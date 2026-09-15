@@ -8,5 +8,5 @@ One line per memory. Content lives in the linked files, never here.
 - [Workflow and gates](eagleeye-workflow-gates.md) — five agents, file-based handoffs, approval gate between every step.
 - [Locked product decisions](eagleeye-product-decisions.md) — settled answers on connectivity, enforcement, time model, packaging; don't re-ask.
 - [Dev and test setup](eagleeye-dev-test-setup.md) — Win11 VM plus macOS parent app is the primary test pair; PowerShell only, no CI.
-- [Repo not initialized](eagleeye-repo-not-initialized.md) — git init has never been run here; flag before DEV starts.
+- [Git setup](eagleeye-git-setup.md) — repo live on GitHub, MIT licensed; pushes need username `x-access-token` with the fine-grained PAT.
 - [Secrets handling](eagleeye-secrets-handling.md) — credentials in secrets/secrets.json, never logged or committed.
