@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <WindowsService>true</WindowsService>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EagleEye.Shared\EagleEye.Shared.csproj" />
+  </ItemGroup>
+
+  <!-- Package versions to be pinned by DEV agent during first user story implementation -->
+  <ItemGroup>
+    <!-- <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="x.x.x" /> -->
+    <!-- <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="x.x.x" /> -->
+  </ItemGroup>
+
+</Project>

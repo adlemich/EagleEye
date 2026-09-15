@@ -1,0 +1,47 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "EagleEye.ParentApp (macOS)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Build (Debug)",
+      "program": "${workspaceFolder}/src/EagleEye.ParentApp/bin/Debug/net10.0-maccatalyst/EagleEye.ParentApp.app",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/EagleEye.ParentApp",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "EagleEye.Service (Windows VM — remote)",
+      "type": "coreclr",
+      "request": "attach",
+      "processName": "EagleEye.Service",
+      "pipeTransport": {
+        "pipeProgram": "ssh",
+        "pipeArgs": ["${input:vmHost}"],
+        "debuggerPath": "~/vsdbg/vsdbg",
+        "pipeCwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "EagleEye.TrayClient (Windows VM — remote)",
+      "type": "coreclr",
+      "request": "attach",
+      "processName": "EagleEye.TrayClient",
+      "pipeTransport": {
+        "pipeProgram": "ssh",
+        "pipeArgs": ["${input:vmHost}"],
+        "debuggerPath": "~/vsdbg/vsdbg",
+        "pipeCwd": "${workspaceFolder}"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "vmHost",
+      "type": "promptString",
+      "description": "Windows VM SSH address (e.g. user@192.168.x.x)"
+    }
+  ]
+}

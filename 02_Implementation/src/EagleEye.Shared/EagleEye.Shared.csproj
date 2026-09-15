@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- SignalR client dependency — used by all components that connect to the hub -->
+  <ItemGroup>
+    <!-- Package versions to be pinned by DEV agent during first user story implementation -->
+    <!-- <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="x.x.x" /> -->
+  </ItemGroup>
+
+</Project>

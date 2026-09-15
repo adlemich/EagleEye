@@ -1,0 +1,50 @@
+{
+  "editor.formatOnSave": true,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 4,
+  "files.encoding": "utf8",
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "[markdown]": {
+    "editor.wordWrap": "on",
+    "files.trimTrailingWhitespace": false
+  },
+  "[json]": {
+    "editor.tabSize": 2
+  },
+  "[jsonc]": {
+    "editor.tabSize": 2
+  },
+  "[yaml]": {
+    "editor.tabSize": 2
+  },
+  "[powershell]": {
+    "editor.tabSize": 4
+  },
+  "[xml]": {
+    "editor.tabSize": 2
+  },
+  "dotnet.defaultSolution": "EagleEye.sln",
+  "omnisharp.enableEditorConfigSupport": true,
+  "csharp.format.enable": true,
+  "plantuml.server": "http://localhost:8080",
+  "plantuml.render": "PlantUMLServer",
+  "plantuml.diagramsRoot": "docs",
+  "powershell.powerShellDefaultVersion": "PowerShell (x64)",
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
+  "markdownlint.config": {
+    "MD013": false,
+    "MD033": false
+  },
+  "files.associations": {
+    "*.iss": "pascal"
+  },
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/TestResults": true,
+    "**/coverage": true
+  }
+}

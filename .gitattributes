@@ -1,0 +1,62 @@
+# =============================================================================
+# EagleEye — .gitattributes
+# Normalize line endings and mark binary files
+# =============================================================================
+
+# Default: auto line ending normalization
+* text=auto eol=lf
+
+# C# / .NET source — always LF
+*.cs        text eol=lf
+*.csproj    text eol=lf
+*.sln       text eol=lf
+*.props     text eol=lf
+*.targets   text eol=lf
+*.config    text eol=lf
+
+# MAUI
+*.xaml      text eol=lf
+*.maui      text eol=lf
+
+# PowerShell — LF (PowerShell 7.6 on macOS handles LF)
+*.ps1       text eol=lf
+*.psm1      text eol=lf
+*.psd1      text eol=lf
+
+# Inno Setup — CRLF (Windows tool)
+*.iss       text eol=crlf
+
+# Web / Config
+*.json      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.xml       text eol=lf
+*.md        text eol=lf
+*.txt       text eol=lf
+*.html      text eol=lf
+*.css       text eol=lf
+
+# Shell scripts
+*.sh        text eol=lf
+
+# Binary files — no diff, no merge
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.bmp       binary
+*.tiff      binary
+*.pdf       binary
+*.zip       binary
+*.tar.gz    binary
+*.exe       binary
+*.dll       binary
+*.msi       binary
+*.dmg       binary
+*.ipa       binary
+*.apk       binary
+*.aab       binary
+*.p12       binary
+*.pfx       binary
+*.cer       binary
