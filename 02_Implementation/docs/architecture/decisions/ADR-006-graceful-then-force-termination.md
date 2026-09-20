@@ -90,6 +90,7 @@ For blocked-app termination (Tier 3, ADR-005), **no warning is given** — the p
 ### Why WM_CLOSE before Kill?
 
 `WM_CLOSE` triggers the application's normal close handler, which typically:
+
 - Prompts to save unsaved work (documents, game progress)
 - Performs cleanup (releasing file locks, flushing buffers)
 - Exits gracefully
@@ -153,5 +154,5 @@ Blocked apps are unauthorized — the child should not be running them in the fi
 - System Architecture: `02_Implementation/docs/architecture/arc42/system-architecture.md` — sections 5.2 (Enforcement component), 6.2 (Process Monitoring sequence), 6.3 (Pause Window sequence)
 - Product requirements: FR-SVC-020 through FR-SVC-023
 - ADR-005: Process Classification Strategy — defines when termination is triggered (blocked or budget/pause enforcement)
-- .NET API: `Process.Kill(bool entireProcessTree)` — https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.kill
-- .NET API: `Process.CloseMainWindow()` — https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.closemainwindow
+- .NET API: `Process.Kill(bool entireProcessTree)` — <https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.kill>
+- .NET API: `Process.CloseMainWindow()` — <https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.closemainwindow>

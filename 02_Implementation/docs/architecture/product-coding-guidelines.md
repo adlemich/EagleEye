@@ -97,6 +97,7 @@ Nullable reference types are **enabled project-wide** in every `.csproj`:
 ```
 
 Rules:
+
 - **Non-nullable is the default.** Only add `?` when `null` is a genuinely valid state.
 - **Treat compiler warnings as errors** for nullable reference types (`<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`).
 - **Never suppress** nullable warnings with `!` (null-forgiving operator) unless there is a documented reason in a comment.
@@ -125,6 +126,7 @@ public void UpdateTimeBudgets(string userSid, List<TimeBudgetDto> budgets)
 ```
 
 Rules:
+
 - Use `ArgumentNullException.ThrowIfNull()` for null checks (not manual `if` + `throw`).
 - Use `ArgumentException.ThrowIfNullOrWhiteSpace()` for string parameters that must have content.
 - Use `ArgumentOutOfRangeException.ThrowIfNegative()`, `ThrowIfZero()`, `ThrowIfGreaterThan()` for numeric bounds.
@@ -254,6 +256,7 @@ See system architecture §8.12 for the service registration overview.
 | **Transient** | Stateless, lightweight services | Validators, mappers |
 
 Rules:
+
 - **Register interfaces, not concrete types.** Always bind `IFoo` → `FooImpl`.
 - **Constructor injection only.** Do not use service locator (`IServiceProvider.GetService<T>()`) in application code. Exception: factory patterns where the type is determined at runtime.
 - **Use primary constructors** for classes with DI dependencies — makes the dependency list immediately visible.
@@ -420,6 +423,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 ### 9.2 Security
 
 **Never log sensitive data.** This is an absolute rule (see ADR-002):
+
 - Pairing codes → `***`
 - Authentication tokens → `***`
 - Certificate private keys → never referenced in log statements

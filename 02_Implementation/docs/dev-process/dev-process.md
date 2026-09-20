@@ -54,12 +54,13 @@ Before DEV writes any code for a user story, ALL of the following must be true:
 
 Before DEV presents work as complete:
 
-1. All code specified in the implementation plan is written.
+1. All code specified in the implementation plan is written (or justified deviations are documented).
 2. Every production class has corresponding unit tests with 100% branch coverage.
 3. All unit tests pass (`pwsh scripts/test.ps1`).
 4. Code compiles without warnings (`pwsh scripts/build.ps1`).
 5. No secrets are hardcoded anywhere in the code.
-6. The user story status is updated to `Implemented`.
+6. An implementation report is written at `US-XXX/implementation-report.md`, documenting what was built, any deviations from ARC's plan with reasoning, and open questions.
+7. The user story status is updated to `Implemented`.
 
 ---
 
@@ -88,18 +89,20 @@ Before DEV presents work as complete:
 
 ## 5. Implementation Rules
 
-### 5.1 Follow the Plan
+### 5.1 Follow the Plan — or Justify Deviations
 
-DEV must follow ARC's implementation plan exactly. The plan specifies:
+DEV follows ARC's implementation plan by default. The plan specifies:
+
 - Which files to create or modify
 - The order of implementation steps
 - Interface contracts and class responsibilities
 
-If DEV discovers that the plan is incomplete, incorrect, or needs deviation, DEV must flag this to Michael and ARC before proceeding. DEV does not improvise.
+DEV may deviate from the plan when existing code or concrete technical knowledge yields a better solution. Every deviation must be documented with reasoning in the implementation report (`US-XXX/implementation-report.md`). Deviations must be grounded in concrete facts (e.g., existing code already provides the abstraction, a library API differs from what the plan assumed), not subjective preference.
 
 ### 5.2 API-First
 
 If the user story requires SignalR interface changes:
+
 1. Update `EagleEye.Shared/Contracts/` **first**.
 2. Then implement the server-side hub methods.
 3. Then implement the client-side consumption.

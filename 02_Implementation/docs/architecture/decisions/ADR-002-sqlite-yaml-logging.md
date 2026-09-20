@@ -131,7 +131,7 @@ The Service supports runtime switching between normal and debug mode via a paren
 ## References
 
 - System Architecture: `02_Implementation/docs/architecture/arc42/system-architecture.md` — sections 4.1, 4.2, 7.1, 8.3, 8.4, 8.8
-- SQLite: https://www.sqlite.org/
-- `Microsoft.Data.Sqlite`: https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/
-- `YamlDotNet`: https://github.com/aaubry/YamlDotNet
-- `Microsoft.Extensions.Logging`: https://learn.microsoft.com/en-us/dotnet/core/extensions/logging
+- SQLite: <https://www.sqlite.org/>
+- `Microsoft.Data.Sqlite`: <https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/>
+- `YamlDotNet`: <https://github.com/aaubry/YamlDotNet>
+- `Microsoft.Extensions.Logging`: <https://learn.microsoft.com/en-us/dotnet/core/extensions/logging>

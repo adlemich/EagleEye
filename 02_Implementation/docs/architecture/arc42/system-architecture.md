@@ -19,6 +19,7 @@ EagleEye is a parental control solution for Windows PCs. It gives parents remote
 | **EagleEye.Shared** | Class library — SignalR contracts, domain models, shared constants |
 
 Core capabilities:
+
 - **Allow-list enforcement**: only parent-approved applications may run; everything else is terminated
 - **Time budgets**: per-application, per-weekday daily limits in minutes
 - **Pause windows**: per-weekday time-of-day blocks during which all apps are denied
@@ -892,6 +893,7 @@ Log file locations per component:
 #### Security Rule
 
 **Sensitive data must never be logged**, regardless of log level. This includes:
+
 - Passwords, pairing codes, authentication tokens/credentials
 - Certificate private keys
 - Any value that could be used to impersonate a paired device

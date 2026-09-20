@@ -15,6 +15,7 @@ EagleEye uses SignalR as its sole communication technology between the Windows s
 3. **State synchronization** — all connected clients (multiple parent apps, tray client) must always show consistent data. The Windows service is the single source of truth (server-authoritative).
 
 The two client types have fundamentally different roles:
+
 - **Parent apps**: authenticated, read/write, connect over LAN
 - **Tray client**: unauthenticated (localhost), read-only, runs in the kid's session
 
@@ -164,6 +165,7 @@ This eliminates the "stale state after reconnect" problem — clients never need
 #### Rule 4: Clients never cache state as authoritative
 
 Clients may hold state in memory for display, but they **never treat local state as authoritative**. If a client needs current data, it either:
+
 - Uses what the server last pushed (which is kept up to date via broadcasts), or
 - Invokes a query method to fetch fresh data from the server
 

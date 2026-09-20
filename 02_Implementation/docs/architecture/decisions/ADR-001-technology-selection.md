@@ -40,6 +40,7 @@ We will use the following technologies for the EagleEye project:
 ### SignalR
 
 SignalR was selected as the single integration technology because it natively supports all three required communication patterns:
+
 1. **Data queries** — request/response from parent app to service
 2. **Event push** — server-initiated updates to connected clients (no polling)
 3. **Pub/Sub** — multiple parent apps stay synchronized simultaneously

@@ -11,6 +11,7 @@
 EagleEye's core function is controlling which applications a child can run on Windows. The service monitors all processes running under standard-user (non-admin) sessions and must decide what to do with each one. The decision must be fast (evaluated every poll interval), correct (never terminate essential OS processes), and safe (default to denying unknown applications).
 
 A classification strategy is needed that balances:
+
 - **Safety**: essential Windows processes must never be terminated
 - **Security**: unknown applications must be blocked by default (deny-by-default)
 - **Usability**: parents should only need to manage the apps they care about, not hundreds of system processes
@@ -50,6 +51,7 @@ A **shipped, non-configurable** list of essential Windows processes that are req
 | `dllhost.exe` | COM surrogate |
 
 **Design rules for the ignore list**:
+
 - Only essential OS processes that, if terminated, would crash or degrade the user session
 - Maintained by the development team, not configurable by parents
 - Erring on the side of inclusion: if uncertain whether a process is essential, include it — a false ignore is less harmful than crashing a user session
@@ -62,6 +64,7 @@ Applications explicitly placed on the user's allow-list by the parent via the pa
 **Matching**: by executable file name (case-insensitive), looked up in the per-user configuration in SQLite (`UserConfig` table, allow-list column).
 
 **Behavior when allowed**:
+
 - Process runs normally
 - Usage time is tracked (accumulated per poll interval)
 - Time budget is decremented
@@ -73,6 +76,7 @@ Applications explicitly placed on the user's allow-list by the parent via the pa
 Any process that is neither ignored nor on the allow-list. **This is the default classification** — deny-by-default.
 
 **Behavior when blocked**:
+
 - Process is terminated immediately using the graceful-then-force pattern (see ADR-006)
 - An enforcement event is pushed to all connected parent apps and the user's tray client
 - The termination is logged
@@ -113,6 +117,7 @@ A deny-by-default (blocklist-everything-except-allowed) model is the only approa
 ### Why a separate ignore list instead of a broader allow-list?
 
 The ignore list serves a fundamentally different purpose than the allow-list:
+
 - **Ignore list**: protects system stability. Managed by developers. Not tracked.
 - **Allow-list**: implements parental policy. Managed by parents. Time-tracked.
 

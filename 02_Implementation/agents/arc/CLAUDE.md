@@ -119,6 +119,7 @@ For each user story, produce `02_Implementation/docs/requirements/user-stories/U
 ## Issue Handling
 
 When TES raises an issue:
+
 1. Read the issue
 2. Determine: is this an unclear requirement (→ PRO) or an implementation deviation (→ DEV)?
 3. If architectural: update the relevant architecture documents and re-issue the implementation plan
