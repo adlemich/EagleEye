@@ -86,7 +86,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         try
         {
             var version = await TryGetServiceVersionAsync();
-            using var dialog = new AboutDialog(version);
+            using var dialog = new AboutDialog(AboutText.Compose(version, _connection.ServerAddress));
             dialog.ShowDialog();
         }
         finally
@@ -110,7 +110,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         }
         catch (Exception ex) when (ex is HubException or InvalidOperationException or OperationCanceledException or IOException)
         {
-            // Connection dropped or the query timed out: the dialog shows "unavailable".
+            // Connection dropped or the query timed out: the dialog shows the connection error.
             return null;
         }
     }

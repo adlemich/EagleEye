@@ -1,6 +1,6 @@
-# Test Run 02: US-001 — Re-test of ISSUE-001 (Localization)
+# Test Run 02: US-001 — Re-test of ISSUE-001, ISSUE-002, ISSUE-003
 
-**Test plan**: `docs/testing/US-001/test-plan.md` (cases re-used; expected texts updated to German per ISSUE-001)
+**Test plan**: `docs/testing/US-001/test-plan.md` (cases re-used; expected texts updated to German per ISSUE-001; AC-13 added per ISSUE-003)
 **Prepared by**: TES, 2026-10-03
 **Executed by**: Michael
 **Execution date**: <!-- fill in -->
@@ -8,7 +8,7 @@
 **Machine(s)**: Windows Developer Machine (German UI)
 
 > **How to record**: as in run 01: tick exactly one box per case, and fill in **Observed** for Fail/Blocked. When done, tell TES: *"test run 02 for US-001 is done"*.
-> **Scope**: everything that changed in 0.1.1. The upgrade install, all tray texts in German, and a short regression of the service registration. About 15 minutes; no reboot.
+> **Scope**: everything that changed in 0.1.1. The upgrade install and publisher name (ISSUE-002), all tray texts in German (ISSUE-001), the connection error in the About dialog (ISSUE-003 / AC-13), and a short regression of the service registration. About 15 minutes; no reboot.
 
 ---
 
@@ -21,7 +21,7 @@
 
 ### TC-001-R01: Upgrade from 0.1.0 to 0.1.1
 
-*Regression of AC-1 / installer upgrade · Windows / Admin*
+*Regression of AC-1 / installer upgrade / ISSUE-002 · Windows / Admin*
 
 1. Run `03_Delivery\windows\EagleEye-Setup-0.1.1.exe` with default settings (SmartScreen → *Trotzdem ausführen*).
 2. Finish the wizard (leave "Start the EagleEye tray icon now" unticked).
@@ -30,6 +30,7 @@
 **Expected**:
 - The wizard finishes without an error message.
 - EagleEye is listed **once**, with version **0.1.1**.
+- The publisher shown is **Michael Adler** (ISSUE-002).
 
 - **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
@@ -115,13 +116,15 @@
 
 ---
 
-### TC-001-09 (re-test): About while disconnected, in German
+### TC-001-09 (re-test): About while disconnected shows the connection error
 
-*ISSUE-001 (language only; the richer error text is ISSUE-003, not part of this build) · Windows / Kid · service stopped*
+*AC-13 (new), ISSUE-001, ISSUE-003 · Windows / Kid · service stopped*
 
 1. Right-click → **App Infos**, read the dialog, and click **OK**.
 
-**Expected**: title **"EagleEye – App Infos"**, text **"Server-Version: nicht verfügbar"**.
+**Expected**:
+- Title **"EagleEye – App Infos"**
+- Text **"Verbindungsfehler: Keine Verbindung zum Server unter localhost:5080 möglich."**. It names the server address and is fully readable, not cut off.
 
 - **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
@@ -153,7 +156,7 @@ Only if you want to check the English side by hand (unit tests already cover it)
 2. Hover over the icon and open **About**.
 3. Switch the display language back to **Deutsch** afterwards.
 
-**Expected**: the tooltip reads **"EagleEye — Connected"**, the menu entry is **"About"**, and the dialog shows **"About EagleEye"** and **"Server Version: EagleEye_v0.1"**.
+**Expected**: the tooltip reads **"EagleEye — Connected"**, the menu entry is **"About"**, and the dialog shows **"About EagleEye"** and **"Server Version: EagleEye_v0.1"**. With the service stopped, it shows **"Connection error: could not connect to the server at localhost:5080."**
 
 - **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:

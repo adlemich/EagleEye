@@ -13,6 +13,9 @@ public interface IServiceConnection : IAsyncDisposable
     /// <summary>Whether the connection to the service is currently established.</summary>
     bool IsConnected { get; }
 
+    /// <summary>The address (host:port) of the service this connection targets, e.g. "localhost:5080".</summary>
+    string ServerAddress { get; }
+
     /// <summary>
     /// Connects to the service, retrying until it succeeds or <paramref name="ct"/> is cancelled.
     /// </summary>

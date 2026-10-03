@@ -9,7 +9,7 @@
 
 ## 1. Verdict
 
-**Not ready to close yet.** All 12 acceptance criteria passed functionally in run 01, but the tray client's texts violate the localization requirements (ISSUE-001, Medium). The fix must be confirmed in `test-run-02.md`.
+**Not ready to close yet.** All 12 original acceptance criteria passed functionally in run 01. Build 0.1.1 fixes ISSUE-001 (localization), ISSUE-002 (publisher) and ISSUE-003, which became the new AC-13. These fixes must be confirmed in `test-run-02.md`.
 
 ## 2. Environment
 
@@ -48,13 +48,13 @@ None. US-001 is the first story.
 | Issue | Severity | Status | Routed to | Test case |
 |---|---|---|---|---|
 | `US-001/issues/ISSUE-001.md`: tray texts English only | Medium | Implemented (awaiting re-test) | DEV | TC-05, 06, 08, 09 |
-| `US-001/issues/ISSUE-002.md`: publisher "adlemich" | Low | New | DEV, pending Michael's go | TC-01 |
-| `US-001/issues/ISSUE-003.md`: richer connection-error text in About | Low (PRO feedback) | New | PRO | TC-09 |
+| `US-001/issues/ISSUE-002.md`: publisher "adlemich" | Low | Implemented (awaiting re-test) | DEV | TC-01 |
+| `US-001/issues/ISSUE-003.md`: richer connection-error text in About | Low | Implemented (awaiting re-test); became AC-13 | PRO → DEV | TC-09 |
 
 ## 6. Feedback for PRO / ARC
 
-- **PRO, US-001 AC-6/7/8/11**: these ACs quote English UI texts ("About", connected/disconnected). Because of NFR-L-011 (German default), the ACs should either name the texts per language or refer to "the localized equivalent". Michael's German wording: *Verbunden*, *Verbindungsfehler*, *App Infos*.
-- **PRO, ISSUE-003**: decide whether the About dialog should explain a failed connection (target address, error), and in which story.
+- **PRO, US-001 AC wording**: done 2026-10-03. AC-11/AC-12 now refer to the application-information entry with English examples, plus a note that all quoted UI texts are English examples shown in the user's language (Michael's decision).
+- **PRO, ISSUE-003**: done. Michael decided to add AC-13 to US-001 and fix it in 0.1.1.
 - **PRO, timing**: AC-8/AC-9 have no time bounds. Run 01 measured about 15 s to detect a stop. TES used ≤ 30 s / ≤ 60 s; consider writing such bounds into the AC.
 - **ARC**: localization was a known NFR, but the US-001 plan did not mention it, so DEV did not implement it. Future plans should list the localization impact for every user-facing text.
 

@@ -32,8 +32,18 @@ References: FR-SVC-050, FR-TRAY-010, FR-TRAY-040, FR-TRAY-041, FR-TRAY-042, FR-T
 - [ ] **AC-8**: When `EagleEye.Service` is stopped (e.g. via services.msc), the tray client detects the disconnection and shows a red (disconnected) status.
 - [ ] **AC-9**: When `EagleEye.Service` is restarted after being stopped, the tray client automatically reconnects and returns to green status.
 - [ ] **AC-10**: `EagleEye.Service` exposes a version identifier in the format `EagleEye_vMAJOR.MINOR` (e.g. `EagleEye_v0.1`). The version correlates to the installer version.
-- [ ] **AC-11**: Right-clicking the tray icon shows a context menu with an "About" entry.
-- [ ] **AC-12**: Clicking "About" displays a dialog or popup that shows the server version, fetched via a live query to the service at that moment.
+- [ ] **AC-11**: Right-clicking the tray icon shows a context menu with an entry that opens the application information (English example: "About"; on a German system: "App Infos").
+- [ ] **AC-12**: Clicking that entry displays a dialog or popup that shows the server version, fetched via a live query to the service at that moment.
+- [ ] **AC-13**: When the service cannot be reached, the application information dialog shows a connection error that names the server address the tray client tried to reach (English example: "Connection error: could not connect to the server at localhost:5080").
+
+> **Language of UI texts** (NFR-L-010, NFR-L-011): all UI texts quoted in these criteria and in the mockups below are **English examples**. The tray client shows them in the user's Windows display language: German (default) or English.
+
+### Change Log
+
+| Date | Change | Source |
+|---|---|---|
+| 2026-10-03 | AC-11/AC-12 reworded so texts are language-dependent; language note added | Michael, after test run 01 (ISSUE-001) |
+| 2026-10-03 | AC-13 added: connection error with server address in the About dialog | Michael, ISSUE-003 |
 
 ---
 

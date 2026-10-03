@@ -15,7 +15,7 @@ public sealed class TrayTextsTests
         { "de-DE", () => TrayTexts.AboutMenuItem, "App Infos" },
         { "de-DE", () => TrayTexts.AboutTitle, "EagleEye – App Infos" },
         { "de-DE", () => TrayTexts.ServerVersionFormat, "Server-Version: {0}" },
-        { "de-DE", () => TrayTexts.VersionUnavailable, "nicht verfügbar" },
+        { "de-DE", () => TrayTexts.ConnectionErrorFormat, "Verbindungsfehler: Keine Verbindung zum Server unter {0} möglich." },
         { "de-DE", () => TrayTexts.Ok, "OK" },
     };
 
@@ -26,7 +26,7 @@ public sealed class TrayTextsTests
         { "en-US", () => TrayTexts.AboutMenuItem, "About" },
         { "en-US", () => TrayTexts.AboutTitle, "About EagleEye" },
         { "en-US", () => TrayTexts.ServerVersionFormat, "Server Version: {0}" },
-        { "en-US", () => TrayTexts.VersionUnavailable, "unavailable" },
+        { "en-US", () => TrayTexts.ConnectionErrorFormat, "Connection error: could not connect to the server at {0}." },
         { "en-US", () => TrayTexts.Ok, "OK" },
     };
 

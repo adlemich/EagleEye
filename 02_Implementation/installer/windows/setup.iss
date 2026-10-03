@@ -16,7 +16,7 @@
 #endif
 
 #define AppName            "EagleEye"
-#define AppPublisher       "adlemich"
+#define AppPublisher       "Michael Adler"
 #define AppURL             "https://github.com/adlemich/EagleEye"
 #define ServiceName        "EagleEyeService"
 #define ServiceDisplayName "EagleEye Service"

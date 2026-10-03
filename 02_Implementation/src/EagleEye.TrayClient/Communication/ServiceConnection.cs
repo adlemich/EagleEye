@@ -22,6 +22,7 @@ public sealed class ServiceConnection : IServiceConnection
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(serviceBaseUrl);
 
+        ServerAddress = new Uri(serviceBaseUrl).Authority;
         _hubConnection = new HubConnectionBuilder()
             .WithUrl(serviceBaseUrl + HubRoutes.Tray)
             .WithAutomaticReconnect(new ServiceReconnectPolicy())
@@ -37,6 +38,9 @@ public sealed class ServiceConnection : IServiceConnection
 
     /// <inheritdoc />
     public bool IsConnected => _hubConnection.State == HubConnectionState.Connected;
+
+    /// <inheritdoc />
+    public string ServerAddress { get; }
 
     /// <inheritdoc />
     public async Task ConnectAsync(CancellationToken ct)

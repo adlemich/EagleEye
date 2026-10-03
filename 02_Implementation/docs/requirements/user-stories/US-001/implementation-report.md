@@ -145,3 +145,18 @@ Not unit-tested, per the plan (verified manually): `TrayApplicationContext`, `Ab
 **Deviation D-11**: AC-11 names the menu entry "About". On a German system it is now "App Infos" at Michael's direction. TES report §6 asks PRO to align the AC wording.
 
 **Not fixed (outside "language findings")**: ISSUE-002 (publisher name, awaiting Michael's go) and ISSUE-003 (PRO feedback).
+
+---
+
+## 8. Further Fixes in 0.1.1 (2026-10-03, Michael's decision)
+
+**ISSUE-002, publisher name.** `AppPublisher` in `installer/windows/setup.iss` and `Company` in `Directory.Build.props` changed to **Michael Adler**. Verified: the installer's file metadata shows CompanyName "Michael Adler".
+
+**ISSUE-003 / new AC-13, connection error in the About dialog.**
+
+- `IServiceConnection.ServerAddress` (host:port, derived from the service base URL, e.g. `localhost:5080`).
+- New `UI/AboutText.Compose(version, address)` returns the localized version line, or the localized connection error with the address. `AboutDialog` now takes the composed text and is 380 px wide, so the error fits on two lines.
+- Resource `VersionUnavailable` replaced by `ConnectionErrorFormat` (de: `Verbindungsfehler: Keine Verbindung zum Server unter {0} möglich.`, en: `Connection error: could not connect to the server at {0}.`).
+- New unit tests `tests/EagleEye.TrayClient.Tests/UI/AboutTextTests.cs` (7). Total unit tests: **59**, all passing; build has 0 warnings.
+
+The installer `03_Delivery/windows/EagleEye-Setup-0.1.1.exe` was rebuilt with all fixes (ISSUE-001, -002, -003).

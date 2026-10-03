@@ -10,6 +10,6 @@
   <data name="AboutMenuItem" xml:space="preserve"><value>About</value></data>
   <data name="AboutTitle" xml:space="preserve"><value>About EagleEye</value></data>
   <data name="ServerVersionFormat" xml:space="preserve"><value>Server Version: {0}</value></data>
-  <data name="VersionUnavailable" xml:space="preserve"><value>unavailable</value></data>
+  <data name="ConnectionErrorFormat" xml:space="preserve"><value>Connection error: could not connect to the server at {0}.</value></data>
   <data name="Ok" xml:space="preserve"><value>OK</value></data>
 </root>

@@ -26,7 +26,8 @@ internal static class TrayTexts
     /// <summary>Composite format with one placeholder for the version string.</summary>
     public static string ServerVersionFormat => Get(nameof(ServerVersionFormat));
 
-    public static string VersionUnavailable => Get(nameof(VersionUnavailable));
+    /// <summary>Composite format with one placeholder for the server address (host:port).</summary>
+    public static string ConnectionErrorFormat => Get(nameof(ConnectionErrorFormat));
 
     public static string Ok => Get(nameof(Ok));
 

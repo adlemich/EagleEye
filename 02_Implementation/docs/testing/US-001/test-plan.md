@@ -52,7 +52,8 @@
 | AC-10 | TC-001-07 |
 | AC-11 | TC-001-06 |
 | AC-12 | TC-001-07 |
-| *(exploratory)* | TC-001-09: About while disconnected (not specified by the story) |
+| AC-13 | TC-001-09 (from run 02; added 2026-10-03, ISSUE-003) |
+| *(run 01 only)* | TC-001-09 was exploratory in run 01, before AC-13 existed |
 
 ## 5. Test Cases
 
