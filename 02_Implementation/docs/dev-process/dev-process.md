@@ -65,29 +65,46 @@ Before DEV presents work as complete:
 5. No secrets are hardcoded anywhere in the code.
 6. The testable artifact (installer, app build) is produced and smoke-checked on its target machine.
 7. An implementation report is written at `US-XXX/implementation-report.md`, documenting what was built, any deviations from ARC's plan with reasoning, open questions, the machines used, and a **"How to test"** section for TES.
-8. All work is committed on `main`.
+8. All work is committed and pushed on the story's feature branch (§4).
 9. The user story status is updated to `Implemented`.
 
 ---
 
-## 4. Git Workflow
+## 4. Git Workflow: One Feature Branch per User Story
 
-### 4.1 Branching Strategy
+*Binding for PRO, ARC, DEV and TES since 2026-10-03 (Michael's decision). US-001 predates this rule and was done on `main`.*
 
-- **Trunk-based development** directly on `main`, shared by both machines.
-- Short-lived feature branches (`feature/US-XXX-short-description`) are optional.
-- Pull at session start; commit (and push) before switching machines.
+### 4.1 The Rule
 
-### 4.2 Commit Conventions
+- **Every user story is developed on its own feature branch**, named after the story:
+  `feature/US-XXX-<short-title>`: the story ID plus a short kebab-case title, e.g. `feature/US-002-app-allow-list`.
+- **All artifacts of the story** are committed on that branch, from PRO to TES: user story, implementation plan, ADRs and architecture updates, code, unit tests, scripts, implementation report, test plan, test runs, test report, issues.
+- **`main` only receives a story once it is complete**, i.e. when Michael has set it to `Verified/Closed`. Nothing of an open story is committed to `main`.
+- **One story at a time**: at most one open feature branch.
+- The branch is pushed to `origin`, so that the Windows machine and the MacBook work on the same branch.
+
+### 4.2 Branch Lifecycle
+
+| Step | Who | Git actions |
+|---|---|---|
+| 1. Start story | **PRO**, before writing `user-story.md` | `git switch main` → `git pull` → `git switch -c feature/US-XXX-<short-title>` → (write and commit the story) → `git push -u origin feature/US-XXX-<short-title>` |
+| 2. Work on story | **ARC, DEV, TES** (and PRO for story changes), on either machine | `git fetch` → `git switch feature/US-XXX-<short-title>` → `git pull` → work → commit → `git push` |
+| 3. Switch machines | whoever is working | Commit and push on the branch; on the other machine `git switch` to the branch and `git pull` |
+| 4. Story closed | Michael sets `Verified/Closed` (TES records it on the branch) | — |
+| 5. Merge | **Orchestrator**, only with Michael's explicit go | `git switch main` → `git pull` → `git merge --no-ff feature/US-XXX-<short-title> -m "Merge US-XXX: <title>"` → `git push` → delete the branch locally (`git branch -d …`) and on `origin` (`git push origin --delete …`) |
+
+### 4.3 Rules for Every Agent
+
+1. **Check the branch before any story work.** If the current branch is not the story's feature branch, stop and switch (or ask Michael). Never commit story work to `main`.
+2. **If `main` changes while a story branch is open** (process or setup changes), bring it in with `git merge main` on the feature branch. **Do not rebase**: the branch is shared between two machines.
+3. **Work that does not belong to a user story** (process, setup or documentation fixes requested by Michael) is committed directly to `main` by the Orchestrator.
+4. **Merge conflicts** are resolved on the feature branch, never on `main`.
+
+### 4.4 Commit Conventions
 
 - Commit messages must be clear and reference the user story: `US-XXX: <what changed and why>`.
 - No commits containing secrets, credentials, or tokens.
 - No commented-out code in committed files.
-
-### 4.3 Branch Lifecycle
-
-1. DEV commits incrementally on `main` as implementation progresses.
-2. If a feature branch was used, it is merged to `main` and deleted after Michael approves.
 
 ---
 

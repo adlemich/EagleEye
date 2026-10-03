@@ -69,9 +69,13 @@ Read `02_Implementation/docs/dev-process/dev-environments.md` at the start of ev
 
 ## Git Workflow
 
-- **Trunk-based development** directly on `main` (both machines share it). A short-lived `feature/US-XXX-...` branch is optional.
+- **One feature branch per user story**: `feature/US-XXX-<short-title>`, created by PRO (`02_Implementation/docs/dev-process/dev-process.md` §4).
+- **Before writing any code**: `git fetch` → `git switch feature/US-XXX-<short-title>` → `git pull`. If you are on `main`, stop. Never commit story work to `main`.
+- Both machines work on the same branch: push before Michael switches machines; pull after switching.
+- If `main` changed meanwhile, `git merge main` into the feature branch. Do not rebase (the branch is shared).
 - Commit messages reference the user story: `US-XXX: <what changed and why>`.
-- Commit incrementally as implementation progresses.
+- Commit incrementally as implementation progresses, and push the branch.
+- DEV never merges into `main`. The Orchestrator merges after Michael has closed the story.
 
 ## Handover to Manual Testing
 

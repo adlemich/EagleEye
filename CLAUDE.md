@@ -48,7 +48,7 @@ Development happens on **two machines sharing this git repo**. The full rules ar
 5. **Reference artifacts by repo-relative path.** Never say "the document". Say `02_Implementation/docs/...`.
 6. **Never skip a gate.** Each step waits for Michael's explicit approval (see the workflow below).
 7. **Testing is manual.** Acceptance and E2E testing are executed by Michael, guided by TES (`02_Implementation/docs/testing/README.md`). Nobody writes automated E2E tests. DEV still writes automated unit tests.
-8. **Work on `main`.** Trunk-based development directly on `main`. Short-lived feature branches are optional.
+8. **One feature branch per user story.** Every user story is developed on its own branch `feature/US-XXX-<short-title>`, from PRO's first commit to TES's last. All story artifacts (story, plan, code, tests, test runs, issues) are committed there, never on `main`. The branch is merged into `main` (`--no-ff`) only after Michael has closed the story and given the go to merge. Before any story work, check that you are on the story's branch. Full rules: `02_Implementation/docs/dev-process/dev-process.md` §4. Work that does not belong to a story goes directly to `main` (Orchestrator only).
 
 ---
 
@@ -84,6 +84,7 @@ To invoke an agent: open a new Claude Code session in that agent's subfolder, on
 For each user story:
 
 ```
+0. PRO creates the branch feature/US-XXX-<short-title> from main
 a. PRO writes user story (US-XXX)                         → Michael approves
 b. ARC writes implementation plan (US-XXX)                → Michael approves
    (the plan states which machine(s) each step runs on)
@@ -92,14 +93,18 @@ d. TES writes the manual test plan                        → Michael approves
 e. Michael executes the test run(s), records results
 f. TES evaluates, writes test report + issues             → Michael approves
    (issues loop back to c; unclear requirements go to PRO via ARC)
-g. Michael closes the story. Repeat with the next story.
+g. Michael closes the story
+h. Orchestrator merges the feature branch into main       → only on Michael's go
+   (git merge --no-ff, push, delete the branch). Repeat with the next story.
 ```
+
+Steps a to g all happen on the story's feature branch.
 
 User story and issue status values: `New` → `Analyzed` → `Implemented` → `Verified/Closed`. Only Michael closes a story.
 
 ### Orchestrator Rules
 
-1. **State your position.** Always tell Michael the current phase, the current step, the host you are on, and the next action.
+1. **State your position.** Always tell Michael the current phase, the current step, the host you are on, the current git branch, and the next action.
 2. **Route work to the right machine.** When the next step belongs to the other machine, say so explicitly, together with the handoff instructions.
 3. **Support manual testing.** When a story reaches step d, make sure TES produces a test plan and a test-run checklist, and remind Michael how to record results (`02_Implementation/docs/testing/README.md` §4).
 

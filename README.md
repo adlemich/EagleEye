@@ -99,7 +99,7 @@ pwsh 02_Implementation/scripts/plantuml.ps1 -Action stop
 
 ## Git Workflow
 
-- **Strategy**: trunk-based development directly on `main`
+- **Strategy**: one feature branch per user story (`feature/US-XXX-<short-title>`), merged into `main` (`--no-ff`) only when the story is closed. Process/setup changes go directly to `main`. Details: `02_Implementation/docs/dev-process/dev-process.md` §4.
 - **Commit style**: imperative, present tense, referencing the story where applicable: `US-001: Add tray connection status`
 
 ---

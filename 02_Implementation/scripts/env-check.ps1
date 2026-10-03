@@ -55,7 +55,13 @@ Write-Host ""
 Write-Host "Repository" -ForegroundColor Cyan
 if ($repoRoot) {
     Write-Item "Repo root" $repoRoot
-    Write-Item "Branch" (git -C $repoRoot branch --show-current)
+    $branch = git -C $repoRoot branch --show-current
+    if ($branch -match '^feature/US-\d+') {
+        Write-Item "Branch" "$branch (user story branch)" "Green"
+    }
+    else {
+        Write-Item "Branch" "$branch - story work belongs on feature/US-XXX-<short-title> (dev-process.md §4)" "Yellow"
+    }
     $dirty = (git -C $repoRoot status --porcelain | Measure-Object).Count
     Write-Item "Uncommitted changes" "$dirty file(s)" ($(if ($dirty -gt 0) { "Yellow" } else { "Green" }))
     $counts = (git -C $repoRoot rev-list --left-right --count "HEAD...origin/main" 2>$null)

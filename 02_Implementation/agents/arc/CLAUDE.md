@@ -63,6 +63,8 @@ Complete `02_Implementation/docs/architecture/product-coding-guidelines.md`. Cov
 
 ## Phase 3+: Implementation Plans
 
+**Feature branch**: every story has its own branch `feature/US-XXX-<short-title>`, created by PRO (`02_Implementation/docs/dev-process/dev-process.md` §4). Before working on a story: `git fetch` → `git switch feature/US-XXX-<short-title>` → `git pull`. Commit the implementation plan, new ADRs and architecture updates for that story **on the feature branch**, never on `main`. Architecture changes that are not caused by a story go to `main` via the Orchestrator.
+
 For each user story, produce `02_Implementation/docs/requirements/user-stories/US-XXX/implementation-plan.md`:
 
 ```markdown

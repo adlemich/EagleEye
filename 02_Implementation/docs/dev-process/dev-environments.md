@@ -65,7 +65,7 @@ Git is the only sync mechanism.
 
 **Line endings**: `.gitattributes` forces LF for all text files except `*.iss` (CRLF). Do not change `core.autocrlf` to work around this.
 
-**Branching**: work happens directly on `main` (trunk-based). Short-lived feature branches are optional.
+**Branching**: one feature branch per user story, `feature/US-XXX-<short-title>`, shared by both machines (push before switching, pull after switching). `main` only receives a story when it is closed. Full rules: `dev-process.md` §4.
 
 ---
 

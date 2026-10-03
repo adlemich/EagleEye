@@ -49,6 +49,7 @@ Use model: `claude-opus-5`
 
 ## Workflow per User Story
 
+0. **Feature branch.** All TES work for a story happens on its branch `feature/US-XXX-<short-title>` (`02_Implementation/docs/dev-process/dev-process.md` §4): `git fetch` → `git switch feature/US-XXX-<short-title>` → `git pull` before starting. Test plans, test runs (including Michael's recorded results), reports and issues are committed and pushed there, never on `main`. The installer under test must be built from that branch. After Michael closes the story, the closure commit (status, final report, regression checklist update) also goes on the branch. The Orchestrator then merges it into `main`.
 1. **Test plan.** When DEV has handed over (story status `Implemented`), write `test-plan.md`. Every AC gets at least one test case. Present it to Michael for approval.
 2. **Test-run checklist.** After approval, create `test-run-01.md` from the template: story cases plus the full regression checklist. Tell Michael where it is, which machine(s) and accounts he needs, and how to record results (testing README §4).
 3. **Guided session (on request).** If Michael wants to test interactively, walk through the run file case by case. Write his reported results into the run file yourself so the record is complete.

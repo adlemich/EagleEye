@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-Since 2026-10-03 (ADR-007, Michael's direction), EagleEye is developed on **two machines sharing the repo on `main`**:
+Since 2026-10-03 (ADR-007, Michael's direction), EagleEye is developed on **two machines sharing the repo** (story work on the story's feature branch, see [[eagleeye-workflow-gates]]):
 
 - **Windows 11 developer machine** (`Platform: win32`; checkout at `C:\Users\Admin\AppDevelopment\EagleEye` as of 2026-10-03, but never hard-code it): Service, TrayClient, Shared, ParentApp **Windows** target (new "Windows client") and **Android** target, Inno Setup installer. It is also the **manual test station**.
 - **MacBook** (`Platform: darwin`): ParentApp **macOS** (Mac Catalyst) and **iOS** targets, `.dmg`.

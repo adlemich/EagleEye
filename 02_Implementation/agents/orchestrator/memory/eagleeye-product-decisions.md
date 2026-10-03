@@ -15,7 +15,7 @@ Decisions already settled in `01_Intend_and_Constraints/questions_and_answers.md
 - **Multi-kid**: service auto-discovers all local standard (non-admin) accounts; all config is per account.
 - **Time control is two-layer**: pause windows per weekday (block everything regardless of budget) + per-app daily budgets in hours:minutes, counting down only during non-pause time. Minimum unit = minutes. No carry-over; reset at midnight.
 - **Distribution**: Windows service = Inno Setup; macOS = direct `.dmg`, no Mac App Store; Android = adb sideload (built on the Windows machine); iOS = Xcode sideload (built on MacBook); Windows parent app = extra app, single copied .exe, no installer.
-- **Repo**: single monorepo, trunk-based dev directly on `main` (Michael, 2026-10-03), shared by the Windows machine and the MacBook.
+- **Repo / branching** (Michael, 2026-10-03, after US-001): single monorepo; **one feature branch per user story** (`feature/US-XXX-<short-title>`, created by PRO, used by ARC/DEV/TES), merged `--no-ff` into `main` only when the story is closed and Michael says go. Non-story process changes go directly to `main`. Both machines share the branch via origin.
 - **Parent app platforms** (Michael, 2026-10-03): Android + iOS are the primary production platforms. The Windows client is the initial testing vehicle and runs on the service PC or remotely, using the same comms model as the mobile apps (TLS + pairing via ParentHub). macOS desktop app is built on the MacBook.
 
 Stack per ADR-001: .NET 10, MAUI, SignalR, PowerShell 7.6, Inno Setup, VSCode, PlantUML in local Docker. API-first — SignalR contracts in `EagleEye.Shared/Contracts/` are the interface spec and change before any implementation. See [[eagleeye-dev-test-setup]].

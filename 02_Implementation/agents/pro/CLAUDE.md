@@ -59,6 +59,22 @@ Present the completed document to Michael for review before proceeding.
 
 For each iteration, write one user story using the template at `02_Implementation/docs/requirements/user-stories/US-000-template.md`.
 
+### Feature Branch (PRO starts it)
+
+Every user story lives on its own branch (`02_Implementation/docs/dev-process/dev-process.md` §4). **Before writing a new story, PRO creates that branch:**
+
+```
+git switch main
+git pull
+git switch -c feature/US-XXX-<short-title>     # e.g. feature/US-002-app-allow-list
+# write and commit user-story.md ("US-XXX: Add user story")
+git push -u origin feature/US-XXX-<short-title>
+```
+
+- Choose the short title (kebab-case, a few words) from the story title, and tell Michael the branch name.
+- Later changes to the story (e.g. clarified ACs after TES feedback) are committed on the same branch, never on `main`.
+- Do not create a new story branch while another story is still open.
+
 Create a new folder: `02_Implementation/docs/requirements/user-stories/US-XXX/`
 Save the story as: `user-story.md`
 
