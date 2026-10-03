@@ -2,46 +2,38 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "EagleEye.ParentApp (macOS)",
+      "name": "EagleEye.Service (Windows, console mode)",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "Build (Debug)",
-      "program": "${workspaceFolder}/src/EagleEye.ParentApp/bin/Debug/net10.0-maccatalyst/EagleEye.ParentApp.app",
+      "program": "${workspaceFolder}/src/EagleEye.Service/bin/Debug/net10.0-windows/win-x64/EagleEye.Service.exe",
       "args": [],
-      "cwd": "${workspaceFolder}/src/EagleEye.ParentApp",
+      "cwd": "${workspaceFolder}/src/EagleEye.Service",
       "stopAtEntry": false,
       "console": "integratedTerminal"
     },
     {
-      "name": "EagleEye.Service (Windows VM — remote)",
+      "name": "EagleEye.Service (Windows, attach to installed service)",
       "type": "coreclr",
       "request": "attach",
-      "processName": "EagleEye.Service",
-      "pipeTransport": {
-        "pipeProgram": "ssh",
-        "pipeArgs": ["${input:vmHost}"],
-        "debuggerPath": "~/vsdbg/vsdbg",
-        "pipeCwd": "${workspaceFolder}"
-      }
+      "processName": "EagleEye.Service.exe"
     },
     {
-      "name": "EagleEye.TrayClient (Windows VM — remote)",
+      "name": "EagleEye.TrayClient (Windows)",
       "type": "coreclr",
-      "request": "attach",
-      "processName": "EagleEye.TrayClient",
-      "pipeTransport": {
-        "pipeProgram": "ssh",
-        "pipeArgs": ["${input:vmHost}"],
-        "debuggerPath": "~/vsdbg/vsdbg",
-        "pipeCwd": "${workspaceFolder}"
-      }
-    }
-  ],
-  "inputs": [
+      "request": "launch",
+      "preLaunchTask": "Build (Debug)",
+      "program": "${workspaceFolder}/src/EagleEye.TrayClient/bin/Debug/net10.0-windows/win-x64/EagleEye.TrayClient.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/EagleEye.TrayClient",
+      "stopAtEntry": false,
+      "console": "internalConsole"
+    },
     {
-      "id": "vmHost",
-      "type": "promptString",
-      "description": "Windows VM SSH address (e.g. user@192.168.x.x)"
+      "name": "EagleEye.ParentApp (MAUI: Windows / Android on Windows, macOS on MacBook)",
+      "type": "maui",
+      "request": "launch",
+      "preLaunchTask": "maui: Build"
     }
   ]
 }

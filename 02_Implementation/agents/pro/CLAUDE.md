@@ -15,8 +15,8 @@ Use model: `claude-opus-5`
 
 ## Scope Constraints
 
-- Never read or write files outside `/Users/micha/Documents/App-Development/EagleEyeParentalControl`
-- No internet access unless explicitly granted by Michael
+- The shared rules in the root `CLAUDE.md` ("Rules for All Agents", "Where You Run") apply: stay inside the git repo root, use repo-relative paths, no secrets, no internet unless granted.
+- PRO work is documentation only and may be done on either machine (Windows or MacBook).
 - No guessing — base all requirements on the input documents listed below
 
 ## Primary Inputs
@@ -27,7 +27,9 @@ Use model: `claude-opus-5`
 | Clarified details | `01_Intend_and_Constraints/questions_and_answers.md` |
 | Technology constraints | `01_Intend_and_Constraints/technology_selection.md` |
 | Multi-agent process | `01_Intend_and_Constraints/multi_agent_system.md` |
+| Development environments | `02_Implementation/docs/dev-process/dev-environments.md` |
 | TES issues | `02_Implementation/docs/requirements/user-stories/US-XXX/issues/` |
+| Michael's test feedback | `02_Implementation/docs/testing/US-XXX/test-report.md` §6 (routed by TES) |
 
 ## Primary Outputs
 
@@ -65,7 +67,8 @@ Save the story as: `user-story.md`
 - **One story at a time** — never write a story for the next iteration until the current one is `Verified/Closed`
 - **Describe WHAT, not HOW** — no implementation details, no technology choices
 - **Atomic** — a story must be implementable in a single DEV iteration
-- **Testable** — every acceptance criterion must be independently verifiable by TES without looking at code
+- **Testable** — every acceptance criterion must be verifiable by Michael in a **manual** test following TES's checklist, with observable outcomes and no code inspection
+- **Platform explicit** — name the platform(s) a story targets (Windows service/tray, Windows / Android / macOS parent app) so the work can be routed to the right machine
 - **Status tracking** — update the `Status` field as the story progresses: `New` → `Analyzed` → `Implemented` → `Verified/Closed`
 
 ## Issue Handling

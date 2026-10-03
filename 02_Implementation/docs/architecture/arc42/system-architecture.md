@@ -1,7 +1,9 @@
 # EagleEye — System Architecture
 
 *Template: arc42 v8 | Status: Draft — for Michael's review*
-*Maintainer: ARC Agent | Last Updated: 2026-09-20*
+*Maintainer: ARC Agent | Last Updated: 2026-10-03*
+
+> **Amendment 2026-10-03 (ADR-007)**: Windows desktop target added to the ParentApp; two-machine development; manual acceptance testing. Affected: §1.1, §2.1, §2.2, §3.2, §4.2, §5.5, §7, §8.10, §9. Approved status of the 2026-09-20 version is unchanged; the amendments are pending Michael's review.
 
 ---
 
@@ -15,7 +17,7 @@ EagleEye is a parental control solution for Windows PCs. It gives parents remote
 |-----------|------|
 | **EagleEye.Service** | Windows service (SYSTEM) — process monitoring, enforcement, SignalR hub, data persistence |
 | **EagleEye.TrayClient** | Windows tray app (kid's session) — remaining-time display, notifications, pairing code display |
-| **EagleEye.ParentApp** | MAUI app (macOS, iOS, Android) — remote configuration, statistics, event feed |
+| **EagleEye.ParentApp** | MAUI app (Windows, macOS, Android; iOS later) — remote configuration, statistics, event feed |
 | **EagleEye.Shared** | Class library — SignalR contracts, domain models, shared constants |
 
 Core capabilities:
@@ -56,7 +58,8 @@ Core capabilities:
 | Constraint | Source |
 |-----------|--------|
 | .NET 10 for all components | `technology_selection.md` |
-| .NET MAUI for ParentApp (iOS, Android, macOS via Catalyst) | `technology_selection.md` |
+| .NET MAUI for ParentApp (Windows via WinUI, macOS via Catalyst, Android; iOS later) | `technology_selection.md`, ADR-007 |
+| Each build target is built on its owning machine: Windows machine (Service, TrayClient, ParentApp Windows + Android), MacBook (ParentApp Mac Catalyst) | ADR-007 |
 | SignalR (ASP.NET Core) for all inter-component communication | `technology_selection.md`, ADR-001 |
 | Windows service runs under SYSTEM account | `questions_and_answers.md` Q2.3 |
 | Self-signed TLS certificate, auto-generated, non-expiring | `questions_and_answers.md` Q1.2 |
@@ -76,8 +79,9 @@ Core capabilities:
 | Monorepo for all components | `questions_and_answers.md` Q6.1 |
 | API-first: `EagleEye.Shared/Contracts/` defines interfaces before any implementation | `technology_selection.md` |
 | Incremental user-story delivery — one story fully completed before starting the next | `technology_selection.md` |
-| macOS + Windows VM is the primary dev/test setup | `technology_selection.md` |
-| iOS and Android development deferred until core matures | Product requirements §10 |
+| Two dev machines (Windows Developer Machine + MacBook) share one repo; the Windows machine is the manual test station | ADR-007 |
+| Acceptance/E2E testing is manual (Michael), guided by TES; only unit tests are automated | ADR-007 |
+| iOS development deferred until core matures | Product requirements §10 |
 
 ### 2.3 Conventions
 
@@ -141,7 +145,7 @@ node "Windows 11 PC" as winbox {
   database "SQLite + YAML\n(%ProgramData%)" as store
 }
 
-node "Parent Device\n(macOS / iOS / Android)" as parentdev {
+node "Parent Device\n(Windows / macOS / Android / iOS later)" as parentdev {
   component "EagleEye.ParentApp\n(.NET MAUI)" as app
 }
 
@@ -195,7 +199,7 @@ end note
 | SignalR client (TrayClient, ParentApp) | `Microsoft.AspNetCore.SignalR.Client` |
 | Process monitoring | `System.Diagnostics.Process` + Win32 API (via P/Invoke where needed) |
 | TLS certificates | `System.Security.Cryptography.X509Certificates` |
-| Cross-platform UI | .NET MAUI (Mac Catalyst, iOS, Android) |
+| Cross-platform UI | .NET MAUI (WinUI, Mac Catalyst, Android; iOS later) |
 | TrayClient UI | WinForms (`NotifyIcon`, `Form` for overlay) |
 | Data persistence | SQLite via `Microsoft.Data.Sqlite` (all application data) |
 | Application configuration | YAML via `YamlDotNet` (one file per application for runtime parameters) |
@@ -372,17 +376,19 @@ package "EagleEye.ParentApp" {
 }
 
 package "Platform-Specific" {
-  component [iOS] as IOS
-  component [Android] as AND
+  component [Windows (WinUI)] as WIN
   component [macOS (Catalyst)] as MAC
+  component [Android] as AND
+  component [iOS (later)] as IOS
 }
 
 PA_VIEWS --> PA_VM : data binding
 PA_VM --> PA_COMM : commands / queries
 PA_COMM --> PA_VM : events / responses
-PA_VIEWS --> IOS
-PA_VIEWS --> AND
+PA_VIEWS --> WIN
 PA_VIEWS --> MAC
+PA_VIEWS --> AND
+PA_VIEWS --> IOS
 @enduml
 ```
 
@@ -391,7 +397,7 @@ PA_VIEWS --> MAC
 | **Communication** | Manages the SignalR connection to the service (connect, reconnect, disconnect). Handles pairing handshake. Sends configuration commands. Receives events and data responses. |
 | **ViewModels** | MVVM view models for each screen. Expose commands (save rules, trigger re-scan) and observable properties (user list, app list, stats). |
 | **Views** | MAUI ContentPages for: connection/pairing, user selection, allow-list management, budget configuration, pause-window configuration, statistics, event feed, paired-devices management. |
-| **Platform-Specific** | iOS/Android: portrait lock, platform entry points. macOS (Catalyst): desktop window sizing. |
+| **Platform-Specific** | Android/iOS: portrait lock, platform entry points. macOS (Catalyst) and Windows (WinUI): desktop window sizing. Windows + Android targets are built on the Windows machine, Mac Catalyst on the MacBook (ADR-007). |
 
 ---
 
@@ -597,6 +603,9 @@ node "Windows 11 PC (x64)" as winpc {
 }
 
 node "Parent Device" as parentdev {
+  node "Windows 11" {
+    artifact "EagleEye.ParentApp\n(WinUI, distribution TBD)"
+  }
   node "macOS 26+" {
     artifact "EagleEye.ParentApp\n(.app bundle via .dmg)"
     artifact "EagleEye.ParentApp.yaml" as mac_yaml
@@ -605,7 +614,7 @@ node "Parent Device" as parentdev {
   node "iOS 26+ (future)" {
     artifact "EagleEye.ParentApp\n(sideloaded via Xcode)"
   }
-  node "Android 14+ (future)" {
+  node "Android 14+" {
     artifact "EagleEye.ParentApp\n(sideloaded via adb)"
   }
 }
@@ -633,6 +642,7 @@ Each parent app instance stores its YAML config and SQLite database in the OS-st
 
 | Platform | Config File | Database | Location |
 |----------|------------|----------|----------|
+| Windows | `EagleEye.ParentApp.yaml` | `EagleEye.ParentApp.db` | `%LocalAppData%\EagleEye\` (per parent user) |
 | macOS | `EagleEye.ParentApp.yaml` | `EagleEye.ParentApp.db` | `~/Library/Application Support/EagleEye/` |
 | iOS | `EagleEye.ParentApp.yaml` | `EagleEye.ParentApp.db` | App sandbox `Documents/` |
 | Android | `EagleEye.ParentApp.yaml` | `EagleEye.ParentApp.db` | App internal storage |
@@ -654,9 +664,10 @@ Each parent app instance stores its YAML config and SQLite database in the OS-st
 
 | Platform | Distribution | Package |
 |----------|-------------|---------|
+| Windows 11 | TBD (product requirements §11 Q-1) | — |
 | macOS 26+ | Direct download | `.dmg` with `.app` bundle |
 | iOS 26+ (future) | Sideload | Xcode / `ios-deploy` |
-| Android 14+ (future) | Sideload | `adb install` APK |
+| Android 14+ | Sideload (built on Windows machine) | `adb install` APK |
 
 ---
 
@@ -886,6 +897,7 @@ Log file locations per component:
 |-----------|--------------|
 | EagleEye.Service | `%ProgramData%\EagleEye\` |
 | EagleEye.TrayClient | `%ProgramData%\EagleEye\` |
+| EagleEye.ParentApp (Windows) | `%LocalAppData%\EagleEye\` |
 | EagleEye.ParentApp (macOS) | `~/Library/Application Support/EagleEye/` |
 | EagleEye.ParentApp (iOS) | App sandbox `Documents/` |
 | EagleEye.ParentApp (Android) | App internal storage |
@@ -954,6 +966,7 @@ All architectural decisions are recorded as ADRs in `02_Implementation/docs/arch
 | ADR-004 | Pairing-Based Authentication for Parent Apps | Accepted |
 | ADR-005 | Process Classification Strategy — Ignore, Allow, Block | Accepted |
 | ADR-006 | Graceful-Then-Force Process Termination Pattern | Accepted |
+| ADR-007 | Two-Machine Development and Manual Acceptance Testing | Accepted |
 
 ---
 

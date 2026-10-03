@@ -145,3 +145,31 @@ This file records all clarifying questions asked during the project bootstrappin
 **Q8.1**: Any CI/CD pipeline planned at this stage?
 
 **A**: PowerShell 7.6 scripts only, running locally on the MacBook. No CI/CD pipeline for now.
+
+---
+
+## Group 9: Development Environment Change (2026-10-03)
+
+Recorded by the Orchestrator. These answers supersede the development and test setup described in `technology_selection.md` ("Development and Test") and in Q8.1 where they conflict. Decision record: ADR-007.
+
+**Q9.1**: On which machines is EagleEye developed?
+
+**A**: On two machines with the same git repository: a Windows 11 developer machine and the MacBook. Claude Code instructions must work on both and must be aware which machine they run on.
+
+---
+
+**Q9.2**: Which work happens on which machine?
+
+**A**: All development, build and test for Windows (the service, the tray app and a new Windows parent client) and for Android happens on the Windows developer machine. All development, build and test for the macOS desktop parent app happens on the MacBook.
+
+---
+
+**Q9.3**: How is testing done?
+
+**A**: All testing moves to manual, on the Windows developer machine. Michael executes 100 % of the tests. The agents support him with instructions, checklists and feedback mechanisms. (Interpretation recorded in ADR-007: this covers acceptance/E2E testing; DEV's automated unit tests remain.)
+
+---
+
+**Q9.4**: Branching?
+
+**A**: Work directly on `main`.

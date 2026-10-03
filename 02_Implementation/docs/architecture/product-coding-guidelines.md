@@ -26,6 +26,9 @@ This document defines the coding standards all EagleEye components must follow. 
 13. [Platform-Specific: macOS (ParentApp via Mac Catalyst)](#13-platform-specific-macos-parentapp-via-mac-catalyst)
 14. [Platform-Specific: iOS (ParentApp)](#14-platform-specific-ios-parentapp)
 15. [Platform-Specific: Android (ParentApp)](#15-platform-specific-android-parentapp)
+16. [Platform-Specific: Windows (ParentApp via WinUI)](#16-platform-specific-windows-parentapp-via-winui)
+
+> **Amendment 2026-10-03 (ADR-007)**: §10.1 and §11.1 now reflect the actual test project layout (`02_Implementation/tests/`); §16 added for the Windows parent app; build hosts per platform noted in §10.4.
 
 ---
 
@@ -473,15 +476,17 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 │   ├── Data/                     # SQLite (connections, cached state), YAML reader
 │   ├── Resources/                # Localization (de, en), images, styles
 │   ├── Platforms/
-│   │   ├── iOS/
+│   │   ├── Windows/
+│   │   ├── MacCatalyst/
 │   │   ├── Android/
-│   │   └── MacCatalyst/
+│   │   └── iOS/
 │   └── MauiProgram.cs
-└── EagleEye.Tests/               # Unit tests (all components)
-    ├── Service/
-    ├── Shared/
-    ├── TrayClient/
-    └── ParentApp/
+
+02_Implementation/tests/          # Unit tests — one project per component
+├── EagleEye.Shared.Tests/
+├── EagleEye.Service.Tests/
+├── EagleEye.TrayClient.Tests/
+└── EagleEye.ParentApp.Tests/
 ```
 
 ### 10.2 Code Reuse Principles
@@ -494,8 +499,15 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 
 ### 10.3 Version Management
 
-- All projects share a single version number (`EagleEye_vMAJOR.MINOR`), set via `Directory.Build.props` at the solution root.
+- All projects share a single version number (`EagleEye_vMAJOR.MINOR`), set via `02_Implementation/Directory.Build.props` (next to `EagleEye.sln`).
 - Use `<VersionPrefix>` and `<VersionSuffix>` in `Directory.Build.props` for consistent versioning.
+
+### 10.4 Build Hosts (ADR-007)
+
+- Code for `EagleEye.Service`, `EagleEye.TrayClient` and the ParentApp `Platforms/Windows` and `Platforms/Android` folders is built and verified on the Windows Developer Machine.
+- Code in ParentApp `Platforms/MacCatalyst` is built and verified on the MacBook.
+- Shared ParentApp code (ViewModels, Views, Communication) must compile on both hosts. Do not use platform APIs outside `Platforms/` or behind `#if` guards.
+- Never hard-code absolute paths, path separators or line endings. Use `Path.Combine`, `Environment.GetFolderPath`, and `Environment.NewLine` where output is OS-facing.
 
 ---
 
@@ -505,7 +517,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 
 - **Framework**: xUnit
 - **Mocking**: Moq
-- **Project**: `EagleEye.Tests` with subfolders mirroring the source project structure.
+- **Projects**: one test project per component in `02_Implementation/tests/` (`EagleEye.<Component>.Tests`), with folders mirroring the source project structure. Unit tests are the only automated tests; acceptance testing is manual (ADR-007).
 - **Naming**: `{ClassUnderTest}_{MethodUnderTest}_{Scenario}_{ExpectedResult}`
   - Example: `ProcessMonitor_ClassifyProcess_IgnoredProcess_ReturnsIgnored`
 - **One assert per test** (preferred). Multiple asserts are acceptable when testing a single logical outcome with multiple observable effects.
@@ -634,4 +646,23 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 
 ---
 
-*End of Product Coding Guidelines — Draft for review*
+## 16. Platform-Specific: Windows (ParentApp via WinUI)
+
+*Added 2026-10-03 (ADR-007). Built and tested on the Windows Developer Machine.*
+
+### 16.1 Windows Considerations
+
+- **Target**: `net10.0-windows10.0.19041.0`, minimum OS Windows 11 (`10.0.22000.0`). MAUI renders through WinUI 3.
+- **Desktop UI**: same desktop-style layout as macOS (§13). Resizable window with a sensible minimum size. No portrait lock.
+- **TLS trust**: as on macOS, accept the service's self-signed certificate programmatically via `ServerCertificateCustomValidationCallback`. Never install it into the Windows certificate store.
+- **Secure storage**: store the pairing token with MAUI `SecureStorage` (DPAPI-backed on Windows) rather than in plain SQLite.
+- **Packaging model** (MSIX vs. unpackaged): an ARC decision to be recorded as an ADR once distribution is decided (product requirements §11 Q-1).
+- **Same-PC caveat**: if the parent app runs on the PC that hosts the service, it runs under the parent's admin account. Admin accounts are never monitored, so EagleEye does not enforce rules on the parent app itself.
+
+### 16.2 Windows File Paths
+
+- `Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)` → `%LocalAppData%\EagleEye\` for the database, YAML config and logs.
+
+---
+
+*End of Product Coding Guidelines*

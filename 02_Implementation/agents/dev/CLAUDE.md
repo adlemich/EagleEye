@@ -10,15 +10,28 @@ Use model: `claude-opus-5`
 
 ## Scope Constraints
 
-- Never read or write files outside `/Users/micha/Documents/App-Development/EagleEyeParentalControl`
-- No internet access unless explicitly granted by Michael
+- The shared rules in the root `CLAUDE.md` ("Rules for All Agents", "Where You Run") apply: stay inside the git repo root, use repo-relative paths, no secrets, no internet unless granted.
 - **ABSOLUTE RULE**: Do not write any production code until the ARC implementation plan for the current user story is approved by Michael
+
+## Host Machine Rules
+
+Read `02_Implementation/docs/dev-process/dev-environments.md` at the start of every session. Determine the host first (`Platform:` in your environment info, or `pwsh scripts/env-check.ps1`) and state it.
+
+| Host | DEV may implement, build and unit-test |
+|------|----------------------------------------|
+| **Windows Developer Machine** | `EagleEye.Shared`, `EagleEye.Service`, `EagleEye.TrayClient`, `EagleEye.ParentApp` (shared code + Windows and Android targets), installer, Android packaging |
+| **MacBook** | `EagleEye.ParentApp` (shared code + Mac Catalyst target), `.dmg` packaging. Change `EagleEye.Shared` only if the plan explicitly assigns it to the MacBook. |
+
+- Only implement plan steps assigned to your host (see the plan's "Machine Assignment" section). For steps on the other machine: stop, commit, and tell Michael what to run there.
+- Shared ParentApp code (ViewModels, Communication, Views) can be written on either machine, but it must build on the host you are on before you commit.
+- Pull before you start; commit before you hand over. Never leave work uncommitted when Michael switches machines.
 
 ## Primary Inputs
 
 | Input | Location |
 |-------|----------|
 | **Development process** | `02_Implementation/docs/dev-process/dev-process.md` |
+| **Development environments** | `02_Implementation/docs/dev-process/dev-environments.md` |
 | User story | `02_Implementation/docs/requirements/user-stories/US-XXX/user-story.md` |
 | Implementation plan | `02_Implementation/docs/requirements/user-stories/US-XXX/implementation-plan.md` |
 | General product requirements | `02_Implementation/docs/requirements/general-product-requirements.md` |
@@ -56,10 +69,17 @@ Use model: `claude-opus-5`
 
 ## Git Workflow
 
-- **Trunk-based development** on `main`. Create a feature branch `feature/US-XXX-short-description` before starting implementation.
+- **Trunk-based development** directly on `main` (both machines share it). A short-lived `feature/US-XXX-...` branch is optional.
 - Commit messages reference the user story: `US-XXX: <what changed and why>`.
 - Commit incrementally as implementation progresses.
-- After Michael approves, the branch is merged to `main` and deleted.
+
+## Handover to Manual Testing
+
+There are no automated E2E tests; Michael tests manually (see `02_Implementation/docs/testing/README.md`). Before presenting a story as implemented, DEV on the Windows machine must:
+
+1. Run `pwsh scripts/build.ps1` and `pwsh scripts/test.ps1` (zero warnings, all green).
+2. Produce the testable artifact (e.g. the installer via `scripts/package-windows.ps1`, or a runnable parent-app build) and do a **smoke check**: it installs or starts and the main screen or tray icon appears. This is not a substitute for TES's test plan.
+3. In the implementation report, add a **"How to test"** section: artifact location, version, install/start steps, log locations, and known limitations. TES uses this to write the test plan.
 
 ## Implementation Report
 
@@ -75,6 +95,8 @@ The report must contain:
 3. **Files created or modified** — full paths.
 4. **Unit test coverage** — which test classes were added, what scenarios they cover.
 5. **Open questions or risks** — anything Michael should be aware of.
+6. **How to test** — see "Handover to Manual Testing" above.
+7. **Machine(s) used** — which steps were done on Windows and which on the MacBook.
 
 If there are no deviations, state so explicitly. The report is a required deliverable — DEV does not present work as complete without it.
 
@@ -84,7 +106,7 @@ If there are no deviations, state so explicitly. The report is a required delive
 |------|-----------|
 | Language | C# 14, .NET 10 |
 | Windows service | `Microsoft.Extensions.Hosting.WindowsServices` |
-| MAUI app | .NET MAUI (iOS, Android, MacCatalyst) |
+| MAUI app | .NET MAUI: Windows + Android (built on Windows), Mac Catalyst (built on MacBook); iOS later |
 | SignalR server | `Microsoft.AspNetCore.SignalR` |
 | SignalR client | `Microsoft.AspNetCore.SignalR.Client` |
 | TLS certificates | `System.Security.Cryptography.X509Certificates` |
@@ -119,4 +141,5 @@ If there are no deviations, state so explicitly. The report is a required delive
 - Use Moq for all external dependencies and interfaces
 - No test depends on another test's state
 - Unit tests must run without any external services, files, network, or Windows-specific APIs (mock those)
-- Run `pwsh scripts/test.ps1` to verify all tests pass before presenting work to Michael
+- Run `pwsh scripts/test.ps1` to verify all tests pass before presenting work to Michael. The script runs the test projects that belong to the current host.
+- Unit tests are the only automated tests. Do not create E2E or UI automation tests.

@@ -1,10 +1,19 @@
 ---
 name: eagleeye-dev-test-setup
-description: EagleEye development and testing environment, and the primary test pair
+description: EagleEye two-machine development setup (Windows dev machine + MacBook) and manual testing, since 2026-10-03
 metadata:
   type: project
 ---
 
-Development happens on Michael's MacBook (macOS 26+). The Windows service and tray client are tested in a Windows 11 x64 VM under VMware Fusion; the macOS parent app runs on the host and connects to the service in the VM over the LAN. **That pair — Windows 11 VM + macOS parent app — is the primary setup for all feature and quality testing.**
+Since 2026-10-03 (ADR-007, Michael's direction), EagleEye is developed on **two machines sharing the repo on `main`**:
 
-Consequence: nothing Windows-specific can be built or verified on the Mac directly, and E2E tests must account for the host↔VM network hop (hostname resolution, self-signed cert trust). Automation is PowerShell 7.6 only (`02_Implementation/scripts/build.ps1`, `test.ps1`, `package-windows.ps1`, `package-macos.ps1`); there is no CI/CD pipeline and none is planned for now. PlantUML renders via a local Docker server on `http://localhost:8080`.
+- **Windows 11 developer machine** (`Platform: win32`; checkout at `C:\Users\Admin\AppDevelopment\EagleEye` as of 2026-10-03, but never hard-code it): Service, TrayClient, Shared, ParentApp **Windows** target (new "Windows client") and **Android** target, Inno Setup installer. It is also the **manual test station**.
+- **MacBook** (`Platform: darwin`): ParentApp **macOS** (Mac Catalyst) target and `.dmg` only; iOS later.
+
+The old MacBook + VMware Fusion VM setup is gone. Acceptance/E2E testing is **100 % manual by Michael**. TES became "Manual Test Lead" and writes test plans and test-run checklists in `02_Implementation/docs/testing/`; Michael ticks results in the Markdown run files. DEV unit tests stay automated. That was my interpretation of "all testing manual", flagged to Michael; revisit if he says otherwise.
+
+**Why:** Michael has a native Windows box now and wants each toolchain on its natural host.
+
+**How to apply:** at session start, state the host and git sync state (`pwsh 02_Implementation/scripts/env-check.ps1`). Route work to the right machine; never attempt the other machine's builds. Docs work is fine anywhere. Full rules: `02_Implementation/docs/dev-process/dev-environments.md`. See [[eagleeye-workflow-gates]].
+
+Toolchain on the Windows machine as of 2026-10-03: .NET SDK 10.0.401, pwsh 7.6.6, MAUI workload present; Inno Setup, adb and Docker/Podman not installed; no `secrets/secrets.json` yet.

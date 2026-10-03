@@ -19,9 +19,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$scriptDir  = $PSScriptRoot
-$implDir    = $scriptDir
-$repoRoot   = Split-Path $implDir -Parent
+if (-not $IsMacOS) {
+    Write-Error "package-macos.ps1 runs on the MacBook only (see docs/dev-process/dev-environments.md)."
+    exit 1
+}
+
+$implDir  = Split-Path $PSScriptRoot -Parent
+$repoRoot = Split-Path $implDir -Parent
 
 # Resolve secrets file
 if ([string]::IsNullOrEmpty($SecretsFile)) {

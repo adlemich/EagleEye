@@ -1,7 +1,15 @@
 # Implementation Plan: US-001 — Basic Service Installation and Tray Client Connectivity
 
-**Status**: Draft
-**Date**: 2026-09-20
+**Status**: Approved (2026-09-20). Amendment of 2026-10-03 pending Michael's approval.
+**Date**: 2026-09-20, amended 2026-10-03
+
+> **Amendment 2026-10-03 (ADR-007)**: adapted to the two-machine setup and manual testing. Changed: Impact table (solution/scripts already exist), new "Machine Assignment" section, Step 0, Step 4 (test project locations), Step 5 (installer path), Step 6 (smoke check + manual testing), new "Manual Verification Notes". The design itself (contracts, classes, behaviour) is unchanged.
+
+---
+
+## Machine Assignment
+
+**All of US-001 runs on the Windows Developer Machine.** It touches only `EagleEye.Shared`, `EagleEye.Service`, `EagleEye.TrayClient`, the installer and the scripts. The MacBook is not involved.
 
 ---
 
@@ -16,8 +24,8 @@ US-001 is the foundational story. It establishes the executable skeleton for thr
 | **EagleEye.TrayClient** | New: WinForms app with NotifyIcon, SignalR client, connection-status UI, About dialog |
 | **EagleEye.ParentApp** | Not touched |
 | **Installer** | New: Inno Setup script for service + tray client packaging |
-| **Build scripts** | New: `build.ps1`, `test.ps1` |
-| **Solution** | New: `EagleEye.sln`, `Directory.Build.props` |
+| **Build scripts** | Existing, host-aware `build.ps1` / `test.ps1` / `package-windows.ps1`. DEV completes `package-windows.ps1`. |
+| **Solution** | Existing: `02_Implementation/EagleEye.sln`, `02_Implementation/Directory.Build.props` (DEV adds version properties) |
 
 ---
 
@@ -324,21 +332,18 @@ DEV must follow these steps in order. Steps within the same numbered group may b
 
 ### Step 0: Solution and Build Infrastructure
 
-1. Create `02_Implementation/src/EagleEye.sln` — add all four existing `.csproj` projects.
-2. Create `02_Implementation/src/Directory.Build.props` — set shared version `0.1.0`:
+*Amended 2026-10-03: the solution, `Directory.Build.props` and the host-aware scripts already exist.*
+
+1. Use the existing `02_Implementation/EagleEye.sln` (already references all projects).
+2. Add the shared version to the existing `02_Implementation/Directory.Build.props` (keep `EnableWindowsTargeting`):
 
     ```xml
-    <Project>
-      <PropertyGroup>
-        <VersionPrefix>0.1.0</VersionPrefix>
-        <Product>EagleEye</Product>
-        <Company>EagleEye</Company>
-      </PropertyGroup>
-    </Project>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <Product>EagleEye</Product>
+    <Company>EagleEye</Company>
     ```
 
-3. Create `02_Implementation/scripts/build.ps1` — builds the solution (`dotnet build`). Must exit with non-zero on warnings/errors.
-4. Create `02_Implementation/scripts/test.ps1` — runs all unit tests (`dotnet test`). Must exit with non-zero on failures.
+3. Use the existing `02_Implementation/scripts/build.ps1` and `test.ps1`. They build and test the host's projects and skip projects without source. They exit non-zero on failure. Warnings fail the build through `TreatWarningsAsErrors` in the `.csproj` files.
 
 ### Step 1: API-First — EagleEye.Shared Contracts
 
@@ -444,32 +449,30 @@ DEV must follow these steps in order. Steps within the same numbered group may b
    - `Application.Run(trayApplicationContext)`.
    - Dispose `serviceConnection` on exit.
 
-### Step 4: Unit Test Project
+### Step 4: Unit Tests
 
-1. Create `02_Implementation/src/EagleEye.Tests/EagleEye.Tests.csproj`:
-   - `net10.0` target framework (not `net10.0-windows` — tests must be cross-platform where possible).
-   - PackageReferences: `xunit`, `xunit.runner.visualstudio`, `Moq`, `Microsoft.NET.Test.Sdk`.
-   - ProjectReferences: `EagleEye.Shared`, `EagleEye.Service`.
-   - Note: TrayClient tests that depend on WinForms types require `net10.0-windows` — use a separate test project `EagleEye.TrayClient.Tests` if needed, or mark those tests with `[PlatformSpecific(TestPlatforms.Windows)]`. For US-001, focus unit tests on cross-platform code (Shared, Service).
+*Amended 2026-10-03: use the existing per-component test projects in `02_Implementation/tests/`.*
+
+1. In `tests/EagleEye.Shared.Tests/EagleEye.Shared.Tests.csproj` and `tests/EagleEye.Service.Tests/EagleEye.Service.Tests.csproj`, pin the PackageReferences `xunit`, `xunit.runner.visualstudio`, `Moq`, `Microsoft.NET.Test.Sdk` (currently commented out). Both projects are already in the solution.
 
 2. Create test classes:
 
-   **`EagleEye.Tests/Shared/ServiceVersionDtoTests.cs`**:
+   **`tests/EagleEye.Shared.Tests/Models/ServiceVersionDtoTests.cs`**:
    - Verify `ServiceVersionDto` record equality and construction.
 
-   **`EagleEye.Tests/Service/AssemblyVersionProviderTests.cs`**:
+   **`tests/EagleEye.Service.Tests/AssemblyVersionProviderTests.cs`**:
    - `GetVersion_ReturnsFormattedVersionString` — verify the output matches `EagleEye_vMAJOR.MINOR`.
 
-   **`EagleEye.Tests/Service/TrayHubTests.cs`**:
+   **`tests/EagleEye.Service.Tests/Communication/TrayHubTests.cs`**:
    - `GetServiceVersion_ReturnsVersionFromProvider` — mock `IVersionProvider`, verify the hub returns its result.
    - `OnConnectedAsync_LogsConnectionEvent` — verify logging.
    - `OnDisconnectedAsync_LogsDisconnectionEvent` — verify logging.
 
-3. Add `EagleEye.Tests` to the solution file.
+3. `EagleEye.TrayClient.Tests` stays empty for US-001 (WinForms UI and the SignalR connection are verified manually; see below).
 
 ### Step 5: Installer (Inno Setup)
 
-1. Create `02_Implementation/installer/eagleeye-setup.iss`:
+1. Complete the existing stub `02_Implementation/installer/windows/setup.iss` (amended 2026-10-03; replace the all-zero `AppId` with a real GUID):
    - App name: "EagleEye", version from `Directory.Build.props`.
    - Installs to `{autopf}\EagleEye`.
    - Files section: copies published Service and TrayClient output to the install directory.
@@ -481,23 +484,18 @@ DEV must follow these steps in order. Steps within the same numbered group may b
    - Auto-start for TrayClient: writes `HKLM\Software\Microsoft\Windows\CurrentVersion\Run\EagleEyeTrayClient` pointing to the TrayClient executable path.
    - Uninstall section: stops and deletes the service, removes the registry run key.
 
-2. Create `02_Implementation/scripts/package-windows.ps1`:
+2. Complete the existing stub `02_Implementation/scripts/package-windows.ps1`:
    - Publishes the Service and TrayClient (`dotnet publish`).
-   - Invokes Inno Setup compiler (`iscc.exe`) to build the installer.
-   - Must be run on the Windows VM where Inno Setup is installed.
+   - Invokes the Inno Setup compiler (`iscc.exe`) to build the installer into `03_Delivery/windows/`.
+   - Runs on the Windows Developer Machine (Inno Setup 6 must be installed there).
 
-### Step 6: Verification
+### Step 6: Smoke Check and Handover to Manual Testing
 
-1. On the Windows 11 VM:
-   - Run the installer -> verify both components install (AC-1).
-   - Open `services.msc` -> verify `EagleEyeService` exists, runs as SYSTEM, start type Automatic (AC-2, AC-3).
-   - Start/stop the service via `services.msc` -> verify it responds (AC-4).
-   - Log in as a standard user -> verify TrayClient starts automatically (AC-5).
-   - Observe tray icon: green when service running (AC-6, AC-7).
-   - Stop service -> observe tray icon turns red (AC-8).
-   - Restart service -> observe tray icon returns to green (AC-9).
-   - Right-click tray icon -> verify "About" menu item (AC-11).
-   - Click "About" -> verify version dialog shows `EagleEye_v0.1` (AC-10, AC-12).
+*Amended 2026-10-03: acceptance testing is manual (ADR-007).*
+
+1. DEV, on the Windows Developer Machine: run `build.ps1` and `test.ps1`, build the installer, install it, and confirm that the service starts and the tray icon appears for the admin session (smoke check only).
+2. DEV writes the implementation report including the **"How to test"** section (installer path, version, service name `EagleEyeService`, Run-key name, log locations, how to uninstall).
+3. TES writes `docs/testing/US-001/test-plan.md` covering AC-1 to AC-12. Michael executes it on the Windows Developer Machine using his admin account and a standard test account.
 
 ---
 
@@ -513,13 +511,28 @@ DEV must follow these steps in order. Steps within the same numbered group may b
 
 ### What Is NOT Unit-Tested in US-001
 
-The following are tested manually during Step 6 (verification on Windows VM) rather than via automated unit tests:
+The following are verified by Michael's manual test run (TES test plan) rather than by automated unit tests:
 
-- **WinForms UI** (`TrayApplicationContext`, `AboutDialog`): These depend on `System.Windows.Forms` which requires a Windows desktop environment. They are verified via manual testing and will be covered by TES E2E tests.
+- **WinForms UI** (`TrayApplicationContext`, `AboutDialog`): These depend on `System.Windows.Forms`, which requires a Windows desktop environment.
 - **SignalR client connection** (`ServiceConnection`): Integration-level behavior (connecting to a real hub, reconnecting) is verified manually. The `IServiceConnection` interface enables mocking for any future consumer tests.
-- **Installer**: Verified manually on the Windows VM.
+- **Installer**: Verified manually on the Windows Developer Machine.
 - **Windows service registration**: Verified manually via `services.msc`.
 
 ---
 
-*End of Implementation Plan — Draft for review*
+## Manual Verification Notes
+
+*Added 2026-10-03, for TES.*
+
+| What | Where to observe |
+|---|---|
+| Service registration, account, start type | `services.msc` → `EagleEyeService` (Log On As: Local System; Startup type: Automatic) |
+| Tray icon state | Notification area; tooltip `EagleEye — Connected` / `EagleEye — Disconnected` |
+| Reconnect timing | Automatic reconnect intervals 0 s, 2 s, 10 s, 30 s, then every 30 s. A test should allow up to ~45 s before judging AC-9. |
+| Auto-start key | `HKLM\Software\Microsoft\Windows\CurrentVersion\Run` |
+| Version | About dialog: `Server Version: EagleEye_v0.1` |
+| Logs | Console only in US-001 (no file logging yet). Run the service in console mode for diagnostics. |
+
+---
+
+*End of Implementation Plan*

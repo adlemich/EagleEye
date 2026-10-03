@@ -90,3 +90,9 @@ The parent app connects to the Windows service via the local home network. Remot
 
 - `01_Intend_and_Constraints/technology_selection.md` — source of all decisions recorded here
 - `01_Intend_and_Constraints/questions_and_answers.md` — Q5.1, Q5.2, Q5.3, Q8.1
+
+---
+
+## Amendment 2026-10-03
+
+The development and test setup (MacBook + Windows 11 VM in VMware Fusion, automated E2E tests) is superseded by ADR-007: two development machines (Windows developer machine + MacBook), a new Windows target for the parent app, and manual acceptance testing. The technology choices in this ADR are unchanged.

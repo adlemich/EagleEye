@@ -3,6 +3,7 @@
 **Status**: New | Analyzed | Implemented | Verified/Closed
 **Created**: YYYY-MM-DD
 **Component(s)**: EagleEye.Service | EagleEye.TrayClient | EagleEye.ParentApp | EagleEye.Shared
+**Platform(s)**: Windows (service/tray) | ParentApp Windows | ParentApp Android | ParentApp macOS
 
 ---
 
@@ -57,3 +58,4 @@ As a **[parent | kid]**, I want to **[action]**, so that **[outcome / value]**.
 - Prerequisite stories: US-XXX
 - Implementation Plan: `US-000/implementation-plan.md` (added by ARC)
 - Issues: `US-000/issues/` (added by TES)
+- Manual tests: `docs/testing/US-000/` (added by TES)

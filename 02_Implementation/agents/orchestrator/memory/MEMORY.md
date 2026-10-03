@@ -2,11 +2,11 @@
 
 One line per memory. Content lives in the linked files, never here.
 
-- [Michael — project owner](michael-project-owner.md) — professional engineer, reviewer and sole approval authority, not a coder here.
+- [Michael — project owner](michael-project-owner.md) — professional engineer, reviewer and sole approval authority; works on a Windows machine and a MacBook.
 - [Memory lives in the project](memory-lives-in-project.md) — memory files belong in this folder, never under ~/.claude.
-- [Current phase](eagleeye-current-phase.md) — Phase 1 delivered and pushed 2026-09-15; Phase 2 (ARC) is the next action.
-- [Workflow and gates](eagleeye-workflow-gates.md) — five agents, file-based handoffs, approval gate between every step.
-- [Locked product decisions](eagleeye-product-decisions.md) — settled answers on connectivity, enforcement, time model, packaging; don't re-ask.
-- [Dev and test setup](eagleeye-dev-test-setup.md) — Win11 VM plus macOS parent app is the primary test pair; PowerShell only, no CI.
-- [Git setup](eagleeye-git-setup.md) — repo live on GitHub, MIT licensed; pushes need username `x-access-token` with the fine-grained PAT.
-- [Secrets handling](eagleeye-secrets-handling.md) — credentials in secrets/secrets.json, never logged or committed.
+- [Current phase](eagleeye-current-phase.md) — Phase 3, US-001 ready for DEV on Windows; the 2026-10-03 setup amendments await Michael's review.
+- [Workflow and gates](eagleeye-workflow-gates.md) — five agents, file-based handoffs, approval gates, manual test loop, work on main.
+- [Dev and test setup](eagleeye-dev-test-setup.md) — two machines (Windows: service/tray/Win+Android client + manual testing; MacBook: macOS app); ADR-007.
+- [Locked product decisions](eagleeye-product-decisions.md) — settled answers on connectivity, enforcement, time model, packaging, platforms; don't re-ask.
+- [Git setup](eagleeye-git-setup.md) — repo on GitHub, MIT licensed; pushes need username `x-access-token` with the fine-grained PAT.
+- [Secrets handling](eagleeye-secrets-handling.md) — credentials in secrets/secrets.json (one per machine), never logged or committed.

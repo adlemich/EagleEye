@@ -6,33 +6,21 @@
     1. Builds EagleEye.Service and EagleEye.TrayClient in Release mode
     2. Publishes self-contained win-x64 executables
     3. Runs Inno Setup to produce the installer in 03_Delivery/windows/
-    NOTE: Inno Setup must be installed in the Windows VM. This script must
-    be run inside the Windows 11 VM or via a remote PowerShell session.
-.PARAMETER SecretsFile
-    Path to secrets.json. Defaults to <repo-root>/secrets/secrets.json.
+    Runs on the Windows Developer Machine only (ADR-007), where Inno Setup is installed.
+    No secrets are needed (the installer is not code-signed).
 .EXAMPLE
     pwsh scripts/package-windows.ps1
 #>
 
-param(
-    [string]$SecretsFile = ""
-)
-
 $ErrorActionPreference = "Stop"
 
-$scriptDir  = $PSScriptRoot
-$implDir    = $scriptDir
-$repoRoot   = Split-Path $implDir -Parent
-
-# Resolve secrets file
-if ([string]::IsNullOrEmpty($SecretsFile)) {
-    $SecretsFile = Join-Path $repoRoot "secrets\secrets.json"
-}
-
-if (-not (Test-Path $SecretsFile)) {
-    Write-Error "Secrets file not found: $SecretsFile`nCopy secrets\secrets.template.json to secrets\secrets.json and fill in your values."
+if (-not $IsWindows) {
+    Write-Error "package-windows.ps1 runs on the Windows Developer Machine only (see docs/dev-process/dev-environments.md)."
     exit 1
 }
+
+$implDir  = Split-Path $PSScriptRoot -Parent
+$repoRoot = Split-Path $implDir -Parent
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan

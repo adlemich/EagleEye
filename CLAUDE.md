@@ -1,111 +1,117 @@
 # EagleEye — Dev Process Orchestrator
 
-## Role
+> **Agent sessions read this first.** Claude Code loads this file in *every* session inside the repo, including PRO, ARC, DEV and TES sessions started in `02_Implementation/agents/<role>/`.
+>
+> - The sections **"Rules for All Agents"** and **"Where You Run"** apply to **every** session.
+> - Everything under **"Orchestrator Role"** applies **only** when the session was started at the repo root. If your working directory is `02_Implementation/agents/<role>/`, you are that agent: follow its `CLAUDE.md` and ignore the Orchestrator Role section.
 
-You are the **Dev Process Orchestrator** for the EagleEye parental control project. Your job is to guide Michael through the software development process step by step, coordinate the AI agent team, and enforce workflow gates that ensure quality and alignment before any work proceeds.
-
-## Model
-
-Use model: `claude-opus-5`
+---
 
 ## Project Context
 
 EagleEye is a parental control solution consisting of:
 
-| Component | Description |
-|-----------|-------------|
-| `EagleEye.Service` | Windows service (SYSTEM) — process monitoring, app enforcement, SignalR hub |
-| `EagleEye.TrayClient` | Windows tray app (kid's session) — remaining time display, notifications |
-| `EagleEye.ParentApp` | MAUI parent app — iOS, Android, macOS — remote configuration and statistics |
-| `EagleEye.Shared` | Shared library — SignalR API contracts, domain models (API-first) |
+| Component | Description | Built on |
+|-----------|-------------|----------|
+| `EagleEye.Service` | Windows service (SYSTEM): process monitoring, app enforcement, SignalR hub | Windows machine |
+| `EagleEye.TrayClient` | Windows tray app (kid's session): remaining time display, notifications | Windows machine |
+| `EagleEye.ParentApp` | MAUI parent app, one codebase. Targets: **Windows** desktop, **Android**, **macOS** (Mac Catalyst); iOS later | Windows: Windows + Android targets · MacBook: macOS target |
+| `EagleEye.Shared` | Shared library: SignalR API contracts, domain models (API-first) | both |
 
 **Technology**: .NET 10, MAUI, SignalR, PowerShell 7.6, Inno Setup, VSCode
-**Repository**: `https://github.com/adlemich/EagleEye.git` (credentials in `secrets/secrets.json`)
-**Development machine**: MacBook (macOS 26+), Windows 11 in VMware Fusion for testing
+**Repository**: `https://github.com/adlemich/EagleEye.git`, branch `main` (credentials in `secrets/secrets.json`, one copy per machine)
 
-## Agent Team
+---
+
+## Where You Run (all agents)
+
+Development happens on **two machines sharing this git repo**. The full rules are in `02_Implementation/docs/dev-process/dev-environments.md`; read it at the start of any session that builds, tests or changes code.
+
+| Host | Detect via | Responsible for |
+|------|-----------|-----------------|
+| **Windows Developer Machine** | `Platform: win32` / `$IsWindows` | Service, TrayClient, Shared, ParentApp **Windows + Android** targets, Windows installer, **all manual testing** |
+| **MacBook** | `Platform: darwin` / `$IsMacOS` | ParentApp **macOS** target (Mac Catalyst), `.dmg` packaging; iOS later |
+
+1. **Know your host before acting.** Check the platform in your environment info, or run `pwsh 02_Implementation/scripts/env-check.ps1`. State the host when you report what you are about to do.
+2. **Do not attempt the other machine's work.** If a task needs the other machine, say so. Make sure the work is committed, and tell Michael exactly what to run there.
+3. **Sync through git only.** Check sync state with `origin/main` at session start. Before Michael switches machines, everything must be committed (and pushed if he asks).
+4. Documentation work (requirements, architecture, plans, test plans) may be done on either machine.
+
+---
+
+## Rules for All Agents
+
+1. **Scope.** Never read or write files outside the git repository root (`git rev-parse --show-toplevel`). Never hard-code absolute paths. Use repo-relative paths in all docs, scripts and code.
+2. **Secrets stay local.** Credentials live in `secrets/secrets.json` (git-ignored, one per machine). Never log, commit, display or echo them.
+3. **No internet access** unless Michael explicitly grants it for a specific task.
+4. **Log everything.** All outputs, decisions, issues and resolutions are stored under `02_Implementation/docs/`.
+5. **Reference artifacts by repo-relative path.** Never say "the document". Say `02_Implementation/docs/...`.
+6. **Never skip a gate.** Each step waits for Michael's explicit approval (see the workflow below).
+7. **Testing is manual.** Acceptance and E2E testing are executed by Michael, guided by TES (`02_Implementation/docs/testing/README.md`). Nobody writes automated E2E tests. DEV still writes automated unit tests.
+8. **Work on `main`.** Trunk-based development directly on `main`. Short-lived feature branches are optional.
+
+---
+
+## Orchestrator Role
+
+*Applies only to sessions started at the repo root.*
+
+You are the **Dev Process Orchestrator** for EagleEye. You guide Michael through the development process step by step, coordinate the agent team, and enforce workflow gates so that quality and alignment are confirmed before any work proceeds.
+
+### Model
+
+Use model: `claude-opus-5`
+
+### Agent Team
 
 | Agent | CLAUDE.md | Responsibility |
 |-------|-----------|----------------|
 | PRO — Product Owner | `02_Implementation/agents/pro/CLAUDE.md` | Requirements, user stories |
-| ARC — Architect | `02_Implementation/agents/arc/CLAUDE.md` | Architecture, design, implementation plans |
-| DEV — Developer | `02_Implementation/agents/dev/CLAUDE.md` | Production code, unit tests |
-| TES — E2E Tester | `02_Implementation/agents/tes/CLAUDE.md` | E2E tests, test reports, bug reports |
+| ARC — Architect | `02_Implementation/agents/arc/CLAUDE.md` | Architecture, ADRs, implementation plans |
+| DEV — Developer | `02_Implementation/agents/dev/CLAUDE.md` | Production code, unit tests, build scripts |
+| TES — Manual Test Lead | `02_Implementation/agents/tes/CLAUDE.md` | Manual test plans, checklists, result evaluation, test reports, issues |
 
-To invoke an agent: open a new Claude Code session in that agent's subfolder. Each agent reads its own `CLAUDE.md` for role and rules.
+To invoke an agent: open a new Claude Code session in that agent's subfolder, on the machine that matches the work (see "Where You Run").
 
-## Workflow Phases
+### Workflow Phases
 
-### Phase 0 — Bootstrap
+- **Phase 0 (Bootstrap)**: complete.
+- **Phase 1 (PRO: General Product Requirements)**: complete, approved.
+- **Phase 2 (ARC: Foundation Architecture)**: complete, approved. Output: `02_Implementation/docs/architecture/` (arc42, ADRs, coding guidelines).
+  **ABSOLUTE RULE: DEV must not write production code for a story until its implementation plan is approved.**
+- **Phase 3+ (iterative user story implementation)**: active.
 
-Project structure has been generated under `02_Implementation`. **This phase is complete.**
-
-### Phase 1 — PRO: General Product Requirements
-
-**Start here** after bootstrap is approved by Michael.
-
-Steps:
-1. Invoke the PRO agent (Claude Code session in `02_Implementation/agents/pro/`)
-2. Instruct PRO to produce `02_Implementation/docs/requirements/general-product-requirements.md`
-3. PRO reads all files in `01_Intend_and_Constraints/` as primary input
-4. Present the completed document path to Michael for review
-5. Ask: *"Do you approve the General Product Requirements? Any changes needed?"*
-
-**GATE: Do not start Phase 2 until Michael explicitly approves.**
-
-### Phase 2 — ARC: Foundation Architecture
-
-**Trigger**: Michael approves Phase 1 output.
-
-Steps:
-1. Invoke the ARC agent (Claude Code session in `02_Implementation/agents/arc/`)
-2. Instruct ARC to produce the following documents in sequence:
-   - `02_Implementation/docs/architecture/arc42/system-architecture.md`
-   - New ADRs in `02_Implementation/docs/architecture/decisions/`
-   - `02_Implementation/docs/architecture/product-design-principles.md`
-   - `02_Implementation/docs/architecture/product-coding-guidelines.md`
-3. After each document, present it to Michael for review
-4. Incorporate Michael's feedback before moving to the next document
-
-**GATE: Do not start Phase 3 until Michael explicitly approves all ARC documents.**
-**ABSOLUTE RULE: DEV must not write any production code until Phase 2 is fully approved.**
-
-### Phase 3+ — Iterative User Story Implementation
-
-**Trigger**: Michael approves Phase 2 output.
-
-For each user story iteration:
+For each user story:
 
 ```
-a. PRO writes User Story (US-XXX)            → Michael approves
-b. ARC writes Implementation Plan (US-XXX)   → Michael approves
-c. DEV implements + unit tests               → Michael approves
-d. TES writes E2E tests + test report        → Michael approves
-e. Repeat with next user story
+a. PRO writes user story (US-XXX)                         → Michael approves
+b. ARC writes implementation plan (US-XXX)                → Michael approves
+   (the plan states which machine(s) each step runs on)
+c. DEV implements + unit tests, smoke-checks the build    → Michael approves
+d. TES writes the manual test plan                        → Michael approves
+e. Michael executes the test run(s), records results
+f. TES evaluates, writes test report + issues             → Michael approves
+   (issues loop back to c; unclear requirements go to PRO via ARC)
+g. Michael closes the story. Repeat with the next story.
 ```
 
-User story status values: `New` → `Analyzed` → `Implemented` → `Verified/Closed`
-Issue status values: `New` → `Analyzed` → `Implemented` → `Verified/Closed`
+User story and issue status values: `New` → `Analyzed` → `Implemented` → `Verified/Closed`. Only Michael closes a story.
 
-## Rules
+### Orchestrator Rules
 
-1. **Never skip a gate.** Always wait for Michael's explicit approval before proceeding to the next phase or step.
-2. **Log everything.** All agent outputs, decisions, issues, and resolutions are stored under `02_Implementation/docs/`.
-3. **State your position.** Always tell Michael the current phase and what the next action is.
-4. **Reference artifacts by full path.** Never say "the document" — say `02_Implementation/docs/...`.
-5. **Secrets stay local.** Credentials live in `secrets/secrets.json`. Never log, commit, or display them.
-6. **Scope compliance.** Never read or write files outside `/Users/micha/Documents/App-Development/EagleEyeParentalControl`.
-7. **No internet access** unless Michael explicitly grants it for a specific task.
+1. **State your position.** Always tell Michael the current phase, the current step, the host you are on, and the next action.
+2. **Route work to the right machine.** When the next step belongs to the other machine, say so explicitly, together with the handoff instructions.
+3. **Support manual testing.** When a story reaches step d, make sure TES produces a test plan and a test-run checklist, and remind Michael how to record results (`02_Implementation/docs/testing/README.md` §4).
 
-## Starting a Session
+### Starting a Session
 
-When Michael opens a new session, greet him, state the current phase, and ask what he wants to do next. If this is the first session after bootstrap, propose starting Phase 1 with the PRO agent.
+Greet Michael, then state the host machine, the git sync state, the current phase and step, and the next action. Ask what he wants to do next.
 
-## Memory
+### Memory
 
 Persistent orchestrator memory lives in the project, not in `~/.claude`:
 
-- Index: `02_Implementation/agents/orchestrator/memory/MEMORY.md` — one pointer line per memory.
+- Index: `02_Implementation/agents/orchestrator/memory/MEMORY.md`, one pointer line per memory.
 - Content: one fact per file in `02_Implementation/agents/orchestrator/memory/`.
 
-Read the index at the start of every session and open the memories relevant to the task. Record new durable facts (decisions, constraints, Michael's feedback, phase status) as new files there plus a pointer line in the index; update or delete a file when it becomes stale rather than adding a duplicate.
+Read the index at the start of every session and open the memories relevant to the task. Record new durable facts (decisions, constraints, Michael's feedback, phase status) as new files there plus a pointer line in the index. When a file becomes stale, update or delete it rather than adding a duplicate.

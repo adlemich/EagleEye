@@ -16,9 +16,10 @@ Use model: `claude-opus-5`
 
 ## Scope Constraints
 
-- Never read or write files outside `/Users/micha/Documents/App-Development/EagleEyeParentalControl`
-- No internet access unless explicitly granted by Michael
+- The shared rules in the root `CLAUDE.md` ("Rules for All Agents", "Where You Run") apply: stay inside the git repo root, use repo-relative paths, no secrets, no internet unless granted.
+- ARC work is documentation only and may be done on either machine. Pull first: the code you assess must be the current `main`.
 - Always check the current state of `02_Implementation/src/` before writing an implementation plan
+- Every architecture decision must respect the two-machine setup in `02_Implementation/docs/dev-process/dev-environments.md` (ADR-007)
 
 ## Primary Inputs
 
@@ -37,7 +38,6 @@ Use model: `claude-opus-5`
 |----------|----------|
 | System Architecture (arc42) | `02_Implementation/docs/architecture/arc42/system-architecture.md` |
 | Architectural Decisions (ADRs) | `02_Implementation/docs/architecture/decisions/ADR-XXX-*.md` |
-| Product Design Principles | `02_Implementation/docs/architecture/product-design-principles.md` |
 | Product Coding Guidelines | `02_Implementation/docs/architecture/product-coding-guidelines.md` |
 | Implementation Plans | `02_Implementation/docs/requirements/user-stories/US-XXX/implementation-plan.md` |
 
@@ -55,7 +55,7 @@ Review existing ADR-001. Write additional ADRs for decisions not yet recorded. U
 
 ### 3. Product Design Principles
 
-Complete `02_Implementation/docs/architecture/product-design-principles.md`. Cover: separation of concerns, API-first, component boundaries, error handling, configuration management, security, async patterns, testability, logging, and trunk-based development.
+Merged into the arc42 document (approved 2026-09-20). There is no separate `product-design-principles.md`.
 
 ### 4. Product Coding Guidelines
 
@@ -73,6 +73,9 @@ For each user story, produce `02_Implementation/docs/requirements/user-stories/U
 
 ## Impact Assessment
 [Which components are affected and how]
+
+## Machine Assignment
+[Which steps run on the Windows Developer Machine and which on the MacBook. Order cross-machine work so that `EagleEye.Shared` contract changes land first, on Windows.]
 
 ## Architecture Changes
 [Any changes to the overall architecture — update arc42 if needed]
@@ -96,19 +99,24 @@ For each user story, produce `02_Implementation/docs/requirements/user-stories/U
 
 ## Unit Test Requirements
 [What must be unit-tested, key scenarios, expected coverage]
+
+## Manual Verification Notes
+[Hints for TES: what is observable, where logs are written, which setup a manual test needs. Do not write test cases; that is TES's job.]
 ```
 
 ## Non-Negotiable Technology Constraints
 
 - .NET 10 for all components
-- MAUI for ParentApp (iOS, Android, macOS)
+- MAUI for ParentApp (Windows, Android, macOS; iOS later), one codebase
+- Windows-side components and the ParentApp Windows + Android targets are built and tested on the Windows Developer Machine; the macOS target on the MacBook (ADR-007)
+- Acceptance/E2E testing is manual (ADR-007); design for observability (clear UI states, log entries) so Michael can verify behaviour by hand
 - SignalR for all service-client communication
 - `EagleEye.Shared/Contracts/` is the API contract — always changed first (API-first)
 - Windows service runs as SYSTEM
 - Self-signed TLS (auto-generated, non-expiring, user-transparent)
 - PowerShell 7.6 for scripts
 - Inno Setup for Windows installer
-- xUnit + Moq for unit tests
+- xUnit + Moq for unit tests (in `02_Implementation/tests/EagleEye.<Component>.Tests/`)
 
 ## ADR Rules
 

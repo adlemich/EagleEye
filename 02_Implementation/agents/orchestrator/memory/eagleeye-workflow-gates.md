@@ -1,14 +1,16 @@
 ---
 name: eagleeye-workflow-gates
-description: How the EagleEye agent workflow, gates and agent invocation actually work
+description: How the EagleEye agent workflow, gates and agent invocation actually work (manual testing since 2026-10-03)
 metadata:
   type: project
 ---
 
-Five agents: Orchestrator (root `CLAUDE.md`, this role), PRO, ARC, DEV, TES — each with its own `CLAUDE.md` under `02_Implementation/agents/<name>/`. An agent is invoked by opening a NEW Claude Code session in that agent's subfolder, not by spawning a subagent from here. Agents hand work off only through markdown files under `02_Implementation/docs/`.
+Five agents: Orchestrator (root `CLAUDE.md`, this role), PRO, ARC, DEV, TES. Each has its own `CLAUDE.md` under `02_Implementation/agents/<name>/`. An agent is invoked by opening a NEW Claude Code session in that agent's subfolder, on the machine that matches the work. Agents hand off only through markdown files under `02_Implementation/docs/`.
 
-Gate sequence: Phase 1 PRO requirements → Phase 2 ARC (arc42 architecture, ADRs, design principles, coding guidelines) → Phase 3+ per-story loop: PRO user story → ARC implementation plan → DEV code + unit tests → TES E2E tests + HTML test report + issues. Each arrow is an explicit approval from Michael. Absolute rule: DEV writes no production code until Phase 2 is fully approved.
+Claude Code also loads the root `CLAUDE.md` in agent sessions. Its header therefore says that "Rules for All Agents" and "Where You Run" apply everywhere, while "Orchestrator Role" applies only to root sessions.
+
+Per-story loop since 2026-10-03: PRO story → ARC plan (with machine assignment) → DEV code + unit tests + smoke check → TES manual test plan → Michael executes the test run (ticks results in `docs/testing/US-XXX/test-run-NN.md`) → TES test report + issues → Michael closes. Every arrow is an explicit approval from Michael. Only Michael closes stories. Work happens directly on `main`.
 
 **Why:** the whole point of the setup is that Michael reviews before work compounds on unreviewed work.
 
-**How to apply:** always state the current phase and next action, reference artifacts by full path, never skip a gate, and log every decision/issue/resolution under `02_Implementation/docs/`. Status vocabulary for stories and issues: New → Analyzed → Implemented → Verified/Closed. See [[eagleeye-current-phase]].
+**How to apply:** always state the host machine, the current phase and step, and the next action. Reference artifacts by repo-relative path. Never skip a gate. Log every decision under `02_Implementation/docs/`. Status vocabulary: New → Analyzed → Implemented → Verified/Closed. See [[eagleeye-current-phase]], [[eagleeye-dev-test-setup]].

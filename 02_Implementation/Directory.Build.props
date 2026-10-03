@@ -1,0 +1,17 @@
+<Project>
+
+  <!--
+    Shared MSBuild properties for every project under 02_Implementation/.
+    DEV adds the shared product version here in US-001 (VersionPrefix, Product, Company).
+  -->
+
+  <PropertyGroup>
+    <!--
+      Two-machine setup (ADR-007): Windows-only projects (Service, TrayClient) are built on
+      the Windows Developer Machine only, but the solution must still load and restore in the
+      IDE on the MacBook. scripts/build.ps1 decides what is actually built on each host.
+    -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+</Project>

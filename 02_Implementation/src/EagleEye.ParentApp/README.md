@@ -1,6 +1,8 @@
 # EagleEye.ParentApp
 
-Cross-platform parent application built with .NET MAUI. Targets iOS, Android, and macOS from a single codebase.
+Cross-platform parent application built with .NET MAUI. One codebase targets Windows, macOS and Android, with iOS later.
+
+**Build hosts (ADR-007)**: Windows and Android targets are built on the Windows developer machine; the macOS (Mac Catalyst) target on the MacBook. The `.csproj` selects target frameworks by host OS.
 
 ## Responsibility
 
@@ -13,20 +15,22 @@ Cross-platform parent application built with .NET MAUI. Targets iOS, Android, an
 
 ## Platform Support
 
-| Platform | Min Version | Distribution |
-|----------|-------------|--------------|
-| iOS | iOS 26 | Sideloading (Xcode / ios-deploy) |
-| Android | Android 14 (API 34) | Sideloading (adb) |
-| macOS | macOS 26 | Direct .dmg download |
+| Platform | Min Version | Built on | Distribution |
+|----------|-------------|----------|--------------|
+| Windows | Windows 11 | Windows machine | TBD |
+| Android | Android 14 (API 34) | Windows machine | Sideloading (adb) |
+| macOS | macOS 26 | MacBook | Direct .dmg download |
+| iOS (later) | iOS 26 | MacBook | Sideloading (Xcode / ios-deploy) |
 
 ## Component Structure
 
 ```
 EagleEye.ParentApp/
 ├── Platforms/
-│   ├── iOS/           iOS-specific code (AppDelegate, Info.plist, entitlements)
+│   ├── Windows/       Windows-specific code (App.xaml, Package.appxmanifest)
 │   ├── Android/       Android-specific code (MainActivity, AndroidManifest.xml)
-│   └── MacCatalyst/   macOS-specific code (AppDelegate, Info.plist)
+│   ├── MacCatalyst/   macOS-specific code (AppDelegate, Info.plist)
+│   └── iOS/           iOS-specific code (later)
 ├── ViewModels/        Shared MVVM view models
 ├── Views/             Shared MAUI UI pages and controls
 └── Communication/     SignalR client — connects to EagleEye.Service on LAN

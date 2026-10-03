@@ -31,7 +31,6 @@
   "plantuml.server": "http://localhost:8080",
   "plantuml.render": "PlantUMLServer",
   "plantuml.diagramsRoot": "docs",
-  "powershell.powerShellDefaultVersion": "PowerShell (x64)",
   "git.enableSmartCommit": true,
   "git.confirmSync": false,
   "markdownlint.config": {

@@ -104,3 +104,4 @@ References: FR-SVC-050, FR-TRAY-010, FR-TRAY-040, FR-TRAY-041, FR-TRAY-042, FR-T
 - Prerequisite stories: none (this is the first story)
 - Implementation Plan: `US-001/implementation-plan.md` (added by ARC)
 - Issues: `US-001/issues/` (added by TES)
+- Manual tests: `docs/testing/US-001/` (added by TES)

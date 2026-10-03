@@ -1,9 +1,11 @@
 # EagleEye -- General Product Requirements
 
-*Status: Approved v1.0*
-*Approved: 2026-09-15 by Michael*
+*Status: v1.1 — v1.0 approved by Michael; v1.1 amendments pending Michael's review*
+*Approved: v1.0 by Michael*
 *Maintainer: PRO Agent*
-*Date: 2026-09-15*
+*Date: 2026-09-15, amended 2026-10-03*
+
+> **v1.1 amendment (2026-10-03, directed by Michael, ADR-007)**: the parent app gains a **Windows desktop** target. Changed: §1.2 G-6, §2.1, §3.3 intro and §3.3.8, §9.5 (new), §10, §11. Development is split across two machines and acceptance testing is manual. Neither changes product behaviour; both are recorded in `docs/dev-process/`.
 
 ---
 
@@ -49,7 +51,7 @@ EagleEye is a parental control solution that enables parents to monitor and cont
 | G-3 | Let parents set daily time budgets per application and per-weekday pause windows. |
 | G-4 | Enforce budgets and pause windows automatically, preventing unauthorized usage. |
 | G-5 | Provide timely notifications to the child before an application is about to be shut down. |
-| G-6 | Support remote configuration and statistics viewing from iOS, Android, and macOS parent apps via the local LAN. |
+| G-6 | Support remote configuration and statistics viewing from Windows, macOS, Android (and later iOS) parent apps via the local LAN. |
 | G-7 | Support multiple child accounts on a single Windows PC, each with independent rules. |
 
 ### 1.3 Success Criteria
@@ -68,7 +70,7 @@ EagleEye is a parental control solution that enables parents to monitor and cont
 |-----------|--------|
 | **Role** | Father, mother, grandparent, or other legal guardian responsible for the child. |
 | **Windows account** | Local administrator account. Required for installing EagleEye and the applications the child may use. |
-| **Devices** | iPhone (iOS 26+), Android phone (Android 14+), or MacBook (macOS 26+, Apple Silicon). |
+| **Devices** | Windows 11 PC, MacBook (macOS 26+, Apple Silicon), Android phone (Android 14+), or later iPhone (iOS 26+). |
 | **Technical skill** | Can follow a guided installer and enter a hostname/IP address. Does not need developer or networking expertise. |
 | **Needs** | (1) Control which apps the child may use. (2) Set time budgets and pause windows. (3) View usage statistics remotely. (4) Receive real-time event notifications (e.g. child attempts a blocked app). |
 | **Constraints** | May not always be physically near the Windows PC. Manages rules from a mobile device on the same LAN (or via home VPN at the user's own setup). |
@@ -225,9 +227,9 @@ The tray client is a lightweight executable that runs in the kid's user session.
 | FR-TRAY-060 | The tray client shall be packaged and installed together with `EagleEye.Service` in a single installer. |
 | FR-TRAY-070 | The tray client shall display the 6-digit pairing code as a popup when requested by the service (FR-SVC-091). |
 
-### 3.3 EagleEye.ParentApp (iOS, Android, macOS)
+### 3.3 EagleEye.ParentApp (Windows, macOS, Android; iOS later)
 
-The parent app is a single MAUI codebase deployed to three platforms. It connects to `EagleEye.Service` over the local LAN.
+The parent app is a single MAUI codebase deployed to Windows, macOS and Android, with iOS following later. It connects to `EagleEye.Service` over the local LAN.
 
 #### 3.3.1 Connection
 
@@ -288,15 +290,15 @@ The parent app is a single MAUI codebase deployed to three platforms. It connect
 | ID | Requirement |
 |----|-------------|
 | FR-APP-080 | On iOS and Android, the app shall operate in portrait orientation only and follow platform-typical look and feel. |
-| FR-APP-081 | On macOS, the app shall present a desktop-style UI. |
-| FR-APP-082 | The app shall be functionally identical across all three platforms. |
+| FR-APP-081 | On macOS and Windows, the app shall present a desktop-style UI. |
+| FR-APP-082 | The app shall be functionally identical across all platforms. |
 
 ### 3.4 Code Reuse
 
 | ID | Requirement |
 |----|-------------|
 | FR-CR-010 | Common logic, data models, and communication contracts shared across components shall be implemented once and reused, to minimize long-term maintenance effort. |
-| FR-CR-011 | The parent app shall share a single codebase across iOS, Android, and macOS. Only platform-specific UI code may differ. |
+| FR-CR-011 | The parent app shall share a single codebase across Windows, macOS, Android and iOS. Only platform-specific UI code may differ. |
 
 ---
 
@@ -320,7 +322,7 @@ This describes the end-to-end workflow from installation to daily use.
 
 | Step | Actor | Action |
 |------|-------|--------|
-| 8 | Parent | Installs the EagleEye parent app on their mobile phone (iOS/Android) or MacBook. |
+| 8 | Parent | Installs the EagleEye parent app on their Windows PC, MacBook or mobile phone (Android; iOS later). |
 | 9 | Parent | Opens the parent app and enters the Windows machine's hostname (or IP address). |
 | 10 | Parent | The app connects to `EagleEye.Service` over TLS on the local LAN. |
 
@@ -454,7 +456,7 @@ This describes the end-to-end workflow from installation to daily use.
 
 | ID | Requirement |
 |----|-------------|
-| NFR-L-010 | The tray client and all parent apps (iOS, Android, macOS) shall support multiple languages. |
+| NFR-L-010 | The tray client and all parent apps (Windows, macOS, Android, iOS) shall support multiple languages. |
 | NFR-L-011 | The initial languages to support are German (default) and English. |
 | NFR-L-012 | All user-facing text (labels, notifications, messages, error texts) shall be externalised for translation rather than hard-coded. |
 
@@ -509,6 +511,15 @@ This describes the end-to-end workflow from installation to daily use.
 | **UI** | Desktop-style (not portrait-locked) |
 | **Distribution** | Direct `.dmg` distribution. No Mac App Store for v1. |
 
+### 9.5 Windows (ParentApp) — added in v1.1
+
+| Attribute | Requirement |
+|-----------|-------------|
+| **OS** | Windows 11 (x64) |
+| **Framework** | .NET MAUI (WinUI) |
+| **UI** | Desktop-style (not portrait-locked), like macOS |
+| **Distribution** | Open, see §11 Q-1 |
+
 ---
 
 ## 10. Out of Scope for Version 1
@@ -524,7 +535,7 @@ The following are explicitly **not** included in the initial version of EagleEye
 | **Web browser content filtering** | EagleEye controls which applications run, not what content is accessed within an allowed browser. |
 | **Internet-based account system** | No cloud accounts, no user registration. All data is local. |
 | **CI/CD pipeline** | Builds and tests are run via local PowerShell scripts. No hosted CI/CD. |
-| **iOS and Android app development** | Development starts with Windows service + macOS parent app. iOS and Android apps are built after the core product matures. |
+| **iOS app development** | Deferred until the core product matures. Android and Windows parent apps are in scope; their sequencing relative to the macOS app is decided per user story (see §11 Q-3). |
 | **Budget carry-over** | Unused daily budget does not carry over. This is by design, not a deferral. |
 | **Per-app pause windows** | Pause windows apply to all apps for a user. Per-app pause windows are not planned. |
 
@@ -532,8 +543,14 @@ The following are explicitly **not** included in the initial version of EagleEye
 
 ## 11. Open Questions
 
-All open questions have been resolved. None remaining.
+Questions raised by the v1.1 amendment (to be answered by Michael):
+
+| ID | Question |
+|----|----------|
+| Q-1 | How is the Windows parent app distributed: bundled as an optional component of the EagleEye installer, or as a separate installer? |
+| Q-2 | May the Windows parent app run on the same PC as the service (the parent's admin account), connecting via `localhost`, or only on a different Windows PC on the LAN? |
+| Q-3 | Sequencing: which parent-app platform comes first after the service and tray basics: macOS, Windows, or both in parallel? Does Android stay deferred like iOS? |
 
 ---
 
-*End of General Product Requirements -- Approved v1.0*
+*End of General Product Requirements — v1.1 (amendments pending review)*

@@ -20,10 +20,12 @@ This document defines the rules, workflows, and conventions the DEV agent must f
 |-------|---------------|--------|
 | **PRO** (Product Owner) | Requirements, user stories | `docs/requirements/` |
 | **ARC** (Architect) | Architecture, ADRs, implementation plans | `docs/architecture/`, `docs/requirements/user-stories/US-XXX/implementation-plan.md` |
-| **DEV** (Developer) | Production code, unit tests | `src/`, `tests/` |
-| **TES** (E2E Tester) | E2E tests, test reports, bug reports | `tests/`, `docs/test-reports/` |
+| **DEV** (Developer) | Production code, unit tests, build scripts | `src/`, `tests/`, `scripts/` |
+| **TES** (Manual Test Lead) | Manual test plans and checklists, result evaluation, test reports, issues | `docs/testing/`, `docs/requirements/user-stories/US-XXX/issues/` |
 
 Agents communicate exclusively through files under `02_Implementation/docs/`. There is no direct agent-to-agent communication. Each handoff requires Michael's explicit approval.
+
+Development happens on two machines (Windows Developer Machine and MacBook). Which machine does what is defined in `02_Implementation/docs/dev-process/dev-environments.md` (ADR-007).
 
 ---
 
@@ -32,10 +34,12 @@ Agents communicate exclusively through files under `02_Implementation/docs/`. Th
 Each user story progresses through these stages:
 
 ```
-PRO writes User Story (US-XXX)         -> Michael approves
-ARC writes Implementation Plan (US-XXX) -> Michael approves
-DEV implements + unit tests             -> Michael approves
-TES writes E2E tests + test report      -> Michael approves
+PRO writes User Story (US-XXX)                    -> Michael approves
+ARC writes Implementation Plan (US-XXX)           -> Michael approves
+DEV implements + unit tests + smoke check         -> Michael approves
+TES writes manual test plan                       -> Michael approves
+Michael executes test run(s), records results
+TES evaluates, writes test report + issues        -> Michael approves, closes story
 ```
 
 **Status values**: `New` -> `Analyzed` -> `Implemented` -> `Verified/Closed`
@@ -56,11 +60,13 @@ Before DEV presents work as complete:
 
 1. All code specified in the implementation plan is written (or justified deviations are documented).
 2. Every production class has corresponding unit tests with 100% branch coverage.
-3. All unit tests pass (`pwsh scripts/test.ps1`).
-4. Code compiles without warnings (`pwsh scripts/build.ps1`).
+3. All unit tests pass (`pwsh scripts/test.ps1`) on every machine that built part of the story.
+4. Code compiles without warnings (`pwsh scripts/build.ps1`) on every machine that built part of the story.
 5. No secrets are hardcoded anywhere in the code.
-6. An implementation report is written at `US-XXX/implementation-report.md`, documenting what was built, any deviations from ARC's plan with reasoning, and open questions.
-7. The user story status is updated to `Implemented`.
+6. The testable artifact (installer, app build) is produced and smoke-checked on its target machine.
+7. An implementation report is written at `US-XXX/implementation-report.md`, documenting what was built, any deviations from ARC's plan with reasoning, open questions, the machines used, and a **"How to test"** section for TES.
+8. All work is committed on `main`.
+9. The user story status is updated to `Implemented`.
 
 ---
 
@@ -68,9 +74,9 @@ Before DEV presents work as complete:
 
 ### 4.1 Branching Strategy
 
-- **Trunk-based development** on `main`.
-- Short-lived feature branches per user story: `feature/US-XXX-short-description`.
-- Feature branches are merged back to `main` promptly after approval.
+- **Trunk-based development** directly on `main`, shared by both machines.
+- Short-lived feature branches (`feature/US-XXX-short-description`) are optional.
+- Pull at session start; commit (and push) before switching machines.
 
 ### 4.2 Commit Conventions
 
@@ -80,10 +86,8 @@ Before DEV presents work as complete:
 
 ### 4.3 Branch Lifecycle
 
-1. DEV creates `feature/US-XXX-...` from `main` before starting implementation.
-2. DEV commits incrementally as implementation progresses.
-3. After Michael approves the implementation, the branch is merged to `main`.
-4. The feature branch is deleted after merge.
+1. DEV commits incrementally on `main` as implementation progresses.
+2. If a feature branch was used, it is merged to `main` and deleted after Michael approves.
 
 ---
 
@@ -130,7 +134,7 @@ DEV fully completes the current user story before starting the next. No parallel
 |-----------|---------|---------|
 | `EagleEye.Service` | Windows service — process monitoring, app enforcement, SignalR hub | SYSTEM account |
 | `EagleEye.TrayClient` | Windows tray app — remaining time display, notifications | Kid's user session |
-| `EagleEye.ParentApp` | MAUI parent app — remote configuration and statistics | iOS, Android, macOS |
+| `EagleEye.ParentApp` | MAUI parent app — remote configuration and statistics | Windows, Android, macOS (iOS later) |
 | `EagleEye.Shared` | Shared library — SignalR API contracts, domain models | Referenced by all |
 
 ### 6.2 Dependency Rule
@@ -157,7 +161,7 @@ EagleEye.Service    -> EagleEye.ParentApp (FORBIDDEN)
 
 | Area | Technology | Version |
 |------|-----------|---------|
-| Language | C# | 13 (.NET 10) |
+| Language | C# | 14 (.NET 10) |
 | Runtime | .NET | 10 (LTS) |
 | Windows service | `Microsoft.Extensions.Hosting.WindowsServices` | .NET 10 |
 | Cross-platform UI | .NET MAUI | .NET 10 |
@@ -176,25 +180,29 @@ All automation is via PowerShell 7.6 scripts in `02_Implementation/scripts/`:
 
 | Script | Purpose |
 |--------|---------|
-| `build.ps1` | Build all projects |
-| `test.ps1` | Run all unit tests |
-| `package-windows.ps1` | Package Windows installer |
-| `package-macos.ps1` | Package macOS app |
+| `env-check.ps1` | Show host machine, git sync state, toolchain |
+| `build.ps1` | Build the projects that belong to the current host |
+| `test.ps1` | Run the unit tests that belong to the current host |
+| `package-windows.ps1` | Package Windows installer (Windows machine only) |
+| `package-macos.ps1` | Package macOS app (MacBook only) |
+| `plantuml.ps1` | Start/stop the local PlantUML server |
 
 ### 8.2 Development Environment
 
-- **Development machine**: MacBook (macOS 26+), VSCode.
-- **Windows testing**: Windows 11 x64 VM under VMware Fusion.
-- **macOS parent app**: runs on the host Mac, connects to the service in the VM over LAN.
+Two machines, one repository. See `02_Implementation/docs/dev-process/dev-environments.md`.
+
+- **Windows Developer Machine** (Windows 11): Service, TrayClient, Shared, ParentApp Windows + Android targets, installer. Also the manual test station.
+- **MacBook** (macOS 26+): ParentApp Mac Catalyst target, `.dmg`.
 - **No CI/CD pipeline**. All builds and tests run locally.
 
 ### 8.3 Verification Before Handoff
 
-Before presenting work as complete, DEV must:
+Before presenting work as complete, DEV must, on each machine involved:
 
 1. Run `pwsh scripts/build.ps1` — zero warnings, zero errors.
 2. Run `pwsh scripts/test.ps1` — all tests pass.
 3. Verify no secrets are present in any source file.
+4. Produce the testable artifact and smoke-check it (it installs/starts).
 
 ---
 
@@ -254,14 +262,14 @@ A user story may only be set to `Verified/Closed` when **all** of the following 
 
 ### 12.2 Testing
 
-- E2E test cases have been created by TES and added to the test suites.
-- All unit tests pass (`pwsh scripts/test.ps1`).
-- All E2E tests pass and a test report has been generated in `docs/test-reports/`.
-- Test results prove correct implementation of every acceptance criterion in the user story.
+- All unit tests pass (`pwsh scripts/test.ps1`) on every machine involved.
+- TES has written a test plan (`docs/testing/US-XXX/test-plan.md`) approved by Michael, covering every acceptance criterion.
+- Michael has executed the manual test run(s) (`docs/testing/US-XXX/test-run-NN.md`) including the regression checklist.
+- TES's test report (`docs/testing/US-XXX/test-report.md`) shows every AC passed and no open Critical/High issues.
 
 ### 12.3 Human Acceptance
 
-- Michael has performed a manual test of the implemented feature on the target environment (Windows 11 VM + macOS parent app where applicable).
+- Michael has approved the test report.
 - Michael has explicitly approved the user story as complete.
 
 **No agent may close a user story. Only Michael can.**
@@ -270,7 +278,7 @@ A user story may only be set to `Verified/Closed` when **all** of the following 
 
 ## 13. Issue and Bug Tracking
 
-Issues discovered during development or testing are tracked as markdown files:
+Issues discovered during development or testing are tracked as markdown files in `docs/requirements/user-stories/US-XXX/issues/` (format: `agents/tes/CLAUDE.md`):
 
 - **Issue status values**: `New` -> `Analyzed` -> `Implemented` -> `Verified/Closed`
 - Issues reference the originating user story.

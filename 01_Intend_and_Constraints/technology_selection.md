@@ -77,3 +77,7 @@ We will use PlantUML as primary tool to integrate UML Diagrams into markdown fil
 ## AI Agents
 
 We will use claude code v2.1 for this project. The default model to use is claude-opus-5.
+
+---
+
+> **Amendment 2026-10-03**: The "Development and Test" section above is superseded by the two-machine setup (Windows developer machine + MacBook) and manual testing. See `questions_and_answers.md` Group 9 and `02_Implementation/docs/architecture/decisions/ADR-007-dual-machine-development-and-manual-testing.md`.
