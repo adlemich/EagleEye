@@ -1,6 +1,6 @@
 # Implementation Plan: US-001 — Basic Service Installation and Tray Client Connectivity
 
-**Status**: Approved (2026-09-20). Amendment of 2026-10-03 pending Michael's approval.
+**Status**: Approved (2026-09-20; amendment of 2026-10-03 approved by Michael 2026-10-03)
 **Date**: 2026-09-20, amended 2026-10-03
 
 > **Amendment 2026-10-03 (ADR-007)**: adapted to the two-machine setup and manual testing. Changed: Impact table (solution/scripts already exist), new "Machine Assignment" section, Step 0, Step 4 (test project locations), Step 5 (installer path), Step 6 (smoke check + manual testing), new "Manual Verification Notes". The design itself (contracts, classes, behaviour) is unchanged.

@@ -1,6 +1,6 @@
 # EagleEye — Product Coding Guidelines
 
-*Status: Draft — for Michael's review*
+*Status: Approved (2026-09-20, amended 2026-10-03)*
 *Maintainer: ARC Agent | Last Updated: 2026-09-20*
 
 This document defines the coding standards all EagleEye components must follow. It complements but does not duplicate the system architecture (`arc42/system-architecture.md`) and ADRs — refer to those for architectural decisions, component responsibilities, and design rationale.

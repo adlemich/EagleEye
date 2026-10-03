@@ -1,6 +1,6 @@
 # US-001: Basic Service Installation and Tray Client Connectivity
 
-**Status**: New
+**Status**: Implemented
 **Created**: 2026-09-15
 **Component(s)**: EagleEye.Service, EagleEye.TrayClient
 

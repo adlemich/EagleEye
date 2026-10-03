@@ -14,12 +14,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="UI\Resources\*.ico" LogicalName="EagleEye.TrayClient.UI.Resources.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="EagleEye.TrayClient.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\EagleEye.Shared\EagleEye.Shared.csproj" />
   </ItemGroup>
 
-  <!-- Package versions to be pinned by DEV agent during first user story implementation -->
   <ItemGroup>
-    <!-- <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="x.x.x" /> -->
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.12" />
   </ItemGroup>
 
 </Project>

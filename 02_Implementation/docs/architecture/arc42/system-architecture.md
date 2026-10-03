@@ -1,9 +1,9 @@
 # EagleEye — System Architecture
 
-*Template: arc42 v8 | Status: Draft — for Michael's review*
+*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03)*
 *Maintainer: ARC Agent | Last Updated: 2026-10-03*
 
-> **Amendment 2026-10-03 (ADR-007)**: Windows desktop target added to the ParentApp; two-machine development; manual acceptance testing. Affected: §1.1, §2.1, §2.2, §3.2, §4.2, §5.5, §7, §8.10, §9. Approved status of the 2026-09-20 version is unchanged; the amendments are pending Michael's review.
+> **Amendment 2026-10-03 (ADR-007)**: Windows desktop target added to the ParentApp; two-machine development; manual acceptance testing. Affected: §1.1, §2.1, §2.2, §3.2, §4.2, §5.5, §7, §8.10, §9. Amendments approved by Michael on 2026-10-03.
 
 ---
 
@@ -1091,4 +1091,4 @@ maint --> maint3
 
 ---
 
-*End of System Architecture — Draft for review*
+*End of System Architecture*

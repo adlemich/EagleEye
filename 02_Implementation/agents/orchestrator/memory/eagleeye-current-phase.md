@@ -1,18 +1,15 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — Phase 3, US-001 ready for DEV on the Windows machine; setup amendments of 2026-10-03 awaiting review
+description: EagleEye workflow status — US-001 implemented 2026-10-03 (installer built); waiting for Michael's DEV approval, then TES manual test plan
 metadata:
   type: project
 ---
 
-**As of 2026-10-03. Current: Phase 3, US-001. Next action: Michael reviews the 2026-10-03 setup amendments; then DEV implements US-001 on the Windows developer machine.**
+**As of 2026-10-03. Current: Phase 3, US-001, step c done (DEV). Next: Michael approves the DEV delivery, then TES writes `02_Implementation/docs/testing/US-001/test-plan.md` + `test-run-01.md`, then Michael tests on the Windows machine.**
 
-- Phase 0 (bootstrap), Phase 1 (PRO) and Phase 2 (ARC) were approved by Michael on 2026-09-20.
-- US-001 ("Basic Service Installation and Tray Client Connectivity", 12 ACs, status `New`) has an approved implementation plan at `02_Implementation/docs/requirements/user-stories/US-001/implementation-plan.md`. No production code exists yet.
-- On 2026-10-03 the orchestrator applied Michael's two-machine and manual-testing change (ADR-007). These amendments are **pending Michael's review**:
-  - `general-product-requirements.md` v1.1: Windows parent app added (FR-APP-090..092). Q-1 to Q-3 were answered by Michael the same day: single copied exe, works on the service PC and remotely with the same comms model, Android + iOS are production, Windows client is for initial testing.
-  - arc42 and coding-guidelines amendments
-  - the US-001 plan amendment (paths, machine assignment, manual verification)
-- Files the auto-mode classifier blocked me from deleting, left for Michael: `02_Implementation/tests/EagleEye.E2E.Tests/` (plus its entry in `EagleEye.sln`), `02_Implementation/docs/test-reports/.gitkeep`, `02_Implementation/scripts/plantuml/*.sh` (replaced by `scripts/plantuml.ps1`).
+- Michael approved all ADR-007 / two-machine amendments on 2026-10-03 (requirements v1.1, arc42, coding guidelines, US-001 plan amendment). He also removed the leftover E2E project, `docs/test-reports/` and the `.sh` PlantUML scripts himself.
+- US-001 was implemented on 2026-10-03 on the Windows machine. At Michael's request ("let DEV build the installer"), the DEV role ran inside the orchestrator session, following `agents/dev/CLAUDE.md`. Status `Implemented`. Report: `02_Implementation/docs/requirements/user-stories/US-001/implementation-report.md` (10 deviations, a "How to test" section). Installer: `03_Delivery/windows/EagleEye-Setup-0.1.0.exe` (git-ignored; rebuild with `scripts/package-windows.ps1`).
+- The DEV session was **not elevated**, so the installer itself was never run by DEV. Install, service registration and auto-start are unverified until Michael's manual test.
+- Michael wants to test US-001 himself as soon as possible.
 
 See [[eagleeye-workflow-gates]], [[eagleeye-dev-test-setup]].
