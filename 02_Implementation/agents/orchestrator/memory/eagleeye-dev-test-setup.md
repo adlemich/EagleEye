@@ -8,7 +8,7 @@ metadata:
 Since 2026-10-03 (ADR-007, Michael's direction), EagleEye is developed on **two machines sharing the repo on `main`**:
 
 - **Windows 11 developer machine** (`Platform: win32`; checkout at `C:\Users\Admin\AppDevelopment\EagleEye` as of 2026-10-03, but never hard-code it): Service, TrayClient, Shared, ParentApp **Windows** target (new "Windows client") and **Android** target, Inno Setup installer. It is also the **manual test station**.
-- **MacBook** (`Platform: darwin`): ParentApp **macOS** (Mac Catalyst) target and `.dmg` only; iOS later.
+- **MacBook** (`Platform: darwin`): ParentApp **macOS** (Mac Catalyst) and **iOS** targets, `.dmg`.
 
 The old MacBook + VMware Fusion VM setup is gone. Acceptance/E2E testing is **100 % manual by Michael**. TES became "Manual Test Lead" and writes test plans and test-run checklists in `02_Implementation/docs/testing/`; Michael ticks results in the Markdown run files. DEV unit tests stay automated. That was my interpretation of "all testing manual", flagged to Michael; revisit if he says otherwise.
 

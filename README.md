@@ -10,7 +10,7 @@ EagleEye is a parental control solution that lets parents control which applicat
 |-----------|-------------|------------|
 | `EagleEye.Service` | Windows service (SYSTEM): monitors processes, enforces rules, serves the SignalR hub | .NET 10, Windows Service |
 | `EagleEye.TrayClient` | Windows tray application: runs in the kid's user session, shows remaining time | .NET 10, WinForms |
-| `EagleEye.ParentApp` | Parent app: configure rules, view statistics | .NET 10, MAUI (Windows, macOS, Android; iOS later) |
+| `EagleEye.ParentApp` | Parent app: configure rules, view statistics | .NET 10, MAUI (Android + iOS for production; Windows client for testing; macOS) |
 | `EagleEye.Shared` | Shared library: SignalR contracts (API-first), domain models | .NET 10 |
 
 ---

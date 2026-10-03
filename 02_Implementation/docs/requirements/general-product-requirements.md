@@ -5,7 +5,7 @@
 *Maintainer: PRO Agent*
 *Date: 2026-09-15, amended 2026-10-03*
 
-> **v1.1 amendment (2026-10-03, directed by Michael, ADR-007)**: the parent app gains a **Windows desktop** target. Changed: §1.2 G-6, §2.1, §3.3 intro and §3.3.8, §9.5 (new), §10, §11. Development is split across two machines and acceptance testing is manual. Neither changes product behaviour; both are recorded in `docs/dev-process/`.
+> **v1.1 amendment (2026-10-03, directed by Michael, ADR-007)**: the parent app gains a **Windows desktop** target (copy-deployed single exe, used for initial testing). Android and iOS become the primary production platforms, and iOS is no longer out of scope. Changed: §1.2 G-6, §2.1, §3.3 intro and §3.3.8, §3.3.9 (new), §4.2, §8.4, §9.5 (new), §10, §11. Development is split across two machines and acceptance testing is manual. Neither changes product behaviour; both are recorded in `docs/dev-process/`.
 
 ---
 
@@ -51,7 +51,7 @@ EagleEye is a parental control solution that enables parents to monitor and cont
 | G-3 | Let parents set daily time budgets per application and per-weekday pause windows. |
 | G-4 | Enforce budgets and pause windows automatically, preventing unauthorized usage. |
 | G-5 | Provide timely notifications to the child before an application is about to be shut down. |
-| G-6 | Support remote configuration and statistics viewing from Windows, macOS, Android (and later iOS) parent apps via the local LAN. |
+| G-6 | Support remote configuration and statistics viewing from Android and iOS (primary), Windows and macOS parent apps via the local LAN. |
 | G-7 | Support multiple child accounts on a single Windows PC, each with independent rules. |
 
 ### 1.3 Success Criteria
@@ -70,7 +70,7 @@ EagleEye is a parental control solution that enables parents to monitor and cont
 |-----------|--------|
 | **Role** | Father, mother, grandparent, or other legal guardian responsible for the child. |
 | **Windows account** | Local administrator account. Required for installing EagleEye and the applications the child may use. |
-| **Devices** | Windows 11 PC, MacBook (macOS 26+, Apple Silicon), Android phone (Android 14+), or later iPhone (iOS 26+). |
+| **Devices** | Android phone (Android 14+) or iPhone (iOS 26+) as primary devices; also Windows 11 PC or MacBook (macOS 26+, Apple Silicon). |
 | **Technical skill** | Can follow a guided installer and enter a hostname/IP address. Does not need developer or networking expertise. |
 | **Needs** | (1) Control which apps the child may use. (2) Set time budgets and pause windows. (3) View usage statistics remotely. (4) Receive real-time event notifications (e.g. child attempts a blocked app). |
 | **Constraints** | May not always be physically near the Windows PC. Manages rules from a mobile device on the same LAN (or via home VPN at the user's own setup). |
@@ -227,9 +227,17 @@ The tray client is a lightweight executable that runs in the kid's user session.
 | FR-TRAY-060 | The tray client shall be packaged and installed together with `EagleEye.Service` in a single installer. |
 | FR-TRAY-070 | The tray client shall display the 6-digit pairing code as a popup when requested by the service (FR-SVC-091). |
 
-### 3.3 EagleEye.ParentApp (Windows, macOS, Android; iOS later)
+### 3.3 EagleEye.ParentApp (Android, iOS, Windows, macOS)
 
-The parent app is a single MAUI codebase deployed to Windows, macOS and Android, with iOS following later. It connects to `EagleEye.Service` over the local LAN.
+The parent app is a single MAUI codebase deployed to Android, iOS, Windows and macOS. It connects to `EagleEye.Service` over the local LAN.
+
+**Platform roles (Michael, 2026-10-03):**
+
+| Platform | Role |
+|----------|------|
+| **Android, iOS** | Primary platforms for production use |
+| **Windows** | Initial testing vehicle for parent-side functionality. Built first, so features can be exercised on the Windows developer machine before the mobile apps exist. Remains available as an extra app. |
+| **macOS** | Desktop parent app, developed on the MacBook |
 
 #### 3.3.1 Connection
 
@@ -293,6 +301,14 @@ The parent app is a single MAUI codebase deployed to Windows, macOS and Android,
 | FR-APP-081 | On macOS and Windows, the app shall present a desktop-style UI. |
 | FR-APP-082 | The app shall be functionally identical across all platforms. |
 
+#### 3.3.9 Windows Parent App (added in v1.1)
+
+| ID | Requirement |
+|----|-------------|
+| FR-APP-090 | The Windows parent app shall provide the same functionality as the other parent apps (FR-APP-082). |
+| FR-APP-091 | The Windows parent app shall work both on the same PC as `EagleEye.Service` and remotely from another PC on the LAN. In both cases it uses the same communication model as the mobile apps: TLS-encrypted connection, pairing (FR-SVC-090 to FR-SVC-098) and the parent API. There is no special local or privileged access path. |
+| FR-APP-092 | The Windows parent app shall be deployable by copying a single executable. No installer and no installation step shall be required. |
+
 ### 3.4 Code Reuse
 
 | ID | Requirement |
@@ -322,7 +338,7 @@ This describes the end-to-end workflow from installation to daily use.
 
 | Step | Actor | Action |
 |------|-------|--------|
-| 8 | Parent | Installs the EagleEye parent app on their Windows PC, MacBook or mobile phone (Android; iOS later). |
+| 8 | Parent | Installs the EagleEye parent app on their mobile phone (Android or iOS), Windows PC (copy the executable) or MacBook. |
 | 9 | Parent | Opens the parent app and enters the Windows machine's hostname (or IP address). |
 | 10 | Parent | The app connects to `EagleEye.Service` over TLS on the local LAN. |
 
@@ -518,7 +534,9 @@ This describes the end-to-end workflow from installation to daily use.
 | **OS** | Windows 11 (x64) |
 | **Framework** | .NET MAUI (WinUI) |
 | **UI** | Desktop-style (not portrait-locked), like macOS |
-| **Distribution** | Open, see §11 Q-1 |
+| **Distribution** | Separate, extra app with **no installer**. Delivered as a single executable that is copied onto the PC and run (copy deployment). Not part of the EagleEye service installer. |
+| **Deployment** | May run on the same PC as the service, or on another Windows PC on the LAN (FR-APP-091) |
+| **Purpose** | Initial testing vehicle for the parent-side functionality (see §3.3) |
 
 ---
 
@@ -535,7 +553,6 @@ The following are explicitly **not** included in the initial version of EagleEye
 | **Web browser content filtering** | EagleEye controls which applications run, not what content is accessed within an allowed browser. |
 | **Internet-based account system** | No cloud accounts, no user registration. All data is local. |
 | **CI/CD pipeline** | Builds and tests are run via local PowerShell scripts. No hosted CI/CD. |
-| **iOS app development** | Deferred until the core product matures. Android and Windows parent apps are in scope; their sequencing relative to the macOS app is decided per user story (see §11 Q-3). |
 | **Budget carry-over** | Unused daily budget does not carry over. This is by design, not a deferral. |
 | **Per-app pause windows** | Pause windows apply to all apps for a user. Per-app pause windows are not planned. |
 
@@ -543,13 +560,13 @@ The following are explicitly **not** included in the initial version of EagleEye
 
 ## 11. Open Questions
 
-Questions raised by the v1.1 amendment (to be answered by Michael):
+No open questions. The questions raised by the v1.1 amendment were answered by Michael on 2026-10-03:
 
-| ID | Question |
-|----|----------|
-| Q-1 | How is the Windows parent app distributed: bundled as an optional component of the EagleEye installer, or as a separate installer? |
-| Q-2 | May the Windows parent app run on the same PC as the service (the parent's admin account), connecting via `localhost`, or only on a different Windows PC on the LAN? |
-| Q-3 | Sequencing: which parent-app platform comes first after the service and tray basics: macOS, Windows, or both in parallel? Does Android stay deferred like iOS? |
+| ID | Question | Answer (Michael, 2026-10-03) |
+|----|----------|------------------------------|
+| Q-1 | How is the Windows parent app distributed? | An extra app; no installer needed. A single executable that is simply copied is sufficient. → §9.5, FR-APP-092 |
+| Q-2 | May the Windows parent app run on the same PC as the service? | Yes, and remotely as well. It uses the same communication model as the mobile apps. → FR-APP-091 |
+| Q-3 | Which parent-app platform comes first? | Android and iOS are the primary platforms for production. The Windows client is used for initial testing. → §3.3 |
 
 ---
 

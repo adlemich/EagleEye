@@ -17,7 +17,7 @@ EagleEye is a parental control solution for Windows PCs. It gives parents remote
 |-----------|------|
 | **EagleEye.Service** | Windows service (SYSTEM) — process monitoring, enforcement, SignalR hub, data persistence |
 | **EagleEye.TrayClient** | Windows tray app (kid's session) — remaining-time display, notifications, pairing code display |
-| **EagleEye.ParentApp** | MAUI app (Windows, macOS, Android; iOS later) — remote configuration, statistics, event feed |
+| **EagleEye.ParentApp** | MAUI app (Android + iOS primary for production; Windows client for initial testing; macOS) — remote configuration, statistics, event feed |
 | **EagleEye.Shared** | Class library — SignalR contracts, domain models, shared constants |
 
 Core capabilities:
@@ -58,7 +58,7 @@ Core capabilities:
 | Constraint | Source |
 |-----------|--------|
 | .NET 10 for all components | `technology_selection.md` |
-| .NET MAUI for ParentApp (Windows via WinUI, macOS via Catalyst, Android; iOS later) | `technology_selection.md`, ADR-007 |
+| .NET MAUI for ParentApp (Android, iOS, Windows via WinUI, macOS via Catalyst) | `technology_selection.md`, ADR-007 |
 | Each build target is built on its owning machine: Windows machine (Service, TrayClient, ParentApp Windows + Android), MacBook (ParentApp Mac Catalyst) | ADR-007 |
 | SignalR (ASP.NET Core) for all inter-component communication | `technology_selection.md`, ADR-001 |
 | Windows service runs under SYSTEM account | `questions_and_answers.md` Q2.3 |
@@ -81,7 +81,7 @@ Core capabilities:
 | Incremental user-story delivery — one story fully completed before starting the next | `technology_selection.md` |
 | Two dev machines (Windows Developer Machine + MacBook) share one repo; the Windows machine is the manual test station | ADR-007 |
 | Acceptance/E2E testing is manual (Michael), guided by TES; only unit tests are automated | ADR-007 |
-| iOS development deferred until core matures | Product requirements §10 |
+| Android and iOS are the primary production platforms; the Windows parent app is the initial testing vehicle | Product requirements §3.3 (Michael, 2026-10-03) |
 
 ### 2.3 Conventions
 
@@ -145,7 +145,7 @@ node "Windows 11 PC" as winbox {
   database "SQLite + YAML\n(%ProgramData%)" as store
 }
 
-node "Parent Device\n(Windows / macOS / Android / iOS later)" as parentdev {
+node "Parent Device\n(Android / iOS / Windows / macOS)" as parentdev {
   component "EagleEye.ParentApp\n(.NET MAUI)" as app
 }
 
@@ -199,7 +199,7 @@ end note
 | SignalR client (TrayClient, ParentApp) | `Microsoft.AspNetCore.SignalR.Client` |
 | Process monitoring | `System.Diagnostics.Process` + Win32 API (via P/Invoke where needed) |
 | TLS certificates | `System.Security.Cryptography.X509Certificates` |
-| Cross-platform UI | .NET MAUI (WinUI, Mac Catalyst, Android; iOS later) |
+| Cross-platform UI | .NET MAUI (Android, iOS, WinUI, Mac Catalyst) |
 | TrayClient UI | WinForms (`NotifyIcon`, `Form` for overlay) |
 | Data persistence | SQLite via `Microsoft.Data.Sqlite` (all application data) |
 | Application configuration | YAML via `YamlDotNet` (one file per application for runtime parameters) |
@@ -379,7 +379,7 @@ package "Platform-Specific" {
   component [Windows (WinUI)] as WIN
   component [macOS (Catalyst)] as MAC
   component [Android] as AND
-  component [iOS (later)] as IOS
+  component [iOS] as IOS
 }
 
 PA_VIEWS --> PA_VM : data binding
@@ -397,7 +397,9 @@ PA_VIEWS --> IOS
 | **Communication** | Manages the SignalR connection to the service (connect, reconnect, disconnect). Handles pairing handshake. Sends configuration commands. Receives events and data responses. |
 | **ViewModels** | MVVM view models for each screen. Expose commands (save rules, trigger re-scan) and observable properties (user list, app list, stats). |
 | **Views** | MAUI ContentPages for: connection/pairing, user selection, allow-list management, budget configuration, pause-window configuration, statistics, event feed, paired-devices management. |
-| **Platform-Specific** | Android/iOS: portrait lock, platform entry points. macOS (Catalyst) and Windows (WinUI): desktop window sizing. Windows + Android targets are built on the Windows machine, Mac Catalyst on the MacBook (ADR-007). |
+| **Platform-Specific** | Android/iOS (primary production platforms): portrait lock, platform entry points. macOS (Catalyst) and Windows (WinUI): desktop window sizing. Windows + Android targets are built on the Windows machine; Mac Catalyst + iOS on the MacBook (ADR-007). |
+
+**Windows parent app** (product requirements §3.3.9): the initial testing vehicle for parent-side features. It is a normal `ParentHub` client with no special local access path. On the service PC it connects through the same TLS + pairing flow as a remote client (to `localhost` or the machine's own hostname). It is deployed by copying a single executable.
 
 ---
 
@@ -604,14 +606,14 @@ node "Windows 11 PC (x64)" as winpc {
 
 node "Parent Device" as parentdev {
   node "Windows 11" {
-    artifact "EagleEye.ParentApp\n(WinUI, distribution TBD)"
+    artifact "EagleEye.ParentApp.exe\n(WinUI, copy-deployed)\nsame PC as service or remote"
   }
   node "macOS 26+" {
     artifact "EagleEye.ParentApp\n(.app bundle via .dmg)"
     artifact "EagleEye.ParentApp.yaml" as mac_yaml
     database "EagleEye.ParentApp.db\n(SQLite)" as mac_db
   }
-  node "iOS 26+ (future)" {
+  node "iOS 26+" {
     artifact "EagleEye.ParentApp\n(sideloaded via Xcode)"
   }
   node "Android 14+" {
@@ -664,9 +666,9 @@ Each parent app instance stores its YAML config and SQLite database in the OS-st
 
 | Platform | Distribution | Package |
 |----------|-------------|---------|
-| Windows 11 | TBD (product requirements §11 Q-1) | — |
+| Windows 11 | Copy deployment: single executable, no installer (FR-APP-092). Runs on the service PC or remotely. | `EagleEye.ParentApp.exe` |
 | macOS 26+ | Direct download | `.dmg` with `.app` bundle |
-| iOS 26+ (future) | Sideload | Xcode / `ios-deploy` |
+| iOS 26+ (built on MacBook) | Sideload | Xcode / `ios-deploy` |
 | Android 14+ | Sideload (built on Windows machine) | `adb install` APK |
 
 ---

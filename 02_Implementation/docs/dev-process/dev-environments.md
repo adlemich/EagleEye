@@ -14,7 +14,7 @@ EagleEye is developed on **two machines that share one git repository** (`https:
 |---|---|---|
 | **OS** | Windows 11 Pro x64 | macOS 26+ (Apple Silicon) |
 | **Role** | Primary dev machine **and the manual test station** | Dev machine for the macOS parent app only |
-| **Builds / develops** | `EagleEye.Shared`, `EagleEye.Service`, `EagleEye.TrayClient`, `EagleEye.ParentApp` (Windows target), `EagleEye.ParentApp` (Android target) | `EagleEye.Shared`, `EagleEye.ParentApp` (Mac Catalyst target); iOS later |
+| **Builds / develops** | `EagleEye.Shared`, `EagleEye.Service`, `EagleEye.TrayClient`, `EagleEye.ParentApp` (Windows target), `EagleEye.ParentApp` (Android target) | `EagleEye.Shared`, `EagleEye.ParentApp` (Mac Catalyst and iOS targets) |
 | **Unit tests run** | `Shared.Tests`, `Service.Tests`, `TrayClient.Tests`, `ParentApp.Tests` | `Shared.Tests`, `ParentApp.Tests` |
 | **Packaging** | Windows installer (Inno Setup), Android APK | macOS `.dmg` |
 | **Manual testing** | Service, TrayClient, Windows parent app, Android parent app (emulator or device) | macOS parent app, connecting over the LAN to the service on the Windows machine |

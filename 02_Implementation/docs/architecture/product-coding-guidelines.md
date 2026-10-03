@@ -605,7 +605,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 
 ## 14. Platform-Specific: iOS (ParentApp)
 
-*Note: iOS development is deferred until the macOS ParentApp and Windows Service mature (see product requirements §10). These guidelines apply when iOS development begins.*
+*Note: iOS is a primary production platform (with Android). It is built on the MacBook (ADR-007). Its user stories follow once the Windows parent app has validated the parent-side features.*
 
 ### 14.1 iOS Considerations
 
@@ -656,7 +656,9 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 - **Desktop UI**: same desktop-style layout as macOS (§13). Resizable window with a sensible minimum size. No portrait lock.
 - **TLS trust**: as on macOS, accept the service's self-signed certificate programmatically via `ServerCertificateCustomValidationCallback`. Never install it into the Windows certificate store.
 - **Secure storage**: store the pairing token with MAUI `SecureStorage` (DPAPI-backed on Windows) rather than in plain SQLite.
-- **Packaging model** (MSIX vs. unpackaged): an ARC decision to be recorded as an ADR once distribution is decided (product requirements §11 Q-1).
+- **Role**: initial testing vehicle for parent-side features. Android and iOS are the production platforms, so keep Windows-specific code to a minimum and put everything possible in shared code.
+- **Packaging**: copy deployment, no installer (FR-APP-092). Target: unpackaged (`WindowsPackageType=None`), self-contained Windows App SDK, published as a single executable. **ARC must validate single-file publishing for MAUI/WinUI early** (native Windows App SDK dependencies may need `IncludeNativeLibrariesForSelfExtract` or may not fully collapse into one file) and record the outcome as an ADR. A copied folder is the fallback if a true single exe is not achievable.
+- **Same communication model** (FR-APP-091): the Windows app is an ordinary `ParentHub` client (TLS + pairing), whether it runs on the service PC or remotely. Never add a local shortcut such as direct SQLite access, named pipes or skipping pairing on `localhost`.
 - **Same-PC caveat**: if the parent app runs on the PC that hosts the service, it runs under the parent's admin account. Admin accounts are never monitored, so EagleEye does not enforce rules on the parent app itself.
 
 ### 16.2 Windows File Paths

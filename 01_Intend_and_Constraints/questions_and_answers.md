@@ -173,3 +173,21 @@ Recorded by the Orchestrator. These answers supersede the development and test s
 **Q9.4**: Branching?
 
 **A**: Work directly on `main`.
+
+---
+
+**Q9.5**: How is the new Windows parent client distributed?
+
+**A**: It is an extra app. No need to package it into the installer; a single copied exe file is sufficient.
+
+---
+
+**Q9.6**: May the Windows client run on the same PC as the service?
+
+**A**: Yes, and also remotely. It uses the same communication model as the mobile apps.
+
+---
+
+**Q9.7**: Which parent-app platforms matter most?
+
+**A**: Android and iOS apps are the primary platforms for production. The Windows client is used for initial testing.

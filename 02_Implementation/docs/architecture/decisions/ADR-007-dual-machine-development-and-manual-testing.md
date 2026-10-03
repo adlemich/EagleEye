@@ -26,7 +26,7 @@ Michael now has a dedicated **Windows 11 developer machine** in addition to the 
 | Machine | Builds, develops and tests |
 |---|---|
 | **Windows Developer Machine** | `EagleEye.Shared`, `EagleEye.Service`, `EagleEye.TrayClient`, `EagleEye.ParentApp` Windows target (new) and Android target, Windows installer |
-| **MacBook** | `EagleEye.ParentApp` Mac Catalyst target, `.dmg` packaging; iOS when it starts |
+| **MacBook** | `EagleEye.ParentApp` Mac Catalyst target, iOS target, `.dmg` packaging |
 
 - Both machines work on `main` of `https://github.com/adlemich/EagleEye.git`. Git is the only sync mechanism.
 - No absolute paths in any instruction, document or script. Everything is repo-relative.
@@ -40,6 +40,12 @@ Details: `02_Implementation/docs/dev-process/dev-environments.md`.
 ### 2. Windows parent client
 
 The parent app gains a **Windows desktop target** (MAUI on WinUI, `net10.0-windows10.0.19041.0`, minimum Windows 11). It shares the single ParentApp codebase and gets a desktop-style UI like the macOS app. The resulting requirement changes are recorded in `general-product-requirements.md` v1.1 (pending Michael's review).
+
+Michael's clarifications (2026-10-03):
+
+- **Role**: Android and iOS are the primary production platforms. The Windows client is the **initial testing vehicle** for parent-side features, which can then be tested on the Windows developer machine before the mobile apps exist.
+- **Distribution**: an extra app with no installer, deployed by copying a single `.exe` (FR-APP-092). Feasibility of a true single-file MAUI/WinUI publish must be validated early (coding guidelines §16.1).
+- **Communication**: same model as the mobile apps (TLS + pairing via `ParentHub`). This holds both on the service PC and remotely (FR-APP-091).
 
 ### 3. Manual acceptance testing
 
@@ -88,7 +94,7 @@ Process: `02_Implementation/docs/testing/README.md`.
 ### Neutral
 
 - The previous VMware Fusion and remote-debugging setup is dropped
-- iOS remains deferred. When it starts, it is built on the MacBook.
+- iOS (a primary production platform, together with Android) is built on the MacBook.
 
 ---
 

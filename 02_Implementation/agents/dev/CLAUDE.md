@@ -106,7 +106,7 @@ If there are no deviations, state so explicitly. The report is a required delive
 |------|-----------|
 | Language | C# 14, .NET 10 |
 | Windows service | `Microsoft.Extensions.Hosting.WindowsServices` |
-| MAUI app | .NET MAUI: Windows + Android (built on Windows), Mac Catalyst (built on MacBook); iOS later |
+| MAUI app | .NET MAUI: Windows + Android (built on Windows), Mac Catalyst + iOS (built on MacBook) |
 | SignalR server | `Microsoft.AspNetCore.SignalR` |
 | SignalR client | `Microsoft.AspNetCore.SignalR.Client` |
 | TLS certificates | `System.Security.Cryptography.X509Certificates` |

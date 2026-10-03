@@ -15,7 +15,7 @@ EagleEye is a parental control solution consisting of:
 |-----------|-------------|----------|
 | `EagleEye.Service` | Windows service (SYSTEM): process monitoring, app enforcement, SignalR hub | Windows machine |
 | `EagleEye.TrayClient` | Windows tray app (kid's session): remaining time display, notifications | Windows machine |
-| `EagleEye.ParentApp` | MAUI parent app, one codebase. Targets: **Windows** desktop, **Android**, **macOS** (Mac Catalyst); iOS later | Windows: Windows + Android targets · MacBook: macOS target |
+| `EagleEye.ParentApp` | MAUI parent app, one codebase. **Android + iOS** = production platforms; **Windows** client (copy-deployed exe) = initial testing vehicle; **macOS** desktop | Windows: Windows + Android targets · MacBook: macOS + iOS targets |
 | `EagleEye.Shared` | Shared library: SignalR API contracts, domain models (API-first) | both |
 
 **Technology**: .NET 10, MAUI, SignalR, PowerShell 7.6, Inno Setup, VSCode
@@ -30,7 +30,7 @@ Development happens on **two machines sharing this git repo**. The full rules ar
 | Host | Detect via | Responsible for |
 |------|-----------|-----------------|
 | **Windows Developer Machine** | `Platform: win32` / `$IsWindows` | Service, TrayClient, Shared, ParentApp **Windows + Android** targets, Windows installer, **all manual testing** |
-| **MacBook** | `Platform: darwin` / `$IsMacOS` | ParentApp **macOS** target (Mac Catalyst), `.dmg` packaging; iOS later |
+| **MacBook** | `Platform: darwin` / `$IsMacOS` | ParentApp **macOS** target (Mac Catalyst), **iOS** target, `.dmg` packaging |
 
 1. **Know your host before acting.** Check the platform in your environment info, or run `pwsh 02_Implementation/scripts/env-check.ps1`. State the host when you report what you are about to do.
 2. **Do not attempt the other machine's work.** If a task needs the other machine, say so. Make sure the work is committed, and tell Michael exactly what to run there.

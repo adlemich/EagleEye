@@ -14,8 +14,8 @@ Decisions already settled in `01_Intend_and_Constraints/questions_and_answers.md
 - **Overlay**: optional, TopMost window only; DirectX/fullscreen-game overlay deferred.
 - **Multi-kid**: service auto-discovers all local standard (non-admin) accounts; all config is per account.
 - **Time control is two-layer**: pause windows per weekday (block everything regardless of budget) + per-app daily budgets in hours:minutes, counting down only during non-pause time. Minimum unit = minutes. No carry-over; reset at midnight.
-- **Distribution**: Windows service = Inno Setup; macOS = direct `.dmg`, no Mac App Store; Android = adb sideload (built on the Windows machine); iOS = Xcode sideload, later; Windows parent app = open question (GPR §11 Q-1).
+- **Distribution**: Windows service = Inno Setup; macOS = direct `.dmg`, no Mac App Store; Android = adb sideload (built on the Windows machine); iOS = Xcode sideload (built on MacBook); Windows parent app = extra app, single copied .exe, no installer.
 - **Repo**: single monorepo, trunk-based dev directly on `main` (Michael, 2026-10-03), shared by the Windows machine and the MacBook.
-- **Parent app platforms** (2026-10-03): Windows (new), macOS, Android; iOS later. Platform sequencing is open (GPR §11 Q-3).
+- **Parent app platforms** (Michael, 2026-10-03): Android + iOS are the primary production platforms. The Windows client is the initial testing vehicle and runs on the service PC or remotely, using the same comms model as the mobile apps (TLS + pairing via ParentHub). macOS desktop app is built on the MacBook.
 
 Stack per ADR-001: .NET 10, MAUI, SignalR, PowerShell 7.6, Inno Setup, VSCode, PlantUML in local Docker. API-first — SignalR contracts in `EagleEye.Shared/Contracts/` are the interface spec and change before any implementation. See [[eagleeye-dev-test-setup]].
