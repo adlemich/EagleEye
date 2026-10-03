@@ -11,6 +11,9 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>false</SelfContained>
     <ApplicationIcon>UI\Resources\eagleeye.ico</ApplicationIcon>
+    <!-- Localization (NFR-L-011): German is the neutral/default language, English is a satellite. -->
+    <NeutralLanguage>de</NeutralLanguage>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>

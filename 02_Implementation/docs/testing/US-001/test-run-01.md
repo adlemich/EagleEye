@@ -16,10 +16,10 @@
 
 ## Setup (Admin)
 
-- [ ] **S-1** EagleEye is *not* listed in *Einstellungen → Apps → Installierte Apps* (uninstall it if it is).
-- [ ] **S-2** Port 5080 is free. In PowerShell, `Get-NetTCPConnection -LocalPort 5080 -ErrorAction SilentlyContinue` prints nothing.
-- [ ] **S-3** The standard account `eagleeye-kid` exists and has signed in at least once (commands in test plan §3, step 3).
-- [ ] **S-4** You are signed in with your **Admin** account. No other user session is open (*Strg+Alt+Entf → Task-Manager → Benutzer* shows only you).
+- [x] **S-1** EagleEye is *not* listed in *Einstellungen → Apps → Installierte Apps* (uninstall it if it is).
+- [x] **S-2** Port 5080 is free. In PowerShell, `Get-NetTCPConnection -LocalPort 5080 -ErrorAction SilentlyContinue` prints nothing.
+- [x] **S-3** The standard account `eagleeye-kid` exists and has signed in at least once (commands in test plan §3, step 3).
+- [x] **S-4** You are signed in with your **Admin** account. No other user session is open (*Strg+Alt+Entf → Task-Manager → Benutzer* shows only you).
 
 ---
 
@@ -40,8 +40,8 @@
 - `C:\Program Files\EagleEye\Service\EagleEye.Service.exe` and `C:\Program Files\EagleEye\TrayClient\EagleEye.TrayClient.exe` exist.
 - "EagleEye" (version 0.1.0) is listed under installed apps.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Observed**:
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Observed**: The app shows "adlemich" as author of the app in Apps - Installed Apps. Should be "Michael Adler".
 - **Notes**:
 
 ---
@@ -61,8 +61,8 @@
 - *Anmelden als*: **Lokales System** (Local System)
 - Cross-check (if done): `State : Running`, `StartMode : Auto`, `StartName : LocalSystem`
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Observed**:
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Observed**: All as expected
 - **Notes**:
 
 ---
@@ -81,7 +81,7 @@
 - After step 2: *Status* is empty (stopped) and no error dialog appeared.
 - After step 3: *Status* is **Wird ausgeführt** again and no error dialog appeared.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -105,7 +105,7 @@
 
 Tip: to keep the icon always visible for the following cases, go to *Einstellungen → Personalisierung → Taskleiste → Andere Symbole der Taskleiste* and switch on EagleEye.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -122,8 +122,8 @@ Tip: to keep the icon always visible for the following cases, go to *Einstellung
 - The icon is **green**.
 - The tooltip reads **"EagleEye — Connected"**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Observed**:
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Observed**: Functionality is good, but it uses english texts "Connected" instead of "Verbunden". 
 - **Notes**:
 
 ---
@@ -137,8 +137,8 @@ Tip: to keep the icon always visible for the following cases, go to *Einstellung
 **Expected**:
 - A context menu opens and contains an entry **"About"**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Observed**:
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Observed**: Functionality is good, but it uses english texts "About" instead of "App Infos". 
 - **Notes**:
 
 ---
@@ -155,7 +155,7 @@ Tip: to keep the icon always visible for the following cases, go to *Einstellung
 - It shows **"Server Version: EagleEye_v0.1"**: format `EagleEye_vMAJOR.MINOR`, matching installer version 0.1.0.
 - **OK** closes the dialog.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -177,8 +177,8 @@ Tip: to keep the icon always visible for the following cases, go to *Einstellung
 - The tooltip reads **"EagleEye — Disconnected"**.
 - The tray icon itself stays present (the tray client does not exit).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Observed**: <!-- note roughly how many seconds it took -->
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Observed**: Functionality is good, but it uses english texts "Disconneced" instead of "Verbindungsfehler".  It took around 15 seconds.
 - **Notes**:
 
 ---
@@ -192,8 +192,8 @@ Tip: to keep the icon always visible for the following cases, go to *Einstellung
 
 **Expected**: not specified by US-001. Please record what you see and whether you find it acceptable.
 
-- **Result**: [ ] Pass (acceptable)  [ ] Fail (not acceptable)  [ ] Skipped
-- **Observed**:
+- **Result**: [X] Pass (acceptable)  [] Fail (not acceptable)  [ ] Skipped
+- **Observed**: This dialog is not multi-language enabled, it should display german texts (see before comments). In addition, it could give more information not only showing "unavailable" but rather say "Connection error, could not connect to Server at IP-Port" (in target language).
 - **Notes**:
 
 ---
@@ -210,7 +210,7 @@ Tip: to keep the icon always visible for the following cases, go to *Einstellung
 - Without any user action, the icon turns **green** within **60 s**.
 - The tooltip reads **"EagleEye — Connected"**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**: <!-- roughly how many seconds -->
 - **Notes**:
 
@@ -230,7 +230,7 @@ Tip: to keep the icon always visible for the following cases, go to *Einstellung
 - The icon turns **green** within **60 s** after the start.
 - About shows **"Server Version: EagleEye_v0.1"** again.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -251,7 +251,7 @@ Tip: to keep the icon always visible for the following cases, go to *Einstellung
 **Expected**:
 - *Status* is **Wird ausgeführt** without any manual start.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -268,7 +268,7 @@ Tip: to keep the icon always visible for the following cases, go to *Einstellung
 - The tray icon is present without any manual start.
 - It is **green** (possibly briefly red during the first seconds after logon), and the tooltip reads **"EagleEye — Connected"**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -282,12 +282,13 @@ None. US-001 is the first user story.
 
 ## General Feedback
 
-<!-- Anything that did not fit a test case: look of the icon, texts, installer experience, surprises, ideas. -->
-
+Looks good so far, the basics are working. Make sure that multi-language is used in all areas including the about box.
 ---
 
 ## Summary (filled in by TES after evaluation)
 
 | Pass | Fail | Blocked | Skipped | Not executed |
 |---|---|---|---|---|
-| | | | | |
+| 13 | 0 | 0 | 0 | 0 |
+
+Evaluated by TES on 2026-10-03. Findings: ISSUE-001 (localization), ISSUE-002 (publisher name), ISSUE-003 (PRO feedback). See `test-report.md`.

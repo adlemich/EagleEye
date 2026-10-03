@@ -4,7 +4,7 @@ One line per memory. Content lives in the linked files, never here.
 
 - [Michael — project owner](michael-project-owner.md) — professional engineer, reviewer and sole approval authority; works on a Windows machine and a MacBook.
 - [Memory lives in the project](memory-lives-in-project.md) — memory files belong in this folder, never under ~/.claude.
-- [Current phase](eagleeye-current-phase.md) — US-001 implemented, installer built; test-run-01 ready for Michael to execute.
+- [Current phase](eagleeye-current-phase.md) — US-001 run 01 passed; localization fixed in 0.1.1; test-run-02 ready for Michael.
 - [Workflow and gates](eagleeye-workflow-gates.md) — five agents, file-based handoffs, approval gates, manual test loop, work on main.
 - [Dev and test setup](eagleeye-dev-test-setup.md) — two machines (Windows: service/tray/Win+Android client + manual testing; MacBook: macOS app); ADR-007.
 - [Locked product decisions](eagleeye-product-decisions.md) — settled answers on connectivity, enforcement, time model, packaging, platforms; don't re-ask.

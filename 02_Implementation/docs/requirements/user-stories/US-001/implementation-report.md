@@ -127,3 +127,21 @@ Not unit-tested, per the plan (verified manually): `TrayApplicationContext`, `Ab
 | Service port | `http://localhost:5080` (local only) |
 | Diagnostics | Event Viewer → Windows Logs → Application (warnings/errors from the service). For full logs: stop the service, then run `EagleEye.Service.exe` from a console. |
 | Uninstall | Settings → Apps → EagleEye → Uninstall (stops and removes the service and the tray client, removes the `Run` value) |
+
+---
+
+## 7. Fix after Test Run 01 (2026-10-03)
+
+**ISSUE-001: tray texts English only.** Fixed in build **0.1.1** (`03_Delivery/windows/EagleEye-Setup-0.1.1.exe`).
+
+- All tray client texts now live in resource files, as arc42 §8.13 requires: `src/EagleEye.TrayClient/Resources/TrayTexts.resx` holds German, the neutral and default language (NFR-L-011). `TrayTexts.en.resx` holds English.
+- `<NeutralLanguage>de</NeutralLanguage>`: the Windows display language of the signed-in user selects the texts. English UI → English; any other language → German.
+- `<SatelliteResourceLanguages>en</SatelliteResourceLanguages>`: only the English satellite assembly is shipped (folder `TrayClient\en\`).
+- `UI/TrayTexts` is now a typed accessor over the `ResourceManager`. `AboutDialog` and `TrayApplicationContext` are unchanged apart from that.
+- German texts: tooltip `EagleEye — Verbunden` / `EagleEye — Verbindungsfehler`, menu `App Infos`, dialog title `EagleEye – App Infos`, `Server-Version: {0}`, `nicht verfügbar`, `OK`. The first three are Michael's wording; the rest follow the same style.
+- New unit tests `tests/EagleEye.TrayClient.Tests/UI/TrayTextsTests.cs` (18): every text in German and English, fallback to German for other languages, the same keys in both languages, and the missing-key guard. Total unit tests: 52, all passing. Build: 0 warnings.
+- Version bumped to `0.1.1` so the re-test build can be told apart. The service still reports `EagleEye_v0.1` (MAJOR.MINOR).
+
+**Deviation D-11**: AC-11 names the menu entry "About". On a German system it is now "App Infos" at Michael's direction. TES report §6 asks PRO to align the AC wording.
+
+**Not fixed (outside "language findings")**: ISSUE-002 (publisher name, awaiting Michael's go) and ISSUE-003 (PRO feedback).

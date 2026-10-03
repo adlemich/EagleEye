@@ -1,16 +1,40 @@
+using System.Globalization;
+using System.Resources;
+
 namespace EagleEye.TrayClient.UI;
 
 /// <summary>
-/// User-facing texts of the tray client. Centralised here so that they can be moved to
-/// resource files when localization (German/English, NFR-L-010) is implemented.
+/// Localized user-facing texts of the tray client (NFR-L-010 to NFR-L-012).
+/// German is the neutral/default language (<c>Resources/TrayTexts.resx</c>); English is in
+/// <c>Resources/TrayTexts.en.resx</c>. The current UI culture selects the language, and any
+/// language other than English falls back to German.
 /// </summary>
 internal static class TrayTexts
 {
-    public const string TooltipConnected = "EagleEye — Connected";
-    public const string TooltipDisconnected = "EagleEye — Disconnected";
-    public const string AboutMenuItem = "About";
-    public const string AboutTitle = "About EagleEye";
-    public const string ServerVersionFormat = "Server Version: {0}";
-    public const string VersionUnavailable = "unavailable";
-    public const string Ok = "OK";
+    /// <summary>Resource manager for the tray texts (exposed for completeness tests).</summary>
+    internal static readonly ResourceManager ResourceManager =
+        new("EagleEye.TrayClient.Resources.TrayTexts", typeof(TrayTexts).Assembly);
+
+    public static string TooltipConnected => Get(nameof(TooltipConnected));
+
+    public static string TooltipDisconnected => Get(nameof(TooltipDisconnected));
+
+    public static string AboutMenuItem => Get(nameof(AboutMenuItem));
+
+    public static string AboutTitle => Get(nameof(AboutTitle));
+
+    /// <summary>Composite format with one placeholder for the version string.</summary>
+    public static string ServerVersionFormat => Get(nameof(ServerVersionFormat));
+
+    public static string VersionUnavailable => Get(nameof(VersionUnavailable));
+
+    public static string Ok => Get(nameof(Ok));
+
+    /// <summary>Returns the text for the current UI culture.</summary>
+    /// <exception cref="InvalidOperationException">The resource key does not exist.</exception>
+    internal static string Get(string name)
+    {
+        return ResourceManager.GetString(name, CultureInfo.CurrentUICulture)
+            ?? throw new InvalidOperationException($"Missing tray text resource '{name}'.");
+    }
 }
