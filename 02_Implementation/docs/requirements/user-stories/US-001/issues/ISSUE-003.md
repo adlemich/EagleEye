@@ -1,6 +1,6 @@
 # ISSUE-003: About dialog could explain the connection error (PRO feedback)
 
-**Status**: Implemented
+**Status**: Verified/Closed
 **User Story**: US-001
 **Found in**: docs/testing/US-001/test-run-01.md, TC-001-09 (exploratory)
 **Date**: 2026-10-03
@@ -31,3 +31,5 @@ Language-only aspects of this dialog are handled in ISSUE-001.
 
   The address comes from the tray client's connection settings (`IServiceConnection.ServerAddress`). The text is composed by `UI/AboutText` and unit-tested.
 - Re-test: `docs/testing/US-001/test-run-02.md`, TC-001-09.
+
+**Verified**: TES, 2026-10-03, in `docs/testing/US-001/test-run-02.md` (build 0.1.1). Closed by Michael.

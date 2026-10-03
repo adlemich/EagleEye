@@ -1,22 +1,22 @@
 # Test Report: US-001 — Basic Service Installation and Tray Client Connectivity
 
-**Status**: Draft — awaiting re-test (test-run-02) and Michael's approval
+**Status**: Approved by Michael, 2026-10-03
 **Date**: 2026-10-03
 **Author**: TES
-**Test runs evaluated**: `test-run-01.md`
+**Test runs evaluated**: `test-run-01.md` (build 0.1.0), `test-run-02.md` (build 0.1.1)
 
 ---
 
 ## 1. Verdict
 
-**Not ready to close yet.** All 12 original acceptance criteria passed functionally in run 01. Build 0.1.1 fixes ISSUE-001 (localization), ISSUE-002 (publisher) and ISSUE-003, which became the new AC-13. These fixes must be confirmed in `test-run-02.md`.
+**Ready to close — closed by Michael on 2026-10-03.** All 13 acceptance criteria (12 original + AC-13) pass in build 0.1.1. ISSUE-001, ISSUE-002 and ISSUE-003 are verified and closed.
 
 ## 2. Environment
 
 | Item | Value |
 |---|---|
 | Machine | Windows Developer Machine, Windows 11 Pro (German UI) |
-| Build / installer | `EagleEye-Setup-0.1.0.exe` (service version `EagleEye_v0.1`) |
+| Build / installer | Run 01: `EagleEye-Setup-0.1.0.exe`; run 02: `EagleEye-Setup-0.1.1.exe` (upgrade install). Service version `EagleEye_v0.1` |
 | Accounts | Admin (Michael), standard user `eagleeye-kid` |
 
 ## 3. Acceptance Criteria Results (run 01)
@@ -37,7 +37,23 @@
 | AC-12 | TC-001-07 | Pass | |
 | — | TC-001-09 (exploratory) | Acceptable | Improvement suggestion → ISSUE-003 (PRO) |
 
-Totals: 13 executed, 13 Pass, 0 Fail, 0 Blocked, 0 Skipped.
+Totals run 01: 13 executed, 13 Pass.
+
+### Run 02 (build 0.1.1, re-test)
+
+| Case | Verifies | Result |
+|---|---|---|
+| TC-001-R01 | Upgrade 0.1.0 → 0.1.1, publisher "Michael Adler" (ISSUE-002) | Pass |
+| TC-001-02 | AC-2, AC-3 after upgrade | Pass |
+| TC-001-05 | AC-6, AC-7, German tooltip (ISSUE-001) | Pass |
+| TC-001-06 | AC-11 "App Infos" (ISSUE-001) | Pass |
+| TC-001-07 | AC-10, AC-12 in German | Pass |
+| TC-001-08 | AC-8, "Verbindungsfehler" tooltip | Pass |
+| TC-001-09 | **AC-13** connection error with `localhost:5080` (ISSUE-003) | Pass |
+| TC-001-10 | AC-9, reconnect | Pass |
+| TC-001-R02 | English texts by hand (optional) | Skipped; covered by unit tests |
+
+Totals run 02: 8 Pass, 1 Skipped, 0 Fail.
 
 ## 4. Regression Results
 
@@ -47,9 +63,9 @@ None. US-001 is the first story.
 
 | Issue | Severity | Status | Routed to | Test case |
 |---|---|---|---|---|
-| `US-001/issues/ISSUE-001.md`: tray texts English only | Medium | Implemented (awaiting re-test) | DEV | TC-05, 06, 08, 09 |
-| `US-001/issues/ISSUE-002.md`: publisher "adlemich" | Low | Implemented (awaiting re-test) | DEV | TC-01 |
-| `US-001/issues/ISSUE-003.md`: richer connection-error text in About | Low | Implemented (awaiting re-test); became AC-13 | PRO → DEV | TC-09 |
+| `US-001/issues/ISSUE-001.md`: tray texts English only | Medium | Verified/Closed | DEV | TC-05, 06, 08, 09 |
+| `US-001/issues/ISSUE-002.md`: publisher "adlemich" | Low | Verified/Closed | DEV | TC-01 |
+| `US-001/issues/ISSUE-003.md`: richer connection-error text in About | Low | Verified/Closed; became AC-13 | PRO → DEV | TC-09 |
 
 ## 6. Feedback for PRO / ARC
 
@@ -60,4 +76,4 @@ None. US-001 is the first story.
 
 ## 7. Regression Checklist Update
 
-To be added when US-001 is closed: TC-001-01 (install), TC-001-02 (service registration), TC-001-05 (green + localized tooltip), TC-001-07 (About version), TC-001-08/10 (red/green on stop/start).
+Added to `docs/testing/regression-checklist.md` on 2026-10-03 (section US-001).

@@ -14,8 +14,8 @@
 
 ## Setup
 
-- [ ] **S-1** EagleEye **0.1.0** from run 01 is still installed. Do **not** uninstall it; this run also checks the upgrade.
-- [ ] **S-2** You are signed in as **Admin**. If an `eagleeye-kid` session is still open, sign it out (*Task-Manager → Benutzer → eagleeye-kid → Abmelden*).
+- [x] **S-1** EagleEye **0.1.0** from run 01 is still installed. Do **not** uninstall it; this run also checks the upgrade.
+- [x] **S-2** You are signed in as **Admin**. If an `eagleeye-kid` session is still open, sign it out (*Task-Manager → Benutzer → eagleeye-kid → Abmelden*).
 
 ---
 
@@ -32,7 +32,7 @@
 - EagleEye is listed **once**, with version **0.1.1**.
 - The publisher shown is **Michael Adler** (ISSUE-002).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -46,7 +46,7 @@
 
 **Expected**: *Wird ausgeführt*, *Automatisch*, *Lokales System*. There is still only **one** EagleEye service.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -62,7 +62,7 @@
 
 **Expected**: the icon is **green**, and the tooltip reads **"EagleEye — Verbunden"**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -76,7 +76,7 @@
 
 **Expected**: the menu contains **"App Infos"**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -94,7 +94,7 @@
 - Text **"Server-Version: EagleEye_v0.1"**
 - Button **OK** closes the dialog.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -110,7 +110,7 @@
 
 **Expected**: the icon turns **red**, and the tooltip reads **"EagleEye — Verbindungsfehler"**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -126,7 +126,7 @@
 - Title **"EagleEye – App Infos"**
 - Text **"Verbindungsfehler: Keine Verbindung zum Server unter localhost:5080 möglich."**. It names the server address and is fully readable, not cut off.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -140,7 +140,7 @@
 
 **Expected**: the icon turns **green**, and the tooltip reads **"EagleEye — Verbunden"**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -158,7 +158,7 @@ Only if you want to check the English side by hand (unit tests already cover it)
 
 **Expected**: the tooltip reads **"EagleEye — Connected"**, the menu entry is **"About"**, and the dialog shows **"About EagleEye"** and **"Server Version: EagleEye_v0.1"**. With the service stopped, it shows **"Connection error: could not connect to the server at localhost:5080."**
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -166,12 +166,13 @@ Only if you want to check the English side by hand (unit tests already cover it)
 
 ## General Feedback
 
-<!-- anything else -->
-
+<!-- anything else --> ALL GOOD!
 ---
 
 ## Summary (filled in by TES after evaluation)
 
 | Pass | Fail | Blocked | Skipped | Not executed |
 |---|---|---|---|---|
-| | | | | |
+| 8 | 0 | 0 | 1 | 0 |
+
+Evaluated by TES on 2026-10-03. TC-001-R02 (optional English check) skipped; English texts are covered by unit tests. ISSUE-001, ISSUE-002 and ISSUE-003 verified. Michael: "ALL GOOD!"

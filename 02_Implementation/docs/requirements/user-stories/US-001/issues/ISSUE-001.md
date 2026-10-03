@@ -1,6 +1,6 @@
 # ISSUE-001: Tray client texts are English only, German is required as default
 
-**Status**: Implemented
+**Status**: Verified/Closed
 **User Story**: US-001
 **Found in**: docs/testing/US-001/test-run-01.md, TC-001-05, TC-001-06, TC-001-08, TC-001-09, General Feedback
 **Date**: 2026-10-03
@@ -41,3 +41,5 @@ Run file observations only; no screenshots.
 ## Resolution
 
 DEV, 2026-10-03: tray texts moved to resource files (`EagleEye.TrayClient/Resources/TrayTexts.resx` = German, neutral/default; `TrayTexts.en.resx` = English). Build 0.1.1. See implementation report §7. Re-test: `docs/testing/US-001/test-run-02.md`.
+
+**Verified**: TES, 2026-10-03, in `docs/testing/US-001/test-run-02.md` (build 0.1.1). Closed by Michael.

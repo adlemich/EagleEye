@@ -1,6 +1,6 @@
 # US-001: Basic Service Installation and Tray Client Connectivity
 
-**Status**: Implemented
+**Status**: Verified/Closed
 **Created**: 2026-09-15
 **Component(s)**: EagleEye.Service, EagleEye.TrayClient
 
@@ -22,19 +22,19 @@ References: FR-SVC-050, FR-TRAY-010, FR-TRAY-040, FR-TRAY-041, FR-TRAY-042, FR-T
 
 ## Acceptance Criteria
 
-- [ ] **AC-1**: When the parent runs the EagleEye installer on a Windows 11 PC (Home or Pro) with default settings, both `EagleEye.Service` and `EagleEye.TrayClient` are installed successfully.
-- [ ] **AC-2**: After installation, `EagleEye.Service` is registered as a Windows service running under the SYSTEM account.
-- [ ] **AC-3**: `EagleEye.Service` starts automatically on system boot without manual intervention.
-- [ ] **AC-4**: `EagleEye.Service` can be started and stopped using the standard Windows Services management tools (services.msc).
-- [ ] **AC-5**: When a standard (non-admin) user logs into Windows, `EagleEye.TrayClient` starts automatically in that user's session.
-- [ ] **AC-6**: The tray client displays a system tray icon with a connection status indicator (green = connected, red = disconnected).
-- [ ] **AC-7**: When `EagleEye.Service` is running, the tray client shows a green (connected) status.
-- [ ] **AC-8**: When `EagleEye.Service` is stopped (e.g. via services.msc), the tray client detects the disconnection and shows a red (disconnected) status.
-- [ ] **AC-9**: When `EagleEye.Service` is restarted after being stopped, the tray client automatically reconnects and returns to green status.
-- [ ] **AC-10**: `EagleEye.Service` exposes a version identifier in the format `EagleEye_vMAJOR.MINOR` (e.g. `EagleEye_v0.1`). The version correlates to the installer version.
-- [ ] **AC-11**: Right-clicking the tray icon shows a context menu with an entry that opens the application information (English example: "About"; on a German system: "App Infos").
-- [ ] **AC-12**: Clicking that entry displays a dialog or popup that shows the server version, fetched via a live query to the service at that moment.
-- [ ] **AC-13**: When the service cannot be reached, the application information dialog shows a connection error that names the server address the tray client tried to reach (English example: "Connection error: could not connect to the server at localhost:5080").
+- [x] **AC-1**: When the parent runs the EagleEye installer on a Windows 11 PC (Home or Pro) with default settings, both `EagleEye.Service` and `EagleEye.TrayClient` are installed successfully.
+- [x] **AC-2**: After installation, `EagleEye.Service` is registered as a Windows service running under the SYSTEM account.
+- [x] **AC-3**: `EagleEye.Service` starts automatically on system boot without manual intervention.
+- [x] **AC-4**: `EagleEye.Service` can be started and stopped using the standard Windows Services management tools (services.msc).
+- [x] **AC-5**: When a standard (non-admin) user logs into Windows, `EagleEye.TrayClient` starts automatically in that user's session.
+- [x] **AC-6**: The tray client displays a system tray icon with a connection status indicator (green = connected, red = disconnected).
+- [x] **AC-7**: When `EagleEye.Service` is running, the tray client shows a green (connected) status.
+- [x] **AC-8**: When `EagleEye.Service` is stopped (e.g. via services.msc), the tray client detects the disconnection and shows a red (disconnected) status.
+- [x] **AC-9**: When `EagleEye.Service` is restarted after being stopped, the tray client automatically reconnects and returns to green status.
+- [x] **AC-10**: `EagleEye.Service` exposes a version identifier in the format `EagleEye_vMAJOR.MINOR` (e.g. `EagleEye_v0.1`). The version correlates to the installer version.
+- [x] **AC-11**: Right-clicking the tray icon shows a context menu with an entry that opens the application information (English example: "About"; on a German system: "App Infos").
+- [x] **AC-12**: Clicking that entry displays a dialog or popup that shows the server version, fetched via a live query to the service at that moment.
+- [x] **AC-13**: When the service cannot be reached, the application information dialog shows a connection error that names the server address the tray client tried to reach (English example: "Connection error: could not connect to the server at localhost:5080").
 
 > **Language of UI texts** (NFR-L-010, NFR-L-011): all UI texts quoted in these criteria and in the mockups below are **English examples**. The tray client shows them in the user's Windows display language: German (default) or English.
 
@@ -44,6 +44,7 @@ References: FR-SVC-050, FR-TRAY-010, FR-TRAY-040, FR-TRAY-041, FR-TRAY-042, FR-T
 |---|---|---|
 | 2026-10-03 | AC-11/AC-12 reworded so texts are language-dependent; language note added | Michael, after test run 01 (ISSUE-001) |
 | 2026-10-03 | AC-13 added: connection error with server address in the About dialog | Michael, ISSUE-003 |
+| 2026-10-03 | Verified/Closed by Michael after test runs 01 and 02 (build 0.1.1) | Michael |
 
 ---
 
