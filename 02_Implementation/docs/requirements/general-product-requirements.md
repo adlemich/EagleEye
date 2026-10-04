@@ -5,7 +5,7 @@
 *Maintainer: PRO Agent*
 *Date: 2026-09-15, amended 2026-10-03, 2026-10-04*
 
-> **v1.2 amendment (2026-10-04, directed by Michael, with US-002)**: the Windows parent app is no longer copy-deployed. It gets **its own, self-contained Windows installer**, separate from the service installer. Changed: FR-APP-092, §4.2 step 8, §9.5, §11 (Q-1 superseded by Q-4).
+> **v1.2 amendment (2026-10-04, directed by Michael, with US-002)**: the Windows parent app is no longer copy-deployed. It gets **its own, self-contained Windows installer**, separate from the service installer. Also new: light/dark appearance setting for all parent apps (FR-APP-083). Changed: §3.3.8 (FR-APP-083 new), FR-APP-092, §4.2 step 8, §9.5, §11 (Q-1 superseded by Q-4).
 
 > **v1.1 amendment (2026-10-03, directed by Michael, ADR-007)**: the parent app gains a **Windows desktop** target (copy-deployed single exe, used for initial testing). Android and iOS become the primary production platforms, and iOS is no longer out of scope. Changed: §1.2 G-6, §2.1, §3.3 intro and §3.3.8, §3.3.9 (new), §4.2, §8.4, §9.5 (new), §10, §11. Development is split across two machines and acceptance testing is manual. Neither changes product behaviour; both are recorded in `docs/dev-process/`.
 
@@ -302,6 +302,7 @@ The parent app is a single MAUI codebase deployed to Android, iOS, Windows and m
 | FR-APP-080 | On iOS and Android, the app shall operate in portrait orientation only and follow platform-typical look and feel. |
 | FR-APP-081 | On macOS and Windows, the app shall present a desktop-style UI. |
 | FR-APP-082 | The app shall be functionally identical across all platforms. |
+| FR-APP-083 | The parent shall be able to switch the app between a light and a dark appearance in the app settings. The choice is stored per app installation and kept across restarts and updates. Until the parent has chosen, the app follows the operating system's light/dark setting. *(v1.2)* |
 
 #### 3.3.9 Windows Parent App (added in v1.1)
 
