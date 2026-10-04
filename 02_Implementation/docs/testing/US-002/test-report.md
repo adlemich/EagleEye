@@ -11,7 +11,7 @@
 
 **Not ready to close.** In test run 01 the pairing code popup was too narrow to show the code (ISSUE-004, Critical). Pairing could not be completed, so the run was aborted at TC-002-12, and 31 of 48 cases were not executed.
 
-**Re-test (test-run-02, after DEV's fix):** TES creates `test-run-02.md` only after DEV hands over a new build. Per **Michael's decision (2026-10-04)**, run 02 does **not** include the regression checklist (REG-001-01..05). Regression is run in a later step, before the story is closed. This deviates from the TES rule "full regression every run" by Michael's explicit decision.
+**Re-test (test-run-02, after DEV's fix):** TES creates `test-run-02.md` only after DEV hands over a new build. Per **Michael's decision (2026-10-04)**, run 02 does **not** include the regression checklist (REG-001-01..05). Per the updated process (`docs/testing/README.md`, commit 236fbbf), regression runs only on Michael's explicit request before a major version release.
 
 Run 02 covers:
 
@@ -95,7 +95,7 @@ Supporting checks (no AC): TC-002-02 **Fail** (ISSUE-005), TC-002-03 Skipped, TC
 |---|---|---|---|---|
 | US-001 | REG-001-01..05 | 2 (REG-001-01, -02) | 0 | 3 (REG-001-03..05 skipped) |
 
-Regression is not part of run 02 (Michael, 2026-10-04). It is run in full in a later run before closure.
+Regression is not part of run 02 or later story runs (Michael, 2026-10-04). It runs only on his explicit request before a major version release.
 
 ## 5. Issues
 
