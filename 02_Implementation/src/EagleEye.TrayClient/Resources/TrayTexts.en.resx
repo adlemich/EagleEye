@@ -12,4 +12,8 @@
   <data name="ServerVersionFormat" xml:space="preserve"><value>Server Version: {0}</value></data>
   <data name="ConnectionErrorFormat" xml:space="preserve"><value>Connection error: could not connect to the server at {0}.</value></data>
   <data name="Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="PairingTitle" xml:space="preserve"><value>EagleEye – Pair a parent app</value></data>
+  <data name="PairingCodeFormat" xml:space="preserve"><value>Pairing code: {0}</value></data>
+  <data name="PairingInstruction" xml:space="preserve"><value>Enter this code in the EagleEye parent app.</value></data>
+  <data name="PairingValidityFormat" xml:space="preserve"><value>The code is valid for {0} minutes.</value></data>
 </root>

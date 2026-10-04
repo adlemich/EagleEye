@@ -10,6 +10,9 @@ public interface IServiceConnection : IAsyncDisposable
     /// <summary>Raised on every connection state change: <c>true</c> = connected, <c>false</c> = disconnected.</summary>
     event Action<bool>? ConnectionChanged;
 
+    /// <summary>Raised when the service sends a pairing code to show (FR-TRAY-070). Raised on a thread-pool thread.</summary>
+    event Action<string>? PairingCodeReceived;
+
     /// <summary>Whether the connection to the service is currently established.</summary>
     bool IsConnected { get; }
 

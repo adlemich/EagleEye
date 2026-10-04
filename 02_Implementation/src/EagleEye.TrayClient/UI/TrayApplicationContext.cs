@@ -5,7 +5,8 @@ namespace EagleEye.TrayClient.UI;
 
 /// <summary>
 /// Owns the tray icon: shows the connection state (green/red, AC-6 to AC-9) and offers the
-/// "About" entry that queries the server version live (AC-11, AC-12).
+/// "About" entry that queries the server version live (AC-11, AC-12). Shows pairing codes
+/// sent by the service in a topmost window (US-002 AC-14).
 /// </summary>
 internal sealed class TrayApplicationContext : ApplicationContext
 {
@@ -18,6 +19,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly Icon _connectedIcon;
     private readonly Icon _disconnectedIcon;
     private bool _aboutOpen;
+    private PairingCodeDialog? _pairingDialog;
 
     /// <summary>Creates the tray icon and starts following the connection state.</summary>
     public TrayApplicationContext(IServiceConnection connection)
@@ -41,6 +43,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         ApplyConnectionState(_connection.IsConnected);
 
         _connection.ConnectionChanged += OnConnectionChanged;
+        _connection.PairingCodeReceived += OnPairingCodeReceived;
         Application.ApplicationExit += OnApplicationExit;
     }
 
@@ -50,6 +53,8 @@ internal sealed class TrayApplicationContext : ApplicationContext
         if (disposing)
         {
             _connection.ConnectionChanged -= OnConnectionChanged;
+            _connection.PairingCodeReceived -= OnPairingCodeReceived;
+            _pairingDialog?.Dispose();
             Application.ApplicationExit -= OnApplicationExit;
             _notifyIcon.Visible = false;
             _notifyIcon.Dispose();
@@ -65,6 +70,30 @@ internal sealed class TrayApplicationContext : ApplicationContext
     {
         // Raised on a thread-pool thread by SignalR: marshal to the UI thread.
         _uiContext.Post(_ => ApplyConnectionState(connected), null);
+    }
+
+    private void OnPairingCodeReceived(string code)
+    {
+        // Raised on a thread-pool thread by SignalR: marshal to the UI thread.
+        _uiContext.Post(_ => ShowPairingCode(code), null);
+    }
+
+    private void ShowPairingCode(string code)
+    {
+        // A new code replaces an open window (the previous code is no longer valid).
+        // Closing a modeless form also disposes it.
+        _pairingDialog?.Close();
+        var dialog = new PairingCodeDialog(code);
+        dialog.FormClosed += (_, _) =>
+        {
+            if (ReferenceEquals(_pairingDialog, dialog))
+            {
+                _pairingDialog = null;
+            }
+        };
+        _pairingDialog = dialog;
+        dialog.Show();
+        dialog.Activate();
     }
 
     private void ApplyConnectionState(bool connected)
