@@ -106,10 +106,10 @@ Coverage measured with coverlet (`dotnet test --collect:"XPlat Code Coverage"`),
 
 ## 5. Open Questions and Risks
 
-1. **Open points of the plan (not answered yet, defaults implemented):**
-   - The tray client still starts in **admin** sessions (HKLM Run key). A parent pairing at the service PC as admin sees the code there.
-   - Product name in Start menu and *Installierte Apps*: **"EagleEye Parent App"** (one `#define` in `parentapp-setup.iss`).
-   - Security consequence of Q-1 (a kid can pair their own app) and the need for a second Windows PC (AC-6, AC-23, AC-24, AC-2) are still for Michael to decide/provide.
+1. **Open points of the plan (answered by Michael 2026-10-04, see user story Q-7 to Q-11; the implemented defaults stand):**
+   - The tray client still starts in **admin** sessions (HKLM Run key). A parent pairing at the service PC as admin sees the code there. Accepted (Q-7).
+   - Product name in Start menu and *Installierte Apps*: **"EagleEye Parent App"** (one `#define` in `parentapp-setup.iss`). Kept (Q-10).
+   - A kid can pair their own app: no technical protection for now, accepted risk (Q-8, arc42 R-8). A second Windows PC is available for AC-2, AC-6, AC-23 and AC-24 (Q-9).
 2. **Service installer not executed by DEV.** The DEV session has no admin rights. ACLs, the firewall rule, the service running as SYSTEM with `MachineKeySet`, and the Event Log source/event 1000 are verified for the first time in Michael's test run.
 3. **Event Log path (AC-15) not smoke-tested.** In console mode a tray client was always connected. Without admin rights, writing the Event Log source fails and is logged as an error (by design, D-1 context); as SYSTEM it is expected to work.
 4. **Pin mismatch during an automatic reconnect** shows "Not connected to <host>" instead of the "identity has changed" message. The message appears on the next connect loop (app start, or after the server closes the connection). Only relevant if the service certificate changes while the app runs.
