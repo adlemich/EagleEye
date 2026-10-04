@@ -1,16 +1,17 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — US-001 Verified/Closed 2026-10-03 (build 0.1.1); next is PRO writing US-002
+description: EagleEye workflow status — US-002 implemented (0.2.0), TES test plan written, awaiting Michael's review of DEV work + test plan
 metadata:
   type: project
 ---
 
-**As of 2026-10-03. Current: Phase 3. US-001 is Verified/Closed (closed by Michael). Next action: PRO writes US-002; then the usual loop (ARC plan → DEV → TES manual test).**
+**As of 2026-10-04. Current: Phase 3, US-002 on branch `feature/US-002-windows-parent-app-pairing`. Step c done (story `Implemented`), step d test plan written (Draft). Next: Michael reviews the implementation report and `docs/testing/US-002/test-plan.md` together; after approval TES creates `test-run-01.md`.**
 
-- US-001 delivered as build **0.1.1** (`03_Delivery/windows/EagleEye-Setup-0.1.1.exe`, git-ignored; rebuild with `02_Implementation/scripts/package-windows.ps1`). Test run 01 (build 0.1.0): 13/13 Pass. Test run 02 (0.1.1): 8 Pass, 1 optional skipped.
-- Issues found and closed: ISSUE-001 (tray texts were English only, now German default via resx), ISSUE-002 (publisher "Michael Adler"), ISSUE-003 (About shows a localized connection error with the server address, added as AC-13).
-- The regression checklist now has a US-001 section (`docs/testing/regression-checklist.md`, REG-001-01..05). Every future test run includes it.
-- Open PRO feedback from the US-001 test report §6: AC-8/AC-9 have no time bounds (TES used ≤30 s / ≤60 s).
-- How the session ran: at Michael's request, DEV and TES ran inside the orchestrator session (following their `CLAUDE.md` rules) rather than as separate sessions.
+- Plan + ADR-008/009 approved by Michael 2026-10-04 (commit 5728ced). At Michael's request DEV and TES ran as subagents of the orchestrator session, and TES started right after DEV without a separate DEV review gate.
+- Build 0.2.0: `03_Delivery/windows/EagleEye-Setup-0.2.0.exe`, `EagleEye-ParentApp-Setup-0.2.0.exe`. 590 unit tests green, 0 warnings. DEV deviations D-1..D-14 in the implementation report §2.
+- Test plan: 43 cases, blocks A/B (service PC), C (needs a second Windows 11 PC without .NET: AC-2, AC-6, AC-23, AC-24), D (second Windows account `eagleeye-parent2`).
+- Outstanding: ARC doc updates from the plan's "Architecture Changes" table (arc42, guidelines §12.2/§16.1, ADR-007 note); orchestrator to fix "copy-deployed exe" wording in root `CLAUDE.md` and `agents/arc/CLAUDE.md`; PRO to delete the outdated second Decisions table in the US-002 story (old Q-4 contradicts AC-25).
+- Open decisions for Michael: kid can pair own parent app (security, before first config story); tray in admin sessions; second PC available?; product name "EagleEye Parent App"; TES rule that UI wording differences are notes, not Fails.
+- US-001: Verified/Closed (build 0.1.1).
 
 See [[eagleeye-workflow-gates]], [[us001-lessons]].
