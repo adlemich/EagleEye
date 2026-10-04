@@ -1,10 +1,10 @@
 # Implementation Plan: US-002 — Windows Parent App: Installation, Connection and Pairing
 
-**Status**: Draft — awaiting Michael's approval
+**Status**: Approved by Michael (2026-10-04)
 **Date**: 2026-10-04
 **Author**: ARC
 **User story**: `02_Implementation/docs/requirements/user-stories/US-002/user-story.md` (approved 2026-10-04, 30 ACs)
-**New ADRs**: ADR-008 (connectivity, TLS, pairing protocol), ADR-009 (Windows packaging, `ParentApp.Core`), both `Proposed`
+**New ADRs**: ADR-008 (connectivity, TLS, pairing protocol), ADR-009 (Windows packaging, `ParentApp.Core`), both `Accepted`
 
 ---
 

@@ -1,6 +1,6 @@
 # ADR-008: Parent App Connectivity — Endpoints, TLS Trust and Pairing Protocol
 
-**Status**: Proposed (with the US-002 implementation plan)
+**Status**: Accepted (approved by Michael with the US-002 implementation plan, 2026-10-04)
 **Date**: 2026-10-04
 **Deciders**: ARC, Michael
 

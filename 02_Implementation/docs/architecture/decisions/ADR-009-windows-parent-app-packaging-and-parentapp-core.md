@@ -1,6 +1,6 @@
 # ADR-009: Windows Parent App Packaging and the ParentApp.Core Library
 
-**Status**: Proposed (with the US-002 implementation plan)
+**Status**: Accepted (approved by Michael with the US-002 implementation plan, 2026-10-04)
 **Date**: 2026-10-04
 **Deciders**: ARC, Michael
 
