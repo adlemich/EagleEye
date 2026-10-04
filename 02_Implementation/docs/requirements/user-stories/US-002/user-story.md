@@ -1,6 +1,6 @@
 # US-002: Windows Parent App — Installation, Connection and Pairing
 
-**Status**: Analyzed
+**Status**: Implemented
 **Created**: 2026-10-04
 **Approved**: by Michael, 2026-10-04 (status becomes `Analyzed` when the implementation plan is approved)
 **Component(s)**: EagleEye.ParentApp, EagleEye.Service, EagleEye.TrayClient, EagleEye.Shared
@@ -99,6 +99,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-083 (v1.2, light/dark mode), FR-APP
 | 2026-10-04 | Menu entry "Connection" replaced by "Settings" with sections "Visual appearance" (new: light/dark mode switch, AC-9) and "Server connection" (pairing status, set/change host, remove pairing). New AC-25 (change host while paired). ACs renumbered; numbers in this log refer to the current numbering. | Michael, review feedback |
 | 2026-10-04 | Open questions decided (Q-1 to Q-6). AC-11: host dialog on start when unpaired. AC-25: host cannot be changed while paired. AC-8, AC-27 and mockups adjusted. | Michael, review feedback |
 | 2026-10-04 | Story approved | Michael |
+| 2026-10-04 | Status `Implemented`; see `US-002/implementation-report.md` | DEV |
 
 ---
 
