@@ -44,4 +44,6 @@
   <data name="ErrorCertificateChangedFormat" xml:space="preserve"><value>The identity of the EagleEye PC {0} has changed. The connection was refused.</value></data>
   <data name="ErrorRemoveFailed" xml:space="preserve"><value>The pairing could not be removed. Please try again.</value></data>
   <data name="InfoPairingLostFormat" xml:space="preserve"><value>This PC is no longer paired with {0}.</value></data>
+  <data name="ErrorStartup" xml:space="preserve"><value>The data of the EagleEye parent app could not be opened. Please reinstall the app.</value></data>
+  <data name="OkButton" xml:space="preserve"><value>OK</value></data>
 </root>

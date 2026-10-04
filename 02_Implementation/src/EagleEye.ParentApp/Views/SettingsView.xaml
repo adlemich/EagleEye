@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:core="clr-namespace:EagleEye.ParentApp.Core;assembly=EagleEye.ParentApp.Core"
+             xmlns:vm="clr-namespace:EagleEye.ParentApp.Core.ViewModels;assembly=EagleEye.ParentApp.Core"
+             x:Class="EagleEye.ParentApp.Views.SettingsView">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="8" MaximumWidthRequest="760" HorizontalOptions="Start">
+
+            <Label Text="{x:Static core:AppTexts.MenuSettings}" Style="{StaticResource PageHeader}" />
+
+            <!-- Visual appearance (AC-9) -->
+            <VerticalStackLayout x:Name="AppearanceSection" x:DataType="vm:AppearanceViewModel" Spacing="4">
+                <Label Text="{x:Static core:AppTexts.SectionAppearance}" Style="{StaticResource SectionHeader}" />
+                <HorizontalStackLayout Spacing="12">
+                    <Switch IsToggled="{Binding IsDarkMode}" VerticalOptions="Center" />
+                    <Label Text="{Binding ThemeLabel}" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <!-- Server connection (AC-8, AC-11 to AC-30) -->
+            <VerticalStackLayout x:Name="ServerSection" x:DataType="vm:ServerConnectionViewModel" Spacing="8">
+                <Label Text="{x:Static core:AppTexts.SectionServerConnection}" Style="{StaticResource SectionHeader}" />
+                <HorizontalStackLayout Spacing="8">
+                    <Label Text="{x:Static core:AppTexts.PairingStatusLabel}" FontAttributes="Bold" />
+                    <Label Text="{Binding PairingStatusText}" />
+                </HorizontalStackLayout>
+
+                <!-- Not paired: host entry -->
+                <VerticalStackLayout IsVisible="{Binding IsNotPaired}" Spacing="6">
+                    <Label Text="{x:Static core:AppTexts.HostLabel}" />
+                    <Entry Text="{Binding HostInput}"
+                           Placeholder="{x:Static core:AppTexts.HostPlaceholder}"
+                           Keyboard="Url"
+                           ReturnCommand="{Binding ConnectCommand}" />
+                    <Button Text="{x:Static core:AppTexts.ConnectButton}" Command="{Binding ConnectCommand}" />
+                </VerticalStackLayout>
+
+                <!-- Connecting to start pairing -->
+                <ActivityIndicator IsVisible="{Binding IsPairingConnecting}"
+                                   IsRunning="{Binding IsPairingConnecting}"
+                                   HorizontalOptions="Start" />
+
+                <!-- Pairing: code and device name -->
+                <VerticalStackLayout IsVisible="{Binding IsAwaitingCode}" Spacing="6">
+                    <Label Text="{x:Static core:AppTexts.PairingInstruction}" />
+                    <Label Text="{x:Static core:AppTexts.PairingCodeLabel}" />
+                    <Entry Text="{Binding CodeInput}" MaxLength="6" Keyboard="Numeric" />
+                    <Label Text="{x:Static core:AppTexts.DeviceNameLabel}" />
+                    <Entry Text="{Binding DeviceNameInput}" MaxLength="50" ReturnCommand="{Binding PairCommand}" />
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="{x:Static core:AppTexts.PairButton}" Command="{Binding PairCommand}" />
+                        <Button Text="{x:Static core:AppTexts.NewCodeButton}" Command="{Binding NewCodeCommand}" Style="{StaticResource SecondaryButton}" />
+                        <Button Text="{x:Static core:AppTexts.CancelButton}" Command="{Binding CancelCommand}" Style="{StaticResource SecondaryButton}" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- Paired: host read-only (AC-25), device name, remove pairing (AC-26, AC-30) -->
+                <VerticalStackLayout IsVisible="{Binding IsPaired}" Spacing="6">
+                    <Label Text="{Binding PairedWithText}" />
+                    <Label Text="{Binding ThisDeviceText}" />
+                    <Button Text="{x:Static core:AppTexts.RemovePairingButton}" Command="{Binding RemoveCommand}" />
+                    <Label Text="{x:Static core:AppTexts.RemoveNeedsConnection}"
+                           IsVisible="{Binding ShowRemoveHint}"
+                           Style="{StaticResource SecondaryText}" />
+                </VerticalStackLayout>
+
+                <Label Text="{Binding MessageText}" IsVisible="{Binding HasMessage}" Style="{StaticResource ErrorText}" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentView>

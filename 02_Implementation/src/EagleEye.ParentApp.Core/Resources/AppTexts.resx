@@ -44,4 +44,6 @@
   <data name="ErrorCertificateChangedFormat" xml:space="preserve"><value>Die Identität des EagleEye-PCs {0} hat sich geändert. Die Verbindung wurde abgelehnt.</value></data>
   <data name="ErrorRemoveFailed" xml:space="preserve"><value>Die Kopplung konnte nicht aufgehoben werden. Bitte erneut versuchen.</value></data>
   <data name="InfoPairingLostFormat" xml:space="preserve"><value>Dieser PC ist nicht mehr mit {0} gekoppelt.</value></data>
+  <data name="ErrorStartup" xml:space="preserve"><value>Die Daten der EagleEye-Eltern-App konnten nicht geöffnet werden. Bitte die App neu installieren.</value></data>
+  <data name="OkButton" xml:space="preserve"><value>OK</value></data>
 </root>

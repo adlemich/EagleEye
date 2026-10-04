@@ -55,6 +55,8 @@ public static class AppTexts
     public static string ErrorCertificateChangedFormat => Get(nameof(ErrorCertificateChangedFormat));
     public static string ErrorRemoveFailed => Get(nameof(ErrorRemoveFailed));
     public static string InfoPairingLostFormat => Get(nameof(InfoPairingLostFormat));
+    public static string ErrorStartup => Get(nameof(ErrorStartup));
+    public static string OkButton => Get(nameof(OkButton));
 #pragma warning restore CS1591
 
     /// <summary>Formats a composite text with the current culture.</summary>
