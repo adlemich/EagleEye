@@ -193,3 +193,19 @@ Recorded by the Orchestrator. These answers supersede the development and test s
 **Q9.7**: Which parent-app platforms matter most?
 
 **A**: Android and iOS apps are the primary platforms for production. The Windows client is used for initial testing.
+
+---
+
+## Group 10: Parent App Pairing (2026-10-04)
+
+Recorded by PRO from Michael's answers to the open points of `02_Implementation/docs/requirements/user-stories/US-002/implementation-plan.md`. Story-specific answers are in `02_Implementation/docs/requirements/user-stories/US-002/user-story.md`, Decisions Q-7 to Q-11.
+
+**Q10.1**: The pairing code is shown in the kid's tray client, so a kid can pair their own parent app. Is a technical protection needed?
+
+**A**: No technical protection for now; this is an accepted risk. To be revisited before or when configuration stories make it relevant (a paired app that can change rules).
+
+---
+
+**Q10.2**: Should the tray client run only in standard-user (kid) sessions?
+
+**A**: No change: the tray client keeps running in admin sessions too.

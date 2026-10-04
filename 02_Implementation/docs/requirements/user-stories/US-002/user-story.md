@@ -100,6 +100,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-083 (v1.2, light/dark mode), FR-APP
 | 2026-10-04 | Open questions decided (Q-1 to Q-6). AC-11: host dialog on start when unpaired. AC-25: host cannot be changed while paired. AC-8, AC-27 and mockups adjusted. | Michael, review feedback |
 | 2026-10-04 | Story approved | Michael |
 | 2026-10-04 | Status `Implemented`; see `US-002/implementation-report.md` | DEV |
+| 2026-10-04 | Outdated duplicate decisions table removed. Decisions Q-7 to Q-11 added (answers to the implementation plan's open points). ACs unchanged. | Michael, recorded by PRO |
 
 ---
 
@@ -271,13 +272,11 @@ App -> Parent : back to hostname entry (red)
 | Q-4 | **Changing the server address while paired.** | Not possible. Remove the pairing first, then enter the new address and pair again (AC-25). In the unpaired state, the app asks for the host in a dialog on start (AC-11). |
 | Q-5 | **Default appearance on first start.** | The system default (Windows light/dark setting) is the start value (AC-9). |
 | Q-6 | **One story or split into two?** | One story. |
-
----|---|---|
-| Q-1 | **Where does the parent see the pairing code?** Per FR-SVC-091/092, the code goes to the tray client popup, otherwise to the Event Log. US-001 shows the tray client only in standard-user sessions. If the parent sits at the service PC as admin, the code only appears in the Event Log; if a kid is logged on, the **kid** sees the code. | Keep the approved requirements for US-002 (AC-14, AC-15). Revisit in a later story if it is a problem in practice. |
-| Q-2 | **What does uninstalling the parent app do with the pairing?** The uninstaller cannot reach the service, so the service keeps the device as paired. | Uninstall removes all local data (AC-5). The orphaned entry on the service stays until a later story allows removing other devices (FR-APP-015). |
-| Q-3 | **Removing the pairing while the service is unreachable.** | Only possible while connected (AC-30), so the service and the app never disagree. |
-| Q-4 | **Changing the server address while paired.** Same service at a new address, or a different service? | Try the existing pairing at the new address; if it is not accepted, start pairing there (AC-25). The pairing with the previous service is then given up on the app side only. |
-| Q-5 | **Default appearance on first start.** | Follow the Windows app mode of the current user (AC-9); afterwards the parent's choice wins. |
+| Q-7 | **Tray client in admin sessions** (implementation plan, open point 2). Since US-001 the tray client also starts in admin sessions. Restrict it to kid sessions? | No change: the tray client keeps running in admin sessions too. This refines Q-1; AC-14 and AC-15 are unchanged. |
+| Q-8 | **A kid can pair their own parent app** (implementation plan, open point 1). The pairing code appears in the kid's tray. | No technical protection for now; accepted risk. To be revisited before or when configuration stories make it relevant (`01_Intend_and_Constraints/questions_and_answers.md` Q10.1). |
+| Q-9 | **Second Windows PC for remote tests** (implementation plan, open point 3). | Michael has a second Windows PC; AC-2, AC-6, AC-23 and AC-24 are testable. |
+| Q-10 | **Product name** of the parent app (implementation plan, open point 4). | Stays "EagleEye Parent App". |
+| Q-11 | **UI wording in manual tests.** | Differences in UI wording are notes, not Fails. Michael reports needed text changes during testing. |
 
 ---
 
