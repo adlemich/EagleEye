@@ -1,6 +1,6 @@
 # Test Plan: US-002 — Windows Parent App: Installation, Connection and Pairing
 
-**Status**: Draft (waiting for Michael's approval)
+**Status**: Approved (Michael, 2026-10-04)
 **Date**: 2026-10-04
 **Author**: TES
 **User Story**: `02_Implementation/docs/requirements/user-stories/US-002/user-story.md` (30 ACs)
@@ -52,16 +52,16 @@
 | **C** Second PC: clean PC install, LAN reachability, two apps | TC-002-33 to TC-002-40 (8) | PC2 + service PC / Admin + Kid | **yes** |
 | **D** Second parent app on the service PC (second Windows account) | TC-002-41 to TC-002-43 (3) | Service PC / Admin + Parent 2 | no |
 
-Blocks A and B run in this order in one session. Block C can run later (a separate test run if needed). If no second PC is available, mark Block C **Blocked** with the note "no second PC"; this does not block Blocks A, B and D. Block D gives AC-29 a result without a second PC; run it if Block C is not run in the same test run (it may also run in addition).
+Blocks A and B run in this order in one session. Michael has a second Windows PC (confirmed 2026-10-04), so Block C is part of the run; it can run later than A and B. Only if PC2 cannot be used on the day, mark Block C **Blocked** with the reason; this does not block Blocks A, B and D. Block D also runs: it adds a same-PC, second-account check of AC-1, AC-5 and AC-29.
 
 ### Conventions for expected results
 
-- **UI texts.** The German texts in the expected results are the texts of the build (DEV handover). A different wording with the same meaning goes into **Notes**, not Fail. Exceptions, where the wording was agreed in the story and is a Pass criterion: *Einstellungen*, *Darstellung*, *Serververbindung*, *Hell* / *Dunkel*, *Verbunden mit <host>*, *Kopplung aufheben*.
+- **UI texts.** The German texts in the expected results are the texts of the build (DEV handover). A different wording with the same meaning goes into **Notes**, not Fail (agreed with Michael, 2026-10-04). If you want a text changed, write the wanted text into **Notes**; TES routes it to PRO. Exceptions, where the wording was agreed in the story and is a Pass criterion: *Einstellungen*, *Darstellung*, *Serververbindung*, *Hell* / *Dunkel*, *Verbunden mit <host>*, *Kopplung aufheben*.
 - **`<host>` in texts** is exactly what was typed (hostname or IP address, AC-10).
 - **Colours.** Green / red = the connection indicator in the status bar of the parent app (bottom of the window).
 - **Timing.** Take times with a stopwatch. Bounds from the story: green within 30 s after app start (AC-21), red within 30 s after the service stops, green within 60 s after it starts again (AC-22). Where the story gives no bound (e.g. connection error, AC-12), a slow result is a Note, not a Fail.
 - **Certificate prompts (AC-7).** In every case of this plan: if the parent app ever shows anything about a certificate (warning, question, import), write it into **Observed** of the current case and mark it Fail.
-- **Pairing code popup in the admin session.** The tray client also runs in admin sessions (open point 2 of the implementation plan, not decided yet). After TC-002-12 you may read further codes from the popup in your admin session, which saves switching users.
+- **Pairing code popup in the admin session.** The tray client also runs in admin sessions (open point 2 of the implementation plan; Michael decided on 2026-10-04 that it stays that way). After TC-002-12 you may read further codes from the popup in your admin session, which saves switching users.
 - **Unspecified behaviour** that you notice (e.g. a message you did not expect) is a Note; TES routes it to PRO.
 
 ## 3. Setup Instructions
@@ -130,10 +130,10 @@ Cases in **bold** need the second PC (Block C).
 | AC-26 | TC-002-22, **TC-002-39** |
 | AC-27 | TC-002-23, TC-002-24, **TC-002-39** |
 | AC-28 | TC-002-25, TC-002-28 |
-| AC-29 | **TC-002-39**, or without second PC TC-002-42 |
+| AC-29 | **TC-002-39**, TC-002-42 |
 | AC-30 | TC-002-20 |
 
-All 30 ACs have at least one case. Without a second PC, **AC-2, AC-6 (LAN part), AC-23 (other-PC part) and AC-24** stay open; AC-29 is then covered by Block D.
+All 30 ACs have at least one case. **AC-2, AC-6 (LAN part), AC-23 (other-PC part) and AC-24** get their result only in Block C (second PC, available). AC-29 is covered by Block C and, independently, by Block D.
 
 ## 5. Test Cases
 
@@ -344,7 +344,7 @@ All 30 ACs have at least one case. Without a second PC, **AC-2, AC-6 (LAN part),
 
 **Steps**
 
-1. Before switching: note whether a pairing popup appeared **in your Admin session** too (observation for open point 2, no Pass/Fail).
+1. Before switching: note whether a pairing popup appeared **in your Admin session** too (observation only, no Pass/Fail; the tray client running in admin sessions is accepted).
 2. *Benutzer wechseln* → `eagleeye-kid`.
 3. Look for the window **"EagleEye – Eltern-App koppeln"**. Write down the code. Close it with *OK*.
 4. *Benutzer wechseln* → Admin.
@@ -708,7 +708,7 @@ All 30 ACs have at least one case. Without a second PC, **AC-2, AC-6 (LAN part),
 
 ### Block C — Second PC (PC2)
 
-*Needs a second Windows 11 PC in the LAN (setup S-9, S-10). If none is available, mark all cases Blocked with the note "no second PC". Pair one app at a time.*
+*Needs the second Windows 11 PC in the LAN (setup S-9, S-10; Michael has one). If it cannot be used on the day, mark the cases Blocked with the reason. Pair one app at a time.*
 
 #### TC-002-33: On a PC without .NET the app installs and starts without further steps
 
@@ -840,7 +840,7 @@ All 30 ACs have at least one case. Without a second PC, **AC-2, AC-6 (LAN part),
 
 ### Block D — Second parent app on the service PC (second Windows account)
 
-*Gives AC-29 a result without a second PC. Setup S-11 done. The Admin parent app is paired and green.*
+*Second Windows account on the service PC; covers AC-29 independently of Block C. Setup S-11 done. The Admin parent app is paired and green.*
 
 #### TC-002-41: A second parent account on the service PC can install and pair its own app
 
@@ -925,9 +925,9 @@ After the run (keep EagleEye service 0.2.0 installed; later stories build on it)
 Found while writing this plan; none blocks the test run.
 
 1. **Story text (PRO).** `user-story.md` contains a second, older *Decisions* table after the approved one (rows Q-1 to Q-5 starting with `---|---|---|`). Its Q-4 says "try the existing pairing at the new address", which contradicts AC-25 and the approved Q-4. TES tests against AC-25. PRO should delete the stale rows.
-2. **Tray popup in admin sessions** (implementation plan, open point 2): TC-002-12 records whether the code also appears in the Admin session. Still Michael's decision.
-3. **A kid can pair their own app** (open point 1): not tested as a failure, because the story allows it (Q-1). Block D shows that a standard account can install and pair a parent app. This matters as soon as a parent app can change settings.
+2. **Tray popup in admin sessions** (implementation plan, open point 2): decided by Michael on 2026-10-04: the tray client keeps running in admin sessions. TC-002-12 only records whether the code also appears in the Admin session.
+3. **A kid can pair their own app** (open point 1): accepted risk for now (Michael, 2026-10-04), no technical protection required; not a Fail (the story allows it, Q-1). Block D shows that a standard account can install and pair a parent app. This matters as soon as a parent app can change settings.
 4. **AC-4 "newer version"** can only be checked with a later parent app build (see §1).
 5. **AC-20, server side:** a black-box test can show "never green" and "removed pairing refused" (TC-002-25). That the service refuses every other call from an unpaired app is only covered by DEV's unit tests.
 6. **App behaviour when the service no longer knows its pairing** (TC-002-25), **whether a code stays valid after a rejected empty device name** (TC-002-13), and **what happens to the pairing form during a 5-minute wait** (TC-002-27) are not specified by the story. They are recorded as observations for PRO.
-7. **Second PC** (open point 3): still to be confirmed. AC-2, AC-6 (LAN part), AC-23 (other-PC part) and AC-24 stay open until Block C runs.
+7. **Second PC** (open point 3): confirmed by Michael on 2026-10-04. Block C is executable; AC-2, AC-6 (LAN part), AC-23 (other-PC part) and AC-24 get their result there.
