@@ -149,7 +149,7 @@ public sealed class TrayHubTests
             l => l.Log(
                 level,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((state, _) => state.ToString() == message),
+                It.Is<It.IsAnyType>((state, _) => $"{state}" == message),
                 exception,
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);

@@ -218,7 +218,7 @@ public sealed class PairingManagerTests
                 It.IsAny<LogLevel>(),
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((state, _) =>
-                    state.ToString()!.Contains(Code) || state.ToString()!.Contains("111111") || state.ToString()!.Contains(Token)),
+                    $"{state}".Contains(Code) || $"{state}".Contains("111111") || $"{state}".Contains(Token)),
                 It.IsAny<Exception?>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Never);

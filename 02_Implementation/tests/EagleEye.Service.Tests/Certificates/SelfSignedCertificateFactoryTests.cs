@@ -33,7 +33,7 @@ public sealed class SelfSignedCertificateFactoryTests : IDisposable
     {
         var eku = _certificate.Extensions.OfType<X509EnhancedKeyUsageExtension>().Single();
 
-        Assert.Equal(["1.3.6.1.5.5.7.3.1"], eku.EnhancedKeyUsages.Cast<Oid>().Select(o => o.Value).ToArray());
+        Assert.Equal(["1.3.6.1.5.5.7.3.1"], eku.EnhancedKeyUsages.Cast<Oid>().Select(o => o.Value ?? string.Empty).ToArray());
     }
 
     [Fact]
