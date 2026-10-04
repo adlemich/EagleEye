@@ -53,7 +53,3 @@ Every AC must have at least one test case.
 - ...
 
 [Repeat for each test case.]
-
-## 6. Regression
-
-[Which sections of `docs/testing/regression-checklist.md` apply to this story's test runs. Normally: all of them.]

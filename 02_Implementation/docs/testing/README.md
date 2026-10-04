@@ -42,11 +42,13 @@ All acceptance and end-to-end testing for EagleEye is **manual**. Michael execut
 4. Michael tells TES: "test run 01 for US-XXX is done"
 5. TES evaluates → writes docs/testing/US-XXX/test-report.md
                  → writes issues in docs/requirements/user-stories/US-XXX/issues/ISSUE-XXX.md
-6. After fixes: TES creates test-run-02.md (failed cases + regression) → repeat 3–5
+6. After fixes: TES creates test-run-02.md (failed, blocked and not-executed cases) → repeat 3–5
 7. Michael approves the test report → story can be closed (by Michael only)
 ```
 
-Every test run includes the **regression checklist** (`docs/testing/regression-checklist.md`), which covers all previously closed user stories. TES adds a story's key cases to that checklist when the story is closed.
+Story test runs contain **no regression cases**. The **regression checklist** (`docs/testing/regression-checklist.md`) covers all previously closed user stories; TES adds a story's key cases to it when the story is closed.
+
+**Regression testing happens only when Michael explicitly requests it, before a major version release.** TES then creates `docs/testing/regression/regression-run-<version>.md` from all sections of the checklist. Michael executes and records it like any test run (§4), and TES evaluates it. A failure becomes an issue under the story that owns the case.
 
 ---
 

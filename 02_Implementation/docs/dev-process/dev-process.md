@@ -281,7 +281,7 @@ A user story may only be set to `Verified/Closed` when **all** of the following 
 
 - All unit tests pass (`pwsh scripts/test.ps1`) on every machine involved.
 - TES has written a test plan (`docs/testing/US-XXX/test-plan.md`) approved by Michael, covering every acceptance criterion.
-- Michael has executed the manual test run(s) (`docs/testing/US-XXX/test-run-NN.md`) including the regression checklist.
+- Michael has executed the manual test run(s) (`docs/testing/US-XXX/test-run-NN.md`). Regression is not part of a story's Definition of Done. It runs only on Michael's explicit request before a major version release (`docs/testing/README.md`).
 - TES's test report (`docs/testing/US-XXX/test-report.md`) shows every AC passed and no open Critical/High issues.
 
 ### 12.3 Human Acceptance
