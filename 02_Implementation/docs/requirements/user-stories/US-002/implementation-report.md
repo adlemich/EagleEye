@@ -193,3 +193,16 @@ Coverage measured with coverlet (`dotnet test --collect:"XPlat Code Coverage"`),
 |---|---|
 | Steps 0 to 9 (code, unit tests, `build.ps1`, `test.ps1`, both installers, smoke check) | Windows Developer Machine |
 | MacBook | Not used. The Mac Catalyst head files are unverified (D-13); `build.ps1` on the MacBook builds Shared and ParentApp.Core and skips the head while the MAUI workload is missing. |
+
+---
+
+## 8. Fixes after Test Run 01
+
+| Issue | Fix | Files |
+|---|---|---|
+| ISSUE-004 (Critical): pairing-code window clipped at 150 % display scaling ("Kopplungscode: 22") | `PairingCodeDialog` no longer uses fixed pixel sizes. It scales with the DPI (`AutoScaleMode.Dpi`, logical 96-DPI values) and sizes itself to its content: `AutoSize`/`GrowAndShrink` window, one-column `TableLayoutPanel`, auto-sized centered labels that wrap above 480 logical px, auto-sized OK button (min. 80 px), code font relative to the dialog font. Root cause and verification: `issues/ISSUE-004.md` §Resolution. | `02_Implementation/src/EagleEye.TrayClient/UI/PairingCodeDialog.cs`; screenshots in `02_Implementation/docs/requirements/user-stories/US-002/issues/ISSUE-004-evidence/` |
+
+- **No deviation** from the plan's behavior (AC-14 texts, topmost, taskbar, 5-minute auto-close, replacement by a new code are unchanged). Process DPI mode stays `SystemAware` (see the issue for why `PerMonitorV2` was not adopted).
+- **No new unit tests:** the change is pure WinForms layout, which the plan keeps out of unit tests; verified by rendering instead (see the issue). `build.ps1`: 0 warnings, 0 errors. `test.ps1`: 318/318 passed.
+- **Artifacts (version stays 0.2.0):** only `03_Delivery/windows/EagleEye-Setup-0.2.0.exe` (service + tray client) was rebuilt (`package-windows.ps1 -Target Service`). `03_Delivery/windows/EagleEye-ParentApp-Setup-0.2.0.exe` was **not** rebuilt and is unchanged (no parent app code changed). Re-running `EagleEye-Setup-0.2.0.exe` over the installed 0.2.0 replaces the tray client (same version; Inno Setup overwrites the files, `ignoreversion`). The installer ends the tray client in all sessions; it comes back at the next sign-in, or via Start menu *EagleEye Tray* (or the installer's last-page checkbox in the installing session).
+- **Known, not fixed (same pattern, other dialog):** the US-001 *App Infos* dialog (`AboutDialog`) also uses fixed pixel sizes. At 150 % it is still readable (the OK button is tight, see `issues/ISSUE-004-evidence/`); at 200 % the connection-error text fills the window and touches the OK button. Fixing it needs the same per-dialog layout change, not a process-wide one, so it was left out (no unsolicited refactoring). Suggest a separate issue if TES or Michael sees it clipped.
