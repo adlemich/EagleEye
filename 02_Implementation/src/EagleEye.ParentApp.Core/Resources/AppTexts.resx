@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- German: neutral / default language (NFR-L-011) -->
+  <data name="MenuSettings" xml:space="preserve"><value>Einstellungen</value></data>
+  <data name="SectionAppearance" xml:space="preserve"><value>Darstellung</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>Hell</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>Dunkel</value></data>
+  <data name="SectionServerConnection" xml:space="preserve"><value>Serververbindung</value></data>
+  <data name="PairingStatusLabel" xml:space="preserve"><value>Kopplungsstatus</value></data>
+  <data name="PairingStatusNotPaired" xml:space="preserve"><value>Nicht gekoppelt</value></data>
+  <data name="PairingStatusInProgress" xml:space="preserve"><value>Kopplung läuft</value></data>
+  <data name="PairingStatusPaired" xml:space="preserve"><value>Gekoppelt</value></data>
+  <data name="HostLabel" xml:space="preserve"><value>Hostname oder IP-Adresse des EagleEye-PCs</value></data>
+  <data name="HostPlaceholder" xml:space="preserve"><value>z. B. kinder-pc</value></data>
+  <data name="HostDialogTitle" xml:space="preserve"><value>Mit dem EagleEye-PC verbinden</value></data>
+  <data name="ConnectButton" xml:space="preserve"><value>Verbinden</value></data>
+  <data name="PairingInstruction" xml:space="preserve"><value>Geben Sie den 6-stelligen Code ein, der auf dem EagleEye-PC angezeigt wird.</value></data>
+  <data name="PairingCodeLabel" xml:space="preserve"><value>Kopplungscode</value></data>
+  <data name="DeviceNameLabel" xml:space="preserve"><value>Gerätename dieses PCs</value></data>
+  <data name="PairButton" xml:space="preserve"><value>Koppeln</value></data>
+  <data name="NewCodeButton" xml:space="preserve"><value>Neuen Code anfordern</value></data>
+  <data name="CancelButton" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="PairedWithFormat" xml:space="preserve"><value>Gekoppelt mit: {0}</value></data>
+  <data name="ThisDeviceFormat" xml:space="preserve"><value>Dieses Gerät: {0}</value></data>
+  <data name="RemovePairingButton" xml:space="preserve"><value>Kopplung aufheben</value></data>
+  <data name="RemoveConfirmTitle" xml:space="preserve"><value>Kopplung aufheben?</value></data>
+  <data name="RemoveConfirmMessageFormat" xml:space="preserve"><value>Dieser PC wird von {0} getrennt. Für eine neue Verbindung ist ein neuer Kopplungscode nötig.</value></data>
+  <data name="RemoveNeedsConnection" xml:space="preserve"><value>Zum Aufheben der Kopplung ist eine Verbindung zum EagleEye-PC nötig.</value></data>
+  <data name="StatusConnectedFormat" xml:space="preserve"><value>Verbunden mit {0}</value></data>
+  <data name="StatusConnectingFormat" xml:space="preserve"><value>Verbindung zu {0} wird hergestellt …</value></data>
+  <data name="StatusNotConnected" xml:space="preserve"><value>Nicht verbunden</value></data>
+  <data name="StatusNotConnectedFormat" xml:space="preserve"><value>Nicht verbunden mit {0}</value></data>
+  <data name="ErrorUnreachableFormat" xml:space="preserve"><value>Verbindungsfehler: Keine Verbindung zum EagleEye-Dienst unter {0} möglich.</value></data>
+  <data name="ErrorInvalidHost" xml:space="preserve"><value>Bitte einen gültigen Hostnamen oder eine IP-Adresse eingeben.</value></data>
+  <data name="ErrorCodeFormat" xml:space="preserve"><value>Der Kopplungscode besteht aus 6 Ziffern.</value></data>
+  <data name="ErrorWrongCode" xml:space="preserve"><value>Der Kopplungscode ist falsch.</value></data>
+  <data name="ErrorCodeExpired" xml:space="preserve"><value>Der Kopplungscode ist abgelaufen.</value></data>
+  <data name="ErrorNoPendingCode" xml:space="preserve"><value>Kein gültiger Kopplungscode vorhanden. Bitte einen neuen Code anfordern.</value></data>
+  <data name="ErrorDeviceNameRequired" xml:space="preserve"><value>Bitte einen Gerätenamen eingeben (höchstens 50 Zeichen).</value></data>
+  <data name="ErrorCertificateChangedFormat" xml:space="preserve"><value>Die Identität des EagleEye-PCs {0} hat sich geändert. Die Verbindung wurde abgelehnt.</value></data>
+  <data name="ErrorRemoveFailed" xml:space="preserve"><value>Die Kopplung konnte nicht aufgehoben werden. Bitte erneut versuchen.</value></data>
+  <data name="InfoPairingLostFormat" xml:space="preserve"><value>Dieser PC ist nicht mehr mit {0} gekoppelt.</value></data>
+</root>

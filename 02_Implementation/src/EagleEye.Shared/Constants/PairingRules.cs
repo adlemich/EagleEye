@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace EagleEye.Shared.Constants;
 
 /// <summary>
@@ -15,7 +17,7 @@ public static class PairingRules
     public static readonly TimeSpan CodeLifetime = TimeSpan.FromMinutes(5);
 
     /// <summary>Whether <paramref name="code"/> consists of exactly <see cref="CodeLength"/> ASCII digits.</summary>
-    public static bool IsValidCodeFormat(string? code)
+    public static bool IsValidCodeFormat([NotNullWhen(true)] string? code)
     {
         return code is { Length: CodeLength } && code.All(char.IsAsciiDigit);
     }
