@@ -34,12 +34,6 @@
 
 ---
 
-## Regression
-
-[Copied from `docs/testing/regression-checklist.md` by TES. Same result block per case.]
-
----
-
 ## General Feedback
 
 <!-- Anything that does not fit a test case: usability remarks, ideas, surprises. -->

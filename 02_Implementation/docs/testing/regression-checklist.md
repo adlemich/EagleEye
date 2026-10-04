@@ -2,7 +2,7 @@
 
 *Owner: TES. Cumulative: one section per closed user story.*
 
-TES copies the relevant sections into every new test run (`docs/testing/US-XXX/test-run-NN.md`). Cases are added here only when a story is closed (`Verified/Closed`). Keep each section short. It holds the cases that prove the story still works, not the full test plan.
+Story test runs do not include these cases. Only when Michael explicitly requests a regression run before a major version release does TES copy all sections into `docs/testing/regression/regression-run-<version>.md` (see `docs/testing/README.md`). Cases are added here only when a story is closed (`Verified/Closed`). Keep each section short. It holds the cases that prove the story still works, not the full test plan.
 
 UI texts below are the German texts (Windows display language German); on an English system the English equivalents apply.
 

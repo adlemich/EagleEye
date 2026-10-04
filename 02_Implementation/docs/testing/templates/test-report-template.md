@@ -25,11 +25,11 @@
 |---|---|---|---|
 | AC-1 | TC-XXX-01 | Pass | |
 
-## 4. Regression Results
+## 4. Cases Not Executed
 
-| Story | Cases | Pass | Fail | Not executed |
-|---|---|---|---|---|
-| US-00X | | | | |
+| Test case | Run | Reason |
+|---|---|---|
+| TC-XXX-NN | `test-run-01.md` | |
 
 ## 5. Issues
 
