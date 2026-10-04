@@ -180,6 +180,8 @@ Recorded by the Orchestrator. These answers supersede the development and test s
 
 **A**: It is an extra app. No need to package it into the installer; a single copied exe file is sufficient.
 
+**Superseded (Michael, 2026-10-04)**: the Windows parent client gets its own full, clean and self-contained Windows installer, next to the service installer. Copy deployment is dropped. See `02_Implementation/docs/requirements/general-product-requirements.md` FR-APP-092 (v1.2).
+
 ---
 
 **Q9.6**: May the Windows client run on the same PC as the service?
