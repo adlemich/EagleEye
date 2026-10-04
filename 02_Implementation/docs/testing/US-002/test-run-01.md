@@ -23,14 +23,14 @@
 
 ## Setup (service PC, Admin) — before Block A
 
-- [ ] **S-1** *Installierte Apps*: **EagleEye 0.1.1** installed (do not uninstall). "EagleEye Parent App" **not** listed.
-- [ ] **S-2** PowerShell: `Test-Path "$env:LOCALAPPDATA\EagleEye"` and `Test-Path "$env:LOCALAPPDATA\Programs\EagleEye Parent App"` both `False` (delete the folder if `True`).
-- [ ] **S-3** *Task-Manager → Details*: no `EagleEye.Service.exe` running from a `02_Implementation` folder, no `EagleEye.ParentApp.exe`.
-- [ ] **S-4** `eagleeye-kid` exists and is signed out.
-- [ ] **S-5** `hostname` → `<host>` = ____________ · `ipconfig` (LAN IPv4) → `<ip>` = ____________
-- [ ] **S-6** Windows app mode = **Dunkel** (*Einstellungen → Personalisierung → Farben*). Your usual setting (for cleanup): ____________
-- [ ] **S-7** SmartScreen on the unsigned installers: *Weitere Informationen* → *Trotzdem ausführen* (expected, not a failure).
-- [ ] **S-8** Terminal (Administrator) open. Commands: `Stop-Service -DisplayName "EagleEye Service"` / `Start-Service -DisplayName "EagleEye Service"`.
+- [x] **S-1** *Installierte Apps*: **EagleEye 0.1.1** installed (do not uninstall). "EagleEye Parent App" **not** listed.
+- [x] **S-2** PowerShell: `Test-Path "$env:LOCALAPPDATA\EagleEye"` and `Test-Path "$env:LOCALAPPDATA\Programs\EagleEye Parent App"` both `False` (delete the folder if `True`).
+- [x] **S-3** *Task-Manager → Details*: no `EagleEye.Service.exe` running from a `02_Implementation` folder, no `EagleEye.ParentApp.exe`.
+- [x] **S-4** `eagleeye-kid` exists and is signed out.
+- [x] **S-5** `hostname` → `<host>` = ____________ · `ipconfig` (LAN IPv4) → `<ip>` = ____________
+- [x] **S-6** Windows app mode = **Dunkel** (*Einstellungen → Personalisierung → Farben*). Your usual setting (for cleanup): ____________
+- [x] **S-7** SmartScreen on the unsigned installers: *Weitere Informationen* → *Trotzdem ausführen* (expected, not a failure).
+- [x] **S-8** Terminal (Administrator) open. Commands: `Stop-Service -DisplayName "EagleEye Service"` / `Start-Service -DisplayName "EagleEye Service"`.
 
 ---
 
@@ -50,7 +50,7 @@
 - `0.0.0.0:5443` and `[::]:5443` *ABHÖREN*. Port 5080 only as `127.0.0.1:5080` and `[::1]:5080`.
 - Rule: *Aktiviert* Ja, *Aktion* Zulassen, *Profil* Alle, TCP, *Lokaler Port* 5443, *Remoteadresse* Lokales Subnetz, *Programm* `C:\Program Files\EagleEye\Service\EagleEye.Service.exe`.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -64,7 +64,7 @@
 
 **Expected**: no error; **EagleEye** is listed once, version **0.2.0**, publisher **Michael Adler**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -78,7 +78,7 @@
 
 **Expected**: *Wird ausgeführt*, *Automatisch*, *Lokales System*.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -97,8 +97,15 @@
 - `certs`: only SYSTEM (F) and Administratoren (F). No *Benutzer* entry.
 - `True`.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Observed**:
+- **Result**: [ ] Pass  [X ] Fail  [ ] Blocked  [ ] Skipped
+- **Observed**: Command line shows access errors: 
+- PS C:\Users\Admin> icacls "$env:ProgramData\EagleEye\certs"
+C:\ProgramData\EagleEye\certs: Zugriff verweigert
+0 Dateien erfolgreich verarbeitet, bei 1 Dateien ist ein Verarbeitungsfehler aufgetreten.
+PS C:\Users\Admin> Test-Path "$env:ProgramData\EagleEye\certs\eagleeye.pfx"
+Test-Path: Access to the path 'C:\ProgramData\EagleEye\certs\eagleeye.pfx' is denied.
+False
+-
 - **Notes**:
 
 ---
@@ -113,7 +120,7 @@
 
 **Expected**: the icon is present without a manual start, it is **green**, and the tooltip reads **"EagleEye — Verbunden"**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -127,7 +134,7 @@
 
 **Expected**: dialog **"EagleEye – App Infos"** showing **"Server-Version: EagleEye_v0.2"**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -143,7 +150,7 @@
 
 **Expected**: all three observations as stated.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -160,7 +167,7 @@
 - Explorer refuses access (*"Sie verfügen momentan nicht über die Berechtigung…"*).
 - PowerShell: *Zugriff verweigert*; no file listed.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -182,7 +189,7 @@
 - Start menu entry **EagleEye Parent App** exists.
 - *Note only*: whether a UAC prompt appeared.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -198,7 +205,7 @@
 - **EagleEye Parent App** listed separately from **EagleEye**.
 - Version **0.2.0**, publisher **Michael Adler**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -214,7 +221,7 @@
 - The app opens and **immediately** shows **"Mit dem EagleEye-PC verbinden"** (hostname or IP address), buttons *Verbinden* and *Abbrechen*.
 - Dialog and window are **dark**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -234,7 +241,7 @@
 - *Serververbindung*: status **Nicht gekoppelt**, **editable** host field, button *Verbinden*.
 - Status bar: **red** indicator, **"Nicht verbunden"**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -253,7 +260,7 @@
 - Each change applies to the **whole** window **at once**, without a restart.
 - The label shows the current mode (*Hell* / *Dunkel*).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -272,7 +279,7 @@
 - Indicator stays **red**; never "Verbunden".
 - The field stays editable (step 3 works).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: <!-- seconds until the error -->
 
@@ -290,7 +297,7 @@
 - A connection error naming `<host>`.
 - Indicator stays **red**; *Verbinden* can be used again.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -308,7 +315,7 @@
 - Status bar **red** "Verbindung zu `<host>` wird hergestellt …"; **not** "Verbunden mit `<host>`".
 - *Note only*: what the device name field is prefilled with.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: <!-- prefilled device name -->
 
@@ -327,8 +334,8 @@
 - In the Kid session the popup **"EagleEye – Eltern-App koppeln"** is shown on top, visible without searching.
 - It shows **6 digits** ("Kopplungscode: nnnnnn") and says the code is for the EagleEye parent app ("Geben Sie diesen Code in der EagleEye-Eltern-App ein.", "Der Code ist 5 Minuten gültig.").
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Observed**:
+- **Result**: [ ] Pass  [X] Fail  [ ] Blocked  [ ] Skipped
+- **Observed**: The window that shows the code is to small. See screenshot "02_Implementation\docs\testing\US-002\evidence\Screenshot 2026-10-04 203157.png". As a result, the process could not be continued. Test aborted here.
 - **Notes**: <!-- popup also in Admin session? yes / no -->
 
 ---
