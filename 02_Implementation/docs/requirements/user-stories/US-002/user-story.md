@@ -36,7 +36,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-015 (de-registration of the own dev
 
 ### A. Installer of the parent app
 
-- [ ] **AC-1**: There is a separate installer for the EagleEye parent app, independent of the EagleEye service installer. It can be installed on a Windows 11 PC on which the EagleEye service is **not** installed, and also on the service PC next to the service.
+- [ ] **AC-1**: There is a separate installer for the EagleEye parent app, independent of the EagleEye service installer. It can be installed on any Windows 11 PC, with or without the EagleEye service installed. On the service PC it installs and behaves **exactly as on any other PC**: no difference in installation, use, connection or pairing. This includes the case where the parent uses the kid's PC under their own Windows account (e.g. an admin account) while the kid uses a standard account on the same PC.
 - [ ] **AC-2**: The installer is a guided wizard. When the parent installs with default settings on a Windows 11 PC that has no other software installed for EagleEye (in particular no separately installed .NET runtime), the installation completes and the parent app starts from the Windows Start menu without any further installation step.
 - [ ] **AC-3**: The installer and the installed app show the publisher "Michael Adler" and the EagleEye product version (e.g. in *Settings → Apps → Installed apps*).
 - [ ] **AC-4**: When the parent runs the installer of the same or a newer version over an existing installation (repair or update), it completes without errors, and an existing pairing is kept: the app connects afterwards without a new pairing code.
@@ -74,7 +74,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-015 (de-registration of the own dev
 
 - [ ] **AC-20**: When the parent starts a paired parent app, it connects to the stored host on its own, without a code or any other input, and shows "Connected to <host>" with a green indicator within 30 seconds after start (provided the service is running).
 - [ ] **AC-21**: When the service is stopped while the parent app is connected, the parent app shows a red indicator and a not-connected status within 30 seconds. When the service is started again, the parent app reconnects without user action and shows green within 60 seconds.
-- [ ] **AC-22**: Pairing and connection work in both setups: parent app on the service PC itself, and parent app on another PC in the same LAN.
+- [ ] **AC-22**: Pairing and connection work in both setups with identical behaviour: parent app on the service PC itself (used from the parent's own Windows account), and parent app on another PC in the same LAN.
 - [ ] **AC-23**: Two parent apps on two different PCs can be paired with the same service at the same time; both show "Connected to <host>".
 
 ### F. Removing the pairing ("detach")
@@ -90,6 +90,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-015 (de-registration of the own dev
 | Date | Change | Source |
 |---|---|---|
 | 2026-10-04 | Story created | Michael's scope, written by PRO |
+| 2026-10-04 | AC-1, AC-22: no difference between service PC and other PCs, incl. parent and kid sharing one PC with separate Windows accounts | Michael, review feedback |
 
 ---
 
