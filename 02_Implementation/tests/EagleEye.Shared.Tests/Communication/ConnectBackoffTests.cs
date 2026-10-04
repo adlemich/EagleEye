@@ -1,7 +1,7 @@
-using EagleEye.TrayClient.Communication;
+using EagleEye.Shared.Communication;
 using Xunit;
 
-namespace EagleEye.TrayClient.Tests.Communication;
+namespace EagleEye.Shared.Tests.Communication;
 
 public sealed class ConnectBackoffTests
 {

@@ -1,10 +1,10 @@
-namespace EagleEye.TrayClient.Communication;
+namespace EagleEye.Shared.Communication;
 
 /// <summary>
 /// Delay between initial connection attempts while the service is not reachable:
-/// exponential (1 s, 2 s, 4 s, ...), capped at 30 s.
+/// exponential (1 s, 2 s, 4 s, ...), capped at 30 s. Used by the tray client and the parent app.
 /// </summary>
-internal static class ConnectBackoff
+public static class ConnectBackoff
 {
     private const int MaxDelaySeconds = 30;
 

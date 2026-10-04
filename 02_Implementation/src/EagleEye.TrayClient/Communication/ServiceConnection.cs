@@ -1,3 +1,4 @@
+using EagleEye.Shared.Communication;
 using EagleEye.Shared.Constants;
 using EagleEye.Shared.Contracts;
 using EagleEye.Shared.Models;
