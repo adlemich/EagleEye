@@ -23,6 +23,9 @@
 #define ServiceExe         "EagleEye.Service.exe"
 #define TrayExe            "EagleEye.TrayClient.exe"
 #define TrayRunValue       "EagleEyeTrayClient"
+#define DataFolder         "EagleEye"
+#define FirewallRule       "EagleEye Service (Parent apps)"
+#define ParentPort         "5443"
 
 [Setup]
 AppId={{EA07FFCA-77A6-417F-8430-B3D31ADE2425}
@@ -120,6 +123,46 @@ begin
   RunHidden(NetExe(), 'start ' + SvcName);
 end;
 
+function IcaclsExe(): String;
+begin
+  Result := ExpandConstant('{sys}\icacls.exe');
+end;
+
+function NetshExe(): String;
+begin
+  Result := ExpandConstant('{sys}\netsh.exe');
+end;
+
+{ Creates %ProgramData%\EagleEye and certs\ and restricts them (ADR-008 section 7).
+  Well-known SIDs instead of names, so that localized (e.g. German) Windows works:
+  S-1-5-18 = SYSTEM, S-1-5-32-544 = Administrators, S-1-5-32-545 = Users.
+  Idempotent: /inheritance:r and /grant:r replace earlier entries on every install. }
+procedure ConfigureDataFolder();
+var
+  DataDir, CertDir: String;
+begin
+  DataDir := ExpandConstant('{commonappdata}\{#DataFolder}');
+  CertDir := DataDir + '\certs';
+  ForceDirectories(CertDir);
+
+  RunHidden(IcaclsExe(), '"' + DataDir + '" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F *S-1-5-32-545:(OI)(CI)RX');
+  RunHidden(IcaclsExe(), '"' + CertDir + '" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F');
+end;
+
+procedure RemoveFirewallRule();
+begin
+  RunHidden(NetshExe(), 'advfirewall firewall delete rule name="{#FirewallRule}"');
+end;
+
+{ Inbound rule for the parent endpoint (ADR-008 section 7): TCP 5443, the service program
+  only, local subnet only, all profiles (home networks are often classified as Public). }
+procedure ConfigureFirewall();
+begin
+  RemoveFirewallRule();
+  RunHidden(NetshExe(), 'advfirewall firewall add rule name="{#FirewallRule}" dir=in action=allow protocol=TCP localport={#ParentPort}' +
+    ' program="' + ExpandConstant('{app}\Service\{#ServiceExe}') + '" remoteip=localsubnet profile=any');
+end;
+
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   StopServiceAndTray();
@@ -129,7 +172,11 @@ end;
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
+  begin
+    ConfigureDataFolder();
+    ConfigureFirewall();
     InstallService();
+  end;
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
@@ -138,5 +185,7 @@ begin
   begin
     StopServiceAndTray();
     RunHidden(ScExe(), 'delete ' + SvcName);
+    { %ProgramData%\EagleEye (certificate, pairings) stays, so that a reinstall keeps the pairings. }
+    RemoveFirewallRule();
   end;
 end;
