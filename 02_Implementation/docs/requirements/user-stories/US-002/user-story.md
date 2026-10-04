@@ -40,7 +40,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-083 (v1.2, light/dark mode), FR-APP
 - [ ] **AC-2**: The installer is a guided wizard. When the parent installs with default settings on a Windows 11 PC that has no other software installed for EagleEye (in particular no separately installed .NET runtime), the installation completes and the parent app starts from the Windows Start menu without any further installation step.
 - [ ] **AC-3**: The installer and the installed app show the publisher "Michael Adler" and the EagleEye product version (e.g. in *Settings → Apps → Installed apps*).
 - [ ] **AC-4**: When the parent runs the installer of the same or a newer version over an existing installation (repair or update), it completes without errors, and an existing pairing is kept: the app connects afterwards without a new pairing code.
-- [ ] **AC-5**: When the parent uninstalls the parent app via *Settings → Apps → Installed apps*, the app is removed completely: no program files, no Start menu entry and no stored connection or pairing data of the app remain on the parent PC. (Removing the device on the service side is not part of uninstalling; see Open Question Q-2.)
+- [ ] **AC-5**: When the parent uninstalls the parent app via *Settings → Apps → Installed apps*, the app is removed completely: no program files, no Start menu entry and no stored connection or pairing data of the app remain on the parent PC. (Removing the device on the service side is not part of uninstalling; see Decision Q-2.)
 
 ### B. Service reachability
 
@@ -51,7 +51,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-083 (v1.2, light/dark mode), FR-APP
 
 - [ ] **AC-8**: The parent app opens a desktop-style main window with a navigation menu on the left. The first menu entry is "Settings" ("Einstellungen"). Selecting it shows the settings page with two sections:
   1. "Visual appearance" ("Darstellung"), see AC-9
-  2. "Server connection" ("Serververbindung"): shows the pairing status (not paired / paired with host and device name), lets the parent set or change the hostname or IP address of the service PC, and, when paired, lets the parent remove the pairing (AC-11, AC-16, AC-25, AC-26).
+  2. "Server connection" ("Serververbindung"): shows the pairing status (not paired / paired with host and device name), lets the parent enter the hostname or IP address of the service PC while the app is not paired, and, when paired, lets the parent remove the pairing (AC-11, AC-16, AC-25, AC-26).
 - [ ] **AC-9**: In the "Visual appearance" section, a switch selects light or dark mode ("Light" / "Dark"; German "Hell" / "Dunkel"). Changing the switch applies the mode to the whole app immediately, without a restart. The choice is kept across restarts of the app and across updates (AC-4). On the very first start, the app uses the Windows app mode (light or dark) of the current user, and the switch shows it.
 - [ ] **AC-10**: The main window has a status bar at the bottom with a connection indicator (green = connected, red = not connected, like the tray client) and a status text naming the host:
   - connected: "Connected to <host>" ("Verbunden mit <host>"), green indicator
@@ -62,7 +62,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-083 (v1.2, light/dark mode), FR-APP
 
 ### D. First connection and pairing
 
-- [ ] **AC-11**: When the parent app is not paired, the "Server connection" section lets the parent enter the service PC's **hostname or IP address** and start the connection. Both a hostname and an IPv4 address work.
+- [ ] **AC-11**: When the parent app starts and is not paired (first start after installation, or after the pairing was removed), it immediately shows a dialog that asks for the service PC's **hostname or IP address** (English example: "Enter the hostname or IP address of the EagleEye PC"). Confirming the dialog starts the connection and continues with pairing (AC-13). If the parent cancels the dialog, the main window shows the app as not paired, and the parent can enter the host in the "Server connection" section instead. Both a hostname and an IPv4 address work.
 - [ ] **AC-12**: When the entered host cannot be reached (wrong name, PC off, service stopped), the parent app shows a connection error that names the host it tried to reach (English example: "Connection error: could not connect to the EagleEye service at kid-pc"). The indicator stays red, and the parent can correct the input and try again.
 - [ ] **AC-13**: When the parent app connects to the service for the first time (not paired), the service generates a 6-digit numeric pairing code, and the parent app asks the parent for this code and for a device name for this PC (e.g. "Dad's laptop").
 - [ ] **AC-14**: When a standard user is logged on to the service PC and the tray client is connected, the pairing code appears there as a popup of the tray client that shows the 6 digits and says that they are needed to pair a parent app.
@@ -79,15 +79,15 @@ References: FR-APP-010 to FR-APP-014, FR-APP-083 (v1.2, light/dark mode), FR-APP
 - [ ] **AC-22**: When the service is stopped while the parent app is connected, the parent app shows a red indicator and a not-connected status within 30 seconds. When the service is started again, the parent app reconnects without user action and shows green within 60 seconds.
 - [ ] **AC-23**: Pairing and connection work in both setups with identical behaviour: parent app on the service PC itself (used from the parent's own Windows account), and parent app on another PC in the same LAN.
 - [ ] **AC-24**: Two parent apps on two different PCs can be paired with the same service at the same time; both show "Connected to <host>".
-- [ ] **AC-25**: When the app is paired, the parent can change the hostname or IP address in the "Server connection" section (e.g. because the service PC got a new IP address). The app then connects to the new address with its existing pairing. If it reaches the same EagleEye service, it shows "Connected to <new host>" without a new pairing code. If the service at the new address does not accept the pairing, the app tells the parent and starts the pairing flow (AC-13) with that service. (See Open Question Q-4.)
+- [ ] **AC-25**: While the app is paired, the hostname or IP address cannot be changed: the "Server connection" section shows it read-only. To connect to a different address, the parent first removes the pairing (AC-26, AC-27), then enters the new address and pairs again.
 
 ### F. Removing the pairing ("detach")
 
 - [ ] **AC-26**: When the app is paired and connected, the "Server connection" section offers an action to remove the pairing (English example: "Remove pairing"; German: "Kopplung aufheben"). The app asks for confirmation before it removes anything.
-- [ ] **AC-27**: After the parent confirms, the service no longer accepts this parent app as paired, and the parent app forgets the stored host and pairing. The app returns to the unpaired state (red indicator, hostname entry), and after a restart it starts with the hostname entry and onboarding again.
+- [ ] **AC-27**: After the parent confirms, the service no longer accepts this parent app as paired, and the parent app forgets the stored host and pairing. The app returns to the unpaired state (red indicator, hostname entry enabled), and after a restart it starts with the hostname dialog of AC-11 and onboarding again.
 - [ ] **AC-28**: When the parent connects again after removing the pairing, a new pairing code is required; the former pairing is not accepted any more.
 - [ ] **AC-29**: Removing the pairing of one parent app does not affect another paired parent app; it stays connected.
-- [ ] **AC-30**: When the app is paired but not connected, removing the pairing is not offered (or not possible), and the app tells the parent that a connection to the service is required for it. (See Open Question Q-3.)
+- [ ] **AC-30**: When the app is paired but not connected, removing the pairing is not offered (or not possible), and the app tells the parent that a connection to the service is required for it. (See Decision Q-3.)
 
 ### Change Log
 
@@ -96,6 +96,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-083 (v1.2, light/dark mode), FR-APP
 | 2026-10-04 | Story created | Michael's scope, written by PRO |
 | 2026-10-04 | AC-1, AC-23: no difference between service PC and other PCs, incl. parent and kid sharing one PC with separate Windows accounts | Michael, review feedback |
 | 2026-10-04 | Menu entry "Connection" replaced by "Settings" with sections "Visual appearance" (new: light/dark mode switch, AC-9) and "Server connection" (pairing status, set/change host, remove pairing). New AC-25 (change host while paired). ACs renumbered; numbers in this log refer to the current numbering. | Michael, review feedback |
+| 2026-10-04 | Open questions decided (Q-1 to Q-6). AC-11: host dialog on start when unpaired. AC-25: host cannot be changed while paired. AC-8, AC-27 and mockups adjusted. | Michael, review feedback |
 
 ---
 
@@ -125,6 +126,20 @@ References: FR-APP-010 to FR-APP-014, FR-APP-083 (v1.2, light/dark mode), FR-APP
   }
   ---
   "<color:red>●</color> Not connected"
+}
+@endsalt
+```
+
+### Start dialog — app not paired (AC-11)
+
+```plantuml
+@startsalt
+{+
+  "EagleEye — Connect to the EagleEye PC"
+  ---
+  "Enter the hostname or IP address of the EagleEye PC"
+  "kid-pc                    "
+  [Connect] | [Cancel]
 }
 @endsalt
 ```
@@ -174,7 +189,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-083 (v1.2, light/dark mode), FR-APP
       ---
       "<b>Server connection"
       "Status: paired"
-      "Hostname or IP address" | "kid-pc              " | [Change]
+      "Hostname or IP address: kid-pc (read-only while paired)"
       "This device: Dad's laptop"
       [Remove pairing]
     }
@@ -243,10 +258,18 @@ App -> Parent : back to hostname entry (red)
 
 ---
 
-## Open Questions (for Michael)
+## Decisions (Michael, 2026-10-04)
 
-| ID | Question | PRO proposal (used in the ACs above) |
+| ID | Question | Decision |
 |---|---|---|
+| Q-1 | **Where does the parent see the pairing code?** Per FR-SVC-091/092, the code goes to the tray client popup, otherwise to the Event Log. The tray client runs only in standard-user (kid) sessions (US-001). | Keep it that way: the tray client runs only in the kid's account. If no kid session is active, the code is in the Event Log (AC-14, AC-15). |
+| Q-2 | **What does uninstalling the parent app do with the pairing?** The uninstaller cannot reach the service, so the service keeps the device as paired. | As proposed: uninstall removes all local data (AC-5). The orphaned entry on the service stays until a later story allows removing other devices (FR-APP-015). |
+| Q-3 | **Removing the pairing while the service is unreachable.** | As proposed: only possible while connected (AC-30). |
+| Q-4 | **Changing the server address while paired.** | Not possible. Remove the pairing first, then enter the new address and pair again (AC-25). In the unpaired state, the app asks for the host in a dialog on start (AC-11). |
+| Q-5 | **Default appearance on first start.** | The system default (Windows light/dark setting) is the start value (AC-9). |
+| Q-6 | **One story or split into two?** | One story. |
+
+---|---|---|
 | Q-1 | **Where does the parent see the pairing code?** Per FR-SVC-091/092, the code goes to the tray client popup, otherwise to the Event Log. US-001 shows the tray client only in standard-user sessions. If the parent sits at the service PC as admin, the code only appears in the Event Log; if a kid is logged on, the **kid** sees the code. | Keep the approved requirements for US-002 (AC-14, AC-15). Revisit in a later story if it is a problem in practice. |
 | Q-2 | **What does uninstalling the parent app do with the pairing?** The uninstaller cannot reach the service, so the service keeps the device as paired. | Uninstall removes all local data (AC-5). The orphaned entry on the service stays until a later story allows removing other devices (FR-APP-015). |
 | Q-3 | **Removing the pairing while the service is unreachable.** | Only possible while connected (AC-30), so the service and the app never disagree. |
