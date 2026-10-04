@@ -1,9 +1,11 @@
 # EagleEye — System Architecture
 
-*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03)*
-*Maintainer: ARC Agent | Last Updated: 2026-10-03*
+*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04)*
+*Maintainer: ARC Agent | Last Updated: 2026-10-04*
 
 > **Amendment 2026-10-03 (ADR-007)**: Windows desktop target added to the ParentApp; two-machine development; manual acceptance testing. Affected: §1.1, §2.1, §2.2, §3.2, §4.2, §5.5, §7, §8.10, §9. Amendments approved by Michael on 2026-10-03.
+>
+> **Amendment 2026-10-04 (US-002, ADR-008, ADR-009)**: two service endpoints (tray: HTTP loopback 5080; parent apps: HTTPS 5443), hub-to-port binding, certificate protection and pinning, explicit `StartPairing`, Windows parent app per-user installer, new `EagleEye.ParentApp.Core` library, Shared `Data/` and `Communication/`. Affected: §3.2, §5.1 to §5.5, §6.1, §7 (incl. §7.1, §7.1.1, §7.3, §7.4), §8.1 to §8.5, §9, §11, §12. ADR-008 and ADR-009 were approved by Michael with the US-002 implementation plan on 2026-10-04.
 
 ---
 
@@ -152,24 +154,25 @@ node "Parent Device\n(Android / iOS / Windows / macOS)" as parentdev {
 package "EagleEye.Shared\n(compile-time dependency)" as shared {
 }
 
-app -down-> svc : SignalR over HTTPS\n(LAN, self-signed TLS)
-tray -down-> svc : SignalR over HTTPS\n(localhost)
+app -down-> svc : SignalR over HTTPS\n(LAN, self-signed TLS, port 5443)
+tray -down-> svc : SignalR over HTTP\n(loopback, port 5080)
 svc -right-> store : SQLite + YAML
 svc ..> shared : references
 app ..> shared : references
 tray ..> shared : references
 
 note right of svc
-  Listens on configurable port (default: 5443)
-  HTTPS with auto-generated self-signed certificate
+  Parent endpoint: all interfaces, port 5443, HTTPS
+  with auto-generated self-signed certificate.
+  Tray endpoint: localhost:5080, HTTP (ADR-008).
 end note
 @enduml
 ```
 
 | Channel | Protocol | Security | Direction |
 |---------|----------|----------|-----------|
-| ParentApp → Service | SignalR (WebSocket over HTTPS) | Self-signed TLS + pairing-based auth token | Bidirectional (hub pattern) |
-| TrayClient → Service | SignalR (WebSocket over HTTPS) | Self-signed TLS, localhost only, session-identity auth | Bidirectional (hub pattern) |
+| ParentApp → Service | SignalR (WebSocket over HTTPS), port 5443 | Self-signed TLS (pinned after pairing) + pairing-based auth token | Bidirectional (hub pattern) |
+| TrayClient → Service | SignalR (WebSocket over HTTP), `localhost:5080` | Loopback only (bound to the loopback endpoint, remote address checked); traffic never leaves the machine (ADR-008) | Bidirectional (hub pattern) |
 | Service → Local Storage | SQLite database + YAML config file | Windows ACLs (SYSTEM-owned) | Read/Write |
 
 ---
@@ -236,8 +239,8 @@ package "Shared (compile-time)" {
   }
 }
 
-APP --> SVC : SignalR/HTTPS (LAN)
-TRAY --> SVC : SignalR/HTTPS (localhost)
+APP --> SVC : SignalR/HTTPS (LAN, 5443)
+TRAY --> SVC : SignalR/HTTP (loopback, 5080)
 
 SVC ..> SHARED : uses
 APP ..> SHARED : uses
@@ -293,14 +296,14 @@ PAIR --> COMM : pushes pairing code to tray
 
 | Internal Component | Responsibility |
 |-------------------|---------------|
-| **Communication** | Hosts two SignalR hubs on Kestrel: `ParentHub` (`/hubs/parent`) for authenticated parent apps and `TrayHub` (`/hubs/tray`) for tray clients. Routes incoming queries to the appropriate component, returns results. Pushes events and full-state snapshots to connected clients via SignalR groups (`Parents`, `Tray:{userSid}`). Broadcasts updated state to all clients after every mutation. Pushes complete state snapshot on client connect/reconnect. |
+| **Communication** | Hosts two SignalR hubs on Kestrel, each bound to its own endpoint (ADR-008): `ParentHub` (`/hubs/parent`, HTTPS port 5443) for parent apps and `TrayHub` (`/hubs/tray`, HTTP `localhost:5080`) for tray clients. A default-deny hub filter allows only `[AllowUnpaired]` methods for unpaired parent connections. Routes incoming queries to the appropriate component, returns results. Pushes events and full-state snapshots to connected clients via SignalR groups (`Parents`, `Tray:{userSid}`). Broadcasts updated state to all clients after every mutation. Pushes complete state snapshot on client connect/reconnect. |
 | **Monitoring** | Polls running processes at a configurable interval. Classifies processes as ignored/allowed/blocked. Tracks active usage time per allowed app. Detects pause-window and budget-expiry transitions. |
 | **Enforcement** | Terminates processes using the two-phase graceful-then-force pattern (ADR-006): sends `WM_CLOSE` first, waits up to the configurable timeout (default 30s), then calls `Process.Kill(entireProcessTree: true)`. Used for blocked-app kills (immediate, no warning), budget-expiry shutdowns (after budget warnings), and pause-window shutdowns (after pause warnings). Pushes enforcement events to all connected clients. |
 | **Configuration** | Reads and writes per-user configuration in the SQLite database (allow-lists, budgets, pause windows). Reads general settings from the YAML config file. Validates changes. Notifies other components on config update. |
 | **Statistics** | Accumulates per-user, per-app daily usage minutes. Persists to SQLite. Serves historical data (up to 90 days). Purges old data. |
-| **Certificates** | Generates a self-signed X.509 certificate on first run. Loads and provides the certificate for Kestrel HTTPS binding. |
+| **Certificates** | Generates a self-signed X.509 certificate on first run (ECDSA P-256, DPAPI-protected PFX, see §8.1). Loads and provides the certificate for the Kestrel HTTPS binding of the parent endpoint. |
 | **UserAccounts** | Discovers local standard (non-admin) Windows user accounts via Win32 API. Provides the list to the Communication component for parent-app queries. |
-| **Pairing** | Manages the pairing lifecycle: generates 6-digit codes, enforces 5-minute expiry, validates submissions, stores paired-device credentials in SQLite. Rejects unpaired clients. |
+| **Pairing** | Manages the pairing lifecycle: generates a 6-digit code on explicit request (`StartPairing`), binds it to the requesting connection, enforces 5-minute expiry and one guess per code, stores paired devices (token hash only) in SQLite. Sends the code to all tray clients, or to the Event Log when none is connected. Rejects unpaired clients. |
 | **AppDiscovery** | Scans installed applications (registry, Start Menu, file metadata). Resolves human-readable display names. Caches the name dictionary. Supports re-scan on demand. |
 | **Logging** | Configures the `Microsoft.Extensions.Logging` pipeline for file output. Supports runtime log-level switching (normal ↔ debug) via parent app command. Manages rolling log files (50 MB max, 3 files retained). In debug mode, logs method traces with parameter values and full stack traces. Never logs sensitive data. |
 
@@ -316,6 +319,7 @@ package "EagleEye.Shared" {
     interface IParentClientCallback <<client callback>>
     interface ITrayHub <<server hub>>
     interface ITrayClientCallback <<client callback>>
+    class AllowUnpairedAttribute
   }
   package "Models" {
     class UserAccountDto
@@ -327,10 +331,20 @@ package "EagleEye.Shared" {
     class PairedDeviceDto
     class ServiceVersionDto
     class AppBudgetStatusDto
+    class PairingStatusDto
+    class PairingResultDto
   }
   package "Constants" {
     class HubRoutes
-    class Defaults
+    class ServiceDefaults
+    class PairingRules
+  }
+  package "Communication" {
+    class ReconnectSchedule
+    class ConnectBackoff
+  }
+  package "Data" {
+    abstract class SqliteDatabase
   }
 }
 @enduml
@@ -338,9 +352,11 @@ package "EagleEye.Shared" {
 
 | Package | Contents |
 |---------|----------|
-| **Contracts** | `IParentHub` — methods the server exposes to parent apps (data queries with `Task<T>` return values, config/rule update commands, pairing). `IParentClientCallback` — callbacks the server invokes on parent apps (enforcement events, state-change broadcasts, pairing codes). `ITrayHub` — methods the server exposes to tray clients (session registration, version query). `ITrayClientCallback` — callbacks the server invokes on tray clients (budget updates, warnings, pairing code display, enforcement notices). |
-| **Models** | DTOs for all data exchanged over SignalR: user accounts, app rules, budgets, pause windows, statistics, installed apps, paired devices, version info, budget status. All used as full-state snapshots in server broadcasts. |
-| **Constants** | Hub route paths (`/hubs/parent`, `/hubs/tray`), default values (timeouts, warning thresholds, port numbers). |
+| **Contracts** | `IParentHub` — methods the server exposes to parent apps (data queries with `Task<T>` return values, config/rule update commands, pairing). `IParentClientCallback` — callbacks the server invokes on parent apps (enforcement events, state-change broadcasts; empty in US-002). `ITrayHub` — methods the server exposes to tray clients (session registration, version query). `ITrayClientCallback` — callbacks the server invokes on tray clients (budget updates, warnings, pairing code display via `OnShowPairingCode`, enforcement notices). `AllowUnpairedAttribute` marks the `ParentHub` methods an unpaired connection may call (default deny, ADR-008). |
+| **Models** | DTOs for all data exchanged over SignalR: user accounts, app rules, budgets, pause windows, statistics, installed apps, paired devices, version info, budget status, pairing status and result (`PairingOutcome`). All state data is used as full-state snapshots in server broadcasts. Only the DTOs a story needs are created; the list above is the target set. |
+| **Constants** | Hub route paths (`HubRoutes`: `/hubs/parent`, `/hubs/tray`), default values (`ServiceDefaults`: ports 5080 and 5443, timeouts, warning thresholds), pairing validation rules (`PairingRules`: 6-digit code, device name length, 5-minute code lifetime). |
+| **Communication** | Client-side reconnect timing used by TrayClient and ParentApp: `ReconnectSchedule` (automatic reconnect after a lost connection: 0, 2, 10 s, then every 30 s) and `ConnectBackoff` (initial connect: 1, 2, 4, 8, 16 s, capped at 30 s). |
+| **Data** | `SqliteDatabase`: abstract base for every component database. One long-lived connection, pragmas (WAL, `synchronous=NORMAL`, `busy_timeout`, `foreign_keys`), `PRAGMA integrity_check`, ordered transactional migrations with a `SchemaVersion` table, serialized access. Used by the service and the parent app so all databases are configured identically (§8.4). |
 
 ### 5.4 Level 2 — EagleEye.TrayClient
 
@@ -360,8 +376,8 @@ TC_UI --> TC_COMM : user clicks (About, etc.)
 
 | Internal Component | Responsibility |
 |-------------------|---------------|
-| **Communication** | Connects to the service on `localhost`. Receives budget updates, warnings, pairing codes. Sends version query. Handles reconnect on disconnect. |
-| **UI** | Manages the `NotifyIcon` (system tray), popup notifications (balloon tips), remaining-time summary window, optional topmost overlay, About dialog, connection-status indicator. |
+| **Communication** | Connects to the service on `http://localhost:5080/hubs/tray`. Receives budget updates, warnings, pairing codes. Sends version query. Handles reconnect on disconnect (Shared `ReconnectSchedule`, `ConnectBackoff`). |
+| **UI** | Manages the `NotifyIcon` (system tray), popup notifications (balloon tips), the pairing-code window (small topmost window, shown in the taskbar, closes at code expiry, replaced by a newer code; ADR-008 §6), remaining-time summary window, optional topmost overlay, About dialog, connection-status indicator. |
 
 ### 5.5 Level 2 — EagleEye.ParentApp
 
@@ -369,13 +385,23 @@ TC_UI --> TC_COMM : user clicks (About, etc.)
 @startuml EagleEye ParentApp Level 2
 skinparam componentStyle rectangle
 
-package "EagleEye.ParentApp" {
-  component [Communication\n(SignalR Client)] as PA_COMM
+The ParentApp component consists of two projects (ADR-009): `EagleEye.ParentApp.Core`, a plain `net10.0` class library with all logic that does not need MAUI, and `EagleEye.ParentApp`, the multi-targeted MAUI head with views and platform code. Dependencies: `ParentApp → ParentApp.Core → Shared`. Core builds and its unit tests run on both machines without the MAUI workload.
+
+```plantuml
+@startuml EagleEye ParentApp Level 2
+skinparam componentStyle rectangle
+
+package "EagleEye.ParentApp.Core (net10.0)" {
+  component [Communication\n(SignalR client, trust policy,\nConnectionCoordinator)] as PA_COMM
   component [ViewModels\n(MVVM)] as PA_VM
-  component [Views\n(MAUI Pages)] as PA_VIEWS
+  component [Data\n(SQLite stores)] as PA_DATA
+  component [Abstractions\n(platform interfaces)] as PA_ABS
+  component [AppTexts\n(resx de/en)] as PA_TXT
 }
 
-package "Platform-Specific" {
+package "EagleEye.ParentApp (MAUI head)" {
+  component [Views\n(MAUI pages)] as PA_VIEWS
+  component [Services\n(platform implementations)] as PA_SVC
   component [Windows (WinUI)] as WIN
   component [macOS (Catalyst)] as MAC
   component [Android] as AND
@@ -384,22 +410,29 @@ package "Platform-Specific" {
 
 PA_VIEWS --> PA_VM : data binding
 PA_VM --> PA_COMM : commands / queries
-PA_COMM --> PA_VM : events / responses
-PA_VIEWS --> WIN
-PA_VIEWS --> MAC
-PA_VIEWS --> AND
-PA_VIEWS --> IOS
+PA_COMM --> PA_VM : state changes
+PA_COMM --> PA_DATA : pairing, settings
+PA_VM --> PA_TXT
+PA_DATA --> PA_ABS : ISecretStore / ISecretProtector
+PA_SVC ..|> PA_ABS : implements
+PA_SVC --> WIN
+PA_SVC --> MAC
+PA_SVC --> AND
+PA_SVC --> IOS
 @enduml
 ```
 
-| Internal Component | Responsibility |
-|-------------------|---------------|
-| **Communication** | Manages the SignalR connection to the service (connect, reconnect, disconnect). Handles pairing handshake. Sends configuration commands. Receives events and data responses. |
-| **ViewModels** | MVVM view models for each screen. Expose commands (save rules, trigger re-scan) and observable properties (user list, app list, stats). |
-| **Views** | MAUI ContentPages for: connection/pairing, user selection, allow-list management, budget configuration, pause-window configuration, statistics, event feed, paired-devices management. |
-| **Platform-Specific** | Android/iOS (primary production platforms): portrait lock, platform entry points. macOS (Catalyst) and Windows (WinUI): desktop window sizing. Windows + Android targets are built on the Windows machine; Mac Catalyst + iOS on the MacBook (ADR-007). |
+| Internal Component | Project | Responsibility |
+|-------------------|---------|---------------|
+| **Communication** | Core | `ParentHubClient` wraps the SignalR `HubConnection` (Bearer token, certificate trust callback on both the HTTP handler and the WebSocket options). `CertificateTrustPolicy`: trust on first use, then pinned thumbprint (ADR-008 §3). `ConnectionCoordinator`: the connection and pairing state machine; never reports "connected" unless the service confirms the pairing; bounds every connect attempt and hub call to 15 s so an unreachable host ends in a clear error. `HostAddress` validates hostnames and IP addresses. |
+| **ViewModels** | Core | MVVM view models (CommunityToolkit.Mvvm) for each screen. Expose commands and observable properties. US-002: main window/navigation, status bar, appearance, server connection. |
+| **Data** | Core | `ParentDatabase` (Shared `SqliteDatabase`), `PairingStore`, `SettingsStore`, `ProtectedSecretStore` (`ISecretStore` over the `Secrets` table; encryption delegated to `ISecretProtector`). See §8.4. |
+| **Abstractions** | Core | Small platform interfaces Core needs: `ISecretStore`, `ISecretProtector`, `IThemeService`, `IDialogService`, `IUiDispatcher`, `IAppDataPaths`. |
+| **AppTexts** | Core | All user-facing parent-app texts (German default, English). |
+| **Views** | MAUI head | MAUI pages/views. Desktop layout (Windows, macOS): navigation menu, content region, status bar. Later: user selection, allow-list, budgets, pause windows, statistics, event feed, paired devices. |
+| **Services / Platform-Specific** | MAUI head | Implementations of the Core abstractions (theme, dialogs, main-thread dispatch, data paths, secret storage: `DpapiSecretProtector` on Windows, `MauiSecureStorageSecretStore` elsewhere). Android/iOS (primary production platforms): portrait lock, platform entry points. macOS (Catalyst) and Windows (WinUI): desktop window sizing. Windows + Android targets are built on the Windows machine; Mac Catalyst + iOS on the MacBook (ADR-007). |
 
-**Windows parent app** (product requirements §3.3.9): the initial testing vehicle for parent-side features. It is a normal `ParentHub` client with no special local access path. On the service PC it connects through the same TLS + pairing flow as a remote client (to `localhost` or the machine's own hostname). It is deployed by copying a single executable.
+**Windows parent app** (product requirements §3.3.9): the initial testing vehicle for parent-side features. It is a normal `ParentHub` client with no special local access path. On the service PC it connects through the same TLS + pairing flow as a remote client (to `localhost` or the machine's own hostname). It is installed with its own per-user installer (ADR-009, §7.4).
 
 ---
 
@@ -416,23 +449,25 @@ participant "TrayClient" as TRAY
 actor Kid
 
 Parent -> APP : Enter hostname, connect
-APP -> SVC : SignalR connect (HTTPS)
-SVC -> SVC : Unknown client detected
-SVC -> SVC : Generate 6-digit code\n(5 min expiry)
-SVC -> TRAY : PushPairingCode(code)
-TRAY -> Kid : Display pairing code\n(notification popup)
+APP -> SVC : SignalR connect (HTTPS 5443,\ntrust on first use: remember thumbprint)
+APP -> SVC : StartPairing()
+SVC -> SVC : Generate 6-digit code\n(bound to this connection, 5 min expiry,\nreplaces any pending code)
+SVC -> TRAY : OnShowPairingCode(code)\n(all tray clients; Event Log if none)
+TRAY -> Kid : Topmost pairing-code window
 Kid -> Parent : Reads code aloud / shows screen
 Parent -> APP : Enter code + device name
 APP -> SVC : SubmitPairingCode(code, deviceName)
-SVC -> SVC : Validate code (not expired)
-SVC -> SVC : Store paired device\n+ auth credential
-SVC -> APP : PairingSuccess(credential)
-APP -> APP : Store credential locally
+SVC -> SVC : Validate code, connection, expiry\n(any failure invalidates the code)
+SVC -> SVC : Store paired device\n+ SHA-256 hash of token
+SVC -> APP : PairingResultDto(Success, deviceId, token)
+APP -> APP : Store pairing + pinned thumbprint,\ntoken encrypted (ISecretStore)
+APP -> SVC : Reconnect with Bearer token
+APP -> SVC : GetPairingStatus() → paired
 
 note over SVC
-  All subsequent connections
-  use the stored credential
-  for authentication
+  All subsequent connections send
+  the token as Bearer header and accept
+  only the pinned certificate (ADR-008)
 end note
 @enduml
 ```
@@ -598,15 +633,21 @@ node "Windows 11 PC (x64)" as winpc {
     database "EagleEye.TrayClient.db\n(SQLite)" as tray_db
     artifact "EagleEye.Service-NNN.log" as svc_log
     artifact "EagleEye.TrayClient-NNN.log" as tray_log
-    folder "certs/" {
-      artifact "eagleeye.pfx"
+    folder "certs/ (SYSTEM + Administrators only)" {
+      artifact "eagleeye.pfx\n(DPAPI LocalMachine)"
     }
   }
+  component "Tray endpoint\nhttp://localhost:5080/hubs/tray" as ep_tray
+  component "Parent endpoint\nhttps://*:5443/hubs/parent" as ep_parent
+  component "Windows Firewall rule\nTCP 5443, LocalSubnet" as fw
 }
 
+tray_exe --> ep_tray : loopback
+
 node "Parent Device" as parentdev {
-  node "Windows 11" {
-    artifact "EagleEye.ParentApp.exe\n(WinUI, copy-deployed)\nsame PC as service or remote"
+  node "Windows 11 (per-user install)" {
+    artifact "EagleEye.ParentApp.exe\n(WinUI, unpackaged, self-contained)\n%LocalAppData%\\Programs\\EagleEye Parent App\\\nsame PC as service or remote"
+    database "%LocalAppData%\\EagleEye\\\nEagleEye.ParentApp.db" as win_db
   }
   node "macOS 26+" {
     artifact "EagleEye.ParentApp\n(.app bundle via .dmg)"
@@ -621,9 +662,19 @@ node "Parent Device" as parentdev {
   }
 }
 
-parentdev --> winpc : HTTPS (SignalR)\nPort 5443 (default)\nLAN only
+parentdev --> fw : HTTPS (SignalR)\nPort 5443\nLAN (local subnet) only
+fw --> ep_parent
 @enduml
 ```
+
+**Endpoints and ports** (ADR-008): the service listens on two Kestrel endpoints. Each hub is bound to its endpoint by the local port of the TCP connection; a request for a hub on the wrong port gets `404`.
+
+| Endpoint | Binding | Protocol | Hub | Reachable from |
+|---|---|---|---|---|
+| Tray | `localhost:5080` (IPv4 and IPv6 loopback) | HTTP | `TrayHub` `/hubs/tray` | Same PC only; the hub also rejects non-loopback remote addresses |
+| Parent | all interfaces, port 5443 | HTTPS (TLS 1.2+) | `ParentHub` `/hubs/parent` | LAN and the same PC; firewall rule "EagleEye Service (Parent apps)" allows TCP 5443 for `EagleEye.Service.exe` from the local subnet, all profiles |
+
+Both ports are constants (`ServiceDefaults`) until the service gets its YAML configuration (ADR-002).
 
 ### 7.1 Windows Installation Layout
 
@@ -636,7 +687,9 @@ parentdev --> winpc : HTTPS (SignalR)\nPort 5443 (default)\nLAN only
 | `%ProgramData%\EagleEye\EagleEye.TrayClient.db` | SQLite database — cached display state (optional, lightweight) | Standard user (r/w) |
 | `%ProgramData%\EagleEye\EagleEye.Service-NNN.log` | Service rolling log files (50 MB max, 3 files) | SYSTEM (r/w) |
 | `%ProgramData%\EagleEye\EagleEye.TrayClient-NNN.log` | TrayClient rolling log files (50 MB max, 3 files) | Standard user (r/w) |
-| `%ProgramData%\EagleEye\certs\` | Auto-generated self-signed certificate `eagleeye.pfx` | SYSTEM (r/w) |
+| `%ProgramData%\EagleEye\certs\` | Auto-generated self-signed certificate `eagleeye.pfx` (DPAPI LocalMachine, §8.1) | SYSTEM and Administrators only (inheritance removed) |
+
+The service installer sets the ACLs with well-known SIDs (works on German Windows): `%ProgramData%\EagleEye\` SYSTEM and Administrators full control, Users read; `certs\` SYSTEM and Administrators only (ADR-008 §7). Uninstalling the service keeps `%ProgramData%\EagleEye\`, so a reinstall keeps the certificate and the pairings.
 
 ### 7.1.1 Parent App Data Locations
 
@@ -644,7 +697,7 @@ Each parent app instance stores its YAML config and SQLite database in the OS-st
 
 | Platform | Config File | Database | Location |
 |----------|------------|----------|----------|
-| Windows | `EagleEye.ParentApp.yaml` | `EagleEye.ParentApp.db` | `%LocalAppData%\EagleEye\` (per parent user) |
+| Windows | `EagleEye.ParentApp.yaml` | `EagleEye.ParentApp.db` | `%LocalAppData%\EagleEye\` (per parent user; removed by the parent app uninstaller) |
 | macOS | `EagleEye.ParentApp.yaml` | `EagleEye.ParentApp.db` | `~/Library/Application Support/EagleEye/` |
 | iOS | `EagleEye.ParentApp.yaml` | `EagleEye.ParentApp.db` | App sandbox `Documents/` |
 | Android | `EagleEye.ParentApp.yaml` | `EagleEye.ParentApp.db` | App internal storage |
@@ -661,12 +714,13 @@ Each parent app instance stores its YAML config and SQLite database in the OS-st
 - Registered via Inno Setup in `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` for each standard user, or via `HKLM` with a per-user launch mechanism
 - Starts automatically when a standard-user session begins
 - Does not require admin privileges to run
+- Also starts in admin sessions (HKLM Run key). Michael's decision (2026-10-04): this stays, so a parent pairing at the service PC as admin sees the pairing code there. Admin sessions are still never monitored (§8.8).
 
 ### 7.4 Parent App Distribution
 
 | Platform | Distribution | Package |
 |----------|-------------|---------|
-| Windows 11 | Copy deployment: single executable, no installer (FR-APP-092). Runs on the service PC or remotely. | `EagleEye.ParentApp.exe` |
+| Windows 11 | Own Inno Setup installer, **per user**, no admin rights (ADR-009, FR-APP-092). Unpackaged, self-contained (`win-x64`, .NET runtime and Windows App SDK included, no MSIX). Installs to `%LocalAppData%\Programs\EagleEye Parent App\`; repair/update keeps the app data; uninstall removes program folder, Start menu entry and `%LocalAppData%\EagleEye\`. Independent of the service installer (own `AppId`). Runs on the service PC or remotely. | `03_Delivery/windows/EagleEye-ParentApp-Setup-<version>.exe` |
 | macOS 26+ | Direct download | `.dmg` with `.app` bundle |
 | iOS 26+ (built on MacBook) | Sideload | Xcode / `ios-deploy` |
 | Android 14+ | Sideload (built on Windows machine) | `adb install` APK |
@@ -677,14 +731,21 @@ Each parent app instance stores its YAML config and SQLite database in the OS-st
 
 ### 8.1 TLS and Certificate Management
 
-The service uses HTTPS for all SignalR connections. On first startup:
+The service uses HTTPS for the parent endpoint (port 5443). The tray endpoint is plain HTTP on loopback and needs no certificate (§8.3, ADR-008). On first startup (`Certificates/CertificateManager`):
 
-1. **Generate**: Create a self-signed X.509 certificate (RSA 2048+ or ECDSA P-256) with `CN=EagleEye`, no expiration (or 100-year validity)
-2. **Store**: Save as `%ProgramData%\EagleEye\certs\eagleeye.pfx` (password-protected, password derived from machine-specific data)
-3. **Bind**: Configure Kestrel to use the certificate for HTTPS on the configured port (default 5443)
-4. **Subsequent starts**: Load the existing certificate from disk
+1. **Generate**: Create a self-signed X.509 certificate: ECDSA P-256, `CN=EagleEye`, SAN = machine DNS name and `localhost`, server-authentication EKU, 100-year validity.
+2. **Store**: Save as `%ProgramData%\EagleEye\certs\eagleeye.pfx`. The PFX bytes are encrypted with DPAPI (`DataProtectionScope.LocalMachine`), and the `certs\` folder is restricted by ACL to SYSTEM and Administrators (set by the installer). The ACL is the actual protection; DPAPI only keeps the file useless outside this machine.
+3. **Load the key**: with `X509KeyStorageFlags.MachineKeySet` (the service runs as SYSTEM). Not `EphemeralKeySet`: SChannel cannot use an ephemeral key for a TLS server. If the machine key store is not writable (only when the service runs in console mode without admin rights, e.g. DEV smoke checks), the import falls back to `UserKeySet` and logs a warning (US-002 deviation D-1).
+4. **Bind**: Configure Kestrel to use the certificate for HTTPS on port 5443.
+5. **Subsequent starts**: Load the existing certificate from disk. It is regenerated only if the file is missing or unreadable (logged as a warning). A regenerated certificate breaks the pin of every paired app (see below).
 
-The ParentApp and TrayClient must accept the self-signed certificate. The SignalR client is configured with `HttpClientHandler.ServerCertificateCustomValidationCallback` to trust the service's certificate (the ParentApp can optionally pin the certificate thumbprint after first successful pairing).
+The certificate is never installed into an OS certificate store, on either side.
+
+**Parent app trust** (ADR-008 §3): the SignalR client sets the validation callback on both the HTTP handler and the WebSocket options (`ClientWebSocketOptions.RemoteCertificateValidationCallback`), otherwise the WebSocket transport ignores it.
+
+- **Unpaired**: trust on first use. The app accepts the certificate the service presents and remembers its SHA-256 thumbprint for the pairing in progress.
+- **On successful pairing**: the thumbprint is stored with the pairing.
+- **Paired**: the app accepts **only** the pinned thumbprint. A different certificate is a connection error with its own message ("the identity of the EagleEye PC has changed"). Recovery in US-002: reinstall the app (removes the pairing); a guided recovery follows with device management (FR-APP-015).
 
 ### 8.2 Authentication and Authorization
 
@@ -693,14 +754,14 @@ See ADR-004 for the full rationale and pairing flow details.
 | Client | Auth Mechanism | Permissions |
 |--------|---------------|------------|
 | **Paired ParentApp** | Persistent token (256-bit, cryptographically random) issued during pairing | Full: read/write config, read stats, read users, manage pairings, set log level |
-| **Unpaired ParentApp** | None (anonymous) | Only: invoke `SubmitPairingCode` on `ParentHub` |
-| **TrayClient** | Session identity (localhost + user SID) | Read-only: receive own user's budget info, warnings, pairing codes. No config changes. |
+| **Unpaired ParentApp** | None (anonymous) | Only the `ParentHub` methods marked `[AllowUnpaired]`: `GetPairingStatus`, `StartPairing`, `SubmitPairingCode`. Everything else is rejected by a default-deny hub filter (ADR-008 §4). |
+| **TrayClient** | Loopback endpoint only (`localhost:5080`, remote address checked) + session identity (user SID) | Read-only: receive own user's budget info, warnings, pairing codes. No config changes. |
 
-**Pairing flow**: Unknown client connects → service generates a 6-digit code (5-minute expiry) → code displayed via TrayClient popup (or written to Windows Event Log if no TrayClient is connected) → parent enters code + device name → service validates → issues a 256-bit token → both sides store it.
+**Pairing flow** (ADR-004, made concrete by ADR-008 §4): parent app connects unpaired → calls `StartPairing()` → service generates a 6-digit code bound to that connection (5-minute expiry, replaces any pending code) → code displayed in a topmost window by every connected TrayClient (or written to the Windows Event Log, source `EagleEye`, event ID 1000, if no TrayClient is connected) → parent enters code + device name → `SubmitPairingCode` → service validates (any failure invalidates the code: one guess per code) → issues a 256-bit token → both sides store it. The code is requested explicitly, not on connect, so reconnects do not push codes.
 
-**Token security**: Tokens are generated via `System.Security.Cryptography.RandomNumberGenerator`. The service stores only the **SHA-256 hash** of each token in the `PairedDevices` SQLite table, never the plaintext. The parent app stores the plaintext token locally. Tokens are transmitted only over TLS and never appear in logs.
+**Token security**: Tokens are generated via `System.Security.Cryptography.RandomNumberGenerator`. The service stores only the **SHA-256 hash** of each token in the `PairedDevices` SQLite table, never the plaintext. The parent app stores the token encrypted through its `ISecretStore` (Windows: DPAPI `CurrentUser`, see §8.4; Android/iOS/macOS: MAUI `SecureStorage`). Tokens are transmitted only over TLS and never appear in logs.
 
-**Subsequent connections**: The parent app includes its token in the SignalR handshake. The service hashes it, looks up the hash in `PairedDevices`, and authenticates the connection if found. Unmatched tokens are rejected — the client is treated as unpaired.
+**Subsequent connections**: The parent app sends its token as `Authorization: Bearer <token>` (SignalR `AccessTokenProvider`). `ParentHub.OnConnectedAsync` hashes it, looks up the hash in `PairedDevices`, and marks the connection as paired if found (and adds it to the `Parents` group). Unmatched tokens leave the client unpaired; the client learns this via `GetPairingStatus()` after every (re)connect and then deletes its local pairing.
 
 **Device management**: Multiple parent apps may be paired simultaneously. Any paired app can view all paired devices and de-register any device (including itself). De-registration deletes the token hash; the affected device must re-pair.
 
@@ -712,10 +773,12 @@ EagleEye uses two SignalR hubs, three communication patterns, and a server-autho
 
 | Hub | Route | Client | Auth | Role |
 |-----|-------|--------|------|------|
-| `ParentHub` | `/hubs/parent` | ParentApp | Pairing credential required | Queries, commands, receives events and state broadcasts |
-| `TrayHub` | `/hubs/tray` | TrayClient | Localhost + user SID | Registers session, receives budget info, warnings, pairing codes |
+| `ParentHub` | `/hubs/parent` (HTTPS, port 5443, all interfaces) | ParentApp | Pairing credential required (except `[AllowUnpaired]` methods) | Queries, commands, receives events and state broadcasts |
+| `TrayHub` | `/hubs/tray` (HTTP, `localhost:5080`) | TrayClient | Loopback + user SID | Registers session, receives budget info, warnings, pairing codes |
 
-Both hubs run on the same Kestrel process, same port, same TLS certificate.
+Both hubs run in the same Kestrel process, but on **separate endpoints** (ADR-008 §1, amends the earlier "same port, same certificate" design). Each hub is bound to its endpoint by the **local port** of the TCP connection (`HttpContext.Connection.LocalPort`, `HubEndpointGuard`), never by the `Host` header: `/hubs/tray` on any port other than 5080 and `/hubs/parent` on any port other than 5443 return `404`. A LAN client can therefore never reach the `TrayHub`, which receives pairing codes. The `TrayHub` additionally rejects non-loopback remote addresses. The tray traffic never leaves the machine, so it uses plain HTTP; moving it to TLS later needs no contract change.
+
+**Client timing**: both clients reconnect after a lost connection with the Shared `ReconnectSchedule` (0, 2, 10 s, then every 30 s) and retry the initial connect with `ConnectBackoff` (1, 2, 4, 8, 16, then 30 s). The parent app additionally bounds each connect attempt and each hub call to 15 s, so an unreachable host produces a clear error instead of hanging for the OS TCP timeout (US-002 deviation D-10).
 
 #### Pattern 1 — Data Queries (request/response)
 
@@ -758,8 +821,12 @@ All application data is stored in SQLite databases. Each EagleEye component has 
 
 **EagleEye.ParentApp** (`EagleEye.ParentApp.db`) tables include:
 
-- **ServerConnections** — stored service endpoints (hostname/IP) and pairing credentials for each connected service.
-- **CachedState** — last-known configuration and statistics for offline display.
+- **ServerConnections** — stored service endpoints (hostname/IP), device ID, device name, pinned certificate thumbprint (SHA-256) and pairing time. At most one row in US-002.
+- **AppSettings** — key/value settings (e.g. `appearance.theme`).
+- **Secrets** — the pairing token, encrypted. On Windows, `ProtectedSecretStore` (Core) stores the bytes returned by `ISecretProtector`, implemented by `DpapiSecretProtector` (DPAPI `CurrentUser`, platform code). MAUI `SecureStorage` is not used on Windows because it needs package identity and the app is unpackaged (ADR-009). Other platforms use `MauiSecureStorageSecretStore` (Keychain/Keystore) and do not use this table.
+- **CachedState** (planned) — last-known configuration and statistics for offline display.
+
+The service and the parent app derive their databases from the Shared `SqliteDatabase` base (§5.3).
 
 **EagleEye.TrayClient** (`EagleEye.TrayClient.db`) — optional, lightweight cache for display state.
 
@@ -775,7 +842,7 @@ Each application has exactly one YAML configuration file, named after the applic
 
 ```yaml
 server:
-  port: 5443
+  port: 5443            # parent endpoint (HTTPS); tray endpoint is localhost:5080
   graceful_shutdown_timeout_seconds: 30
 enforcement:
   poll_interval_seconds: 5
@@ -791,7 +858,7 @@ logging:
 
 ```yaml
 service:
-  url: https://localhost:5443
+  url: http://localhost:5080    # tray endpoint, loopback only (ADR-008)
 overlay:
   enabled: false
   opacity: 0.8
@@ -968,7 +1035,9 @@ All architectural decisions are recorded as ADRs in `02_Implementation/docs/arch
 | ADR-004 | Pairing-Based Authentication for Parent Apps | Accepted |
 | ADR-005 | Process Classification Strategy — Ignore, Allow, Block | Accepted |
 | ADR-006 | Graceful-Then-Force Process Termination Pattern | Accepted |
-| ADR-007 | Two-Machine Development and Manual Acceptance Testing | Accepted |
+| ADR-007 | Two-Machine Development and Manual Acceptance Testing | Accepted (§2 "Distribution" superseded by ADR-009) |
+| ADR-008 | Parent App Connectivity — Endpoints, TLS Trust and Pairing Protocol | Accepted |
+| ADR-009 | Windows Parent App Packaging and the ParentApp.Core Library | Accepted |
 
 ---
 
@@ -1066,6 +1135,8 @@ maint --> maint3
 | R-5 | SQLite database corruption on service crash | Very Low | High | SQLite WAL mode provides crash resilience out of the box. Regular `PRAGMA integrity_check` on startup. |
 | R-6 | Standard-user child kills TrayClient process | Low | Low | TrayClient is informational only; enforcement continues server-side. TrayClient restarts automatically. Consider process-protection techniques in later iterations. |
 | R-7 | Clock manipulation by child to circumvent budget/pause | Low | Medium | Service uses monotonic timers for budget countdown (not wall-clock). Pause-window checks use wall clock but service runs as SYSTEM — standard user cannot change system time. |
+| R-8 | Kid pairs their own parent app: the pairing code is shown in the kid's tray session (US-002 Q-1), and the per-user parent app installer needs no admin rights, so a kid can pair an app on the same PC or another device. From the first configuration story on, such an app could change the kid's own rules. | Medium | High | **Accepted risk** (Michael, 2026-10-04): no technical protection for now; revisit before or with the first configuration story. Candidate mitigations: show the code only in admin sessions / the Event Log, or require an admin confirmation on the service PC. Paired devices are visible and removable via device management (FR-APP-015). |
+| R-9 | Service certificate lost or regenerated (e.g. `%ProgramData%\EagleEye` deleted): every paired app rejects the new certificate (pin mismatch) | Low | Medium | Uninstalling the service keeps `%ProgramData%\EagleEye`. In US-002, recovery means reinstalling the parent app; a guided re-pairing follows with device management (ADR-008). |
 
 ---
 
@@ -1081,7 +1152,8 @@ maint --> maint3
 | **Ignore list** | A shipped, non-configurable list of essential Windows processes that are never terminated or tracked. |
 | **Kid** | A child using a standard Windows user account, subject to EagleEye enforcement. |
 | **Pairing** | The one-time process by which a parent app authenticates with the service using a 6-digit code displayed on the Windows PC. |
-| **Pairing code** | A 6-digit numeric code, valid for 5 minutes, displayed by the TrayClient (or logged to Event Log) for a parent to enter in their app. |
+| **Pairing code** | A 6-digit numeric code, valid for 5 minutes and for one attempt, requested by the parent app and displayed by the TrayClient (or logged to Event Log) for a parent to enter in their app. |
+| **Pinning** | The parent app accepts only the certificate thumbprint it stored at pairing time (ADR-008). |
 | **Parent** | The adult who configures EagleEye rules via the ParentApp. |
 | **Pause window** | A per-weekday time range (e.g., 20:00–09:00) during which all non-ignored applications are denied for a user, regardless of remaining budget. |
 | **Poll interval** | The frequency at which the Monitoring component enumerates running processes. |

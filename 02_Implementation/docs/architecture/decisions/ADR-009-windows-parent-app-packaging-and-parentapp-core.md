@@ -69,6 +69,15 @@ This supersedes ADR-007 §2 "Distribution" and coding guidelines §16.1 "Packagi
 
 ---
 
+## Implementation Notes (US-002, accepted deviations, 2026-10-04)
+
+- Secret storage split (D-2): the table logic is `ParentApp.Core/Data/ProtectedSecretStore` (`ISecretStore`, unit-tested); only the encryption is platform code, `ISecretProtector` implemented on Windows by `Platforms/Windows/DpapiSecretProtector` (DPAPI `CurrentUser`). Other platforms register `MauiSecureStorageSecretStore` as `ISecretStore`.
+- Windows minimum version (D-3): the csproj sets `SupportedOSPlatformVersion` 10.0.19041.0 (the SDK rejects a minimum above the TFM version); Windows 11 is enforced by the installer (`MinVersion=10.0.22000`).
+- Publish (D-4): `RuntimeIdentifier=win-x64`, `SelfContained`, `WindowsAppSDKSelfContained`, `WindowsPackageType=None` are set in the csproj for the Windows TFM only, not on the command line (a command-line `-r` also hits the Android target).
+- Installer (D-14): the uninstaller ends running parent app processes of the current user; the Start menu entry sits directly in *Programs*; an optional "launch now" checkbox. Actual installer size is about 74 MB.
+
+---
+
 ## References
 
 - Requirements v1.2: FR-APP-092, §9.5

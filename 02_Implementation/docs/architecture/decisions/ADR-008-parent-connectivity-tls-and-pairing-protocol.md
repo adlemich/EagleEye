@@ -111,6 +111,8 @@ ADR-004 stays valid. US-002 makes it concrete:
 - If the service certificate is lost (e.g. `%ProgramData%\EagleEye` deleted), paired apps refuse to connect until they are re-paired. In US-002 that means reinstalling the app.
 - Two ports instead of one (5080 loopback, 5443 LAN).
 - The pairing code is visible in the kid's tray session (accepted by Michael for US-002, see the US-002 story, Decision Q-1).
+- **Security consequence, accepted risk (Michael, 2026-10-04):** because the code reaches the kid's session and the parent app installer needs no admin rights, a kid can pair their own parent app (on the same PC or another device). Once configuration stories exist, such an app could change the kid's own rules. Michael decided: **no technical protection for now**; revisit before or with the first configuration story. Tracked as arc42 §11 R-8.
+- The tray client keeps running in admin sessions (Michael, 2026-10-04), so a parent pairing at the service PC as admin sees the code there.
 
 ### Neutral
 
@@ -119,8 +121,16 @@ ADR-004 stays valid. US-002 makes it concrete:
 
 ---
 
+## Implementation Notes (US-002, accepted deviations, 2026-10-04)
+
+- Certificate key loading: `MachineKeySet` as decided. If the machine key store is not writable (service in console mode without admin rights, used only for DEV smoke checks), `CertificateManager` falls back to `UserKeySet` and logs a warning (US-002 implementation report, D-1). As SYSTEM the service always uses `MachineKeySet`.
+- The parent app bounds each connect attempt and each hub call to 15 s, so an unreachable host ends in a clear error (D-10).
+
+---
+
 ## References
 
 - ADR-003 (hub design), ADR-004 (pairing), ADR-002 (persistence, logging)
-- arc42 §7, §8.1 to §8.3 (amended by this ADR)
+- arc42 §7, §8.1 to §8.3 (amended by this ADR), §11 R-8
+- US-002 implementation report: `02_Implementation/docs/requirements/user-stories/US-002/implementation-report.md` §2
 - US-002: `02_Implementation/docs/requirements/user-stories/US-002/user-story.md`, implementation plan in the same folder
