@@ -1,7 +1,7 @@
 # Test Plan: US-002 — Windows Parent App: Installation, Connection and Pairing
 
-**Status**: Approved (Michael, 2026-10-04)
-**Date**: 2026-10-04
+**Status**: Approved (Michael, 2026-10-04); updated after test run 01, see §9 Change Log
+**Date**: 2026-10-04 (last change 2026-10-04)
 **Author**: TES
 **User Story**: `02_Implementation/docs/requirements/user-stories/US-002/user-story.md` (30 ACs)
 **Inputs used**: the user story, `02_Implementation/docs/requirements/general-product-requirements.md`, the "How to test" section of `02_Implementation/docs/requirements/user-stories/US-002/implementation-report.md` (artifacts, setup, German UI labels), "Manual Verification Notes" and "Open Points for Michael" of `02_Implementation/docs/requirements/user-stories/US-002/implementation-plan.md`. Black box: no source code was read.
@@ -40,8 +40,8 @@
 | Accounts on the service PC | **Admin**: Michael's administrator account (parent). **Kid**: local standard account `eagleeye-kid`. **Parent 2** (**Block D only**): local standard account `eagleeye-parent2`, created in setup S-11. |
 | Builds under test | `03_Delivery/windows/EagleEye-Setup-0.2.0.exe` (service + tray, admin) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.2.0.exe` (parent app, per user) |
 | Expected versions | Service installer 0.2.0 → tray *App Infos* shows `EagleEye_v0.2`. Parent app: *Installierte Apps* "EagleEye Parent App", 0.2.0, Michael Adler |
-| Tools | Stopwatch (phone), Terminal (Administrator) for starting/stopping the service, Event Viewer (`eventvwr.msc`), `wf.msc`, Microsoft Edge |
-| Time needed | Block A ≈ 50 min · Block B ≈ 60 min (contains a 5½-minute and a 2-minute wait) · Block C ≈ 35 min · Block D ≈ 20 min · regression ≈ 10 min (inside Block A) |
+| Tools | Stopwatch (phone), **Terminal (Administrator)** = an **elevated** terminal (see S-8) for starting/stopping the service and for the folder checks, Event Viewer (`eventvwr.msc`), `wf.msc`, Microsoft Edge |
+| Time needed | Block A ≈ 40 min · Block B ≈ 60 min (contains a 5½-minute and a 2-minute wait) · Block C ≈ 35 min · Block D ≈ 20 min |
 
 ### Test blocks
 
@@ -75,7 +75,10 @@ Service PC, Admin account, before Block A:
 5. **S-5 Note the names.** In PowerShell: `hostname` → write down as `<host>`. `ipconfig` → IPv4 address of the LAN adapter → write down as `<ip>`. Use these two values in all cases.
 6. **S-6 Windows app mode = Dunkel.** *Einstellungen → Personalisierung → Farben → Modus auswählen* = **Dunkel** (or *Benutzerdefiniert* with *Standard-App-Modus auswählen* = **Dunkel**). Note your usual setting so you can restore it in cleanup. TC-002-06 checks that the app follows this; TC-002-32 later checks the opposite mode.
 7. **S-7 Unsigned installers.** SmartScreen may show *"Der Computer wurde durch Windows geschützt"*. Click *Weitere Informationen* → *Trotzdem ausführen*. Expected, not a test failure.
-8. **S-8 Terminal (Administrator)** open for service control. The service commands used in this plan:
+8. **S-8 Terminal (Administrator)** open. It must run **elevated** ("als Administrator"). A normal terminal in the admin account is **not** enough: with UAC it has no administrator rights (this caused the Fail of TC-002-02 in run 01, ISSUE-005).
+   - Start menu → search **Terminal** (or **PowerShell**) → right-click → **Als Administrator ausführen** → confirm the UAC prompt with *Ja*.
+   - Check: the title bar (tab title) starts with **"Administrator:"**. Optional check: `([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)` returns `True`.
+   - Use this terminal for **every** command in this plan that is marked *Terminal (Administrator)*. The service commands used in this plan:
    ```powershell
    Stop-Service -DisplayName "EagleEye Service"
    Start-Service -DisplayName "EagleEye Service"
@@ -143,32 +146,34 @@ All 30 ACs have at least one case. **AC-2, AC-6 (LAN part), AC-23 (other-PC part
 
 #### TC-002-01: Service update to 0.2.0 sets up network access by itself
 
-- **Verifies**: AC-6 (service side); runs together with REG-001-01 and REG-001-02
+- **Verifies**: AC-6 (service side)
 - **Machine / account**: Service PC / Admin
 - **Precondition**: EagleEye 0.1.1 installed, service running
 
 **Steps**
 
-1. Run `03_Delivery\windows\EagleEye-Setup-0.2.0.exe` with default settings and finish the wizard (= REG-001-01).
-2. `services.msc` → **EagleEye Service** (= REG-001-02).
+1. Run `03_Delivery\windows\EagleEye-Setup-0.2.0.exe` with default settings and finish the wizard.
+2. `services.msc` → **EagleEye Service**.
 3. In PowerShell: `netstat -ano | findstr "5443 5080"`.
 4. `wf.msc` → *Eingehende Regeln* → find **EagleEye Service (Parent apps)** and look at the columns (or double-click the rule).
 
 **Expected result**
 
 - The wizard finishes without an error and **never** asks about a firewall, port or certificate.
+- **EagleEye Service** is *Wird ausgeführt*.
 - Port 5443 is listening for the network: `0.0.0.0:5443` and `[::]:5443` *ABHÖREN* (LISTENING). Port 5080 appears only as `127.0.0.1:5080` and `[::1]:5080` (local only, not on `0.0.0.0`).
 - The rule exists: *Aktiviert* = Ja, *Aktion* = Zulassen, *Profil* = Alle, *Protokoll* TCP, *Lokaler Port* 5443, *Remoteadresse* = Lokales Subnetz, *Programm* = `C:\Program Files\EagleEye\Service\EagleEye.Service.exe`.
 
 #### TC-002-02: Service data folder is protected *(supporting)*
 
 - **Verifies**: — (supporting check, ADR-008 / NFR-S-014; DEV could not run the installer)
-- **Machine / account**: Service PC / Admin
+- **Machine / account**: Service PC / Admin, **Terminal (Administrator)** (elevated, S-8)
 - **Precondition**: TC-002-01 done
 
 **Steps**
 
-1. In PowerShell: `icacls "$env:ProgramData\EagleEye"`
+0. Use the **elevated** terminal from S-8: its title bar must show **"Administrator:"**. If not, open one: Start menu → **Terminal** → right-click → **Als Administrator ausführen**. In a non-elevated terminal, steps 2 and 3 end with *Zugriff verweigert*. That is Windows UAC, not a product error.
+1. In the Terminal (Administrator): `icacls "$env:ProgramData\EagleEye"`
 2. `icacls "$env:ProgramData\EagleEye\certs"`
 3. `Test-Path "$env:ProgramData\EagleEye\certs\eagleeye.pfx"`
 
@@ -178,13 +183,13 @@ All 30 ACs have at least one case. **AC-2, AC-6 (LAN part), AC-23 (other-PC part
 - `certs`: entries only for SYSTEM (F) and Administratoren (F). No *Benutzer* entry.
 - The certificate file exists (`True`).
 
-> **Switch to the Kid account** (*Benutzer wechseln* → `eagleeye-kid`; do not sign Admin out). Run **REG-001-03, REG-001-04** (expected server version `EagleEye_v0.2`) and **REG-001-05**, then TC-002-03.
+> **Switch to the Kid account** (*Benutzer wechseln* → `eagleeye-kid`; do not sign Admin out). Then TC-002-03.
 
 #### TC-002-03: The kid cannot open the service certificate *(supporting)*
 
 - **Verifies**: — (supporting check, ADR-008 / NFR-S-014)
 - **Machine / account**: Service PC / Kid
-- **Precondition**: signed in as `eagleeye-kid`; regression REG-001-03 to -05 done
+- **Precondition**: signed in as `eagleeye-kid`
 
 **Steps**
 
@@ -344,7 +349,7 @@ All 30 ACs have at least one case. **AC-2, AC-6 (LAN part), AC-23 (other-PC part
 
 **Steps**
 
-1. Before switching: note whether a pairing popup appeared **in your Admin session** too (observation only, no Pass/Fail; the tray client running in admin sessions is accepted).
+1. Before switching: check whether a pairing popup appeared **in your Admin session** too (the tray client also runs in admin sessions, Q-7). If it did, check that it is fully readable, as in the expected result below.
 2. *Benutzer wechseln* → `eagleeye-kid`.
 3. Look for the window **"EagleEye – Eltern-App koppeln"**. Write down the code. Close it with *OK*.
 4. *Benutzer wechseln* → Admin.
@@ -353,6 +358,8 @@ All 30 ACs have at least one case. **AC-2, AC-6 (LAN part), AC-23 (other-PC part
 
 - In the Kid session a popup **"EagleEye – Eltern-App koppeln"** is shown (on top, visible without searching).
 - It shows **6 digits** ("Kopplungscode: nnnnnn") and says the code is needed to pair the EagleEye parent app ("Geben Sie diesen Code in der EagleEye-Eltern-App ein.", "Der Code ist 5 Minuten gültig.").
+- All texts are **fully readable**: nothing is cut off at any edge (ISSUE-004). This applies to the popup in the Kid session and, if it appears there, to the popup in the Admin session.
+- *Note only*: the display scaling of each session in which you looked at the popup (*Einstellungen → System → Bildschirm → Skalierung*). Scaling is a per-account setting.
 
 #### TC-002-13: An empty device name is not accepted
 
@@ -895,13 +902,7 @@ All 30 ACs have at least one case. **AC-2, AC-6 (LAN part), AC-23 (other-PC part
 
 ## 6. Regression
 
-All of `02_Implementation/docs/testing/regression-checklist.md` (US-001: REG-001-01 to REG-001-05) is executed in every run of this story. Placement inside Block A:
-
-| Case | Where | Expected for this build |
-|---|---|---|
-| REG-001-01 | TC-002-01 step 1 | EagleEye listed once, version **0.2.0**, publisher Michael Adler |
-| REG-001-02 | TC-002-01 step 2 | *Wird ausgeführt*, *Automatisch*, *Lokales System* |
-| REG-001-03, -04, -05 | Kid session before TC-002-03 | green tray, *App Infos* **"Server-Version: EagleEye_v0.2"**, red/green cycle |
+None. Story test runs contain **no regression cases** (`02_Implementation/docs/testing/README.md`, TES rule 4). Regression runs only when Michael explicitly requests it before a major version release, as a separate run built from `02_Implementation/docs/testing/regression-checklist.md`.
 
 ## 7. Cleanup
 
@@ -931,3 +932,10 @@ Found while writing this plan; none blocks the test run.
 5. **AC-20, server side:** a black-box test can show "never green" and "removed pairing refused" (TC-002-25). That the service refuses every other call from an unpaired app is only covered by DEV's unit tests.
 6. **App behaviour when the service no longer knows its pairing** (TC-002-25), **whether a code stays valid after a rejected empty device name** (TC-002-13), and **what happens to the pairing form during a 5-minute wait** (TC-002-27) are not specified by the story. They are recorded as observations for PRO.
 7. **Second PC** (open point 3): confirmed by Michael on 2026-10-04. Block C is executable; AC-2, AC-6 (LAN part), AC-23 (other-PC part) and AC-24 get their result there.
+
+## 9. Change Log
+
+| Date | Change | Reason |
+|---|---|---|
+| 2026-10-04 | Plan written and approved by Michael. | — |
+| 2026-10-04 | S-8 and TC-002-02: the terminal must be **elevated** (*Als Administrator ausführen*, title bar "Administrator:"); §2 *Tools* points to S-8. TC-002-01: "service running" added to the expected result (until now checked only through REG-001-02). TC-002-12: "all texts fully readable" (Kid popup and, if shown, Admin popup; the Admin popup is no longer observation-only) and a scaling note added. §6: no regression in story runs; REG references removed from TC-002-01, TC-002-03 and the Kid switch; Block A time 50 → 40 min. | ISSUE-005 (run 01 used a non-elevated terminal; Michael, 2026-10-04). ISSUE-004 (clipping at 150 %). New regression policy (`02_Implementation/docs/testing/README.md`, commit 236fbbf). |

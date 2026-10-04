@@ -1,13 +1,13 @@
 # ISSUE-005: Administrator gets "Zugriff verweigert" on the service certificate folder
 
-**Status**: New
+**Status**: Implemented (test-plan fix by TES, 2026-10-04). Becomes `Verified/Closed` when TC-002-02 passes in `docs/testing/US-002/test-run-02.md`.
 **User Story**: US-002
 **Found in**: docs/testing/US-002/test-run-01.md, TC-002-02 (supporting check, no AC)
 **Date**: 2026-10-04
-**Severity**: Medium
+**Severity**: Medium as filed. **Reclassified 2026-10-04: not a product defect** (test-instruction problem, see "Resolution").
 **Machine**: Windows Developer Machine
 **Build**: `03_Delivery/windows/EagleEye-Setup-0.2.0.exe`
-**Routed to**: DEV for analysis (with ARC if the design must change). Possibly a test-plan expectation problem, see "Classification" below.
+**Routed to**: TES (test plan). Originally DEV for analysis; no DEV or ARC action needed after Michael's answer.
 
 ## Description
 
@@ -57,3 +57,29 @@ TES cannot decide from the outside which of these applies:
 ## Evidence
 
 - Command output above (from `docs/testing/US-002/test-run-01.md`, TC-002-02). No screenshot.
+
+## Answer (Michael, 2026-10-04)
+
+> "The terminal was not in Admin mode, so a simple hint in the test instructions will do the fix."
+
+The terminal used for TC-002-02 was **not elevated**. Classification case 2 applies.
+
+## Resolution
+
+**Status**: Implemented (TES, 2026-10-04). No product change, no new build.
+
+### Root cause
+
+Test instruction. TC-002-02 said only "In PowerShell", and setup S-8 did not say how to open an elevated terminal or how to check that it is elevated. With UAC, a non-elevated terminal in an admin account does not use the *Administratoren* group. Windows therefore refuses access to `certs\`, which is restricted to SYSTEM and *Administratoren* by design (ADR-008 §7). The observed *Zugriff verweigert* matches the intended ACL and is **not a product defect**. Whether the ACL itself is exactly as designed is verified by TC-002-02 in run 02.
+
+### Fix
+
+`docs/testing/US-002/test-plan.md` (§9 Change Log, 2026-10-04):
+
+- **S-8** now says that the *Terminal (Administrator)* must be elevated: Start menu → **Terminal** (or **PowerShell**) → right-click → **Als Administrator ausführen** → UAC *Ja*. Check: the title bar starts with **"Administrator:"** (optional `IsInRole(...Administrator)` check returns `True`).
+- **TC-002-02** names the elevated terminal in *Machine / account*, and a new step 0 checks the title bar before the `icacls` commands. It also explains that *Zugriff verweigert* in a non-elevated terminal is Windows UAC, not a product error.
+- §2 *Tools* points to S-8 for every *Terminal (Administrator)* step (also used in TC-002-10, -19, -21, -38, S-11 and the cleanup).
+
+### Re-test
+
+TC-002-02 in `docs/testing/US-002/test-run-02.md`, in an elevated terminal. Expected result unchanged (test plan TC-002-02). If it passes, TES sets this issue to `Verified/Closed`. If `icacls` still reports *Zugriff verweigert* in an elevated terminal, the issue is reopened as a product defect for DEV.
