@@ -14,3 +14,5 @@ Per-story loop since 2026-10-03: PRO story → ARC plan (with machine assignment
 **Why:** the whole point of the setup is that Michael reviews before work compounds on unreviewed work.
 
 **How to apply:** always state the host machine, the current phase and step, and the next action. Reference artifacts by repo-relative path. Never skip a gate. Log every decision under `02_Implementation/docs/`. Status vocabulary: New → Analyzed → Implemented → Verified/Closed. See [[eagleeye-current-phase]], [[eagleeye-dev-test-setup]].
+
+- **Regression policy** (Michael, 2026-10-04): story test runs and re-tests contain no regression cases. Regression runs only when Michael explicitly requests it before a major version release (`docs/testing/README.md`, commit 236fbbf on main).

@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-**As of 2026-10-04. Current: Phase 3, US-002 on branch `feature/US-002-windows-parent-app-pairing`. Implementation report and test plan approved by Michael; `docs/testing/US-002/test-run-01.md` created (48 cases, blocks A–D). Next: step e, Michael executes test run 01, then TES evaluates.**
+**As of 2026-10-04. Current: Phase 3, US-002 on branch `feature/US-002-windows-parent-app-pairing`. Implementation report and test plan approved by Michael; `docs/testing/US-002/test-run-01.md` created (48 cases, blocks A–D). Test run 01 failed (ae7fc62): ISSUE-004 Critical (pairing-code popup clipped, TC-002-12/AC-14), ISSUE-005 Medium (admin access denied on certs, TC-002-02; maybe non-elevated terminal). Next: DEV fixes, then TES writes test-run-02 without regression.**
 
 - Cleanup done 2026-10-04: ARC doc updates (18167eb), PRO story cleanup + Q-7..Q-11 (42a1a84), CLAUDE.md wording (d7585a7). Open from ARC: D-11 (`using` vs guidelines §3.4 `await using`) needs Michael's decision; arc42 §7.1 install path lacks `Service\` subfolder; TrayHub SID registration is target design only.
 
