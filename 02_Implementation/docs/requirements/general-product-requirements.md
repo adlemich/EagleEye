@@ -1,6 +1,6 @@
 # EagleEye -- General Product Requirements
 
-*Status: v1.2 Draft — pending Michael's approval (v1.0 approved 2026-09-20; v1.1 approved by Michael 2026-10-03)*
+*Status: Approved v1.2 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04)*
 *Approved: v1.0 by Michael*
 *Maintainer: PRO Agent*
 *Date: 2026-09-15, amended 2026-10-03, 2026-10-04*
@@ -574,4 +574,4 @@ No open questions. The questions raised by the v1.1 amendment were answered by M
 
 ---
 
-*End of General Product Requirements — v1.2 Draft*
+*End of General Product Requirements — Approved v1.2*

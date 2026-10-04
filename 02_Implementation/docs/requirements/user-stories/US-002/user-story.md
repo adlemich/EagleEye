@@ -2,6 +2,7 @@
 
 **Status**: New
 **Created**: 2026-10-04
+**Approved**: by Michael, 2026-10-04 (status becomes `Analyzed` when the implementation plan is approved)
 **Component(s)**: EagleEye.ParentApp, EagleEye.Service, EagleEye.TrayClient, EagleEye.Shared
 **Platform(s)**: ParentApp Windows · Windows (service/tray)
 
@@ -97,6 +98,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-083 (v1.2, light/dark mode), FR-APP
 | 2026-10-04 | AC-1, AC-23: no difference between service PC and other PCs, incl. parent and kid sharing one PC with separate Windows accounts | Michael, review feedback |
 | 2026-10-04 | Menu entry "Connection" replaced by "Settings" with sections "Visual appearance" (new: light/dark mode switch, AC-9) and "Server connection" (pairing status, set/change host, remove pairing). New AC-25 (change host while paired). ACs renumbered; numbers in this log refer to the current numbering. | Michael, review feedback |
 | 2026-10-04 | Open questions decided (Q-1 to Q-6). AC-11: host dialog on start when unpaired. AC-25: host cannot be changed while paired. AC-8, AC-27 and mockups adjusted. | Michael, review feedback |
+| 2026-10-04 | Story approved | Michael |
 
 ---
 
