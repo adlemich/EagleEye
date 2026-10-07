@@ -2,7 +2,8 @@ namespace EagleEye.Service;
 
 /// <summary>
 /// File-system locations of the service's data. The folders are created on start; their ACLs
-/// are set by the installer (ADR-008 §7).
+/// are set by the installer (ADR-008 §7), and the ACL of <c>logs\</c> again by the service on
+/// every start (<see cref="Diagnostics.LogDirectoryProtector"/>).
 /// </summary>
 public sealed class ServicePaths : IServicePaths
 {
@@ -16,9 +17,13 @@ public sealed class ServicePaths : IServicePaths
     private const string CertificateFolder = "certs";
     private const string CertificateFileName = "eagleeye.pfx";
     private const string DatabaseFileName = "EagleEye.Service.db";
+    private const string LogFolder = "logs";
+    private const string ServiceLogFilePrefix = "EagleEye.Service";
 
     /// <summary>Creates the paths below the given data folder.</summary>
-    public ServicePaths(string dataDirectory)
+    /// <param name="dataDirectory">The data folder.</param>
+    /// <param name="isOverridden">Whether the folder comes from the Debug override.</param>
+    public ServicePaths(string dataDirectory, bool isOverridden = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(dataDirectory);
 
@@ -26,6 +31,8 @@ public sealed class ServicePaths : IServicePaths
         CertificateDirectory = Path.Combine(dataDirectory, CertificateFolder);
         CertificatePath = Path.Combine(CertificateDirectory, CertificateFileName);
         DatabasePath = Path.Combine(dataDirectory, DatabaseFileName);
+        LogDirectory = Path.Combine(dataDirectory, LogFolder);
+        IsOverridden = isOverridden;
     }
 
     /// <inheritdoc />
@@ -40,6 +47,15 @@ public sealed class ServicePaths : IServicePaths
     /// <inheritdoc />
     public string DatabasePath { get; }
 
+    /// <inheritdoc />
+    public string LogDirectory { get; }
+
+    /// <inheritdoc />
+    public string LogFilePrefix => ServiceLogFilePrefix;
+
+    /// <inheritdoc />
+    public bool IsOverridden { get; }
+
     /// <summary>
     /// Returns the production paths (<c>%ProgramData%\EagleEye</c>), or in Debug builds the
     /// folder named by <see cref="DataDirectoryOverrideVariable"/> if it is set.
@@ -50,7 +66,7 @@ public sealed class ServicePaths : IServicePaths
         var overrideDirectory = Environment.GetEnvironmentVariable(DataDirectoryOverrideVariable);
         if (!string.IsNullOrWhiteSpace(overrideDirectory))
         {
-            return new ServicePaths(Path.GetFullPath(overrideDirectory));
+            return new ServicePaths(Path.GetFullPath(overrideDirectory), isOverridden: true);
         }
 #endif
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
@@ -62,5 +78,6 @@ public sealed class ServicePaths : IServicePaths
     {
         Directory.CreateDirectory(DataDirectory);
         Directory.CreateDirectory(CertificateDirectory);
+        Directory.CreateDirectory(LogDirectory);
     }
 }

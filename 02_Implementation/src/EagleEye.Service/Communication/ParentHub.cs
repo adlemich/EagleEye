@@ -1,4 +1,6 @@
+using System.Security.Principal;
 using EagleEye.Service.Pairing;
+using EagleEye.Service.UserAccounts;
 using EagleEye.Shared.Contracts;
 using EagleEye.Shared.Models;
 using Microsoft.AspNetCore.SignalR;
@@ -15,6 +17,7 @@ namespace EagleEye.Service.Communication;
 public sealed class ParentHub(
     IPairingManager pairing,
     IParentConnectionRegistry registry,
+    IUserAccountService userAccounts,
     ILogger<ParentHub> logger) : Hub<IParentClientCallback>, IParentHub
 {
     /// <summary>Group of all paired parent connections.</summary>
@@ -24,6 +27,49 @@ public sealed class ParentHub(
     internal const string SubmitFailedMessage = "Pairing failed.";
     internal const string RemoveFailedMessage = "The device could not be removed.";
     internal const string UnknownDeviceMessage = "Unknown device.";
+    internal const string AccountsUnavailableMessage = "The accounts are not available.";
+    internal const string InvalidRequestMessage = "Invalid request.";
+    internal const string UnknownAccountMessage = "Unknown account.";
+    internal const string SaveFailedMessage = "The change could not be saved.";
+
+    /// <inheritdoc />
+    public async Task<UserAccountListDto> GetUserAccounts()
+    {
+        try
+        {
+            return await userAccounts.GetSnapshotAsync();
+        }
+        catch (Exception ex) when (ex is not HubException)
+        {
+            logger.LogError(ex, "Reading the user accounts failed for connection {ConnectionId}.", Context.ConnectionId);
+            throw new HubException(AccountsUnavailableMessage);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<StateWriteAckDto> SetParentalControl(Guid requestId, string accountSid, bool isUnderParentalControl)
+    {
+        if (requestId == Guid.Empty || !IsValidSid(accountSid))
+        {
+            throw new HubException(InvalidRequestMessage);
+        }
+
+        try
+        {
+            // The default-deny filter only lets paired connections in, and they always carry a device name.
+            var deviceName = ParentConnectionState.GetDeviceName(Context)!;
+            return await userAccounts.SetParentalControlAsync(requestId, accountSid, isUnderParentalControl, deviceName);
+        }
+        catch (UnknownAccountException)
+        {
+            throw new HubException(UnknownAccountMessage);
+        }
+        catch (Exception ex) when (ex is not HubException)
+        {
+            logger.LogError(ex, "Setting parental control for {AccountSid} failed.", accountSid);
+            throw new HubException(SaveFailedMessage);
+        }
+    }
 
     /// <inheritdoc />
     [AllowUnpaired]
@@ -129,5 +175,24 @@ public sealed class ParentHub(
 
         logger.LogInformation(exception, "Parent app disconnected: {ConnectionId}.", Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
+    }
+
+    /// <summary>Whether the text is a syntactically valid SID.</summary>
+    internal static bool IsValidSid(string? sid)
+    {
+        if (string.IsNullOrWhiteSpace(sid))
+        {
+            return false;
+        }
+
+        try
+        {
+            _ = new SecurityIdentifier(sid);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
     }
 }

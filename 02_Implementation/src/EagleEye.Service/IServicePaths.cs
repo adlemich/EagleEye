@@ -17,6 +17,15 @@ public interface IServicePaths
     /// <summary>Full path of the service database.</summary>
     string DatabasePath { get; }
 
-    /// <summary>Creates the data and certificate folders if they do not exist.</summary>
+    /// <summary>Folder of the service log files (<c>logs</c>, SYSTEM and Administrators only, US-003 AC-14).</summary>
+    string LogDirectory { get; }
+
+    /// <summary>File name prefix of the service log files (<c>EagleEye.Service-NNN.log</c>).</summary>
+    string LogFilePrefix { get; }
+
+    /// <summary>Whether the Debug data-folder override (<c>EAGLEEYE_DATA_DIR</c>) is active.</summary>
+    bool IsOverridden { get; }
+
+    /// <summary>Creates the data, certificate and log folders if they do not exist.</summary>
     void EnsureDirectories();
 }

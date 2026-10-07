@@ -1,10 +1,18 @@
+using EagleEye.Shared.Models;
+
 namespace EagleEye.Shared.Contracts;
 
 /// <summary>
-/// Client-side callback interface for parent apps. The service invokes these methods on
-/// connected, paired parent apps. US-002 does not need any server push yet; the interface is
-/// the typed-hub contract placeholder. Broadcasts start with device management (FR-APP-015).
+/// Client-side callback interface for parent apps. The service invokes these methods on all
+/// connected, paired parent apps (group <c>Parents</c>) to broadcast the state of a state area
+/// (ADR-010): full snapshots with a revision, including the app whose write caused the change.
 /// </summary>
 public interface IParentClientCallback
 {
+    /// <summary>
+    /// The account inventory or a selection changed (state area "UserAccounts", ADR-010). Sent to
+    /// all paired apps, including the app whose write caused it. Apply only if
+    /// <see cref="UserAccountListDto.Revision"/> is higher than the last applied revision.
+    /// </summary>
+    Task OnUserAccountsChanged(UserAccountListDto snapshot);
 }

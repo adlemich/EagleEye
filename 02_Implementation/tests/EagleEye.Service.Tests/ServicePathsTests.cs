@@ -17,12 +17,26 @@ public sealed class ServicePathsTests
     }
 
     [Fact]
+    public void Constructor_DerivesLogDirectoryAndPrefix()
+    {
+        var paths = new ServicePaths(Root);
+
+        Assert.Equal((Path.Combine(Root, "logs"), "EagleEye.Service", false), (paths.LogDirectory, paths.LogFilePrefix, paths.IsOverridden));
+    }
+
+    [Fact]
+    public void Constructor_Overridden_IsOverridden()
+    {
+        Assert.True(new ServicePaths(Root, isOverridden: true).IsOverridden);
+    }
+
+    [Fact]
     public void Resolve_WithoutOverride_UsesProgramDataEagleEye()
     {
         var paths = WithOverride(null, ServicePaths.Resolve);
 
         var expected = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "EagleEye");
-        Assert.Equal(expected, paths.DataDirectory);
+        Assert.Equal((expected, false), (paths.DataDirectory, paths.IsOverridden));
     }
 
     [Fact]
@@ -32,7 +46,24 @@ public sealed class ServicePathsTests
 
         var paths = WithOverride(overrideDirectory, ServicePaths.Resolve);
 
-        Assert.Equal(overrideDirectory, paths.DataDirectory);
+        Assert.Equal((overrideDirectory, true), (paths.DataDirectory, paths.IsOverridden));
+    }
+
+    [Fact]
+    public void EnsureDirectories_CreatesDataCertificateAndLogFolders()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "eagleeye-tests", Guid.NewGuid().ToString("N"));
+        var paths = new ServicePaths(root);
+        try
+        {
+            paths.EnsureDirectories();
+
+            Assert.True(Directory.Exists(paths.CertificateDirectory) && Directory.Exists(paths.LogDirectory));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
     }
 
     [Theory]

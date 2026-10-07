@@ -21,9 +21,9 @@ public sealed class PairedDeviceRepositoryTests : IAsyncLifetime
     public async Task DisposeAsync() => await _database.DisposeAsync();
 
     [Fact]
-    public async Task InitializeAsync_NewDatabase_IsAtSchemaVersion1()
+    public async Task InitializeAsync_NewDatabase_IsAtLatestSchemaVersion()
     {
-        Assert.Equal(1, await _database.GetSchemaVersionAsync());
+        Assert.Equal(2, await _database.GetSchemaVersionAsync());
     }
 
     [Fact]

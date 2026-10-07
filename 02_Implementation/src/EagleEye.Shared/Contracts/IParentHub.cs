@@ -33,4 +33,22 @@ public interface IParentHub
     /// <summary>De-registers a paired device (FR-SVC-097). Other connections of that device are closed.</summary>
     /// <param name="deviceId">The device ID returned by a successful pairing.</param>
     Task RemovePairedDevice(string deviceId);
+
+    /// <summary>
+    /// Returns the current inventory of standard accounts of the service PC with their selection
+    /// (state area "UserAccounts", ADR-010). Called by the app after every (re)connect.
+    /// </summary>
+    Task<UserAccountListDto> GetUserAccounts();
+
+    /// <summary>
+    /// Places an account under parental control or removes it (FR-SVC-072, FR-APP-022). The service
+    /// stores the value, broadcasts the new snapshot to all paired apps including the caller
+    /// (<see cref="IParentClientCallback.OnUserAccountsChanged"/>), and then returns the revision.
+    /// Last write wins. Throws <c>HubException</c> if the account is not in the inventory or the
+    /// value cannot be stored.
+    /// </summary>
+    /// <param name="requestId">Client-generated correlation id, echoed in <see cref="UserAccountListDto.LastChangeRequestId"/>.</param>
+    /// <param name="accountSid">The account's SID as delivered in <see cref="UserAccountDto.Sid"/>.</param>
+    /// <param name="isUnderParentalControl">The new state.</param>
+    Task<StateWriteAckDto> SetParentalControl(Guid requestId, string accountSid, bool isUnderParentalControl);
 }

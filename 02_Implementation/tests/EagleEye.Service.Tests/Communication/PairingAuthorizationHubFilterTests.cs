@@ -1,5 +1,6 @@
 using EagleEye.Service.Communication;
 using EagleEye.Service.Pairing;
+using EagleEye.Service.UserAccounts;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -13,6 +14,8 @@ public sealed class PairingAuthorizationHubFilterTests
 
     [Theory]
     [InlineData(nameof(ParentHub.RemovePairedDevice))]
+    [InlineData(nameof(ParentHub.GetUserAccounts))]
+    [InlineData(nameof(ParentHub.SetParentalControl))]
     public async Task InvokeMethodAsync_UnpairedProtectedMethod_ThrowsNotPaired(string methodName)
     {
         var context = CreateInvocation(methodName, paired: false);
@@ -50,6 +53,8 @@ public sealed class PairingAuthorizationHubFilterTests
     [Theory]
     [InlineData(nameof(ParentHub.RemovePairedDevice))]
     [InlineData(nameof(ParentHub.GetPairingStatus))]
+    [InlineData(nameof(ParentHub.GetUserAccounts))]
+    [InlineData(nameof(ParentHub.SetParentalControl))]
     public async Task InvokeMethodAsync_PairedOtherMethod_CallsNext(string methodName)
     {
         var context = CreateInvocation(methodName, paired: true);
@@ -87,7 +92,8 @@ public sealed class PairingAuthorizationHubFilterTests
         }
 
         var hub = new ParentHub(
-            Mock.Of<IPairingManager>(), Mock.Of<IParentConnectionRegistry>(), Mock.Of<ILogger<ParentHub>>());
+            Mock.Of<IPairingManager>(), Mock.Of<IParentConnectionRegistry>(), Mock.Of<IUserAccountService>(),
+            Mock.Of<ILogger<ParentHub>>());
         var method = typeof(ParentHub).GetMethod(methodName)
             ?? throw new InvalidOperationException($"Method {methodName} not found.");
         return new HubInvocationContext(caller.Object, Mock.Of<IServiceProvider>(), hub, method, []);

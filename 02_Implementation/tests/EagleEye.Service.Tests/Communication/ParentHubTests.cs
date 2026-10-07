@@ -1,6 +1,7 @@
 using EagleEye.Service.Communication;
 using EagleEye.Service.Data;
 using EagleEye.Service.Pairing;
+using EagleEye.Service.UserAccounts;
 using EagleEye.Shared.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -20,6 +21,7 @@ public sealed class ParentHubTests
     private readonly Mock<IPairingManager> _pairing = new();
     private readonly Mock<IParentConnectionRegistry> _registry = new();
     private readonly Mock<IGroupManager> _groups = new();
+    private readonly Mock<IUserAccountService> _userAccounts = new();
     private readonly Mock<ILogger<ParentHub>> _logger = new();
 
     [Fact]
@@ -70,7 +72,7 @@ public sealed class ParentHubTests
     public async Task OnConnectedAsync_NoHttpContext_AuthenticatesWithNullToken()
     {
         var context = HubContextFactory.Create(ConnectionId, withHttpContext: false);
-        var hub = new ParentHub(_pairing.Object, _registry.Object, _logger.Object) { Context = context.Object, Groups = _groups.Object };
+        var hub = new ParentHub(_pairing.Object, _registry.Object, _userAccounts.Object, _logger.Object) { Context = context.Object, Groups = _groups.Object };
 
         await hub.OnConnectedAsync();
 
@@ -251,7 +253,7 @@ public sealed class ParentHubTests
     private (ParentHub Hub, Mock<HubCallerContext> Context) CreateHub(string? authorization = null)
     {
         var context = HubContextFactory.Create(ConnectionId, authorization: authorization);
-        var hub = new ParentHub(_pairing.Object, _registry.Object, _logger.Object)
+        var hub = new ParentHub(_pairing.Object, _registry.Object, _userAccounts.Object, _logger.Object)
         {
             Context = context.Object,
             Groups = _groups.Object,
