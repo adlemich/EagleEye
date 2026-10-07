@@ -1,6 +1,6 @@
 # US-004: App Usage Tracking and Daily Usage Report
 
-**Status**: New
+**Status**: Analyzed
 **Created**: 2026-10-07
 **Approved**: by Michael, 2026-10-07 (status becomes `Analyzed` when the implementation plan is approved)
 **Component(s)**: EagleEye.Service, EagleEye.ParentApp, EagleEye.Shared
@@ -112,6 +112,7 @@ References: FR-SVC-010, FR-SVC-012 (v1.4), FR-SVC-013, FR-SVC-040 (v1.4), FR-SVC
 |---|---|---|
 | 2026-10-07 | Story created; product requirements v1.4 amendment proposed | Michael's scope, written by PRO |
 | 2026-10-07 | Story approved; OQ-1 to OQ-11 answered (proposed defaults accepted); requirements v1.4 approved. ACs unchanged. | Michael |
+| 2026-10-07 | Implementation plan approved (incl. ADR-011 security analysis, ADR-012); status `Analyzed` | Michael |
 
 ---
 

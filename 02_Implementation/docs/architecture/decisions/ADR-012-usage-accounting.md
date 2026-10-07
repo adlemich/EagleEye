@@ -1,6 +1,6 @@
 # ADR-012: Usage Accounting — Active Time, Clocks, Day Boundary, Persistence and Usage State Areas
 
-**Status**: Proposed — approved with the US-004 implementation plan
+**Status**: Accepted (approved by Michael with the US-004 implementation plan, 2026-10-07)
 **Date**: 2026-10-07
 **Deciders**: ARC, Michael
 

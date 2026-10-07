@@ -1,6 +1,6 @@
 # ADR-011: Session Agent for App Observation — a SYSTEM Helper per Watched Session
 
-**Status**: Proposed — approved with the US-004 implementation plan
+**Status**: Accepted (approved by Michael with the US-004 implementation plan, 2026-10-07)
 **Date**: 2026-10-07
 **Deciders**: ARC, Michael
 

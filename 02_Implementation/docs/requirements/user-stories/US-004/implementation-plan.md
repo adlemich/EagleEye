@@ -1,6 +1,6 @@
 # Implementation Plan: US-004 — App Usage Tracking and Daily Usage Report
 
-**Status**: Draft (for approval by Michael)
+**Status**: Approved by Michael (2026-10-07), incl. ADR-011 (with Security Analysis), ADR-012 and the ADR-005, arc42 and coding-guideline amendments marked "proposed with the US-004 plan"
 **Date**: 2026-10-07
 **Author**: ARC
 **User story**: `02_Implementation/docs/requirements/user-stories/US-004/user-story.md` (approved 2026-10-07, 27 ACs, OQ-1 to OQ-11 answered with the proposed defaults)
@@ -741,12 +741,12 @@ No AC is changed. Points the plan interprets or adds:
 
 ### New, from the security analysis (ADR-011)
 
-| ID | Question | Proposed answer |
-|---|---|---|
-| Q-6 | **Visibility of recording gaps (T-9).** If the session agent cannot run (repeated failures) or is restarted, usage is not recorded for that time. In US-004 this is visible **only in the service log** (Warning per restart, Error after 3 failed restarts). Should the parent see it in the app? | Not in US-004 (no new AC; keeps the story's scope). Add a "recording interrupted" indicator per account and day as an AC of the first budget/enforcement story, where gaps matter for limits. The data for it (pauses with start/end) is already in the log. |
-| Q-7 | **Evasion by window manipulation (T-10).** A tech-savvy kid can make a program's window a tool window or an owned window (e.g. with AutoHotkey), so it drops out of the "Apps" rule and its usage is not counted (Task Manager behaves similarly). | Accept for US-004 (observation only). Enforcement stays process-based and deny-by-default (ADR-005), so this cannot start blocked programs. The budget story decides whether allowed apps without an app window still count (e.g. counting the process while it runs). |
-| Q-8 | **Disguised names (T-11).** A kid can copy a game to a user folder with version info "Editor"; the report shows "Editor" (separate record, real path in log and database). | Accept for US-004; the parent can check the path in the log. Show the program path or publisher in the parent app together with allow-lists (later story). |
-| Q-9 | **Write-restricted token fallback (T-5).** If the .NET runtime or the desktop connection does not start under the write-restricted SYSTEM token, the agent runs without the write restriction (still no privileges, Administrators deny-only, System integrity, no windows). | Accept the fallback; DEV verifies in Step 3 together with Michael, and records which variant runs in the implementation report and the agent's diagnostic log line. |
+| ID | Question | Proposed answer | Answer |
+|---|---|---|---|
+| Q-6 | **Visibility of recording gaps (T-9).** If the session agent cannot run (repeated failures) or is restarted, usage is not recorded for that time. In US-004 this is visible **only in the service log** (Warning per restart, Error after 3 failed restarts). Should the parent see it in the app? | Not in US-004 (no new AC; keeps the story's scope). Add a "recording interrupted" indicator per account and day as an AC of the first budget/enforcement story, where gaps matter for limits. The data for it (pauses with start/end) is already in the log. | Answer (Michael, 2026-10-07): proposed answer accepted. |
+| Q-7 | **Evasion by window manipulation (T-10).** A tech-savvy kid can make a program's window a tool window or an owned window (e.g. with AutoHotkey), so it drops out of the "Apps" rule and its usage is not counted (Task Manager behaves similarly). | Accept for US-004 (observation only). Enforcement stays process-based and deny-by-default (ADR-005), so this cannot start blocked programs. The budget story decides whether allowed apps without an app window still count (e.g. counting the process while it runs). | Answer (Michael, 2026-10-07): proposed answer accepted. |
+| Q-8 | **Disguised names (T-11).** A kid can copy a game to a user folder with version info "Editor"; the report shows "Editor" (separate record, real path in log and database). | Accept for US-004; the parent can check the path in the log. Show the program path or publisher in the parent app together with allow-lists (later story). | Answer (Michael, 2026-10-07): proposed answer accepted. |
+| Q-9 | **Write-restricted token fallback (T-5).** If the .NET runtime or the desktop connection does not start under the write-restricted SYSTEM token, the agent runs without the write restriction (still no privileges, Administrators deny-only, System integrity, no windows). | Accept the fallback; DEV verifies in Step 3 together with Michael, and records which variant runs in the implementation report and the agent's diagnostic log line. | Answer (Michael, 2026-10-07): proposed answer accepted. |
 
 ---
 
