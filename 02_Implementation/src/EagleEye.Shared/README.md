@@ -16,11 +16,15 @@ Shared library used by all EagleEye components. This is the **API contract bound
 
 ```
 EagleEye.Shared/
-├── Contracts/     SignalR hub interfaces and DTOs (the API contract)
-└── Models/        Shared domain models
+├── Contracts/      SignalR hub interfaces (the API contract)
+├── Models/         DTOs, e.g. UserAccountDto, UserAccountListDto, StateWriteAckDto (ADR-010)
+├── Constants/      HubRoutes, ServiceDefaults, PairingRules
+├── Communication/  ReconnectSchedule, ConnectBackoff
+├── Data/           SqliteDatabase base (pragmas, integrity check, migrations)
+└── Logging/        RollingFileLoggerProvider: EagleEye file logging (ADR-002 note), used by the service
 ```
 
 ## Dependencies
 
-None. This library has no dependency on other EagleEye components.
+No dependency on other EagleEye components. Packages: `Microsoft.Data.Sqlite`, `Microsoft.Extensions.Logging.Abstractions`.
 All other components depend on this library, never on each other.

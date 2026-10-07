@@ -11,6 +11,7 @@ Cross-platform parent application built with .NET MAUI. One codebase targets And
 - Connect to `EagleEye.Service` over the LAN (`https://<host>:5443/hubs/parent`, self-signed certificate: trust on first use, pinned after pairing, ADR-008)
 - Pair once with the 6-digit code shown on the service PC; afterwards connect by itself with the stored token
 - Show the connection state in the status bar; light/dark appearance (US-002)
+- Show the standard accounts of the service PC and tick the ones under parental control (US-003)
 - Later stories: app rules, time budgets, pause windows, statistics per kid
 
 ## Structure
@@ -21,7 +22,7 @@ EagleEye.ParentApp/
 ├── MauiProgram.cs           DI: Core services, platform services, view models, views
 ├── Views/
 │   ├── MainPage             Desktop layout: menu left, content right, status bar bottom (FR-APP-081)
-│   ├── SettingsView         "Visual appearance" and "Server connection" sections
+│   ├── SettingsView         "Visual appearance", "Server connection" and "User accounts on the EagleEye PC"
 │   └── StatusBarView        Green/red indicator + status text
 ├── Services/                MauiThemeService, MauiDialogService, MauiUiDispatcher,
 │                            MauiAppDataPaths, MauiSecureStorageSecretStore (non-Windows)

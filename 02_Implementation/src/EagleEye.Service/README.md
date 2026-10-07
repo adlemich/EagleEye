@@ -21,8 +21,31 @@ EagleEye.Service/
 ├── Configuration/    Per-user configuration management — rules, budgets, schedules
 ├── Statistics/       Usage statistics collection and storage
 ├── Communication/    SignalR hub (server side) — serves parent apps + tray client
-└── Certificates/     Self-signed TLS certificate generation and management
+├── Certificates/     Self-signed TLS certificate generation and management
+├── UserAccounts/     Account inventory and selection (US-003): NetApiLocalAccountSource (Win32),
+│                     AccountInventoryFilter (standard only; no built-ins by RID, no defaultuser0),
+│                     UserAccountService (state owner of the area "UserAccounts", ADR-010),
+│                     UserAccountsBroadcaster, AccountInventoryMonitor (checks every 15 s)
+├── Data/             ServiceDatabase (migrations: 1 PairedDevices, 2 AccountSelections), repositories
+└── Diagnostics/      Event Log pairing code, admin-only ACL of the logs\ folder
 ```
+
+## State areas (ADR-010)
+
+| Area | State owner | Query / write / broadcast |
+|---|---|---|
+| `UserAccounts` | `UserAccounts/UserAccountService` | `GetUserAccounts` / `SetParentalControl` / `OnUserAccountsChanged` |
+
+Every accepted write and every change of the Windows accounts produces one revision and one broadcast to the group `Parents` (including the sender). Revisions are in memory and start at 1 on every service start.
+
+## Data and logs
+
+| What | Where |
+|---|---|
+| Database | `%ProgramData%\EagleEye\EagleEye.Service.db` (`PairedDevices`, `AccountSelections`) |
+| Certificate | `%ProgramData%\EagleEye\certs\` (SYSTEM + Administrators only) |
+| Log files | `%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log` (SYSTEM + Administrators only; 50 MB per file, at most 3 files, older than 5 days deleted except the current one). The service re-applies the folder ACL on every start; if that fails it writes no log file in that run. |
+| Event Log | *Application*, source `EagleEye` (Information and above of `EagleEye.*`) |
 
 ## Runtime
 

@@ -1,6 +1,6 @@
 # US-003: Account Inventory and Selection of Accounts under Parental Control
 
-**Status**: Analyzed
+**Status**: Implemented
 **Created**: 2026-10-07
 **Approved**: by Michael, 2026-10-07 (status becomes `Analyzed` when the implementation plan is approved)
 **Component(s)**: EagleEye.Service, EagleEye.ParentApp, EagleEye.Shared
@@ -105,6 +105,7 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 | 2026-10-07 | AC-23, AC-24: selection changes always go through the service (store, then broadcast at once to all connected parent apps; apps update on receipt, never exchange data directly); 5-second limits are end-to-end. AC-14 (confirmed state, broadcast), flow overview, FR-SVC-072 and FR-APP-022 aligned. Story stays approved. | Michael, change request |
 | 2026-10-07 | AC-3: `defaultuser0` excluded (ARC Q-4). AC-14: service log moved to the admin-only folder `%ProgramData%\EagleEye\logs\` (ARC Q-2). Terms, FR-SVC-070 and FR-SVC-100 aligned. Story stays approved. | Michael, answers to ARC questions |
 | 2026-10-07 | Implementation plan approved; status `Analyzed` | Michael |
+| 2026-10-07 | Implemented (version 0.3.0); see `US-003/implementation-report.md`; status `Implemented` | DEV |
 
 ---
 

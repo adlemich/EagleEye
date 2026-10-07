@@ -158,7 +158,7 @@ public sealed class UserAccountsViewModel : ObservableObject
 
     private async Task WriteAsync(UserAccountItemViewModel item, bool value)
     {
-        var saved = await _model.SetParentalControlAsync(item.Sid, value).ConfigureAwait(false);
+        var saved = await _model.SetParentalControlAsync(item.Sid, value);
         _dispatcher.Post(() =>
         {
             ErrorText = saved ? null : AppTexts.AccountSaveFailed;
