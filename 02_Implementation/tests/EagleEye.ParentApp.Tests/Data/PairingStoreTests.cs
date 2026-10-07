@@ -44,7 +44,7 @@ public sealed class PairingStoreTests : IAsyncLifetime
 
         var columnsWithToken = await _database.ExecuteAsync(async (connection, ct) =>
         {
-            await using var command = connection.CreateCommand();
+            using var command = connection.CreateCommand();
             command.CommandText = "SELECT COUNT(*) FROM ServerConnections WHERE Host LIKE '%token-1%' OR DeviceId LIKE '%token-1%' OR DeviceName LIKE '%token-1%' OR CertificateThumbprint LIKE '%token-1%';";
             return (long)(await command.ExecuteScalarAsync(ct))!;
         });
@@ -134,7 +134,7 @@ public sealed class PairingStoreTests : IAsyncLifetime
     {
         return database.ExecuteAsync(async (connection, ct) =>
         {
-            await using var command = connection.CreateCommand();
+            using var command = connection.CreateCommand();
             command.CommandText = $"DROP TABLE {table};";
             return await command.ExecuteNonQueryAsync(ct);
         });

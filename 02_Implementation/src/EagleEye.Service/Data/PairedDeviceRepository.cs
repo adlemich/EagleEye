@@ -12,7 +12,7 @@ public sealed class PairedDeviceRepository(ServiceDatabase database) : IPairedDe
 
         return database.ExecuteAsync(async (connection, token) =>
         {
-            await using var command = connection.CreateCommand();
+            using var command = connection.CreateCommand();
             command.CommandText = """
                 INSERT INTO PairedDevices (DeviceId, DeviceName, TokenHash, PairedAtUtc)
                 VALUES (@id, @name, @hash, @pairedAt);
@@ -32,13 +32,13 @@ public sealed class PairedDeviceRepository(ServiceDatabase database) : IPairedDe
 
         return database.ExecuteAsync(async (connection, token) =>
         {
-            await using var command = connection.CreateCommand();
+            using var command = connection.CreateCommand();
             command.CommandText = """
                 SELECT DeviceId, DeviceName, TokenHash, PairedAtUtc
                 FROM PairedDevices WHERE TokenHash = @hash;
                 """;
             command.Parameters.AddWithValue("@hash", tokenHash);
-            await using var reader = await command.ExecuteReaderAsync(token).ConfigureAwait(false);
+            using var reader = await command.ExecuteReaderAsync(token).ConfigureAwait(false);
             if (!await reader.ReadAsync(token).ConfigureAwait(false))
             {
                 return null;
@@ -59,7 +59,7 @@ public sealed class PairedDeviceRepository(ServiceDatabase database) : IPairedDe
 
         return database.ExecuteAsync(async (connection, token) =>
         {
-            await using var command = connection.CreateCommand();
+            using var command = connection.CreateCommand();
             command.CommandText = "DELETE FROM PairedDevices WHERE DeviceId = @id;";
             command.Parameters.AddWithValue("@id", deviceId);
             return await command.ExecuteNonQueryAsync(token).ConfigureAwait(false) > 0;

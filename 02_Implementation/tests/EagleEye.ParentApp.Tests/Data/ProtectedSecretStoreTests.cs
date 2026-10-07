@@ -41,7 +41,7 @@ public sealed class ProtectedSecretStoreTests : IAsyncLifetime
 
         var stored = await _database.ExecuteAsync(async (connection, ct) =>
         {
-            await using var command = connection.CreateCommand();
+            using var command = connection.CreateCommand();
             command.CommandText = "SELECT ProtectedValue FROM Secrets;";
             return (byte[])(await command.ExecuteScalarAsync(ct))!;
         });

@@ -36,7 +36,7 @@ public sealed class SettingsStore(ParentDatabase database) : ISettingsStore
     {
         return database.ExecuteAsync(async (connection, ct) =>
         {
-            await using var command = connection.CreateCommand();
+            using var command = connection.CreateCommand();
             command.CommandText = "SELECT Value FROM AppSettings WHERE Key = @key;";
             command.Parameters.AddWithValue("@key", key);
             return await command.ExecuteScalarAsync(ct).ConfigureAwait(false) as string;
@@ -48,7 +48,7 @@ public sealed class SettingsStore(ParentDatabase database) : ISettingsStore
     {
         return database.ExecuteAsync(async (connection, ct) =>
         {
-            await using var command = connection.CreateCommand();
+            using var command = connection.CreateCommand();
             command.CommandText = """
                 INSERT INTO AppSettings (Key, Value) VALUES (@key, @value)
                 ON CONFLICT (Key) DO UPDATE SET Value = excluded.Value;

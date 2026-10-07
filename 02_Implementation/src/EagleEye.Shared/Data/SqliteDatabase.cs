@@ -120,7 +120,7 @@ public abstract class SqliteDatabase : IAsyncDisposable
 
     private async Task ApplyMigrationAsync(string sql, long newVersion, CancellationToken ct)
     {
-        await using var transaction = (SqliteTransaction)await _connection.BeginTransactionAsync(ct).ConfigureAwait(false);
+        using var transaction = (SqliteTransaction)await _connection.BeginTransactionAsync(ct).ConfigureAwait(false);
         try
         {
             await ExecuteNonQueryAsync(sql, transaction, ct).ConfigureAwait(false);
@@ -145,7 +145,7 @@ public abstract class SqliteDatabase : IAsyncDisposable
 
     private async Task ExecuteNonQueryAsync(string sql, SqliteTransaction? transaction, CancellationToken ct)
     {
-        await using var command = _connection.CreateCommand();
+        using var command = _connection.CreateCommand();
         command.CommandText = sql;
         command.Transaction = transaction;
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
@@ -153,7 +153,7 @@ public abstract class SqliteDatabase : IAsyncDisposable
 
     private async Task<object?> ExecuteScalarAsync(string sql, CancellationToken ct)
     {
-        await using var command = _connection.CreateCommand();
+        using var command = _connection.CreateCommand();
         command.CommandText = sql;
         return await command.ExecuteScalarAsync(ct).ConfigureAwait(false);
     }

@@ -155,7 +155,7 @@ public sealed class SqliteDatabaseTests
 
     private static async Task<long> ScalarAsync(SqliteConnection connection, string sql)
     {
-        await using var command = connection.CreateCommand();
+        using var command = connection.CreateCommand();
         command.CommandText = sql;
         return (long)(await command.ExecuteScalarAsync())!;
     }
