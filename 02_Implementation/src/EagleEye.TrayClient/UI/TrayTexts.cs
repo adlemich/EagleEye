@@ -31,6 +31,17 @@ internal static class TrayTexts
 
     public static string Ok => Get(nameof(Ok));
 
+    /// <summary>Title of the pairing-code window (FR-TRAY-070).</summary>
+    public static string PairingTitle => Get(nameof(PairingTitle));
+
+    /// <summary>Composite format with one placeholder for the 6-digit pairing code.</summary>
+    public static string PairingCodeFormat => Get(nameof(PairingCodeFormat));
+
+    public static string PairingInstruction => Get(nameof(PairingInstruction));
+
+    /// <summary>Composite format with one placeholder for the validity in minutes.</summary>
+    public static string PairingValidityFormat => Get(nameof(PairingValidityFormat));
+
     /// <summary>Returns the text for the current UI culture.</summary>
     /// <exception cref="InvalidOperationException">The resource key does not exist.</exception>
     internal static string Get(string name)

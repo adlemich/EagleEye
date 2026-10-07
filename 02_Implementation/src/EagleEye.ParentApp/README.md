@@ -1,41 +1,64 @@
 # EagleEye.ParentApp
 
-Cross-platform parent application built with .NET MAUI. One codebase targets Android and iOS (primary production platforms), Windows (copy-deployed exe, used for initial testing) and macOS.
+Cross-platform parent application built with .NET MAUI. One codebase targets Android and iOS (primary production platforms), Windows (initial testing vehicle, own per-user installer) and macOS.
 
 **Build hosts (ADR-007)**: Windows and Android targets are built on the Windows developer machine; the macOS (Mac Catalyst) and iOS targets on the MacBook. The `.csproj` selects target frameworks by host OS.
 
+**Logic lives in `EagleEye.ParentApp.Core` (ADR-009).** This project is the MAUI head only: views, `MauiProgram`, platform code and the implementations of the small abstractions Core needs (theme, dialogs, UI dispatcher, app data paths, secret storage). See `src/EagleEye.ParentApp.Core/README.md`.
+
 ## Responsibility
 
-- Allow parents to configure app rules (allowed/blocked apps per kid user)
-- Allow parents to configure time budgets (hours:minutes per app per day)
-- Allow parents to configure pause windows (blocked time per weekday per kid)
-- Display real-time and historical usage statistics per kid
-- Connect to `EagleEye.Service` via SignalR over local LAN (HTTPS, self-signed cert)
-- Accept and trust the server's self-signed certificate automatically
+- Connect to `EagleEye.Service` over the LAN (`https://<host>:5443/hubs/parent`, self-signed certificate: trust on first use, pinned after pairing, ADR-008)
+- Pair once with the 6-digit code shown on the service PC; afterwards connect by itself with the stored token
+- Show the connection state in the status bar; light/dark appearance (US-002)
+- Later stories: app rules, time budgets, pause windows, statistics per kid
+
+## Structure
+
+```
+EagleEye.ParentApp/
+├── App.xaml(.cs)            Window "EagleEye" (min. 900 × 600), resolves MainPage
+├── MauiProgram.cs           DI: Core services, platform services, view models, views
+├── Views/
+│   ├── MainPage             Desktop layout: menu left, content right, status bar bottom (FR-APP-081)
+│   ├── SettingsView         "Visual appearance" and "Server connection" sections
+│   └── StatusBarView        Green/red indicator + status text
+├── Services/                MauiThemeService, MauiDialogService, MauiUiDispatcher,
+│                            MauiAppDataPaths, MauiSecureStorageSecretStore (non-Windows)
+├── Resources/
+│   ├── Styles/              Colors (light/dark via AppThemeBinding) and styles
+│   └── AppIcon/             appicon.svg (MAUI icon), eagleeye.ico (exe and installer icon)
+└── Platforms/
+    ├── Windows/             WinUI App, app.manifest, DpapiSecretProtector (token: DPAPI CurrentUser)
+    ├── Android/             MainActivity, MainApplication, AndroidManifest (INTERNET)
+    └── MacCatalyst/         AppDelegate, SceneDelegate, Program, Info.plist, Entitlements (not built yet)
+```
+
+All UI texts come from `EagleEye.ParentApp.Core/Resources/AppTexts*.resx` (German default, English satellite). Only the window title "EagleEye" is not translated.
 
 ## Platform Support
 
 | Platform | Min Version | Built on | Distribution |
 |----------|-------------|----------|--------------|
-| Windows | Windows 11 | Windows machine | Copy a single .exe (no installer); used for initial testing |
+| Windows | Windows 11 | Windows machine | Per-user installer `03_Delivery/windows/EagleEye-ParentApp-Setup-<version>.exe` (unpackaged, self-contained, no admin rights, ADR-009) |
 | Android | Android 14 (API 34) | Windows machine | Sideloading (adb) |
 | macOS | macOS 26 | MacBook | Direct .dmg download |
 | iOS | iOS 26 | MacBook | Sideloading (Xcode / ios-deploy) |
 
-## Component Structure
+## Build, Run, Package (Windows machine)
 
-```
-EagleEye.ParentApp/
-├── Platforms/
-│   ├── Windows/       Windows-specific code (App.xaml, Package.appxmanifest)
-│   ├── Android/       Android-specific code (MainActivity, AndroidManifest.xml)
-│   ├── MacCatalyst/   macOS-specific code (AppDelegate, Info.plist)
-│   └── iOS/           iOS-specific code
-├── ViewModels/        Shared MVVM view models
-├── Views/             Shared MAUI UI pages and controls
-└── Communication/     SignalR client — connects to EagleEye.Service on LAN
-```
+| Task | Command |
+|---|---|
+| Build Windows + Android | `pwsh 02_Implementation/scripts/build.ps1` (finds the JDK / Android SDK via `JAVA_HOME` / `ANDROID_HOME` or `%LOCALAPPDATA%\Android`) |
+| Run (Debug) | `02_Implementation/src/EagleEye.ParentApp/bin/Debug/net10.0-windows10.0.19041.0/win-x64/EagleEye.ParentApp.exe` |
+| Installer | `pwsh 02_Implementation/scripts/package-windows.ps1 -Target ParentApp` |
 
-## Connection
+## Data (Windows)
 
-The parent app connects to the Windows server via hostname or IP address (manually entered by the parent). The connection uses SignalR over HTTPS with the server's self-signed certificate trusted on first connection.
+| What | Where |
+|---|---|
+| Program files | `%LocalAppData%\Programs\EagleEye Parent App\` |
+| Database (pairing, settings) | `%LocalAppData%\EagleEye\EagleEye.ParentApp.db` |
+| Token | `Secrets` table of that database, encrypted with DPAPI (CurrentUser). MAUI `SecureStorage` is not used on Windows because it needs package identity. |
+
+Uninstalling removes all three.

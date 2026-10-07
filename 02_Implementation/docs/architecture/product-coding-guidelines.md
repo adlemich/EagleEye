@@ -1,7 +1,9 @@
 # EagleEye — Product Coding Guidelines
 
-*Status: Approved (2026-09-20, amended 2026-10-03)*
-*Maintainer: ARC Agent | Last Updated: 2026-09-20*
+*Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04)*
+*Maintainer: ARC Agent | Last Updated: 2026-10-04*
+
+> **Amendment 2026-10-04 (US-002, ADR-008, ADR-009)**: §10.1, §10.2, §10.4 (`ParentApp.Core`, Shared `Communication/` and `Data/`), §12.2 (pairing code in a topmost window), §16.1 (packaging per ADR-009, token storage via DPAPI `ISecretStore`).
 
 This document defines the coding standards all EagleEye components must follow. It complements but does not duplicate the system architecture (`arc42/system-architecture.md`) and ADRs — refer to those for architectural decisions, component responsibilities, and design rationale.
 
@@ -449,7 +451,9 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 ├── EagleEye.Shared/              # Shared library — contracts, models, constants
 │   ├── Contracts/                # IParentHub, ITrayHub, IParentClientCallback, ITrayClientCallback
 │   ├── Models/                   # DTOs: UserConfigDto, AppRuleDto, TimeBudgetDto, ...
-│   ├── Constants/                # HubRoutes, Defaults
+│   ├── Constants/                # HubRoutes, ServiceDefaults, PairingRules
+│   ├── Communication/            # ReconnectSchedule, ConnectBackoff (client reconnect timing)
+│   ├── Data/                     # SqliteDatabase base (pragmas, integrity check, migrations)
 │   └── Extensions/               # Shared extension methods
 ├── EagleEye.Service/             # Windows service
 │   ├── Communication/            # ParentHub, TrayHub, connection management
@@ -469,12 +473,16 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 │   ├── UI/                       # NotifyIcon, overlay, notifications
 │   ├── Data/                     # SQLite (optional cache), YAML reader
 │   └── Program.cs
-├── EagleEye.ParentApp/           # MAUI cross-platform app
-│   ├── Communication/            # SignalR client connection to service
+├── EagleEye.ParentApp.Core/      # Plain net10.0 library, all parent-app logic without MAUI (ADR-009)
+│   ├── Abstractions/             # ISecretStore, ISecretProtector, IThemeService, IDialogService, ...
+│   ├── Communication/            # SignalR client, certificate trust, ConnectionCoordinator
+│   ├── Data/                     # SQLite (pairing, settings, secrets), YAML reader
 │   ├── ViewModels/               # MVVM view models
-│   ├── Views/                    # MAUI ContentPages
-│   ├── Data/                     # SQLite (connections, cached state), YAML reader
-│   ├── Resources/                # Localization (de, en), images, styles
+│   └── Resources/                # AppTexts (de, en)
+├── EagleEye.ParentApp/           # MAUI head: views and platform code
+│   ├── Views/                    # MAUI pages and views
+│   ├── Services/                 # Implementations of the Core abstractions
+│   ├── Resources/                # Styles, icons, images
 │   ├── Platforms/
 │   │   ├── Windows/
 │   │   ├── MacCatalyst/
@@ -495,7 +503,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 - **Do not duplicate code across projects.** If logic is needed by more than one component, extract it into `EagleEye.Shared`.
 - **Do not duplicate code within a project.** If a pattern appears three or more times, extract a shared method or class. Two occurrences are acceptable if the contexts differ enough that an abstraction would be forced.
 - **Shared data access patterns** (YAML parsing, SQLite connection setup, PRAGMA configuration) should be in `EagleEye.Shared` or a shared `Data/` utility, so all components configure their databases identically.
-- **Do not add project references between `Service`, `TrayClient`, and `ParentApp`.** They communicate only via SignalR at runtime. All compile-time sharing goes through `EagleEye.Shared`.
+- **Do not add project references between `Service`, `TrayClient`, and `ParentApp`.** They communicate only via SignalR at runtime. All compile-time sharing goes through `EagleEye.Shared`. `EagleEye.ParentApp.Core` is part of the ParentApp component (`ParentApp → ParentApp.Core → Shared`, ADR-009); only the ParentApp head and its tests reference it.
 
 ### 10.3 Version Management
 
@@ -506,7 +514,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 
 - Code for `EagleEye.Service`, `EagleEye.TrayClient` and the ParentApp `Platforms/Windows` and `Platforms/Android` folders is built and verified on the Windows Developer Machine.
 - Code in ParentApp `Platforms/MacCatalyst` is built and verified on the MacBook.
-- Shared ParentApp code (ViewModels, Views, Communication) must compile on both hosts. Do not use platform APIs outside `Platforms/` or behind `#if` guards.
+- Shared ParentApp code (`EagleEye.ParentApp.Core`, and the Views of the MAUI head) must compile on both hosts. `ParentApp.Core` must not reference MAUI. Do not use platform APIs outside `Platforms/` or behind `#if` guards.
 - Never hard-code absolute paths, path separators or line endings. Use `Path.Combine`, `Environment.GetFolderPath`, and `Environment.NewLine` where output is OS-facing.
 
 ---
@@ -562,12 +570,13 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 
 - The TrayClient is a **WinForms** application, not a Windows service. It runs in the kid's user session.
 - Use `System.Windows.Forms.NotifyIcon` for the system tray icon. Set both `Icon` and `Visible = true`.
-- Use `NotifyIcon.ShowBalloonTip()` for popup notifications (budget warnings, pairing codes).
+- Use `NotifyIcon.ShowBalloonTip()` for popup notifications (budget warnings, enforcement notices).
+- **Pairing codes are never shown in a balloon tip**: Focus Assist / "Do not disturb" can suppress balloon tips. Show the code in a small `Form` with `TopMost = true` and `ShowInTaskbar = true` (`UI/PairingCodeDialog`), which closes itself when the code expires and is replaced when a newer code arrives (ADR-008 §6).
 - The optional overlay is a `Form` with `TopMost = true`, `FormBorderStyle = None`, `TransparencyKey` for see-through regions, and `ShowInTaskbar = false`.
 - **Auto-start**: Registered in `HKLM\Software\Microsoft\Windows\CurrentVersion\Run` by the Inno Setup installer.
 - **No admin privileges required** — the TrayClient runs under the kid's standard-user account.
 - **UI thread marshalling**: All UI updates from SignalR callbacks must be marshalled to the UI thread via `Control.Invoke()` or `SynchronizationContext.Post()`. SignalR callbacks arrive on thread-pool threads.
-- **Connection resilience**: Use `HubConnectionBuilder` with `.WithAutomaticReconnect()` for automatic reconnection to the service on localhost.
+- **Connection resilience**: Use `HubConnectionBuilder` with `.WithAutomaticReconnect()` (Shared `ReconnectSchedule`) for automatic reconnection to the service on the loopback tray endpoint `http://localhost:5080/hubs/tray` (ADR-008).
 
 ### 12.3 Windows-Specific Security
 
@@ -652,12 +661,12 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 
 ### 16.1 Windows Considerations
 
-- **Target**: `net10.0-windows10.0.19041.0`, minimum OS Windows 11 (`10.0.22000.0`). MAUI renders through WinUI 3.
+- **Target**: `net10.0-windows10.0.19041.0`. The csproj minimum (`SupportedOSPlatformVersion` / `TargetPlatformMinVersion`) is `10.0.19041.0`, because the SDK rejects a minimum above the TFM version (`NETSDK1135`); the minimum OS **Windows 11** is enforced by the installer (`MinVersion=10.0.22000`). MAUI renders through WinUI 3.
 - **Desktop UI**: same desktop-style layout as macOS (§13). Resizable window with a sensible minimum size. No portrait lock.
-- **TLS trust**: as on macOS, accept the service's self-signed certificate programmatically via `ServerCertificateCustomValidationCallback`. Never install it into the Windows certificate store.
-- **Secure storage**: store the pairing token with MAUI `SecureStorage` (DPAPI-backed on Windows) rather than in plain SQLite.
-- **Role**: initial testing vehicle for parent-side features. Android and iOS are the production platforms, so keep Windows-specific code to a minimum and put everything possible in shared code.
-- **Packaging**: copy deployment, no installer (FR-APP-092). Target: unpackaged (`WindowsPackageType=None`), self-contained Windows App SDK, published as a single executable. **ARC must validate single-file publishing for MAUI/WinUI early** (native Windows App SDK dependencies may need `IncludeNativeLibrariesForSelfExtract` or may not fully collapse into one file) and record the outcome as an ADR. A copied folder is the fallback if a true single exe is not achievable.
+- **TLS trust**: as on macOS, accept the service's self-signed certificate programmatically (trust on first use, then the pinned thumbprint; `CertificateTrustPolicy` in `ParentApp.Core`, ADR-008 §3). Set the callback on both the HTTP handler and `ClientWebSocketOptions.RemoteCertificateValidationCallback`. Never install the certificate into the Windows certificate store.
+- **Secure storage**: store the pairing token via the Core abstraction `ISecretStore`, never in plain SQLite. On Windows, `ProtectedSecretStore` (Core) keeps the encrypted bytes in the `Secrets` table, and the platform class `Platforms/Windows/DpapiSecretProtector` (`ISecretProtector`) encrypts with DPAPI `DataProtectionScope.CurrentUser`. **Do not use MAUI `SecureStorage` on Windows**: it needs package identity, and the app is unpackaged (ADR-009). Other platforms use `MauiSecureStorageSecretStore` (Keychain / Keystore, §14, §15).
+- **Role**: initial testing vehicle for parent-side features. Android and iOS are the production platforms, so keep Windows-specific code to a minimum and put everything possible in `EagleEye.ParentApp.Core` (ADR-009).
+- **Packaging** (ADR-009, supersedes copy deployment): unpackaged (`WindowsPackageType=None`), self-contained (`SelfContained`, `WindowsAppSDKSelfContained=true`), `win-x64`, no MSIX. Set `RuntimeIdentifier` and the self-contained properties **in the csproj for the Windows TFM only**; do not pass `-r` / `--self-contained` on the command line, which also applies to the Android target and breaks its restore. The publish output is packaged by `installer/windows/parentapp-setup.iss` (Inno Setup, **per user**, `PrivilegesRequired=lowest`, own `AppId`, default folder `%LocalAppData%\Programs\EagleEye Parent App`) into `03_Delivery/windows/EagleEye-ParentApp-Setup-<version>.exe`, built by `scripts/package-windows.ps1 -Target ParentApp`. Uninstall removes the program folder, the Start menu entry and `%LocalAppData%\EagleEye\`; repair/update keeps the app data.
 - **Same communication model** (FR-APP-091): the Windows app is an ordinary `ParentHub` client (TLS + pairing), whether it runs on the service PC or remotely. Never add a local shortcut such as direct SQLite access, named pipes or skipping pairing on `localhost`.
 - **Same-PC caveat**: if the parent app runs on the PC that hosts the service, it runs under the parent's admin account. Admin accounts are never monitored, so EagleEye does not enforce rules on the parent app itself.
 

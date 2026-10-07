@@ -1,6 +1,6 @@
 # ADR-007: Two-Machine Development and Manual Acceptance Testing
 
-**Status**: Accepted
+**Status**: Accepted (§2 "Distribution" superseded by ADR-009, 2026-10-04)
 **Date**: 2026-10-03
 **Deciders**: Michael (project owner)
 
@@ -44,7 +44,8 @@ The parent app gains a **Windows desktop target** (MAUI on WinUI, `net10.0-windo
 Michael's clarifications (2026-10-03):
 
 - **Role**: Android and iOS are the primary production platforms. The Windows client is the **initial testing vehicle** for parent-side features, which can then be tested on the Windows developer machine before the mobile apps exist.
-- **Distribution**: an extra app with no installer, deployed by copying a single `.exe` (FR-APP-092). Feasibility of a true single-file MAUI/WinUI publish must be validated early (coding guidelines §16.1).
+- ~~**Distribution**: an extra app with no installer, deployed by copying a single `.exe` (FR-APP-092). Feasibility of a true single-file MAUI/WinUI publish must be validated early (coding guidelines §16.1).~~
+  **Superseded by ADR-009 (2026-10-04)**: requirements v1.2 (FR-APP-092) replace copy deployment with a separate, self-contained, per-user Inno Setup installer with install, repair and uninstall. The single-file validation is no longer needed.
 - **Communication**: same model as the mobile apps (TLS + pairing via `ParentHub`). This holds both on the service PC and remotely (FR-APP-091).
 
 ### 3. Manual acceptance testing
@@ -104,3 +105,4 @@ Process: `02_Implementation/docs/testing/README.md`.
 - `02_Implementation/docs/testing/README.md`
 - `01_Intend_and_Constraints/questions_and_answers.md`, Group 9
 - ADR-001: Technology Selection (development setup superseded in part by this ADR)
+- ADR-009: Windows Parent App Packaging and the ParentApp.Core Library (supersedes §2 "Distribution")

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- Light theme -->
+    <Color x:Key="PageBackgroundLight">#FFFFFF</Color>
+    <Color x:Key="PanelBackgroundLight">#F2F4F3</Color>
+    <Color x:Key="TextLight">#1B1F1C</Color>
+    <Color x:Key="SecondaryTextLight">#4E5752</Color>
+    <Color x:Key="AccentLight">#1E7B3A</Color>
+    <Color x:Key="ErrorLight">#B3261E</Color>
+    <Color x:Key="BorderLight">#D0D5D2</Color>
+
+    <!-- Dark theme -->
+    <Color x:Key="PageBackgroundDark">#141716</Color>
+    <Color x:Key="PanelBackgroundDark">#1F2421</Color>
+    <Color x:Key="TextDark">#E8ECEA</Color>
+    <Color x:Key="SecondaryTextDark">#A9B3AE</Color>
+    <Color x:Key="AccentDark">#5CC77F</Color>
+    <Color x:Key="ErrorDark">#F2B8B5</Color>
+    <Color x:Key="BorderDark">#3A423E</Color>
+
+    <!-- Connection indicator (like the tray client): readable on both themes. -->
+    <SolidColorBrush x:Key="StatusConnectedBrushLight" Color="#1E9E46" />
+    <SolidColorBrush x:Key="StatusConnectedBrushDark" Color="#3DDC6E" />
+    <SolidColorBrush x:Key="StatusDisconnectedBrushLight" Color="#D32F2F" />
+    <SolidColorBrush x:Key="StatusDisconnectedBrushDark" Color="#FF5C5C" />
+
+</ResourceDictionary>

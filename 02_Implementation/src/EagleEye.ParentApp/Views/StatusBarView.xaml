@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:EagleEye.ParentApp.Core.ViewModels;assembly=EagleEye.ParentApp.Core"
+             x:Class="EagleEye.ParentApp.Views.StatusBarView"
+             x:DataType="vm:StatusBarViewModel">
+
+    <!-- Status bar (AC-10): green = connected, red = anything else. -->
+    <Border StrokeThickness="0"
+            Padding="16,8"
+            BackgroundColor="{AppThemeBinding Light={StaticResource PanelBackgroundLight}, Dark={StaticResource PanelBackgroundDark}}">
+        <HorizontalStackLayout Spacing="10">
+            <Ellipse WidthRequest="12"
+                     HeightRequest="12"
+                     VerticalOptions="Center"
+                     Fill="{AppThemeBinding Light={StaticResource StatusDisconnectedBrushLight}, Dark={StaticResource StatusDisconnectedBrushDark}}">
+                <Ellipse.Triggers>
+                    <DataTrigger TargetType="Ellipse" Binding="{Binding IsConnected}" Value="True">
+                        <Setter Property="Fill" Value="{AppThemeBinding Light={StaticResource StatusConnectedBrushLight}, Dark={StaticResource StatusConnectedBrushDark}}" />
+                    </DataTrigger>
+                </Ellipse.Triggers>
+            </Ellipse>
+            <Label Text="{Binding StatusText}" VerticalOptions="Center" />
+        </HorizontalStackLayout>
+    </Border>
+</ContentView>

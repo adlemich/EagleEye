@@ -1,9 +1,11 @@
 # EagleEye -- General Product Requirements
 
-*Status: Approved v1.1 (v1.0 approved 2026-09-20; v1.1 approved by Michael 2026-10-03)*
+*Status: Approved v1.2 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04)*
 *Approved: v1.0 by Michael*
 *Maintainer: PRO Agent*
-*Date: 2026-09-15, amended 2026-10-03*
+*Date: 2026-09-15, amended 2026-10-03, 2026-10-04*
+
+> **v1.2 amendment (2026-10-04, directed by Michael, with US-002)**: the Windows parent app is no longer copy-deployed. It gets **its own, self-contained Windows installer**, separate from the service installer. Also new: light/dark appearance setting for all parent apps (FR-APP-083). Changed: §3.3.8 (FR-APP-083 new), FR-APP-092, §4.2 step 8, §9.5, §11 (Q-1 superseded by Q-4).
 
 > **v1.1 amendment (2026-10-03, directed by Michael, ADR-007)**: the parent app gains a **Windows desktop** target (copy-deployed single exe, used for initial testing). Android and iOS become the primary production platforms, and iOS is no longer out of scope. Changed: §1.2 G-6, §2.1, §3.3 intro and §3.3.8, §3.3.9 (new), §4.2, §8.4, §9.5 (new), §10, §11. Development is split across two machines and acceptance testing is manual. Neither changes product behaviour; both are recorded in `docs/dev-process/`.
 
@@ -300,6 +302,7 @@ The parent app is a single MAUI codebase deployed to Android, iOS, Windows and m
 | FR-APP-080 | On iOS and Android, the app shall operate in portrait orientation only and follow platform-typical look and feel. |
 | FR-APP-081 | On macOS and Windows, the app shall present a desktop-style UI. |
 | FR-APP-082 | The app shall be functionally identical across all platforms. |
+| FR-APP-083 | The parent shall be able to switch the app between a light and a dark appearance in the app settings. The choice is stored per app installation and kept across restarts and updates. Until the parent has chosen, the app follows the operating system's light/dark setting. *(v1.2)* |
 
 #### 3.3.9 Windows Parent App (added in v1.1)
 
@@ -307,7 +310,7 @@ The parent app is a single MAUI codebase deployed to Android, iOS, Windows and m
 |----|-------------|
 | FR-APP-090 | The Windows parent app shall provide the same functionality as the other parent apps (FR-APP-082). |
 | FR-APP-091 | The Windows parent app shall work both on the same PC as `EagleEye.Service` and remotely from another PC on the LAN. In both cases it uses the same communication model as the mobile apps: TLS-encrypted connection, pairing (FR-SVC-090 to FR-SVC-098) and the parent API. There is no special local or privileged access path. |
-| FR-APP-092 | The Windows parent app shall be deployable by copying a single executable. No installer and no installation step shall be required. |
+| FR-APP-092 | The Windows parent app shall be delivered as its own Windows installer, separate from and independent of the `EagleEye.Service` installer. The installer shall be self-contained: no other software (e.g. a runtime) has to be installed before or alongside it. It shall provide a guided wizard for install, repair (re-install over an existing installation) and uninstall, and uninstalling shall remove the application cleanly. *(v1.2; replaces the v1.1 copy deployment.)* |
 
 ### 3.4 Code Reuse
 
@@ -338,7 +341,7 @@ This describes the end-to-end workflow from installation to daily use.
 
 | Step | Actor | Action |
 |------|-------|--------|
-| 8 | Parent | Installs the EagleEye parent app on their mobile phone (Android or iOS), Windows PC (copy the executable) or MacBook. |
+| 8 | Parent | Installs the EagleEye parent app on their mobile phone (Android or iOS), Windows PC (EagleEye parent app installer) or MacBook. |
 | 9 | Parent | Opens the parent app and enters the Windows machine's hostname (or IP address). |
 | 10 | Parent | The app connects to `EagleEye.Service` over TLS on the local LAN. |
 
@@ -534,7 +537,7 @@ This describes the end-to-end workflow from installation to daily use.
 | **OS** | Windows 11 (x64) |
 | **Framework** | .NET MAUI (WinUI) |
 | **UI** | Desktop-style (not portrait-locked), like macOS |
-| **Distribution** | Separate, extra app with **no installer**. Delivered as a single executable that is copied onto the PC and run (copy deployment). Not part of the EagleEye service installer. |
+| **Distribution** | Separate, extra app with **its own self-contained installer** (install, repair, uninstall wizard), FR-APP-092. Not part of the EagleEye service installer. *(v1.2; v1.1 used copy deployment.)* |
 | **Deployment** | May run on the same PC as the service, or on another Windows PC on the LAN (FR-APP-091) |
 | **Purpose** | Initial testing vehicle for the parent-side functionality (see §3.3) |
 
@@ -567,7 +570,8 @@ No open questions. The questions raised by the v1.1 amendment were answered by M
 | Q-1 | How is the Windows parent app distributed? | An extra app; no installer needed. A single executable that is simply copied is sufficient. → §9.5, FR-APP-092 |
 | Q-2 | May the Windows parent app run on the same PC as the service? | Yes, and remotely as well. It uses the same communication model as the mobile apps. → FR-APP-091 |
 | Q-3 | Which parent-app platform comes first? | Android and iOS are the primary platforms for production. The Windows client is used for initial testing. → §3.3 |
+| Q-4 | How is the Windows parent app distributed? (supersedes Q-1) | Michael, 2026-10-04: as an additional, full, clean and self-contained Windows installer next to the service installer. This replaces the copy-only deployment. → §9.5, FR-APP-092 |
 
 ---
 
-*End of General Product Requirements — Approved v1.1*
+*End of General Product Requirements — Approved v1.2*

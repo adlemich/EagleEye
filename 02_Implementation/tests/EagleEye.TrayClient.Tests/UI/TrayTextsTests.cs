@@ -17,6 +17,10 @@ public sealed class TrayTextsTests
         { "de-DE", () => TrayTexts.ServerVersionFormat, "Server-Version: {0}" },
         { "de-DE", () => TrayTexts.ConnectionErrorFormat, "Verbindungsfehler: Keine Verbindung zum Server unter {0} möglich." },
         { "de-DE", () => TrayTexts.Ok, "OK" },
+        { "de-DE", () => TrayTexts.PairingTitle, "EagleEye – Eltern-App koppeln" },
+        { "de-DE", () => TrayTexts.PairingCodeFormat, "Kopplungscode: {0}" },
+        { "de-DE", () => TrayTexts.PairingInstruction, "Geben Sie diesen Code in der EagleEye-Eltern-App ein." },
+        { "de-DE", () => TrayTexts.PairingValidityFormat, "Der Code ist {0} Minuten gültig." },
     };
 
     public static TheoryData<string, Func<string>, string> EnglishTexts => new()
@@ -28,6 +32,10 @@ public sealed class TrayTextsTests
         { "en-US", () => TrayTexts.ServerVersionFormat, "Server Version: {0}" },
         { "en-US", () => TrayTexts.ConnectionErrorFormat, "Connection error: could not connect to the server at {0}." },
         { "en-US", () => TrayTexts.Ok, "OK" },
+        { "en-US", () => TrayTexts.PairingTitle, "EagleEye – Pair a parent app" },
+        { "en-US", () => TrayTexts.PairingCodeFormat, "Pairing code: {0}" },
+        { "en-US", () => TrayTexts.PairingInstruction, "Enter this code in the EagleEye parent app." },
+        { "en-US", () => TrayTexts.PairingValidityFormat, "The code is valid for {0} minutes." },
     };
 
     [Theory]

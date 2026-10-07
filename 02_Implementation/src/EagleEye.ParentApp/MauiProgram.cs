@@ -1,0 +1,56 @@
+using EagleEye.ParentApp.Core.Abstractions;
+using EagleEye.ParentApp.Core.Communication;
+using EagleEye.ParentApp.Core.Data;
+using EagleEye.ParentApp.Core.ViewModels;
+using EagleEye.ParentApp.Services;
+using EagleEye.ParentApp.Views;
+using EagleEye.Shared.Data;
+
+namespace EagleEye.ParentApp;
+
+/// <summary>Builds the MAUI app and its dependency injection container.</summary>
+public static class MauiProgram
+{
+    /// <summary>Creates the app.</summary>
+    public static MauiApp CreateMauiApp()
+    {
+        var builder = MauiApp.CreateBuilder();
+        builder.UseMauiApp<App>();
+
+        var services = builder.Services;
+        var paths = new MauiAppDataPaths();
+        services.AddSingleton<IAppDataPaths>(paths);
+        services.AddSingleton(TimeProvider.System);
+
+        // Storage (ParentApp.Core).
+        services.AddSingleton(_ => new ParentDatabase(SqliteDatabase.BuildConnectionString(paths.DatabasePath)));
+#if WINDOWS
+        services.AddSingleton<ISecretProtector, Platforms.Windows.DpapiSecretProtector>();
+        services.AddSingleton<ISecretStore, ProtectedSecretStore>();
+#else
+        services.AddSingleton<ISecretStore, MauiSecureStorageSecretStore>();
+#endif
+        services.AddSingleton<IPairingStore, PairingStore>();
+        services.AddSingleton<ISettingsStore, SettingsStore>();
+
+        // Communication (ParentApp.Core).
+        services.AddSingleton<IParentHubClientFactory, ParentHubClientFactory>();
+        services.AddSingleton<IConnectionCoordinator, ConnectionCoordinator>();
+
+        // Platform services.
+        services.AddSingleton<IThemeService, MauiThemeService>();
+        services.AddSingleton<IDialogService, MauiDialogService>();
+        services.AddSingleton<IUiDispatcher, MauiUiDispatcher>();
+
+        // View models and views.
+        services.AddSingleton<AppearanceViewModel>();
+        services.AddSingleton<ServerConnectionViewModel>();
+        services.AddSingleton<StatusBarViewModel>();
+        services.AddSingleton<MainViewModel>();
+        services.AddSingleton<SettingsView>();
+        services.AddSingleton<StatusBarView>();
+        services.AddSingleton<MainPage>();
+
+        return builder.Build();
+    }
+}

@@ -1,3 +1,4 @@
+using EagleEye.Shared.Communication;
 using EagleEye.Shared.Constants;
 using EagleEye.Shared.Contracts;
 using EagleEye.Shared.Models;
@@ -31,10 +32,14 @@ public sealed class ServiceConnection : IServiceConnection
         _hubConnection.Reconnecting += _ => RaiseConnectionChanged(false);
         _hubConnection.Reconnected += _ => RaiseConnectionChanged(true);
         _hubConnection.Closed += OnClosed;
+        _hubConnection.On<string>(nameof(ITrayClientCallback.OnShowPairingCode), code => PairingCodeReceived?.Invoke(code));
     }
 
     /// <inheritdoc />
     public event Action<bool>? ConnectionChanged;
+
+    /// <inheritdoc />
+    public event Action<string>? PairingCodeReceived;
 
     /// <inheritdoc />
     public bool IsConnected => _hubConnection.State == HubConnectionState.Connected;

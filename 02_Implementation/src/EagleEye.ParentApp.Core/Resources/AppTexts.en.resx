@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- English -->
+  <data name="MenuSettings" xml:space="preserve"><value>Settings</value></data>
+  <data name="SectionAppearance" xml:space="preserve"><value>Visual appearance</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>Light</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>Dark</value></data>
+  <data name="SectionServerConnection" xml:space="preserve"><value>Server connection</value></data>
+  <data name="PairingStatusLabel" xml:space="preserve"><value>Pairing status</value></data>
+  <data name="PairingStatusNotPaired" xml:space="preserve"><value>Not paired</value></data>
+  <data name="PairingStatusInProgress" xml:space="preserve"><value>Pairing in progress</value></data>
+  <data name="PairingStatusPaired" xml:space="preserve"><value>Paired</value></data>
+  <data name="HostLabel" xml:space="preserve"><value>Hostname or IP address of the EagleEye PC</value></data>
+  <data name="HostPlaceholder" xml:space="preserve"><value>e.g. kid-pc</value></data>
+  <data name="HostDialogTitle" xml:space="preserve"><value>Connect to the EagleEye PC</value></data>
+  <data name="ConnectButton" xml:space="preserve"><value>Connect</value></data>
+  <data name="PairingInstruction" xml:space="preserve"><value>Enter the 6-digit code shown on the EagleEye PC.</value></data>
+  <data name="PairingCodeLabel" xml:space="preserve"><value>Pairing code</value></data>
+  <data name="DeviceNameLabel" xml:space="preserve"><value>Device name of this PC</value></data>
+  <data name="PairButton" xml:space="preserve"><value>Pair</value></data>
+  <data name="NewCodeButton" xml:space="preserve"><value>Request new code</value></data>
+  <data name="CancelButton" xml:space="preserve"><value>Cancel</value></data>
+  <data name="PairedWithFormat" xml:space="preserve"><value>Paired with: {0}</value></data>
+  <data name="ThisDeviceFormat" xml:space="preserve"><value>This device: {0}</value></data>
+  <data name="RemovePairingButton" xml:space="preserve"><value>Remove pairing</value></data>
+  <data name="RemoveConfirmTitle" xml:space="preserve"><value>Remove pairing?</value></data>
+  <data name="RemoveConfirmMessageFormat" xml:space="preserve"><value>This PC will be detached from {0}. Connecting again requires a new pairing code.</value></data>
+  <data name="RemoveNeedsConnection" xml:space="preserve"><value>Removing the pairing requires a connection to the EagleEye PC.</value></data>
+  <data name="StatusConnectedFormat" xml:space="preserve"><value>Connected to {0}</value></data>
+  <data name="StatusConnectingFormat" xml:space="preserve"><value>Connecting to {0} …</value></data>
+  <data name="StatusNotConnected" xml:space="preserve"><value>Not connected</value></data>
+  <data name="StatusNotConnectedFormat" xml:space="preserve"><value>Not connected to {0}</value></data>
+  <data name="ErrorUnreachableFormat" xml:space="preserve"><value>Connection error: could not connect to the EagleEye service at {0}.</value></data>
+  <data name="ErrorInvalidHost" xml:space="preserve"><value>Please enter a valid hostname or IP address.</value></data>
+  <data name="ErrorCodeFormat" xml:space="preserve"><value>The pairing code has 6 digits.</value></data>
+  <data name="ErrorWrongCode" xml:space="preserve"><value>The pairing code is wrong.</value></data>
+  <data name="ErrorCodeExpired" xml:space="preserve"><value>The pairing code has expired.</value></data>
+  <data name="ErrorNoPendingCode" xml:space="preserve"><value>No valid pairing code. Please request a new code.</value></data>
+  <data name="ErrorDeviceNameRequired" xml:space="preserve"><value>Please enter a device name (up to 50 characters).</value></data>
+  <data name="ErrorCertificateChangedFormat" xml:space="preserve"><value>The identity of the EagleEye PC {0} has changed. The connection was refused.</value></data>
+  <data name="ErrorRemoveFailed" xml:space="preserve"><value>The pairing could not be removed. Please try again.</value></data>
+  <data name="InfoPairingLostFormat" xml:space="preserve"><value>This PC is no longer paired with {0}.</value></data>
+  <data name="ErrorStartup" xml:space="preserve"><value>The data of the EagleEye parent app could not be opened. Please reinstall the app.</value></data>
+  <data name="OkButton" xml:space="preserve"><value>OK</value></data>
+</root>

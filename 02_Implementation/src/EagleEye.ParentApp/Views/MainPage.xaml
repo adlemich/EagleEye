@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:EagleEye.ParentApp.Core.ViewModels;assembly=EagleEye.ParentApp.Core"
+             x:Class="EagleEye.ParentApp.Views.MainPage"
+             x:DataType="vm:MainViewModel">
+
+    <!-- Desktop layout (FR-APP-081): navigation menu left, content right, status bar at the bottom. -->
+    <Grid RowDefinitions="*,Auto" ColumnDefinitions="220,*">
+
+        <Border Grid.Row="0" Grid.Column="0"
+                StrokeThickness="0"
+                BackgroundColor="{AppThemeBinding Light={StaticResource PanelBackgroundLight}, Dark={StaticResource PanelBackgroundDark}}">
+            <CollectionView ItemsSource="{Binding MenuItems}"
+                            SelectionMode="Single"
+                            SelectedItem="{Binding SelectedItem}"
+                            Margin="0,12,0,0">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:NavigationItem">
+                        <Label Text="{Binding Title}" Padding="20,10" FontSize="15" />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Border>
+
+        <ContentView x:Name="ContentRegion" Grid.Row="0" Grid.Column="1" Padding="32,24" />
+
+        <ContentView x:Name="StatusBarRegion" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" />
+    </Grid>
+</ContentPage>

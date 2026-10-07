@@ -10,6 +10,8 @@
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">net10.0-maccatalyst</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <RootNamespace>EagleEye.ParentApp</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
@@ -17,25 +19,51 @@
     <ApplicationTitle>EagleEye</ApplicationTitle>
     <ApplicationId>com.adlemich.eagleeye</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
-    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <!-- The product version from Directory.Build.props (FR-APP-092, US-002 AC-3). -->
+    <ApplicationDisplayVersion>$(VersionPrefix)</ApplicationDisplayVersion>
+    <!-- Localization (NFR-L-011): German is the neutral/default language, English is a satellite. -->
+    <NeutralLanguage>de</NeutralLanguage>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <!-- iOS -->
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">26.0</SupportedOSPlatformVersion>
     <!-- Android -->
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">34.0</SupportedOSPlatformVersion>
     <!-- macOS -->
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">26.0</SupportedOSPlatformVersion>
-    <!-- Windows 11 -->
-    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.22000.0</SupportedOSPlatformVersion>
-    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.22000.0</TargetPlatformMinVersion>
+    <!-- Windows: the SDK requires the API minimum to be at most the TFM version (19041). Windows 11 is
+         enforced by the installer (parentapp-setup.iss, MinVersion=10.0.22000). -->
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.19041.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.19041.0</TargetPlatformMinVersion>
+  </PropertyGroup>
+
+  <!--
+    Windows: unpackaged, self-contained (.NET runtime and Windows App SDK included), win-x64,
+    installed per user by installer/windows/parentapp-setup.iss (ADR-009).
+  -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationIcon>Resources\AppIcon\eagleeye.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EagleEye.Shared\EagleEye.Shared.csproj" />
+    <!-- App icon: the EagleEye eye motif of the tray client. -->
+    <MauiIcon Include="Resources\AppIcon\appicon.svg" Color="#1E7B3A" />
   </ItemGroup>
 
-  <!-- Package versions to be pinned by DEV agent during first user story implementation -->
   <ItemGroup>
-    <!-- <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="x.x.x" /> -->
+    <ProjectReference Include="..\EagleEye.ParentApp.Core\EagleEye.ParentApp.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+  </ItemGroup>
+
+  <!-- DPAPI for the token on Windows (MAUI SecureStorage needs package identity, ADR-009). -->
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.12" />
   </ItemGroup>
 
 </Project>
