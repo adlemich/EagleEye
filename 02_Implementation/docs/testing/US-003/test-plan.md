@@ -1,6 +1,6 @@
 # Test Plan: US-003 — Account Inventory and Selection of Accounts under Parental Control
 
-**Status**: Draft, for approval by Michael; aligned with the implementation report (see §9 Change Log)
+**Status**: Approved by Michael (2026-10-07); Q-1 to Q-9 answered (§8). Installer references to be updated to patch 0.3.1 (ISSUE-006) before test run 01.
 **Date**: 2026-10-07
 **Author**: TES
 **User Story**: `02_Implementation/docs/requirements/user-stories/US-003/user-story.md` (24 ACs, approved 2026-10-07; status `Implemented`)
@@ -981,9 +981,12 @@ Found while writing this plan. Each has a proposed answer; none blocks the plan.
 | Q-8 | **Leftover `%ProgramData%\EagleEye` before the 0.2.0 install** (S-2, row "Nothing"). Nothing of EagleEye is installed, but uninstalling keeps this folder: an old certificate and the pairings of apps that no longer exist. Delete it for a clean start? | Yes, delete it. The 0.2.0 installer then creates a fresh certificate and database, and App A is paired fresh in S-3. Nothing of value is lost, because no app is paired with the old data any more. |
 | Q-9 | **Network cable on PC2** (TC-003-23). The main method for AC-16 needs PC2 on a cable that you can unplug. With Wi-Fi, Windows may report the lost network at once, and then the error cannot be provoked. Is PC2 on a cable, or can it be for the test? | Connect PC2 by cable for Block E. If that is not possible, try Wi-Fi off first, then the process-pause alternative. If neither provokes the error, mark TC-003-23 **Blocked**; AC-16 is then covered only by DEV's unit tests until a later run. |
 
+**Answers (Michael, 2026-10-07)**: Q-1 to Q-7: proposed answers accepted (test plan approved as a whole). Q-8: yes. Q-9: yes.
+
 ## 9. Change Log
 
 | Date | Change | Reason |
 |---|---|---|
 | 2026-10-07 | Plan written (in parallel with DEV); places that depend on the implementation marked for checking against the implementation report after DEV's handover. | Step d started early at Michael's request. |
 | 2026-10-07 | Aligned with `implementation-report.md`. All 9 kinds of marked places are resolved and the markers removed: installer names, dates and SHA-256 (S-1); UI texts (instruction, "Wird geladen …", "(deaktiviert)", the error text below the list, row disabled while saving); log line formats; `logs\` ACL and its repair at every start. Setup S-2/S-3 rewritten: nothing is installed on the service PC at the moment, so the setup first installs and pairs 0.2.0 (robust for any state found) to keep the upgrade path testable. TC-003-23 (AC-16) moved to Block E: the PC2 network cable is now the main method, process pause the alternative (DEV §5.4). New: "If there is no log file" (Event Log warning, DEV §5.2); unexpected error text (D-6); no log line for admin-only changes (D-3, TC-003-10). Block durations updated. New questions Q-8 and Q-9. | DEV handover (commits 8037215, 4c1b1ca, c5e419e, 02372b1); Orchestrator facts 2026-10-07. |
+| 2026-10-07 | Approved by Michael; Q-1 to Q-9 answered. | Michael |

@@ -6,6 +6,7 @@
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-003/implementation-plan.md` (approved 2026-10-07, Q-1 to Q-7 answered), ADR-010
 **Machine(s) used**: Windows Developer Machine only (see §7)
 **Story status**: Implemented
+**Review**: implementation approved by Michael (2026-10-07). Usability issue `US-003/issues/ISSUE-006.md` (account list as a table) to be fixed in patch 0.3.1.
 
 ---
 
