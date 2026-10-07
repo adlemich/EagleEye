@@ -66,6 +66,7 @@ Michael records results **directly in the test-run file** in VSCode. This works 
 - **Observed**: required for Fail or Blocked. What actually happened.
 - **Notes**: optional. Remarks, ideas, or "unclear what to expect here". TES forwards these to PRO as requirement feedback.
 - **Evidence**: put screenshots and log excerpts in `docs/testing/US-XXX/evidence/` and reference them by file name (e.g. `evidence/tc-03-tray-red.png`).
+- **Service log files** (from US-003 / build 0.3.0, Michael's decision 2026-10-07): at the end of every test run, and right after any Fail, copy the service log files into `docs/testing/US-XXX/evidence/run-NN-service-logs/`. The `logs\` folder is admin-only, so use an **elevated** terminal: `Copy-Item "$env:ProgramData\EagleEye\logs\*.log" "<repo>\02_Implementation\docs\testing\US-XXX\evidence\run-NN-service-logs\"`. TES puts this step into every test-run checklist (cleanup and the Fail instructions) and uses the logs in the evaluation. The repository is on GitHub: before committing, check the copies for anything that must not be published (the service never logs secrets or pairing codes).
 - **Free-form feedback**: anything that does not fit a test case goes in the "General Feedback" section at the end of the run file. Michael can also just tell TES in chat; TES then writes it into the run file so it is not lost.
 
 Partial runs are fine. Unticked cases count as "not executed".
@@ -74,7 +75,8 @@ Partial runs are fine. Unticked cases count as "not executed".
 
 | Component | Location (Windows) |
 |---|---|
-| Service, TrayClient | `%ProgramData%\EagleEye\` |
+| Service log (from 0.3.0) | `%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log` (admin-only folder, elevated terminal) |
+| Service (before 0.3.0), TrayClient | `%ProgramData%\EagleEye\` |
 | Windows Event Log (pairing code fallback) | Event Viewer → Windows Logs → Application, source `EagleEye` |
 | macOS parent app | `~/Library/Application Support/EagleEye/` |
 
