@@ -83,9 +83,9 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 
 ### D. Changes of accounts while the service runs
 
-- [ ] **AC-19**: When a standard account is added, deleted or renamed on the service PC while the parent app is connected and shows the settings page, the account list shows the change within 60 seconds, without any action of the parent. The same applies to the parent app's next connect if it was not connected at the time of the change.
-- [ ] **AC-20**: When a standard account is changed to an admin account, it disappears from the account list within 60 seconds (AC-19 applies). The service no longer treats it as under parental control.
-- [ ] **AC-21**: When an admin account is changed to a standard account, it appears in the account list within 60 seconds. If it was under parental control before it became an admin account, it is ticked again; otherwise it is not ticked. (See OQ-6.)
+- [ ] **AC-19**: When a standard account is added, deleted or renamed on the service PC, the service pushes the changed inventory at once to **all connected parent apps**, and each of them updates its account list immediately on receipt, without any action of the parent. From the account change on the service PC until the account list in a connected parent app shows the change, at most 60 seconds pass. A parent app that is not connected at the time of the change shows the current inventory as soon as it connects (AC-13).
+- [ ] **AC-20**: When a standard account is changed to an admin account, the service pushes this change like in AC-19, and the account disappears from the account list of all connected parent apps; at most 60 seconds pass from the change on the service PC until the account list has changed. The service no longer treats the account as under parental control.
+- [ ] **AC-21**: When an admin account is changed to a standard account, the service pushes this change like in AC-19, and the account appears in the account list of all connected parent apps; at most 60 seconds pass from the change on the service PC until the account list has changed. If the account was under parental control before it became an admin account, it is ticked again; otherwise it is not ticked. (See OQ-6.)
 - [ ] **AC-22**: When an account under parental control is deleted, the service forgets its selection. If a new account with the same name is created later, it is a different account (new SID) and appears unticked (AC-18).
 
 ### E. Several parent apps
@@ -99,6 +99,7 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 |---|---|---|
 | 2026-10-07 | Story created; product requirements v1.3 amendment proposed | Michael's scope, written by PRO |
 | 2026-10-07 | Open questions OQ-1 to OQ-8 answered (proposed defaults accepted); ACs unchanged. Story and requirements v1.3 approved | Michael |
+| 2026-10-07 | AC-19 to AC-21: inventory changes are pushed by the service at once to all connected parent apps, which update their list on receipt; the 60-second limit is end-to-end (account change on the PC until the list has changed). Flow overview aligned. Story stays approved. | Michael, change request |
 
 ---
 
@@ -167,7 +168,7 @@ participant "Parent app B" as AppB
 participant "EagleEye service" as Svc
 participant "Windows\n(local accounts)" as Win
 
-Svc -> Win : read standard accounts (on start and on changes)
+Svc -> Win : build inventory of standard accounts (on start)
 == open settings ==
 Parent -> AppA : open Settings
 AppA -> Svc : get accounts + selection
@@ -177,11 +178,13 @@ Parent -> AppA : tick "Max Adler (max)"
 AppA -> Svc : set under parental control = yes
 Svc -> Svc : store, write log entry
 Svc --> AppA : stored
-Svc -> AppB : updated list
+Svc -> AppB : push: updated list
 == account change on the PC ==
-Win -> Svc : account renamed / added / deleted / admin rights changed
-Svc -> AppA : updated list
-Svc -> AppB : updated list
+Win -> Svc : account added / deleted / renamed / admin rights changed (noticed by the service)
+Svc -> AppA : push at once: updated inventory
+Svc -> AppB : push at once: updated inventory
+note over AppA, AppB : list updated on receipt;
+at most 60 s after the change on the PC
 @enduml
 ```
 
