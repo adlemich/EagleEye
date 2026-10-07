@@ -77,14 +77,14 @@ Get-LocalUser |
 
 *Goal of this setup: service **0.2.0** running and App A **0.2.0** paired as **Papas PC** with `<host>`, so that Block A can test the upgrade. At the last check service 0.3.0 was installed (your quick check, Orchestrator 2026-10-07); S-2 handles whatever you find. Do **S-6** (Terminal (Administrator)) and **S-9** (`<host>`) first; S-2 and S-3 need them.*
 
-- [ ] **S-1 Installers present.** PowerShell in the repo root:
+- [x] **S-1 Installers present.** PowerShell in the repo root:
   ```powershell
   Get-Item 03_Delivery\windows\EagleEye-Setup-0.2.0.exe, 03_Delivery\windows\EagleEye-ParentApp-Setup-0.2.0.exe, 03_Delivery\windows\EagleEye-Setup-0.3.1.exe, 03_Delivery\windows\EagleEye-ParentApp-Setup-0.3.1.exe | Select-Object Name, LastWriteTime
   (Get-FileHash 03_Delivery\windows\EagleEye-Setup-0.3.1.exe).Hash -eq '6693DC9B362A60DD5FD7D30AA5E96E54ED50503EAD11B66DC757DF6C48434420'
   (Get-FileHash 03_Delivery\windows\EagleEye-ParentApp-Setup-0.3.1.exe).Hash -eq 'D6E5EFC5892825A0AD0C3AD9CAC04A1D520F56D04CD7F7B114DA52B5E8627918'
   ```
   All four exist. 0.3.1 dates **07.10.2026 12:59** (service) / **13:00** (parent app). Both hash lines print **True**. If not: stop and tell TES. Dates written in the header.
-- [ ] **S-2 Bring the service PC to 0.2.0.** *Installierte Apps* → "EagleEye"; Terminal (Administrator): `Get-Service -DisplayName "EagleEye Service" -ErrorAction SilentlyContinue`.
+- [x] **S-2 Bring the service PC to 0.2.0.** *Installierte Apps* → "EagleEye"; Terminal (Administrator): `Get-Service -DisplayName "EagleEye Service" -ErrorAction SilentlyContinue`.
   Found: EagleEye ________ · EagleEye Parent App ________ (write "none" if not listed)
   - **EagleEye 0.3.0 or 0.3.1 installed** (expected: service 0.3.0 from your quick check):
     a. *Installierte Apps* → **EagleEye** → *…* → *Deinstallieren*. If **EagleEye Parent App** 0.3.x is installed here, close it and uninstall it too.
@@ -99,18 +99,18 @@ Get-LocalUser |
   - **Only one of them in 0.2.0**: install the missing one (step 3 or 4 above; delete nothing).
   - **Any other version** (not 0.2.0, 0.3.0 or 0.3.1): **stop** and tell TES.
   - Check: *Installierte Apps* = EagleEye **0.2.0** + EagleEye Parent App **0.2.0**; `services.msc` → **EagleEye Service** *Wird ausgeführt*; Terminal (Administrator): `Test-Path "$env:ProgramData\EagleEye\logs"` → ______ (expected **False** on 0.2.0).
-- [ ] **S-3 Pair App A with 0.2.0.** Start **EagleEye Parent App**. If it is already green "Verbunden mit `<host>`", *Gekoppelt*, **Papas PC**: done. Otherwise: host dialog (or *Serververbindung*) → `<host>` → *Verbinden* → code from the popup **"EagleEye – Eltern-App koppeln"** in your Admin session (no popup: *Ereignisanzeige → Anwendung*, newest **EagleEye** entry, event ID 1000) → device name **Papas PC** → *Koppeln*. Result: green "Verbunden mit `<host>`", *Gekoppelt*, **Papas PC**. If pairing with 0.2.0 fails, stop and tell TES. Leave App A open.
-- [ ] **S-4 No development instances** (*Task-Manager → Details*: no `EagleEye.Service.exe` from a `02_Implementation` folder, only one `EagleEye.ParentApp.exe`).
-- [ ] **S-5 Admin display scaling** (*Einstellungen → System → Bildschirm → Skalierung*): ______ % (expected 150 %).
-- [ ] **S-6 Terminal (Administrator)** open; title bar "Administrator:". Service commands: `Stop-Service` / `Start-Service` / `Restart-Service -DisplayName "EagleEye Service"`.
-- [ ] **S-7 Log monitor**: a **second** Terminal (Administrator), placed next to App A. (LOG-WATCH works only after TC-003-01.)
-- [ ] **S-8 Kid signed out** (*Task-Manager → Benutzer* → `eagleeye-kid` → *Abmelden*, if listed).
-- [ ] **S-9 Names.** `hostname` → `<host>` = ____________
-- [ ] **S-10 Existing local accounts.** Terminal (Administrator): `Get-LocalUser | Format-Table Name, FullName, Enabled, SID -AutoSize`, then EXPECTED-LIST.
+- [x] **S-3 Pair App A with 0.2.0.** Start **EagleEye Parent App**. If it is already green "Verbunden mit `<host>`", *Gekoppelt*, **Papas PC**: done. Otherwise: host dialog (or *Serververbindung*) → `<host>` → *Verbinden* → code from the popup **"EagleEye – Eltern-App koppeln"** in your Admin session (no popup: *Ereignisanzeige → Anwendung*, newest **EagleEye** entry, event ID 1000) → device name **Papas PC** → *Koppeln*. Result: green "Verbunden mit `<host>`", *Gekoppelt*, **Papas PC**. If pairing with 0.2.0 fails, stop and tell TES. Leave App A open.
+- [x] **S-4 No development instances** (*Task-Manager → Details*: no `EagleEye.Service.exe` from a `02_Implementation` folder, only one `EagleEye.ParentApp.exe`).
+- [x] **S-5 Admin display scaling** (*Einstellungen → System → Bildschirm → Skalierung*): ______ % (expected 150 %).
+- [x] **S-6 Terminal (Administrator)** open; title bar "Administrator:". Service commands: `Stop-Service` / `Start-Service` / `Restart-Service -DisplayName "EagleEye Service"`.
+- [x] **S-7 Log monitor**: a **second** Terminal (Administrator), placed next to App A. (LOG-WATCH works only after TC-003-01.)
+- [x] **S-8 Kid signed out** (*Task-Manager → Benutzer* → `eagleeye-kid` → *Abmelden*, if listed).
+- [x] **S-9 Names.** `hostname` → `<host>` = ____________
+- [x] **S-10 Existing local accounts.** Terminal (Administrator): `Get-LocalUser | Format-Table Name, FullName, Enabled, SID -AutoSize`, then EXPECTED-LIST.
   - Full name of `eagleeye-kid`: ____________ (empty = none)
   - Other standard accounts besides `eagleeye-kid`: ____________ (none expected; if there are any, see test plan §8 Q-2 before TC-003-08)
   - `defaultuser0` exists already: [ ] yes [ ] no · `defaultuser1` exists already: [ ] yes [ ] no
-- [ ] **S-11 SmartScreen** on the unsigned installers: *Weitere Informationen* → *Trotzdem ausführen* (expected).
+- [x] **S-11 SmartScreen** on the unsigned installers: *Weitere Informationen* → *Trotzdem ausführen* (expected).
 
 ---
 
@@ -134,7 +134,7 @@ Get-LocalUser |
 - Both `Test-Path`: **True**.
 - App A green "Verbunden mit `<host>`" again within 60 s, no pairing code.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -156,9 +156,9 @@ Get-LocalUser |
 - The new section lists the standard accounts from S-10 (at least `eagleeye-kid`), as a table with the headers **Konto** and **Unter Elternkontrolle** (one checkbox per row), **none ticked** (layout details: TC-003-36).
 - Nothing cut off at 150 %.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
-- **Notes**: How the installer handled the running app: ________ · Instruction text above the rows (expected "Markieren Sie die Konten, die unter Elternkontrolle stehen."): ________
+- **Notes**: See  Screenshot 2026-10-07 191530
 
 ---
 
@@ -176,9 +176,9 @@ Get-LocalUser |
 - Step 2: at least `EagleEye.Service-001.log`. If **no** log file: see "If there is no log file" in the header (Event Log warning) → **Fail**.
 - Step 3: as in US-002: SYSTEM (F), Administratoren (F), Benutzer (RX).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**: <!-- on Fail: paste the output of steps 1-3 -->
-- **Notes**: Title bar showed "Administrator:"? [ ] yes  [ ] no
+- **Notes**: Title bar showed "Administrator:"? [X] yes  [ ] no
 
 ---
 
@@ -196,9 +196,9 @@ Get-LocalUser |
 - Notepad opens the file while the service runs.
 - No pairing code, password or token-like string in any line.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
-- **Notes**: Log file name: ____________
+- **Notes**: Log file name: __EagleEye.Service-001.log_____
 
 ---
 
@@ -218,7 +218,7 @@ Get-LocalUser |
 - Steps 2 and 3: **Zugriff verweigert**; no file name, no log line.
 - Step 4: folder content listed (at least `logs`, `certs`, database file), no error.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -248,7 +248,7 @@ Get-LocalUser |
 - After the start: `icacls` as in TC-003-03 (SYSTEM + Administratoren, F, no `(I)`, no *Benutzer*).
 - A new `EagleEye.Service-001.log`; the log monitor shows a new "Account inventory loaded …" line.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**: <!-- on Fail: paste the icacls output -->
 - **Notes**: App A red and green again within 60 s? [ ] yes  [ ] no
 
@@ -270,7 +270,7 @@ Get-LocalUser |
 - Step 2: the *Benutzer* entry is **gone**; only SYSTEM and Administratoren.
 - **If it is still there**: Fail, then remove it by hand: `icacls "$env:ProgramData\EagleEye\logs" /remove:g "*S-1-5-32-545"`.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -292,10 +292,9 @@ Get-LocalUser |
 - Within **60 s**: **"Keine Nicht-Administrator-Konten vorhanden"**, no rows, no table header (*Konto* / *Unter Elternkontrolle*).
 - Log monitor: "Account inventory changed … removed [eagleeye-kid] … 0 standard accounts."
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
-- **Notes**: Seconds until changed: ______
-
+- **Notes**
 ---
 
 ### TC-003-09: An account that becomes standard again and was never ticked appears unticked
@@ -308,7 +307,7 @@ Get-LocalUser |
 **Expected**:
 - Within **60 s**: row `eagleeye-kid` back, **not ticked**; "Keine Nicht-Administrator-Konten vorhanden" gone.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: Seconds until the row appeared: ______
 
@@ -345,9 +344,9 @@ Get-LocalUser |
 - **Not** shown: `ee-admin`, your Admin account, *Administrator*.
 - Log monitor: one or more "Account inventory changed (revision N): added [...], removed [], changed []; M standard accounts." lines naming the new standard accounts; **never** `defaultuser0`. `ee-admin` appears only if a check caught it before it became an administrator (then later in *removed*); an account that is already an administrator gives no line (DEV D-3).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
-- **Notes**: Seconds until the rows appeared: ______ · `ee-admin` visible briefly? [ ] yes  [ ] no
+- **Notes**: Seconds until the rows appeared: ____1__ · `ee-admin` visible briefly? [] yes  [X] no
 
 ---
 
@@ -365,7 +364,7 @@ Get-LocalUser |
 - App A: a row **`defaultuser1`**.
 - Step 3: no line names `defaultuser0`.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -382,7 +381,7 @@ Get-LocalUser |
 - `ee-lena`, `defaultuser1` (user name only, no empty brackets).
 - `eagleeye-kid` by the same rule (full name from S-10).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -400,7 +399,7 @@ Get-LocalUser |
 - One checkbox per row in the column **Unter Elternkontrolle**, all unticked.
 - Nothing cut off at 150 %.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**: <!-- on Fail: the order you saw -->
 - **Notes**:
 
@@ -422,7 +421,7 @@ Get-LocalUser |
 - Light **and** dark mode: everything clearly readable; at 150 % nothing cut off (long names may wrap in column 1).
 - On Pass, TES sets ISSUE-006 to `Verified/Closed` after the evaluation.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Theme of screenshot 1: [ ] Hell  [ ] Dunkel · Header seen together with "Wird geladen …"? [ ] no  [ ] yes  [ ] not seen
 
@@ -439,7 +438,7 @@ Get-LocalUser |
 - Row reads **`ee-gesperrt (deaktiviert)`**.
 - It can be ticked and stays ticked; within 5 s a log line naming `ee-gesperrt` with **yes**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -458,7 +457,7 @@ Get-LocalUser |
 - Step 3 lists the account (local user name, often shortened).
 - App A: a row `<full name> (<user name>)` (or user name only), not ticked.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: Step 2 needed? [ ] yes  [ ] no · Row text: ____________
 
@@ -483,7 +482,7 @@ Get-LocalUser |
 - Checkbox stays ticked (may be greyed out for a moment); no error text.
 - Step 4: lines for `ee-anna` yes and `ee-lena` yes.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Seconds until the log line: ______ · Same entry in the Event Log (*Anwendung*, source EagleEye)? [ ] yes  [ ] no  [ ] not checked
 
@@ -501,7 +500,7 @@ Get-LocalUser |
 
 > **Tick record** (compare with it until the end of Block D): ticked = `ee-anna`, `ee-lena`, `ee-max` · unticked = `defaultuser1`, `eagleeye-kid`, `ee-gesperrt`.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -517,7 +516,7 @@ Get-LocalUser |
 **Expected**:
 - Same rows, exactly the ticks of the tick record.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -535,7 +534,7 @@ Get-LocalUser |
 - **Red** "Nicht verbunden mit `<host>`" within 30 s.
 - Section: **"Keine Daten verfügbar"**, **no** rows, no checkboxes, no table header (no read-only old list).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -554,7 +553,7 @@ Get-LocalUser |
 - The list with exactly the ticks of the tick record, no action.
 - Log: "Account inventory loaded: … 3 under parental control."
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Seconds until green: ______ · "Wird geladen …" visible? [ ] yes  [ ] no (may be too short to see; test plan §8 Q-4)
 
@@ -571,7 +570,7 @@ Get-LocalUser |
 **Expected**:
 - App A green without a pairing code; exactly the ticks of the tick record.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -590,7 +589,7 @@ Get-LocalUser |
 - App A green without a pairing code; exactly the ticks of the tick record.
 - Step 3: only SYSTEM and Administratoren.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -615,7 +614,7 @@ Get-LocalUser |
 - Within **60 s**: row **`ee-neu`**, **not ticked**, between `ee-lena` and `Max Test (ee-max)`.
 - Other rows keep their ticks.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: Seconds: ______
 
@@ -632,7 +631,7 @@ Get-LocalUser |
 - Within **60 s**: row **`anna Test (ee-annika)`**, still **ticked**; no row `ee-anna` any more.
 - Log: "Account inventory changed … changed [ee-annika] …".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: Seconds: ______
 
@@ -651,7 +650,7 @@ Get-LocalUser |
 - Step 3: note gone, still **ticked**.
 - No time limit in the story for this change: over 60 s is a **Note**, not a Fail.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: Seconds step 2: ______ · step 3: ______
 
@@ -668,7 +667,7 @@ Get-LocalUser |
 - Within **60 s**: row `Max Test (ee-max)` gone. Other rows and ticks unchanged.
 - Log: "Account inventory changed … removed [ee-max] …".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: Seconds: ______
 
@@ -684,7 +683,7 @@ Get-LocalUser |
 **Expected**:
 - Within **60 s**: row **`Max Test (ee-max)`** back and **ticked**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: Seconds: ______
 
@@ -703,7 +702,7 @@ Get-LocalUser |
 - Step 2: "Forgot the parental-control selection of 1 deleted account(s): S-1-5-21-…".
 - Step 3: within **60 s** row **`ee-lena`** again, **not ticked**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: Seconds step 1: ______ · step 3: ______
 
@@ -720,7 +719,7 @@ Get-LocalUser |
 **Expected**:
 - No `ee-neu` row. Ticked: `anna Test (ee-annika)`, `Max Test (ee-max)`; all other rows unticked.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -745,7 +744,7 @@ Get-LocalUser |
 - Step 2: three sections; *Benutzerkonten auf dem EagleEye-PC*: **"Keine Daten verfügbar"**, no rows, no checkboxes.
 - Step 3: still **"Keine Daten verfügbar"**, no rows.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: <!-- if PC2 is English: the English texts -->
 
@@ -763,7 +762,7 @@ Get-LocalUser |
 - Same rows, same order, same names, same ticks as App A.
 - Nothing cut off at PC2's scaling.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked   X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -783,7 +782,7 @@ Get-LocalUser |
 - One log line per change, naming the device (*Papas PC* / *PC2*).
 - End: `defaultuser1` and `ee-gesperrt` unticked in both.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**: Seconds A→B: ______ · B→A: ______
 
@@ -809,7 +808,7 @@ Get-LocalUser |
 
 *Alternative (service PC, not tried by DEV)*: Terminal (Administrator) → `resmon` → tab **CPU** → right-click `EagleEye.Service.exe` → **Prozess anhalten** → within 10 s untick `Max Test (ee-max)` in App A → expected as above within 5 s → **Prozess fortsetzen** at the latest 25 s after pausing. Afterwards both apps must end up equal to the last `ee-max` log line (the service may store the queued untick after it continues; that is a Pass). Then tick `ee-max` again so both show it ticked.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**: Method: [ ] PC2 cable  [ ] PC2 Wi-Fi off  [ ] paused process · Seconds until error text: ______ · App B red / "Keine Daten verfügbar" after ______ s (or not) · Final state of `ee-max` in A / B: ______ / ______ · Last `ee-max` log line: ________
 
@@ -826,7 +825,7 @@ Get-LocalUser |
 - Step 1: within **60 s** both apps show a new unticked row `ee-zwei`.
 - Step 2: within **60 s** it disappears in both.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**: Seconds step 1 (A / B): ______ / ______ · step 2: ______ / ______
 
@@ -854,17 +853,17 @@ Get-LocalUser |
 
 ## Cleanup (test plan §7)
 
-- [ ] **LOG-COPY** with `<subfolder>` = `run-01-service-logs` (Terminal (Administrator)). Looked through the copies (nothing that must not be published).
-- [ ] Test accounts removed (Terminal (Administrator); leave out `defaultuser0` / `defaultuser1` if they existed before the run, S-10):
+- [x] **LOG-COPY** with `<subfolder>` = `run-01-service-logs` (Terminal (Administrator)). Looked through the copies (nothing that must not be published).
+- [x] Test accounts removed (Terminal (Administrator); leave out `defaultuser0` / `defaultuser1` if they existed before the run, S-10):
   ```powershell
   "ee-annika","ee-anna","ee-max","ee-lena","ee-gesperrt","ee-neu","ee-zwei","defaultuser0","defaultuser1","ee-admin" |
     ForEach-Object { if (Get-LocalUser -Name $_ -ErrorAction SilentlyContinue) { Remove-LocalUser -Name $_ } }
   ```
   Rows disappeared from App A within 60 s? [ ] yes  [ ] no
-- [ ] Microsoft account from TC-003-15 removed, if not wanted (*Andere Benutzer* → *Entfernen* → *Konto und Daten löschen*).
-- [ ] `eagleeye-kid` is a standard account (`Get-LocalGroupMember -SID "S-1-5-32-544"` does not list it) and signed out.
-- [ ] PC2: App B stays installed and paired (or, if you prefer: *Kopplung aufheben*, uninstall, delete the installer copy).
-- [ ] Display scaling back to your usual value, if changed (S-5).
+- [x] Microsoft account from TC-003-15 removed, if not wanted (*Andere Benutzer* → *Entfernen* → *Konto und Daten löschen*).
+- [x] `eagleeye-kid` is a standard account (`Get-LocalGroupMember -SID "S-1-5-32-544"` does not list it) and signed out.
+- [x] PC2: App B stays installed and paired (or, if you prefer: *Kopplung aufheben*, uninstall, delete the installer copy).
+- [x] Display scaling back to your usual value, if changed (S-5).
 
 ---
 

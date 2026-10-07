@@ -1,6 +1,6 @@
 # US-003: Account Inventory and Selection of Accounts under Parental Control
 
-**Status**: Implemented
+**Status**: Verified/Closed (closed by Michael, 2026-10-07, after `docs/testing/US-003/test-run-01.md`; see `docs/testing/US-003/test-report.md` for ACs not verified manually)
 **Created**: 2026-10-07
 **Approved**: by Michael, 2026-10-07 (status becomes `Analyzed` when the implementation plan is approved)
 **Component(s)**: EagleEye.Service, EagleEye.ParentApp, EagleEye.Shared
@@ -106,6 +106,7 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 | 2026-10-07 | AC-3: `defaultuser0` excluded (ARC Q-4). AC-14: service log moved to the admin-only folder `%ProgramData%\EagleEye\logs\` (ARC Q-2). Terms, FR-SVC-070 and FR-SVC-100 aligned. Story stays approved. | Michael, answers to ARC questions |
 | 2026-10-07 | Implementation plan approved; status `Analyzed` | Michael |
 | 2026-10-07 | Implemented (version 0.3.0); see `US-003/implementation-report.md`; status `Implemented` | DEV |
+| 2026-10-07 | Implemented (0.3.0, patch 0.3.1 for ISSUE-006); test run 01 partly executed; closed by Michael as `Verified/Closed` | Michael |
 
 ---
 

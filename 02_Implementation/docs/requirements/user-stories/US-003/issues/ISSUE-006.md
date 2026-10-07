@@ -1,6 +1,6 @@
 # ISSUE-006: Account list is hard to read — show it as a table with column headers
 
-**Status**: Implemented
+**Status**: Verified/Closed (TC-003-36 Pass in `docs/testing/US-003/test-run-01.md`, build 0.3.1; closed by Michael, 2026-10-07)
 **User Story**: US-003
 **Found in**: Michael's functional check of build 0.3.0 before test run 01 (not a test-run case)
 **Date**: 2026-10-07
