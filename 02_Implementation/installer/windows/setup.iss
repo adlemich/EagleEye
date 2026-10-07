@@ -133,20 +133,25 @@ begin
   Result := ExpandConstant('{sys}\netsh.exe');
 end;
 
-{ Creates %ProgramData%\EagleEye and certs\ and restricts them (ADR-008 section 7).
+{ Creates %ProgramData%\EagleEye, certs\ and logs\ and restricts them (ADR-008 section 7,
+  US-003 AC-14: the service log folder is readable by SYSTEM and Administrators only).
   Well-known SIDs instead of names, so that localized (e.g. German) Windows works:
   S-1-5-18 = SYSTEM, S-1-5-32-544 = Administrators, S-1-5-32-545 = Users.
-  Idempotent: /inheritance:r and /grant:r replace earlier entries on every install. }
+  Idempotent: /inheritance:r and /grant:r replace earlier entries on every install, so an
+  upgrade from 0.2.0 gets logs\ too. The service applies the same logs\ ACL on every start. }
 procedure ConfigureDataFolder();
 var
-  DataDir, CertDir: String;
+  DataDir, CertDir, LogDir: String;
 begin
   DataDir := ExpandConstant('{commonappdata}\{#DataFolder}');
   CertDir := DataDir + '\certs';
+  LogDir := DataDir + '\logs';
   ForceDirectories(CertDir);
+  ForceDirectories(LogDir);
 
   RunHidden(IcaclsExe(), '"' + DataDir + '" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F *S-1-5-32-545:(OI)(CI)RX');
   RunHidden(IcaclsExe(), '"' + CertDir + '" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F');
+  RunHidden(IcaclsExe(), '"' + LogDir + '" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F');
 end;
 
 procedure RemoveFirewallRule();
