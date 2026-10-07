@@ -1,11 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — US-003 story approved (2026-10-07) on feature/US-003-monitored-accounts; next ARC implementation plan
+description: EagleEye workflow status — US-003 implemented (patch 0.3.1), test plan approved, test-run-01 ready for Michael (2026-10-07)
 metadata:
   type: project
 ---
 
-**As of 2026-10-07. Current: Phase 3, US-003 (account inventory and selection of accounts under parental control) on branch `feature/US-003-monitored-accounts` (created by the Orchestrator at Michael's request, pushed). PRO (as subagent) wrote the story, 24 ACs; Michael approved it, accepted all proposed defaults for OQ-1..OQ-8 and approved product requirements v1.3 (d07bff1). Story status stays `New` until the plan is approved. ARC (subagent) wrote the plan + ADR-010 (event-driven state propagation: service is source of truth, broadcasts stored state to all apps incl. sender, revision numbers, client fetches on reconnect). Michael accepted ADR-010 and answered plan Q-1..Q-6 (logs in admin-only `%ProgramData%agleEyeogs`, `defaultuser0` ignored by the service, 15 s service-side account check) — commit 0b1ee54. Next: Michael reviews the implementation plan (still Draft), then DEV (step c). US-002 is Verified/Closed and merged into main (c0d5cbb).**
+**As of 2026-10-07. Current: Phase 3, US-003 on `feature/US-003-monitored-accounts`, step e. Plan + ADR-010 approved; DEV implemented 0.3.0, Michael approved it; his quick check found ISSUE-006 (account list as table, Low), fixed as patch 0.3.1 (2dac544, visual check open -> TC-003-36). Test plan approved (Q-1..Q-9), aligned to 0.3.1 (cd20cc0): 36 cases, ~4 h, upgrade path 0.2.0 -> 0.3.1, service logs as evidence (testing README §4, on main e872915). Next: Michael executes test-run-01. Agents ran as subagents of the orchestrator session at Michael's request; DEV and TES worked in parallel.**
 
 - Test run 02 passed (Michael's report, 2026-10-07). He ticked setup/cleanup steps but left the per-case result boxes empty; the run file and test report record that the result rests on his report.
 - ISSUE-004 (pairing-code window clipped at 150 %) and ISSUE-005 (non-elevated terminal, test-plan fix) are `Verified/Closed`.
