@@ -172,7 +172,7 @@ The service classifies every process running in a standard user's session into o
 
 | ID | Requirement |
 |----|-------------|
-| FR-SVC-070 | The service shall auto-discover all local standard (non-admin) Windows user accounts and keep them as an inventory. The inventory follows changes while the service runs (accounts added, deleted, renamed, or changed between standard and admin). Windows built-in accounts (Administrator, Guest, DefaultAccount, WDAGUtilityAccount) are not part of it. *(v1.3: made precise)* |
+| FR-SVC-070 | The service shall auto-discover all local standard (non-admin) Windows user accounts and keep them as an inventory. The inventory follows changes while the service runs (accounts added, deleted, renamed, or changed between standard and admin). Windows built-in accounts (Administrator, Guest, DefaultAccount, WDAGUtilityAccount) and the Windows setup leftover account `defaultuser0` are not part of it. *(v1.3: made precise)* |
 | FR-SVC-071 | Discovered accounts shall be presented to the parent app for configuration. Admin accounts shall be excluded. Connected parent apps receive changes of the inventory without having to ask (FR-SVC-053). *(v1.3: made precise)* |
 | FR-SVC-072 | The service shall store for each inventoried account whether it is under parental control. The parent sets this from a paired parent app (FR-APP-022). The service broadcasts every stored change of the selection at once to all connected parent apps (FR-SVC-053). *(v1.3)* |
 | FR-SVC-073 | The selection of FR-SVC-072 shall be persisted locally (FR-SVC-030) and kept across service restarts, reboots and service updates. *(v1.3)* |
@@ -204,7 +204,7 @@ The service classifies every process running in a standard user's session into o
 
 | ID | Requirement |
 |----|-------------|
-| FR-SVC-100 | The service shall write operational logs (enforcement actions, configuration changes, pairing events, errors) to log files in a dedicated subfolder under the application data folder. |
+| FR-SVC-100 | The service shall write operational logs (enforcement actions, configuration changes, pairing events, errors) to log files in a dedicated subfolder under the application data folder (`%ProgramData%\EagleEye\logs\`). The subfolder shall be readable by SYSTEM and administrators only, not by standard users. *(v1.3: made precise)* |
 | FR-SVC-101 | By default, the service shall log at error, warning, and info levels. |
 | FR-SVC-102 | The parent app shall be able to switch the service into debug mode, which additionally logs debug-level entries. |
 | FR-SVC-103 | Log files shall use rotation: each file must not exceed 50 MB. Logs older than 5 days shall be automatically deleted. |

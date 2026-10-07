@@ -30,7 +30,7 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 - *Account*: a local user account of the service PC that a person can log on with. This includes local accounts and accounts linked to a Microsoft account. Domain and Microsoft Entra ID (work/school) accounts are not part of this story.
 - *Admin account*: an account that is a member of the local group "Administrators" ("Administratoren" on German Windows), directly or through another group.
 - *Standard account*: an account that is not an admin account (Windows account type "Standard user", German "Standardbenutzer").
-- *Built-in accounts*: the accounts Windows creates itself: Administrator, Guest (Gast), DefaultAccount and WDAGUtilityAccount.
+- *Built-in accounts*: the accounts Windows creates itself: Administrator, Guest (Gast), DefaultAccount and WDAGUtilityAccount. Also excluded: `defaultuser0`, a technical account that Windows setup sometimes leaves behind.
 - *Under parental control*: the parent has ticked the account. Later stories will monitor and enforce rules only for these accounts.
 - *Account list*: the new section of the parent app described in this story.
 
@@ -58,7 +58,7 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 
 - [ ] **AC-1**: The service keeps an inventory of all standard accounts of the service PC. An account is listed regardless of whether it is logged on at the moment or has ever been logged on.
 - [ ] **AC-2**: Admin accounts are never part of the inventory. This includes the parent's own account and the built-in "Administrator" account.
-- [ ] **AC-3**: The built-in accounts Guest, DefaultAccount and WDAGUtilityAccount are never part of the inventory, even though they are not admin accounts.
+- [ ] **AC-3**: The built-in accounts Guest, DefaultAccount and WDAGUtilityAccount, and the Windows setup leftover account `defaultuser0`, are never part of the inventory and are never sent to parent apps, even though they are not admin accounts.
 - [ ] **AC-4**: Both local accounts and accounts linked to a Microsoft account are part of the inventory, as long as they are standard accounts.
 - [ ] **AC-5**: Accounts are identified by their Windows identity (SID), not by their name. When a standard account is renamed, it keeps its tick (AC-15), and the account list shows the new name (AC-19).
 
@@ -75,7 +75,7 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 
 ### C. Selecting accounts under parental control
 
-- [ ] **AC-14**: When the parent ticks or unticks an account, the change is sent to the service at once, without a separate "Save" button. Within 5 seconds the service has stored it. The service writes an entry to its log file (`%ProgramData%\EagleEye\EagleEye.Service-NNN.log`, level Information) that names the account's user name and the new state (under parental control yes/no). The app shows the state as confirmed by the service, and the service broadcasts it to all other connected parent apps (AC-23). (See OQ-1.)
+- [ ] **AC-14**: When the parent ticks or unticks an account, the change is sent to the service at once, without a separate "Save" button. Within 5 seconds the service has stored it. The service writes an entry to its log file (`%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log`, level Information; the `logs` folder can be read by administrators only, not by standard users) that names the account's user name and the new state (under parental control yes/no). The app shows the state as confirmed by the service, and the service broadcasts it to all other connected parent apps (AC-23). (See OQ-1.)
 - [ ] **AC-15**: The selection is kept by the service: after closing and restarting the parent app, after restarting the service, after rebooting the service PC and after an update (re-install) of the service, the account list shows the same ticks as before.
 - [ ] **AC-16**: When the service cannot store a change (e.g. the connection was lost at the moment of the click), the parent app shows an error message (English example: "The change could not be saved. Please try again."; German: "Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen.") and the checkbox returns to the state that is stored in the service. The app never shows a tick that differs from the service's stored state for longer than 5 seconds.
 - [ ] **AC-17**: The checkboxes can only be changed while the parent app is connected. While the app is not connected, there is nothing to tick (AC-7, AC-8).
@@ -103,6 +103,7 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 | 2026-10-07 | Open questions OQ-1 to OQ-8 answered (proposed defaults accepted); ACs unchanged. Story and requirements v1.3 approved | Michael |
 | 2026-10-07 | AC-19 to AC-21: inventory changes are pushed by the service at once to all connected parent apps, which update their list on receipt; the 60-second limit is end-to-end (account change on the PC until the list has changed). Flow overview aligned. Story stays approved. | Michael, change request |
 | 2026-10-07 | AC-23, AC-24: selection changes always go through the service (store, then broadcast at once to all connected parent apps; apps update on receipt, never exchange data directly); 5-second limits are end-to-end. AC-14 (confirmed state, broadcast), flow overview, FR-SVC-072 and FR-APP-022 aligned. Story stays approved. | Michael, change request |
+| 2026-10-07 | AC-3: `defaultuser0` excluded (ARC Q-4). AC-14: service log moved to the admin-only folder `%ProgramData%\EagleEye\logs\` (ARC Q-2). Terms, FR-SVC-070 and FR-SVC-100 aligned. Story stays approved. | Michael, answers to ARC questions |
 
 ---
 
