@@ -1,11 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — US-003 implemented (patch 0.3.1), test plan approved, test-run-01 ready for Michael (2026-10-07)
+description: EagleEye workflow status — US-003 Verified/Closed and merged into main (2026-10-07); next story not started
 metadata:
   type: project
 ---
 
-**As of 2026-10-07. Current: Phase 3, US-003 on `feature/US-003-monitored-accounts`, step e. Plan + ADR-010 approved; DEV implemented 0.3.0, Michael approved it; his quick check found ISSUE-006 (account list as table, Low), fixed as patch 0.3.1 (2dac544, visual check open -> TC-003-36). Test plan approved (Q-1..Q-9), aligned to 0.3.1 (cd20cc0): 36 cases, ~4 h, upgrade path 0.2.0 -> 0.3.1, service logs as evidence (testing README §4, on main e872915). Next: Michael executes test-run-01. Agents ran as subagents of the orchestrator session at Michael's request; DEV and TES worked in parallel.**
+**As of 2026-10-07. Current: Phase 3, between stories. US-003 (account inventory + selection, build 0.3.1, ADR-010 event-driven state propagation) is `Verified/Closed` by Michael and merged into `main` (003ee9b); branch deleted. Run 01 was partial (18 Pass, 17 Skipped, 1 not ticked): Blocks D and E not run, so AC-4, 5, 7, 9, 16, 19-24 are not verified manually (listed in `docs/testing/US-003/test-report.md` §3, proposal: cover in a later run). Next: PRO starts US-004.**
 
 - Test run 02 passed (Michael's report, 2026-10-07). He ticked setup/cleanup steps but left the per-case result boxes empty; the run file and test report record that the result rests on his report.
 - ISSUE-004 (pairing-code window clipped at 150 %) and ISSUE-005 (non-elevated terminal, test-plan fix) are `Verified/Closed`.

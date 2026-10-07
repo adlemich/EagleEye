@@ -110,3 +110,6 @@ logs/
 03_Delivery/android/*.apk
 *.keystore
 *.jks
+
+# Service log files copied as test evidence must be committable (testing README §4)
+!02_Implementation/docs/testing/**/evidence/**/*.log
