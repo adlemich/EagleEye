@@ -1,8 +1,16 @@
 # ADR-005: Process Classification Strategy — Ignore, Allow, Block
 
-**Status**: Accepted
+**Status**: Accepted (amended for usage recording with US-004, proposed with the US-004 implementation plan)
 **Date**: 2026-09-20
 **Deciders**: Michael (project owner), ARC
+
+> **Amendment 2026-10-07 (US-004; proposed, approved with the US-004 implementation plan)**
+>
+> 1. **Recording is not classification.** US-004 records usage of *apps* (Task Manager's "Apps" group) only, observed through app windows by the session agent (ADR-011). Background and Windows processes are not recorded at all, so the ignore list is not needed for recording. The three tiers below stay the model for **enforcement** (later stories).
+> 2. **Windows Explorer** (US-004 OQ-3, AC-4): `explorer.exe` stays on the ignore list for enforcement (it is never terminated). For usage, "Windows Explorer" counts while at least one File Explorer window (`CabinetWClass`) is open; the shell (taskbar, Start, desktop) never counts.
+> 3. **Seconds** (FR-SVC-012 v1.4): usage is tracked in seconds, credited at least every 5 s, with the "active" definition and clock rules of ADR-012. The sentence "Usage time is tracked (accumulated per poll interval)" below is refined by ADR-012.
+> 4. **Identity**: usage records identify an app by its full program path (US-004 OQ-2, ADR-012 §1). Matching for allow-lists (by executable name, below) is decided again when allow-lists come.
+> 5. **Display names**: the source order below is refined for recording by ADR-012 §1 (package display name for Store apps, then file description, then process name; no online lookup in US-004). The `AppNameCache` table is not introduced; the display name is stored with each app record.
 
 ---
 

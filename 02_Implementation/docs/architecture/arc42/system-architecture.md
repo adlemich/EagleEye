@@ -1,13 +1,17 @@
 # EagleEye — System Architecture
 
-*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); US-003-specific parts proposed with the US-003 plan*
+*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); US-004 amendment proposed with the US-004 plan*
 *Maintainer: ARC Agent | Last Updated: 2026-10-07*
 
 > **Amendment 2026-10-03 (ADR-007)**: Windows desktop target added to the ParentApp; two-machine development; manual acceptance testing. Affected: §1.1, §2.1, §2.2, §3.2, §4.2, §5.5, §7, §8.10, §9. Amendments approved by Michael on 2026-10-03.
 >
 > **Amendment 2026-10-04 (US-002, ADR-008, ADR-009)**: two service endpoints (tray: HTTP loopback 5080; parent apps: HTTPS 5443), hub-to-port binding, certificate protection and pinning, explicit `StartPairing`, Windows parent app per-user installer, new `EagleEye.ParentApp.Core` library, Shared `Data/` and `Communication/`. Affected: §3.2, §5.1 to §5.5, §6.1, §7 (incl. §7.1, §7.1.1, §7.3, §7.4), §8.1 to §8.5, §9, §11, §12. ADR-008 and ADR-009 were approved by Michael with the US-002 implementation plan on 2026-10-04.
 >
-> **Amendment 2026-10-07 (ADR-010, accepted by Michael 2026-10-07)**: event-driven state propagation (service broadcasts full snapshots with revisions to all paired apps including the sender; clients fetch after every (re)connect instead of a server push; last write wins). Affected: §5.2 Communication, §5.3, §5.5, §6.4, §6.6, §8.3, §8.11, §9, §12. Affected: §4.2, §5.2, §5.3, §5.5, §6.4, §6.6 (new), §8.3, §8.4, §8.10, §8.11, §9, §11 R-8, §12.
+> **Amendment 2026-10-07 (ADR-010, accepted by Michael 2026-10-07)**: event-driven state propagation (service broadcasts full snapshots with revisions to all paired apps including the sender; clients fetch after every (re)connect instead of a server push; last write wins). Affected: §5.2 Communication, §5.3, §5.5, §6.4, §6.6, §8.3, §8.11, §9, §12.
+>
+> **Amendment 2026-10-07 (US-003, approved with the US-003 implementation plan)**: account inventory and selection, service file logging with an own rolling file provider in the admin-only folder `%ProgramData%\EagleEye\logs\`. Affected: §4.2, §5.2, §5.3, §5.5, §7.1, §8.4, §8.10, §11 R-8, §12.
+>
+> **Amendment 2026-10-07 (US-004, ADR-011, ADR-012) — proposed, approved together with the US-004 implementation plan**: session agent (the service executable in agent mode, SYSTEM, one per watched session) for app observation; usage accounting in seconds (active time, monotonic clock, day split, per-tick persistence); usage state areas per account and day; ADR-005 amended (Explorer, seconds). Affected: §5.2 (Monitoring, Statistics), §6.2 (new part 6.2.1), §7, §7.1, §8.3, §8.4, §8.6, §8.7, §9, §11 (R-10, R-11), §12.
 
 ---
 
@@ -299,10 +303,10 @@ PAIR --> COMM : pushes pairing code to tray
 | Internal Component | Responsibility |
 |-------------------|---------------|
 | **Communication** | Hosts two SignalR hubs on Kestrel, each bound to its own endpoint (ADR-008): `ParentHub` (`/hubs/parent`, HTTPS port 5443) for parent apps and `TrayHub` (`/hubs/tray`, HTTP `localhost:5080`) for tray clients. A default-deny hub filter allows only `[AllowUnpaired]` methods for unpaired parent connections. Routes incoming queries and write commands to the state owner of the affected state area, returns results. Pushes events and full-state snapshots to connected clients via SignalR groups (`Parents`, `Tray:{userSid}`). Every stored change is broadcast as a full snapshot with a revision to all paired apps, including the sender (ADR-010). Clients fetch the full state themselves after every (re)connect; the service does not push on connect. |
-| **Monitoring** | Polls running processes at a configurable interval. Classifies processes as ignored/allowed/blocked. Tracks active usage time per allowed app. Detects pause-window and budget-expiry transitions. |
+| **Monitoring** | Observes the **apps** (Task Manager "Apps" group) in the sessions of accounts under parental control through a **session agent** per watched session: the service executable started in agent mode (`--session-agent`) as SYSTEM inside the session, scanning top-level windows about once per second and reporting `{pid, kind}` over an inherited anonymous pipe (ADR-011). Tracks session state ("in use": WTS `Active` and unlocked; SCM session and power events plus reconciliation). Resolves program path, owner and display name per process. *(US-004.)* Later: classifies processes as ignored/allowed/blocked (ADR-005) and detects pause-window and budget-expiry transitions. |
 | **Enforcement** | Terminates processes using the two-phase graceful-then-force pattern (ADR-006): sends `WM_CLOSE` first, waits up to the configurable timeout (default 30s), then calls `Process.Kill(entireProcessTree: true)`. Used for blocked-app kills (immediate, no warning), budget-expiry shutdowns (after budget warnings), and pause-window shutdowns (after pause warnings). Pushes enforcement events to all connected clients. |
 | **Configuration** | Reads and writes per-user configuration in the SQLite database (allow-lists, budgets, pause windows). Reads general settings from the YAML config file. Validates changes. Notifies other components on config update. |
-| **Statistics** | Accumulates per-user, per-app daily usage minutes. Persists to SQLite. Serves historical data (up to 90 days). Purges old data. |
+| **Statistics** | Keeps the app inventory per account (forever, while the account exists), the start/end history (90 days) and the daily usage **in seconds** (90 days). Credits active time every 5 s with the monotonic clock and splits it at local midnight (ADR-012). Persists every tick in one transaction. State owner of the usage state areas `UsageDay:{sid}:{day}` (ADR-010, ADR-012 §6): serves `GetAccountUsage`, broadcasts changed days at most every 5 s. Purges old data and all data of deleted accounts. *(US-004.)* |
 | **Certificates** | Generates a self-signed X.509 certificate on first run (ECDSA P-256, DPAPI-protected PFX, see §8.1). Loads and provides the certificate for the Kestrel HTTPS binding of the parent endpoint. |
 | **UserAccounts** | Keeps the inventory of local standard (non-admin, non-built-in, not the setup leftover `defaultuser0`) Windows accounts, read via Win32 (`NetUserEnum`, `NetUserGetLocalGroups`) and re-checked every 15 s; changes are broadcast at once. State owner of the state area `UserAccounts` (ADR-010): stores per SID whether the account is under parental control (`AccountSelections`), keeps the selection of accounts that temporarily become admins, forgets it when the SID is deleted (US-003). |
 | **Pairing** | Manages the pairing lifecycle: generates a 6-digit code on explicit request (`StartPairing`), binds it to the requesting connection, enforces 5-minute expiry and one guess per code, stores paired devices (token hash only) in SQLite. Sends the code to all tray clients, or to the Event Log when none is connected. Rejects unpaired clients. |
@@ -482,6 +486,34 @@ end note
 ```
 
 ### 6.2 Process Monitoring and Enforcement
+
+#### 6.2.1 App Observation and Usage Accounting (US-004; ADR-011, ADR-012)
+
+```plantuml
+@startuml App Observation
+participant "Kid's session\n(app windows)" as WIN
+participant "Session agent\n(EagleEye.Service.exe\n--session-agent, SYSTEM)" as AG
+participant "Monitoring\n(supervisor, report processor,\nsession state)" as MON
+participant "Statistics\n(UsageTracker, UsageService)" as STATS
+database "SQLite" as DB
+participant "ParentApp(s)" as APP
+
+MON -> AG : start in each session of a\ncontrolled account (CreateProcessAsUser)
+loop about every 1 s
+  AG -> WIN : EnumWindows, "Apps" rule
+  AG -> MON : on change / every 5 s:\n{"apps":[{pid, kind}]} (stdout pipe)
+end
+MON -> MON : check session + owner,\nmap PID → program path, display name
+MON -> STATS : apps open per account,\nsession in use?
+loop every 5 s (tick)
+  STATS -> STATS : credit active seconds\n(monotonic clock, split at midnight)
+  STATS -> DB : one transaction
+  STATS -> APP : OnDayUsageChanged(account, day, rev)
+end
+@enduml
+```
+
+#### 6.2.2 Enforcement (later stories)
 
 ```plantuml
 @startuml Process Monitoring
@@ -678,6 +710,7 @@ node "Windows 11 PC (x64)" as winpc {
   }
   node "Kid's User Session" {
     artifact "EagleEye.TrayClient.exe" as tray_exe
+    artifact "EagleEye.Service.exe --session-agent\n(SYSTEM, only for accounts under\nparental control, ADR-011)" as agent_exe
   }
   folder "%ProgramFiles%\\EagleEye\\" as install {
     artifact "EagleEye.Service.exe"
@@ -701,6 +734,7 @@ node "Windows 11 PC (x64)" as winpc {
 }
 
 tray_exe --> ep_tray : loopback
+svc_exe --> agent_exe : starts; anonymous\nstdin/stdout pipes
 
 node "Parent Device" as parentdev {
   node "Windows 11 (per-user install)" {
@@ -741,7 +775,7 @@ Both ports are constants (`ServiceDefaults`) until the service gets its YAML con
 | `%ProgramFiles%\EagleEye\` | Service executable, TrayClient executable, shared DLLs, dependencies | Installer (admin) |
 | `%ProgramData%\EagleEye\EagleEye.Service.yaml` | Service runtime configuration (port, timeouts, warning thresholds, log level) | SYSTEM (r/w), admin (r/w) |
 | `%ProgramData%\EagleEye\EagleEye.TrayClient.yaml` | TrayClient runtime configuration (service URL, overlay preferences) | SYSTEM (r/w), admin (r/w) |
-| `%ProgramData%\EagleEye\EagleEye.Service.db` | SQLite database — per-user config, statistics, paired devices, app-name cache | SYSTEM (r/w) |
+| `%ProgramData%\EagleEye\EagleEye.Service.db` | SQLite database — paired devices, account selections, app inventory, usage history and daily usage (US-004); later per-user config | SYSTEM (r/w) |
 | `%ProgramData%\EagleEye\EagleEye.TrayClient.db` | SQLite database — cached display state (optional, lightweight) | Standard user (r/w) |
 | `%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log` | Service rolling log files (50 MB max, 3 files, 5 days) | SYSTEM and Administrators only; folder `logs\` with inheritance removed, set by the installer and re-applied at every service start (US-003, FR-SVC-100) |
 | `%ProgramData%\EagleEye\EagleEye.TrayClient-NNN.log` | TrayClient rolling log files (50 MB max, 3 files) | Standard user (r/w) |
@@ -857,7 +891,7 @@ The server pushes events to clients by invoking methods on the client callback i
 
 The Windows service is the **single source of truth**. Changes are propagated event-driven through the service: a parent app sends its change to the service, the service stores it and broadcasts the stored state to all connected apps, including the sender. The sender uses the broadcast to confirm its write; the other apps use it as the trigger to update their views and local data. See ADR-010 (refines ADR-003 Pattern 3) for the full rules and rationale.
 
-1. **State areas.** State is partitioned into areas (US-003: `UserAccounts`; later e.g. `UserConfig` per SID, `PairedDevices`, `GeneralSettings`). Each area has a snapshot DTO with `Revision` and `LastChangeRequestId`, a query `GetXxx()`, a broadcast `OnXxxChanged(snapshot)` and write commands `SetXxx(Guid requestId, …)` returning `StateWriteAckDto(Revision)`.
+1. **State areas.** State is partitioned into areas (US-003: `UserAccounts`; later e.g. `UserConfig` per SID, `PairedDevices`, `GeneralSettings`). Each area has a snapshot DTO with `Revision` and `LastChangeRequestId`, a query `GetXxx()`, a broadcast `OnXxxChanged(snapshot)` and write commands `SetXxx(Guid requestId, …)` returning `StateWriteAckDto(Revision)`. *(US-004, proposed)* Usage is split into **keyed areas per account and day** (`UsageDay:{sid}:{day}`, `DayUsageDto`), fetched per account with `GetAccountUsage(sid)` and broadcast with `OnDayUsageChanged` only for changed days, at most every 5 s per account; it has no write commands (ADR-012 §6).
 
 2. **Every stored change triggers one broadcast.** The area's state owner in the service serializes writes, stores, increments the revision, logs, broadcasts the **full snapshot** to the group `Parents` (all paired connections, **including the sender**) and then returns the ack. Changes the service makes itself (e.g. Windows accounts changed) are broadcast the same way with `LastChangeRequestId = null`. Last write received wins.
 
@@ -880,7 +914,8 @@ All application data is stored in SQLite databases. Each EagleEye component has 
 **EagleEye.Service** (`EagleEye.Service.db`) tables include:
 
 - **UserConfig** — per-user allow-list, per-app time budgets (7 weekdays), pause windows (7 weekdays). Keyed by Windows SID (survives username renames).
-- **UsageStatistics** — per-user, per-app daily usage minutes. Indexed by date. Rows older than 90 days are purged automatically during the midnight maintenance cycle.
+- **AppRecords**, **AppInstances**, **DailyUsage** *(US-004, migration 3, ADR-012)* — app inventory per account (identity: account SID + program path, kept forever while the account exists), start/end history (90 days, last-seen time for crash recovery) and seconds per app and local day (90 days). Foreign keys with `ON DELETE CASCADE` from `AppRecords`, so deleting an account's records purges everything. These replace the planned `UsageStatistics` table below; the `AppNameCache` is not needed (the display name is stored per app record).
+- *(original plan)* **UsageStatistics** — per-user, per-app daily usage minutes. Indexed by date. Rows older than 90 days are purged automatically during the midnight maintenance cycle.
 - **PairedDevices** — registered parent apps with device names and authentication credentials.
 - **AccountSelections** — per Windows SID whether the account is under parental control (US-003, FR-SVC-072 to FR-SVC-074). A row exists only for accounts the parent has ticked or unticked; no row = not under parental control. Rows of accounts that became admins are kept; rows of deleted SIDs are removed. The account inventory itself is not stored: it is read from Windows. State revisions (ADR-010) are not stored either.
 - **AppNameCache** — dictionary mapping executable names to resolved human-readable display names.
@@ -946,12 +981,13 @@ YAML files are parsed at startup using `YamlDotNet`. If a YAML file is missing, 
 
 ### 8.6 Statistics Retention
 
-Usage statistics in `EagleEye.Service.db` are retained for 90 days at daily granularity (minutes of use per application per day per user). Data older than 90 days is purged automatically during the daily midnight maintenance cycle.
+Daily usage (`DailyUsage`, **seconds** of use per application per day per account) and the start/end history (`AppInstances`) in `EagleEye.Service.db` are retained for 90 days (FR-SVC-043 v1.4). Older data is purged at the first accounting tick after local midnight and at service start. The app inventory (`AppRecords`) has no age limit. When an account is deleted on the PC, all its data is purged after the next inventory check (FR-SVC-047, US-004).
 
 ### 8.7 Time Tracking and Budget Reset
 
-- The Monitoring component tracks elapsed time per allowed process per user, accumulating at each poll interval
-- Tracked time is persisted to the SQLite database periodically (every N minutes and on service shutdown) to survive service restarts
+- *(US-004, ADR-012)* An app counts as **active** while it is open (Task Manager "Apps" group, ADR-011) and a session of its account is in use (WTS `Active`, not locked). Several apps count in parallel; several processes or windows of one app (same program path) count once.
+- Durations are measured with the **monotonic clock**; the wall clock only decides the day (split at local midnight). Gaps over 15 s (sleep, suspension) and the time between suspend and resume are never counted, so clock and time-zone changes cannot create negative or extra time.
+- Active time is credited every **5 s** and persisted in one transaction per tick (crash loss ≤ 5 s). New apps and instance starts are written at once.
 - At midnight (local time), all daily budgets reset. Unused time does not carry over. The midnight transition also triggers statistics persistence and old-data purge
 - Budget countdown pauses during pause windows (time during pause does not consume budget)
 
@@ -1101,12 +1137,14 @@ All architectural decisions are recorded as ADRs in `02_Implementation/docs/arch
 | ADR-002 | SQLite for Data Persistence, YAML for Application Configuration, .NET Logging for Diagnosability | Accepted |
 | ADR-003 | SignalR Hub Design — Two Hubs, Three Communication Patterns, Server-Authoritative State | Accepted |
 | ADR-004 | Pairing-Based Authentication for Parent Apps | Accepted |
-| ADR-005 | Process Classification Strategy — Ignore, Allow, Block | Accepted |
+| ADR-005 | Process Classification Strategy — Ignore, Allow, Block | Accepted (amendment for usage recording proposed with US-004) |
 | ADR-006 | Graceful-Then-Force Process Termination Pattern | Accepted |
 | ADR-007 | Two-Machine Development and Manual Acceptance Testing | Accepted (§2 "Distribution" superseded by ADR-009) |
 | ADR-008 | Parent App Connectivity — Endpoints, TLS Trust and Pairing Protocol | Accepted |
 | ADR-009 | Windows Parent App Packaging and the ParentApp.Core Library | Accepted |
 | ADR-010 | Event-Driven State Propagation — Service Broadcasts with Revisions | Accepted |
+| ADR-011 | Session Agent for App Observation — a SYSTEM Helper per Watched Session | Proposed — approved with the US-004 implementation plan |
+| ADR-012 | Usage Accounting — Active Time, Clocks, Day Boundary, Persistence and Usage State Areas | Proposed — approved with the US-004 implementation plan |
 
 ---
 
@@ -1206,6 +1244,8 @@ maint --> maint3
 | R-7 | Clock manipulation by child to circumvent budget/pause | Low | Medium | Service uses monotonic timers for budget countdown (not wall-clock). Pause-window checks use wall clock but service runs as SYSTEM — standard user cannot change system time. |
 | R-8 | Kid pairs their own parent app: the pairing code is shown in the kid's tray session (US-002 Q-1), and the per-user parent app installer needs no admin rights, so a kid can pair an app on the same PC or another device. From the first configuration story on, such an app could change the kid's own rules. | Medium | High | **Accepted risk** (Michael, 2026-10-04): no technical protection for now; revisit before or with the first configuration story. US-003 (first configuration story, OQ-7, Michael 2026-10-07): stays accepted, because the account selection has no effect yet; a protection must be decided before the first enforcement story. Candidate mitigations: show the code only in admin sessions / the Event Log, or require an admin confirmation on the service PC. Paired devices are visible and removable via device management (FR-APP-015). |
 | R-9 | Service certificate lost or regenerated (e.g. `%ProgramData%\EagleEye` deleted): every paired app rejects the new certificate (pin mismatch) | Low | Medium | Uninstalling the service keeps `%ProgramData%\EagleEye`. In US-002, recovery means reinstalling the parent app; a guided re-pairing follows with device management (ADR-008). |
+| R-10 | The "Apps" window rule (ADR-011 §4) differs from Task Manager's undocumented rule for unusual programs (e.g. launchers or splash screens with an unowned visible window): such a program could be recorded although Task Manager lists it as a background process, or vice versa *(US-004, proposed)* | Medium | Low | The rule is pure and unit-tested; differences found in testing are added as cases. Usage is observation only in US-004. |
+| R-11 | Memory of the session agent: one extra .NET process (about 30 to 40 MB) per watched session *(US-004, proposed)* | Low | Low | Usually one kid session. If needed, the agent becomes a Native AOT executable (ADR-011 Alternatives). |
 
 ---
 
@@ -1213,6 +1253,9 @@ maint --> maint3
 
 | Term | Definition |
 |------|-----------|
+| **Active (usage)** | An app is active while it is open (Task Manager "Apps" group) and a session of its account is in use (unlocked, not switched away, PC awake) (US-004 AC-12, ADR-012). |
+| **App** | A program with a window of its own in the user's session, as listed in Task Manager's "Apps" group; identified per account by its program path (US-004, ADR-011, ADR-012). |
+| **Session agent** | The service executable started in agent mode as SYSTEM inside a watched user session; it reports the session's app windows to the service (ADR-011). |
 | **Allow-list** | The set of applications a parent has explicitly permitted a child to use. Everything not on this list (and not ignored) is blocked. |
 | **Blocked process** | A process that is neither on the ignore list nor the allow-list. Terminated on detection. |
 | **Budget** | See *Time budget*. |

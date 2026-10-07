@@ -9,7 +9,9 @@
 
 > **Amendment 2026-10-07 (ADR-010, accepted by Michael 2026-10-07)**: §7.2 and §7.3 (broadcast includes the sender; client fetches after (re)connect instead of a server push), new §7.5 (checklist for a state area).
 
-> **Amendment 2026-10-07 (US-003) — proposed, approved together with the US-003 implementation plan**: §9 (EagleEye file logging provider; service logs in the admin-only `logs\` folder), §10.1 (`Shared/Logging`, `Service/UserAccounts`, `ParentApp.Core/Accounts`).
+> **Amendment 2026-10-07 (US-003, approved with the US-003 implementation plan)**: §9 (EagleEye file logging provider; service logs in the admin-only `logs\` folder), §10.1 (`Shared/Logging`, `Service/UserAccounts`, `ParentApp.Core/Accounts`).
+
+> **Amendment 2026-10-07 (US-004, ADR-011, ADR-012) — proposed, approved together with the US-004 implementation plan**: §10.1 (`Service/SessionAgent`, `Service/Monitoring`, `Service/Statistics`, `ParentApp.Core/Reports`), §12.1 (session agent, Win32 interop, monotonic durations).
 
 This document defines the coding standards all EagleEye components must follow. It complements but does not duplicate the system architecture (`arc42/system-architecture.md`) and ADRs — refer to those for architectural decisions, component responsibilities, and design rationale.
 
@@ -494,10 +496,10 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 │   └── Extensions/               # Shared extension methods
 ├── EagleEye.Service/             # Windows service
 │   ├── Communication/            # ParentHub, TrayHub, connection management
-│   ├── Monitoring/               # ProcessMonitor, process enumeration
+│   ├── SessionAgent/             # Agent mode (--session-agent): window scan, "Apps" rule, protocol (ADR-011)
 │   ├── Enforcement/              # ProcessEnforcer, termination logic
 │   ├── Configuration/            # ConfigurationManager, YAML reader
-│   ├── Statistics/               # StatisticsCollector, purge logic
+│   ├── Statistics/               # UsageTracker, UsageService (usage state areas), accounting loop, purge (ADR-012)
 │   ├── Certificates/             # CertificateManager, TLS setup
 │   ├── UserAccounts/             # Account source (Win32), inventory, UserAccountService (state owner)
 │   ├── Pairing/                  # PairingManager, token generation
@@ -597,7 +599,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 - Use `Microsoft.Extensions.Hosting.WindowsServices` with `Host.CreateDefaultBuilder().UseWindowsService()`.
 - The service runs as **SYSTEM** — it has full process visibility across all user sessions but no desktop interaction.
 - Use the Windows `EventLog` as a fallback for the pairing code when no TrayClient is connected (see ADR-004).
-- **Process enumeration**: Use `System.Diagnostics.Process.GetProcesses()` for basic enumeration. Use P/Invoke to `WTSEnumerateProcessesEx` or `NtQuerySystemInformation` if per-session filtering is needed with better performance.
+- **Session agent (ADR-011)**: anything that needs the windows of a user session runs in the session agent (the service executable with `--session-agent`, started as SYSTEM in that session). `Program` branches to agent mode as its **first** statement, before log-folder protection, the host and the database. The agent has no endpoint, no database and no log file; it talks only through its inherited stdin/stdout pipes, and exits on stdin EOF. Keep it thin: decisions (the "Apps" rule) are pure, unit-tested classes. Use P/Invoke to `WTSEnumerateProcessesEx` or `NtQuerySystemInformation` if per-session filtering is needed with better performance.
 - **Process termination**: Use `Process.CloseMainWindow()` for graceful shutdown, `Process.Kill(entireProcessTree: true)` for force-kill (see ADR-006).
 - **User account discovery**: Use `System.DirectoryServices.AccountManagement` to enumerate local standard-user accounts. Filter out admin accounts via group membership checks.
 - **File paths**: Use `Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)` for `%ProgramData%`. Never hardcode paths.
