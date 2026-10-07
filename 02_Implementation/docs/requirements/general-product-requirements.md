@@ -1,11 +1,11 @@
 # EagleEye -- General Product Requirements
 
-*Status: Approved v1.3 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07); v1.4 amendment proposed 2026-10-07 with US-004, pending Michael's approval*
+*Status: Approved v1.4 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07; v1.4 approved by Michael 2026-10-07)*
 *Approved: v1.0 by Michael*
 *Maintainer: PRO Agent*
 *Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07*
 
-> **v1.4 amendment (2026-10-07, directed by Michael, with US-004; proposed, pending approval)**: the service records the **apps** (Task Manager's "Apps" group, not background processes) started in the sessions of accounts under parental control: a permanent app inventory per account, a start/end history, and the daily usage **in seconds**, updated at least every 5 seconds. The parent app shows the usage per account and day as HH:MM. Changed: FR-SVC-012, FR-SVC-040, FR-SVC-041, FR-SVC-043, FR-SVC-044 to FR-SVC-047 (new), FR-APP-060.
+> **v1.4 amendment (2026-10-07, directed by Michael, with US-004; approved by Michael 2026-10-07)**: the service records the **apps** (Task Manager's "Apps" group, not background processes) started in the sessions of accounts under parental control: a permanent app inventory per account, a start/end history, and the daily usage **in seconds**, updated at least every 5 seconds. The parent app shows the usage per account and day as HH:MM. Changed: FR-SVC-012, FR-SVC-040, FR-SVC-041, FR-SVC-043, FR-SVC-044 to FR-SVC-047 (new), FR-APP-060.
 
 > **v1.3 amendment (2026-10-07, directed by Michael, with US-003)**: the service no longer monitors all standard accounts automatically. It keeps an inventory of the standard accounts, and the **parent selects which accounts are under parental control**. Only those are monitored. Changed: FR-SVC-010, FR-SVC-070, FR-SVC-071, FR-SVC-072 to FR-SVC-074 (new), FR-APP-020, FR-APP-022 (new), MU-013, §4.3 step 11.
 
@@ -586,4 +586,4 @@ No open questions. The questions raised by the v1.1 amendment were answered by M
 
 ---
 
-*End of General Product Requirements — Approved v1.3, v1.4 amendment pending*
+*End of General Product Requirements — Approved v1.4*

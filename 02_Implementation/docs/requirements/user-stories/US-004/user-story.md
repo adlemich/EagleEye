@@ -2,6 +2,7 @@
 
 **Status**: New
 **Created**: 2026-10-07
+**Approved**: by Michael, 2026-10-07 (status becomes `Analyzed` when the implementation plan is approved)
 **Component(s)**: EagleEye.Service, EagleEye.ParentApp, EagleEye.Shared
 **Platform(s)**: Windows (service) · ParentApp Windows
 
@@ -110,6 +111,7 @@ References: FR-SVC-010, FR-SVC-012 (v1.4), FR-SVC-013, FR-SVC-040 (v1.4), FR-SVC
 | Date | Change | Source |
 |---|---|---|
 | 2026-10-07 | Story created; product requirements v1.4 amendment proposed | Michael's scope, written by PRO |
+| 2026-10-07 | Story approved; OQ-1 to OQ-11 answered (proposed defaults accepted); requirements v1.4 approved. ACs unchanged. | Michael |
 
 ---
 
@@ -230,23 +232,23 @@ Svc --> App : days, apps, durations
 
 ---
 
-## Open Questions (for Michael)
+## Open Questions (answered by Michael, 2026-10-07)
 
 Each question has a proposed default. If Michael agrees with all defaults, the ACs stay as written.
 
-| ID | Question | Proposed default |
-|---|---|---|
-| OQ-1 | **What does "active" mean?** (a) the app is **running** (open), whatever the session state; (b) the app is **open and the kid's session is in use** (unlocked, not switched away, PC awake); (c) the app is **in the foreground** (the window the kid is working in); (d) foreground **and** recent keyboard/mouse input. For parental control: (a) counts time when the kid is not even at the PC (locked screen, other user signed in). (c) and (d) count only one app at a time, so the sum of a day never exceeds the time at the PC, but an app that plays music or a video in the background counts nothing, and a game left in the foreground counts fully under (c). (d) needs an idle limit and is harder to check with a stopwatch. | **(b)**, as written in AC-12: open in Task Manager's "Apps" group while the session is in use; minimised windows count; parallel apps each count. Easy to verify with a stopwatch, and robust for later budgets. Foreground-only can be added later as a separate figure if wanted. |
-| OQ-2 | **Identity of an app record.** By the full program path, or by the process name? Some apps install each update into a new folder (path changes), and different programs can share a process name (e.g. `launcher.exe`). | **By the full program path** (case-insensitive). An app that moves to a new path after an update gets a second record; the report then shows two rows with the same display name for that day. Revisit when allow-lists come (ADR-005 matches by process name). |
-| OQ-3 | **Windows Explorer.** It is in your "Apps" example list, but ADR-005 puts `explorer.exe` on the ignore list (never tracked). Count it? | Count "Windows Explorer" only while a File Explorer window is open (AC-4), like Task Manager. The ignore list of ADR-005 stays for enforcement; ARC aligns ADR-005. |
-| OQ-4 | **Rounding of HH:MM.** Round down (59 s → "00:00") or to the nearest minute (30 s → "00:01")? | Round **down**, like a clock (AC-19, AC-24). The service keeps seconds. |
-| OQ-5 | **Live update of the open Reports page.** Live while open (pushed by the service), or only on opening, account change and reconnect? | Live, by service push, with at most 15 s lag (AC-22). The push frequency is ARC's choice within this bound. |
-| OQ-6 | **Days without usage.** Show them with "No usage recorded", or leave them out? | Leave older days without usage out; always show today (AC-19). |
-| OQ-7 | **Day total.** Show a total per day? With parallel counting (OQ-1 b), the sum of all apps can be larger than the time the kid sat at the PC. | No day total in this story. If wanted, a later story adds "time at the PC" (time with at least one app active), which avoids double counting. |
-| OQ-8 | **History and inventory in the UI.** You asked for the history store and the inventory, not for their display. | Recorded only (verifiable in the service log, AC-10); no display in this story. |
-| OQ-9 | **Which accounts can be selected in Reports?** Only accounts under parental control now, or also accounts that were unticked but have recorded data? | Only accounts under parental control now (AC-17). Data of an unticked account is kept and appears again when the account is ticked again (within the 90-day retention). |
-| OQ-10 | **Load limit.** Is "< 2 % CPU on average" a suitable, testable bound for NFR-P-010? | Yes, as in AC-25. |
-| OQ-11 | **Retention of the history.** Same 90 days as the daily usage, or forever like the inventory? | 90 days (AC-11). Only the inventory is kept forever. |
+| ID | Question | Proposed default | Answer |
+|---|---|---|---|
+| OQ-1 | **What does "active" mean?** (a) the app is **running** (open), whatever the session state; (b) the app is **open and the kid's session is in use** (unlocked, not switched away, PC awake); (c) the app is **in the foreground** (the window the kid is working in); (d) foreground **and** recent keyboard/mouse input. For parental control: (a) counts time when the kid is not even at the PC (locked screen, other user signed in). (c) and (d) count only one app at a time, so the sum of a day never exceeds the time at the PC, but an app that plays music or a video in the background counts nothing, and a game left in the foreground counts fully under (c). (d) needs an idle limit and is harder to check with a stopwatch. | **(b)**, as written in AC-12: open in Task Manager's "Apps" group while the session is in use; minimised windows count; parallel apps each count. Easy to verify with a stopwatch, and robust for later budgets. Foreground-only can be added later as a separate figure if wanted. | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-2 | **Identity of an app record.** By the full program path, or by the process name? Some apps install each update into a new folder (path changes), and different programs can share a process name (e.g. `launcher.exe`). | **By the full program path** (case-insensitive). An app that moves to a new path after an update gets a second record; the report then shows two rows with the same display name for that day. Revisit when allow-lists come (ADR-005 matches by process name). | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-3 | **Windows Explorer.** It is in your "Apps" example list, but ADR-005 puts `explorer.exe` on the ignore list (never tracked). Count it? | Count "Windows Explorer" only while a File Explorer window is open (AC-4), like Task Manager. The ignore list of ADR-005 stays for enforcement; ARC aligns ADR-005. | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-4 | **Rounding of HH:MM.** Round down (59 s → "00:00") or to the nearest minute (30 s → "00:01")? | Round **down**, like a clock (AC-19, AC-24). The service keeps seconds. | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-5 | **Live update of the open Reports page.** Live while open (pushed by the service), or only on opening, account change and reconnect? | Live, by service push, with at most 15 s lag (AC-22). The push frequency is ARC's choice within this bound. | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-6 | **Days without usage.** Show them with "No usage recorded", or leave them out? | Leave older days without usage out; always show today (AC-19). | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-7 | **Day total.** Show a total per day? With parallel counting (OQ-1 b), the sum of all apps can be larger than the time the kid sat at the PC. | No day total in this story. If wanted, a later story adds "time at the PC" (time with at least one app active), which avoids double counting. | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-8 | **History and inventory in the UI.** You asked for the history store and the inventory, not for their display. | Recorded only (verifiable in the service log, AC-10); no display in this story. | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-9 | **Which accounts can be selected in Reports?** Only accounts under parental control now, or also accounts that were unticked but have recorded data? | Only accounts under parental control now (AC-17). Data of an unticked account is kept and appears again when the account is ticked again (within the 90-day retention). | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-10 | **Load limit.** Is "< 2 % CPU on average" a suitable, testable bound for NFR-P-010? | Yes, as in AC-25. | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-11 | **Retention of the history.** Same 90 days as the daily usage, or forever like the inventory? | 90 days (AC-11). Only the inventory is kept forever. | Answer (Michael, 2026-10-07): proposed default accepted |
 
 ---
 
