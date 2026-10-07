@@ -1,6 +1,6 @@
 # Implementation Plan: US-003 — Account Inventory and Selection of Accounts under Parental Control
 
-**Status**: Draft (for approval by Michael; ADR-010 already accepted)
+**Status**: Approved by Michael (2026-10-07); ADR-010 accepted
 **Date**: 2026-10-07
 **Author**: ARC
 **User story**: `02_Implementation/docs/requirements/user-stories/US-003/user-story.md` (approved 2026-10-07, 24 ACs, OQ-1 to OQ-8 answered)
@@ -722,9 +722,9 @@ All answered by Michael on 2026-10-07. The plan text is aligned with the answers
 
 ### New open point (not blocking)
 
-| ID | Question | Proposed answer |
-|---|---|---|
-| Q-7 | Windows setup occasionally leaves similar technical accounts with other names (e.g. `defaultuser1` or `defaultuser100000`, seen after failed setups or upgrades). AC-3 names only `defaultuser0`. Exclude the whole `defaultuser<digits>` pattern? | Keep exactly `defaultuser0` as approved in AC-3. If such an account shows up during testing, PRO extends AC-3; the filter change is one line. |
+| ID | Question | Proposed answer | Answer |
+|---|---|---|---|
+| Q-7 | Windows setup occasionally leaves similar technical accounts with other names (e.g. `defaultuser1` or `defaultuser100000`, seen after failed setups or upgrades). AC-3 names only `defaultuser0`. Exclude the whole `defaultuser<digits>` pattern? | Keep exactly `defaultuser0` as approved in AC-3. If such an account shows up during testing, PRO extends AC-3; the filter change is one line. | Answer (Michael, 2026-10-07): proposed answer accepted. |
 
 ---
 
