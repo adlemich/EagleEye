@@ -75,7 +75,7 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 
 ### C. Selecting accounts under parental control
 
-- [ ] **AC-14**: When the parent ticks or unticks an account, the change is sent to the service at once, without a separate "Save" button. Within 5 seconds the service has stored it. The service writes an entry to its log file (`%ProgramData%\EagleEye\EagleEye.Service-NNN.log`, level Information) that names the account's user name and the new state (under parental control yes/no). (See OQ-1.)
+- [ ] **AC-14**: When the parent ticks or unticks an account, the change is sent to the service at once, without a separate "Save" button. Within 5 seconds the service has stored it. The service writes an entry to its log file (`%ProgramData%\EagleEye\EagleEye.Service-NNN.log`, level Information) that names the account's user name and the new state (under parental control yes/no). The app shows the state as confirmed by the service, and the service broadcasts it to all other connected parent apps (AC-23). (See OQ-1.)
 - [ ] **AC-15**: The selection is kept by the service: after closing and restarting the parent app, after restarting the service, after rebooting the service PC and after an update (re-install) of the service, the account list shows the same ticks as before.
 - [ ] **AC-16**: When the service cannot store a change (e.g. the connection was lost at the moment of the click), the parent app shows an error message (English example: "The change could not be saved. Please try again."; German: "Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen.") and the checkbox returns to the state that is stored in the service. The app never shows a tick that differs from the service's stored state for longer than 5 seconds.
 - [ ] **AC-17**: The checkboxes can only be changed while the parent app is connected. While the app is not connected, there is nothing to tick (AC-7, AC-8).
@@ -90,8 +90,10 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 
 ### E. Several parent apps
 
-- [ ] **AC-23**: When two paired parent apps are connected at the same time and both show the settings page, a tick or untick in one app appears in the other app within 5 seconds, without any action there.
-- [ ] **AC-24**: When both apps change the same account at about the same time, the last change received by the service wins, and within 5 seconds both apps show the state stored in the service. (Recorded by the service log of AC-14.)
+> Selection changes always go through the service: a parent app sends its change to the service, the service stores it and then broadcasts the stored setting to all connected parent apps. Parent apps never exchange data with each other directly.
+
+- [ ] **AC-23**: When two paired parent apps A and B are connected at the same time and both show the settings page, and the parent ticks or unticks an account in app A, then app A sends the change to the service, the service stores it and broadcasts the stored setting at once to all connected parent apps, and app B updates its account list immediately on receipt, without any action there. App A shows the state confirmed by the service (AC-14, AC-16). From the tick or untick in app A until app B shows it, at most 5 seconds pass.
+- [ ] **AC-24**: When apps A and B change the same account at about the same time, the last change received by the service wins. The service broadcasts each change it stores to all connected parent apps, so that at most 5 seconds after the last change both apps show the same state, which is the state stored in the service. (Recorded by the service log of AC-14.)
 
 ### Change Log
 
@@ -100,6 +102,7 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 | 2026-10-07 | Story created; product requirements v1.3 amendment proposed | Michael's scope, written by PRO |
 | 2026-10-07 | Open questions OQ-1 to OQ-8 answered (proposed defaults accepted); ACs unchanged. Story and requirements v1.3 approved | Michael |
 | 2026-10-07 | AC-19 to AC-21: inventory changes are pushed by the service at once to all connected parent apps, which update their list on receipt; the 60-second limit is end-to-end (account change on the PC until the list has changed). Flow overview aligned. Story stays approved. | Michael, change request |
+| 2026-10-07 | AC-23, AC-24: selection changes always go through the service (store, then broadcast at once to all connected parent apps; apps update on receipt, never exchange data directly); 5-second limits are end-to-end. AC-14 (confirmed state, broadcast), flow overview, FR-SVC-072 and FR-APP-022 aligned. Story stays approved. | Michael, change request |
 
 ---
 
@@ -177,8 +180,13 @@ Svc --> AppA : list (name, ticked)
 Parent -> AppA : tick "Max Adler (max)"
 AppA -> Svc : set under parental control = yes
 Svc -> Svc : store, write log entry
-Svc --> AppA : stored
-Svc -> AppB : push: updated list
+Svc --> AppA : stored (confirmed state)
+AppA -> Parent : show confirmed tick
+Svc -> AppB : broadcast at once: stored setting
+note over AppB
+UI updated on receipt;
+at most 5 s after the tick in app A
+end note
 == account change on the PC ==
 Win -> Svc : account added / deleted / renamed / admin rights changed (noticed by the service)
 Svc -> AppA : push at once: updated inventory

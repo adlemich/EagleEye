@@ -174,7 +174,7 @@ The service classifies every process running in a standard user's session into o
 |----|-------------|
 | FR-SVC-070 | The service shall auto-discover all local standard (non-admin) Windows user accounts and keep them as an inventory. The inventory follows changes while the service runs (accounts added, deleted, renamed, or changed between standard and admin). Windows built-in accounts (Administrator, Guest, DefaultAccount, WDAGUtilityAccount) are not part of it. *(v1.3: made precise)* |
 | FR-SVC-071 | Discovered accounts shall be presented to the parent app for configuration. Admin accounts shall be excluded. Connected parent apps receive changes of the inventory without having to ask (FR-SVC-053). *(v1.3: made precise)* |
-| FR-SVC-072 | The service shall store for each inventoried account whether it is under parental control. The parent sets this from a paired parent app (FR-APP-022). *(v1.3)* |
+| FR-SVC-072 | The service shall store for each inventoried account whether it is under parental control. The parent sets this from a paired parent app (FR-APP-022). The service broadcasts every stored change of the selection at once to all connected parent apps (FR-SVC-053). *(v1.3)* |
 | FR-SVC-073 | The selection of FR-SVC-072 shall be persisted locally (FR-SVC-030) and kept across service restarts, reboots and service updates. *(v1.3)* |
 | FR-SVC-074 | Accounts shall be identified by their Windows security identifier (SID), so that renaming an account does not change its selection or configuration. *(v1.3)* |
 
@@ -262,7 +262,7 @@ The parent app is a single MAUI codebase deployed to Android, iOS, Windows and m
 | ID | Requirement |
 |----|-------------|
 | FR-APP-020 | The parent app shall display all discovered standard user accounts (kids) from the service, as delivered by the service (FR-SVC-070). *(v1.3: made precise)* |
-| FR-APP-022 | The parent shall be able to mark each discovered account as under parental control or not. The parent app shall always show the selection stored in the service (FR-SVC-072); changes are sent to the service and synchronized with all connected parent apps. *(v1.3)* |
+| FR-APP-022 | The parent shall be able to mark each discovered account as under parental control or not. The parent app shall always show the selection stored in the service (FR-SVC-072); changes are sent to the service, and every connected parent app receives the stored setting from the service's broadcast (FR-SVC-072). Parent apps never exchange data with each other directly. *(v1.3)* |
 | FR-APP-021 | The parent shall be able to select a user account and manage its configuration. |
 
 #### 3.3.3 Application Allow-List
