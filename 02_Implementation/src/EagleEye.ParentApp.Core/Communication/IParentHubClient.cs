@@ -31,4 +31,13 @@ public interface IParentHubClient : IAsyncDisposable
 
     /// <summary>Calls <c>IParentHub.RemovePairedDevice</c>.</summary>
     Task RemovePairedDeviceAsync(string deviceId, CancellationToken ct);
+
+    /// <summary>The service broadcast <c>IParentClientCallback.OnUserAccountsChanged</c> (ADR-010).</summary>
+    event Action<UserAccountListDto>? UserAccountsChanged;
+
+    /// <summary>Calls <c>IParentHub.GetUserAccounts</c>.</summary>
+    Task<UserAccountListDto> GetUserAccountsAsync(CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.SetParentalControl</c>.</summary>
+    Task<StateWriteAckDto> SetParentalControlAsync(Guid requestId, string accountSid, bool isUnderParentalControl, CancellationToken ct);
 }

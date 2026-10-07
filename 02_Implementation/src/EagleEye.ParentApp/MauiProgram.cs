@@ -1,4 +1,5 @@
 using EagleEye.ParentApp.Core.Abstractions;
+using EagleEye.ParentApp.Core.Accounts;
 using EagleEye.ParentApp.Core.Communication;
 using EagleEye.ParentApp.Core.Data;
 using EagleEye.ParentApp.Core.ViewModels;
@@ -35,7 +36,13 @@ public static class MauiProgram
 
         // Communication (ParentApp.Core).
         services.AddSingleton<IParentHubClientFactory, ParentHubClientFactory>();
+        services.AddSingleton<ParentHubGateway>();
+        services.AddSingleton<IParentHubGateway>(sp => sp.GetRequiredService<ParentHubGateway>());
+        services.AddSingleton<IPairedConnectionSink>(sp => sp.GetRequiredService<ParentHubGateway>());
         services.AddSingleton<IConnectionCoordinator, ConnectionCoordinator>();
+
+        // State area "UserAccounts" (US-003, ADR-010).
+        services.AddSingleton<IUserAccountsModel, UserAccountsModel>();
 
         // Platform services.
         services.AddSingleton<IThemeService, MauiThemeService>();
@@ -46,6 +53,7 @@ public static class MauiProgram
         services.AddSingleton<AppearanceViewModel>();
         services.AddSingleton<ServerConnectionViewModel>();
         services.AddSingleton<StatusBarViewModel>();
+        services.AddSingleton<UserAccountsViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<SettingsView>();
         services.AddSingleton<StatusBarView>();

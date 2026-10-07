@@ -15,6 +15,7 @@ namespace EagleEye.ParentApp.Core.Communication;
 public sealed class ConnectionCoordinator(
     IParentHubClientFactory clientFactory,
     IPairingStore pairingStore,
+    IPairedConnectionSink pairedConnection,
     TimeProvider timeProvider) : IConnectionCoordinator, IAsyncDisposable
 {
     /// <summary>Upper bound for connecting and for each hub call.</summary>
@@ -362,6 +363,7 @@ public sealed class ConnectionCoordinator(
         session.Client.Reconnected += () => _ = OnPairedReconnectedAsync(session);
         session.Client.Closed += () => OnPairedClosed(session);
         SetState(State with { Status = ConnectionStatus.PairedConnected, LastMessage = ConnectionMessage.None });
+        pairedConnection.SetConnected(session.Client);
     }
 
     private bool IsCurrent(PairedSession session)
@@ -376,6 +378,7 @@ public sealed class ConnectionCoordinator(
     {
         if (IsCurrent(session))
         {
+            pairedConnection.SetDisconnected();
             SetStatus(ConnectionStatus.PairedDisconnected);
         }
     }
@@ -394,6 +397,7 @@ public sealed class ConnectionCoordinator(
             if (status.IsPaired)
             {
                 SetStatus(ConnectionStatus.PairedConnected);
+                pairedConnection.SetConnected(session.Client);
                 return;
             }
         }
@@ -419,6 +423,8 @@ public sealed class ConnectionCoordinator(
             _pairedSession = null;
         }
 
+        pairedConnection.SetDisconnected();
+
         // The automatic reconnect never gives up, so this happens only when the server closed the
         // connection for good: start over with the connect loop.
         _ = session.Client.DisposeAsync().AsTask();
@@ -427,6 +433,7 @@ public sealed class ConnectionCoordinator(
 
     private async Task ForgetLostPairingAsync(StoredPairing pairing)
     {
+        pairedConnection.SetDisconnected();
         await pairingStore.DeleteAsync().ConfigureAwait(false);
         SetState(ConnectionState.Initial with { Host = pairing.Host, LastMessage = ConnectionMessage.PairingLost });
     }
@@ -443,6 +450,7 @@ public sealed class ConnectionCoordinator(
             _pairedLoopCts = null;
         }
 
+        pairedConnection.SetDisconnected();
         if (cts is not null)
         {
             await cts.CancelAsync().ConfigureAwait(false);

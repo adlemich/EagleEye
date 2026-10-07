@@ -46,4 +46,13 @@
   <data name="InfoPairingLostFormat" xml:space="preserve"><value>Dieser PC ist nicht mehr mit {0} gekoppelt.</value></data>
   <data name="ErrorStartup" xml:space="preserve"><value>Die Daten der EagleEye-Eltern-App konnten nicht geöffnet werden. Bitte die App neu installieren.</value></data>
   <data name="OkButton" xml:space="preserve"><value>OK</value></data>
+  <data name="SectionUserAccounts" xml:space="preserve"><value>Benutzerkonten auf dem EagleEye-PC</value></data>
+  <data name="UserAccountsInstruction" xml:space="preserve"><value>Markieren Sie die Konten, die unter Elternkontrolle stehen.</value></data>
+  <data name="UnderParentalControl" xml:space="preserve"><value>Unter Elternkontrolle</value></data>
+  <data name="AccountsNoData" xml:space="preserve"><value>Keine Daten verfügbar</value></data>
+  <data name="AccountsNone" xml:space="preserve"><value>Keine Nicht-Administrator-Konten vorhanden</value></data>
+  <data name="AccountsLoading" xml:space="preserve"><value>Wird geladen …</value></data>
+  <data name="AccountDisabledSuffix" xml:space="preserve"><value>(deaktiviert)</value></data>
+  <data name="AccountNameFormat" xml:space="preserve"><value>{0} ({1})</value></data>
+  <data name="AccountSaveFailed" xml:space="preserve"><value>Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen.</value></data>
 </root>

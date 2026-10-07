@@ -40,7 +40,18 @@ internal sealed class ParentHubClient : IParentHubClient
         _connection.Reconnecting += _ => Raise(Reconnecting);
         _connection.Reconnected += _ => Raise(Reconnected);
         _connection.Closed += _ => Raise(Closed);
+
+        // Registered before StartAsync, so no broadcast is lost (coding guidelines §7.2).
+        _connection.On<UserAccountListDto>(nameof(IParentClientCallback.OnUserAccountsChanged), snapshot => UserAccountsChanged?.Invoke(snapshot));
     }
+
+    public event Action<UserAccountListDto>? UserAccountsChanged;
+
+    public Task<UserAccountListDto> GetUserAccountsAsync(CancellationToken ct)
+        => _connection.InvokeAsync<UserAccountListDto>(nameof(IParentHub.GetUserAccounts), ct);
+
+    public Task<StateWriteAckDto> SetParentalControlAsync(Guid requestId, string accountSid, bool isUnderParentalControl, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.SetParentalControl), requestId, accountSid, isUnderParentalControl, ct);
 
     public event Action? Reconnecting;
 

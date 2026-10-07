@@ -46,4 +46,13 @@
   <data name="InfoPairingLostFormat" xml:space="preserve"><value>This PC is no longer paired with {0}.</value></data>
   <data name="ErrorStartup" xml:space="preserve"><value>The data of the EagleEye parent app could not be opened. Please reinstall the app.</value></data>
   <data name="OkButton" xml:space="preserve"><value>OK</value></data>
+  <data name="SectionUserAccounts" xml:space="preserve"><value>User accounts on the EagleEye PC</value></data>
+  <data name="UserAccountsInstruction" xml:space="preserve"><value>Tick the accounts that are under parental control.</value></data>
+  <data name="UnderParentalControl" xml:space="preserve"><value>Under parental control</value></data>
+  <data name="AccountsNoData" xml:space="preserve"><value>No data available</value></data>
+  <data name="AccountsNone" xml:space="preserve"><value>No non-admin accounts available</value></data>
+  <data name="AccountsLoading" xml:space="preserve"><value>Loading …</value></data>
+  <data name="AccountDisabledSuffix" xml:space="preserve"><value>(disabled)</value></data>
+  <data name="AccountNameFormat" xml:space="preserve"><value>{0} ({1})</value></data>
+  <data name="AccountSaveFailed" xml:space="preserve"><value>The change could not be saved. Please try again.</value></data>
 </root>
