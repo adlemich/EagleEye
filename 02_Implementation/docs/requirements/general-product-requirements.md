@@ -1,9 +1,11 @@
 # EagleEye -- General Product Requirements
 
-*Status: Approved v1.2 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04)*
+*Status: Approved v1.2 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04); v1.3 amendment proposed 2026-10-07 with US-003, pending Michael's approval*
 *Approved: v1.0 by Michael*
 *Maintainer: PRO Agent*
-*Date: 2026-09-15, amended 2026-10-03, 2026-10-04*
+*Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07*
+
+> **v1.3 amendment (2026-10-07, directed by Michael, with US-003; pending approval)**: the service no longer monitors all standard accounts automatically. It keeps an inventory of the standard accounts, and the **parent selects which accounts are under parental control**. Only those are monitored. Changed: FR-SVC-010, FR-SVC-070, FR-SVC-071, FR-SVC-072 to FR-SVC-074 (new), FR-APP-020, FR-APP-022 (new), MU-013, §4.3 step 11.
 
 > **v1.2 amendment (2026-10-04, directed by Michael, with US-002)**: the Windows parent app is no longer copy-deployed. It gets **its own, self-contained Windows installer**, separate from the service installer. Also new: light/dark appearance setting for all parent apps (FR-APP-083). Changed: §3.3.8 (FR-APP-083 new), FR-APP-092, §4.2 step 8, §9.5, §11 (Q-1 superseded by Q-4).
 
@@ -100,7 +102,7 @@ The service runs as a background Windows service under the SYSTEM account. It is
 
 | ID | Requirement |
 |----|-------------|
-| FR-SVC-010 | The service shall continuously monitor running processes for all standard (non-admin) local user accounts. |
+| FR-SVC-010 | The service shall continuously monitor running processes for the standard (non-admin) local user accounts that the parent has placed under parental control (FR-SVC-072). Other accounts are not monitored. *(v1.3; was: all standard accounts)* |
 | FR-SVC-011 | The service shall detect when a monitored user starts a new process and check it against the allow-list configured for that user. |
 | FR-SVC-012 | The service shall track cumulative active usage time (in minutes) per allowed application per user per day. |
 | FR-SVC-013 | For each detected process, the service shall attempt to resolve a human-readable display name. Resolution sources include (in priority order): (1) the executable's file version info / product name metadata, (2) the application's entry in Windows installed-programs registry, (3) an optional online lookup. |
@@ -170,8 +172,11 @@ The service classifies every process running in a standard user's session into o
 
 | ID | Requirement |
 |----|-------------|
-| FR-SVC-070 | The service shall auto-discover all local standard (non-admin) Windows user accounts. |
-| FR-SVC-071 | Discovered accounts shall be presented to the parent app for configuration. Admin accounts shall be excluded. |
+| FR-SVC-070 | The service shall auto-discover all local standard (non-admin) Windows user accounts and keep them as an inventory. The inventory follows changes while the service runs (accounts added, deleted, renamed, or changed between standard and admin). Windows built-in accounts (Administrator, Guest, DefaultAccount, WDAGUtilityAccount) are not part of it. *(v1.3: made precise)* |
+| FR-SVC-071 | Discovered accounts shall be presented to the parent app for configuration. Admin accounts shall be excluded. Connected parent apps receive changes of the inventory without having to ask (FR-SVC-053). *(v1.3: made precise)* |
+| FR-SVC-072 | The service shall store for each inventoried account whether it is under parental control. The parent sets this from a paired parent app (FR-APP-022). *(v1.3)* |
+| FR-SVC-073 | The selection of FR-SVC-072 shall be persisted locally (FR-SVC-030) and kept across service restarts, reboots and service updates. *(v1.3)* |
+| FR-SVC-074 | Accounts shall be identified by their Windows security identifier (SID), so that renaming an account does not change its selection or configuration. *(v1.3)* |
 
 #### 3.1.9 Parent App Pairing (Onboarding)
 
@@ -256,7 +261,8 @@ The parent app is a single MAUI codebase deployed to Android, iOS, Windows and m
 
 | ID | Requirement |
 |----|-------------|
-| FR-APP-020 | The parent app shall display all discovered standard user accounts (kids) from the service. |
+| FR-APP-020 | The parent app shall display all discovered standard user accounts (kids) from the service, as delivered by the service (FR-SVC-070). *(v1.3: made precise)* |
+| FR-APP-022 | The parent shall be able to mark each discovered account as under parental control or not. The parent app shall always show the selection stored in the service (FR-SVC-072); changes are sent to the service and synchronized with all connected parent apps. *(v1.3)* |
 | FR-APP-021 | The parent shall be able to select a user account and manage its configuration. |
 
 #### 3.3.3 Application Allow-List
@@ -349,7 +355,7 @@ This describes the end-to-end workflow from installation to daily use.
 
 | Step | Actor | Action |
 |------|-------|--------|
-| 11 | Parent | Views the list of discovered standard user accounts (children). |
+| 11 | Parent | Views the list of discovered standard user accounts and selects which of them (the children's) are under parental control. *(v1.3)* |
 | 12 | Parent | Selects a child's account and configures the allow-list of applications. |
 | 13 | Parent | Sets daily time budgets (hours:minutes) per allowed application, per weekday. |
 | 14 | Parent | Defines pause windows per weekday (e.g. 20:00--09:00 blocked). |
@@ -422,7 +428,7 @@ This describes the end-to-end workflow from installation to daily use.
 | MU-010 | The service shall support multiple standard (non-admin) user accounts on the same Windows PC simultaneously. |
 | MU-011 | Each user account has its own independent configuration: allow-list, time budgets, pause windows. |
 | MU-012 | Each user account has its own independent usage statistics. |
-| MU-013 | The service auto-discovers standard user accounts (FR-SVC-070). No manual account registration is needed. |
+| MU-013 | The service auto-discovers standard user accounts (FR-SVC-070). No manual account registration is needed; the parent only selects which discovered accounts are under parental control (FR-SVC-072). *(v1.3)* |
 | MU-014 | Admin accounts are excluded from monitoring and enforcement. |
 
 ---
@@ -574,4 +580,4 @@ No open questions. The questions raised by the v1.1 amendment were answered by M
 
 ---
 
-*End of General Product Requirements — Approved v1.2*
+*End of General Product Requirements — Approved v1.2, v1.3 amendment pending*
