@@ -1,10 +1,10 @@
 # ADR-003: SignalR Hub Design — Two Hubs, Three Communication Patterns, Server-Authoritative State
 
-**Status**: Accepted (Pattern 3 refined by ADR-010, proposed with US-003)
+**Status**: Accepted (Pattern 3 refined by ADR-010, accepted 2026-10-07)
 **Date**: 2026-09-20
 **Deciders**: Michael (project owner), ARC
 
-> **Note 2026-10-07 (ADR-010, proposed with the US-003 implementation plan)**: Pattern 3 is refined by ADR-010 "Event-Driven State Propagation": snapshots carry a revision and the correlation id of the write that caused them, write commands take a `requestId` and return `StateWriteAckDto`, the broadcast (which includes the sender) confirms the stored state. **Rule 3 changes**: the service no longer pushes state on connect; the client fetches every area it shows after each (re)connect. Rules 1, 2 and 4 stay. The example signatures below are targets that take the ADR-010 shape when their stories come.
+> **Note 2026-10-07 (ADR-010, accepted by Michael 2026-10-07)**: Pattern 3 is refined by ADR-010 "Event-Driven State Propagation": snapshots carry a revision and the correlation id of the write that caused them, write commands take a `requestId` and return `StateWriteAckDto`, the broadcast (which includes the sender) confirms the stored state. **Rule 3 changes**: the service no longer pushes state on connect; the client fetches every area it shows after each (re)connect. Rules 1, 2 and 4 stay. The example signatures below are targets that take the ADR-010 shape when their stories come.
 
 ---
 

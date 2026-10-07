@@ -7,7 +7,9 @@
 
 > **Amendment 2026-10-07 (Michael, US-002 deviation D-11)**: §3.4 and §8.2: plain `using` for SQLite commands, readers and transactions instead of `await using`.
 
-> **Amendment 2026-10-07 (US-003, ADR-010) — proposed, approved together with the US-003 implementation plan**: §7.2 and §7.3 (broadcast includes the sender; client fetches after (re)connect instead of a server push), new §7.5 (checklist for a state area), §9 (EagleEye file logging provider), §10.1 (`Shared/Logging`, `Service/UserAccounts`, `ParentApp.Core/Accounts`).
+> **Amendment 2026-10-07 (ADR-010, accepted by Michael 2026-10-07)**: §7.2 and §7.3 (broadcast includes the sender; client fetches after (re)connect instead of a server push), new §7.5 (checklist for a state area).
+
+> **Amendment 2026-10-07 (US-003) — proposed, approved together with the US-003 implementation plan**: §9 (EagleEye file logging provider; service logs in the admin-only `logs\` folder), §10.1 (`Shared/Logging`, `Service/UserAccounts`, `ParentApp.Core/Accounts`).
 
 This document defines the coding standards all EagleEye components must follow. It complements but does not duplicate the system architecture (`arc42/system-architecture.md`) and ADRs — refer to those for architectural decisions, component responsibilities, and design rationale.
 
@@ -435,7 +437,7 @@ See ADR-002 for the logging decision and system architecture §8.10 for the logg
 
 ### 9.1 Usage Rules
 
-- File output goes through the EagleEye provider `EagleEye.Shared/Logging/RollingFileLoggerProvider` (.NET has no built-in file provider; ADR-002 implementation note). Do not add third-party logging libraries. The provider must never throw into the application: write errors are swallowed.
+- File output goes through the EagleEye provider `EagleEye.Shared/Logging/RollingFileLoggerProvider` (.NET has no built-in file provider; ADR-002 implementation note). Do not add third-party logging libraries. The provider must never throw into the application: write errors are swallowed. The service writes its log files only into `%ProgramData%\EagleEye\logs\` after it has applied the admin-only ACL (SYSTEM + Administrators); never into a folder standard users can read.
 - Use `ILogger<T>` injected via DI. Never create loggers manually.
 - Use structured logging with message templates (not string interpolation):
 

@@ -1,6 +1,6 @@
 # ADR-010: Event-Driven State Propagation — Service Broadcasts with Revisions
 
-**Status**: Proposed — approved with the US-003 implementation plan
+**Status**: Accepted (approved by Michael, 2026-10-07)
 **Date**: 2026-10-07
 **Deciders**: Michael (project owner), ARC
 
@@ -54,7 +54,7 @@ client ◀── StateWriteAckDto(revision) ─ 6. return the acknowledgement
 - Every write command carries a client-generated correlation id `Guid requestId` as its first parameter.
 - A **state owner** (one singleton per area in the service, e.g. `UserAccountService`) serializes the writes of its area (one `SemaphoreSlim` per area). Steps 2 to 5 run inside that lock, so broadcasts leave the service in revision order.
 - **Every accepted write produces exactly one new revision and exactly one broadcast**, even if the stored value did not change (e.g. two apps tick the same box). This keeps the sender's confirmation path free of special cases.
-- **Last write received wins.** There is no expected-revision check (optimistic concurrency) by default. An area may introduce one later, if a story needs it, through a new ADR or story decision.
+- **Last write received wins** — a general default confirmed by Michael (2026-10-07). There is no expected-revision check (optimistic concurrency) by default. An area may introduce one later, if a story needs it, through a new ADR or story decision.
 - Changes the service makes on its own (e.g. a Windows account was renamed, a budget expired at midnight) follow steps 2 to 5 with `requestId = null`.
 
 ### 3. State areas and the contract shape
@@ -102,7 +102,7 @@ The **broadcast is the confirmation of the stored state**; the **method result i
 
 ### 7. Initial load, reconnect and missed events
 
-- After every (re)connect, **as soon as the service has confirmed the pairing** (`GetPairingStatus().IsPaired`), the client resets its revisions (4) and **fetches** the full snapshot of every area it shows with the area's query. The service does **not** push state on connect. *(This changes ADR-003 Rule 3.)*
+- After every (re)connect, **as soon as the service has confirmed the pairing** (`GetPairingStatus().IsPaired`), the client resets its revisions (4) and **fetches** the full snapshot of every area it shows with the area's query. The service does **not** push state on connect. *(This changes ADR-003 Rule 3; a general default confirmed by Michael, 2026-10-07.)*
 - The connection is in the `Parents` group from `OnConnectedAsync`, before the client can invoke anything (SignalR dispatches invocations only after `OnConnectedAsync` has completed). So there is no gap between joining the group and the fetch: anything that changes afterwards arrives as a broadcast, and the revision rule sorts out the overlap.
 - Events missed while disconnected are **not replayed**. The fetch on reconnect is the recovery.
 - While a client is disconnected, its replicas are stale. What it shows then is decided per story. US-003 shows no data (US-003 AC-8, OQ-5).

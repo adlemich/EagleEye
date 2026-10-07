@@ -1,13 +1,13 @@
 # EagleEye — System Architecture
 
-*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04); amendment 2026-10-07 proposed*
+*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); US-003-specific parts proposed with the US-003 plan*
 *Maintainer: ARC Agent | Last Updated: 2026-10-07*
 
 > **Amendment 2026-10-03 (ADR-007)**: Windows desktop target added to the ParentApp; two-machine development; manual acceptance testing. Affected: §1.1, §2.1, §2.2, §3.2, §4.2, §5.5, §7, §8.10, §9. Amendments approved by Michael on 2026-10-03.
 >
 > **Amendment 2026-10-04 (US-002, ADR-008, ADR-009)**: two service endpoints (tray: HTTP loopback 5080; parent apps: HTTPS 5443), hub-to-port binding, certificate protection and pinning, explicit `StartPairing`, Windows parent app per-user installer, new `EagleEye.ParentApp.Core` library, Shared `Data/` and `Communication/`. Affected: §3.2, §5.1 to §5.5, §6.1, §7 (incl. §7.1, §7.1.1, §7.3, §7.4), §8.1 to §8.5, §9, §11, §12. ADR-008 and ADR-009 were approved by Michael with the US-002 implementation plan on 2026-10-04.
 >
-> **Amendment 2026-10-07 (US-003, ADR-010) — proposed, approved together with the US-003 implementation plan**: event-driven state propagation (service broadcasts full snapshots with revisions to all paired apps including the sender; clients fetch after every (re)connect instead of a server push), account inventory and selection, service file logging with an own rolling file provider. Affected: §4.2, §5.2, §5.3, §5.5, §6.4, §6.6 (new), §8.3, §8.4, §8.10, §8.11, §9, §11 R-8, §12.
+> **Amendment 2026-10-07 (ADR-010, accepted by Michael 2026-10-07)**: event-driven state propagation (service broadcasts full snapshots with revisions to all paired apps including the sender; clients fetch after every (re)connect instead of a server push; last write wins). Affected: §5.2 Communication, §5.3, §5.5, §6.4, §6.6, §8.3, §8.11, §9, §12. Affected: §4.2, §5.2, §5.3, §5.5, §6.4, §6.6 (new), §8.3, §8.4, §8.10, §8.11, §9, §11 R-8, §12.
 
 ---
 
@@ -304,10 +304,10 @@ PAIR --> COMM : pushes pairing code to tray
 | **Configuration** | Reads and writes per-user configuration in the SQLite database (allow-lists, budgets, pause windows). Reads general settings from the YAML config file. Validates changes. Notifies other components on config update. |
 | **Statistics** | Accumulates per-user, per-app daily usage minutes. Persists to SQLite. Serves historical data (up to 90 days). Purges old data. |
 | **Certificates** | Generates a self-signed X.509 certificate on first run (ECDSA P-256, DPAPI-protected PFX, see §8.1). Loads and provides the certificate for the Kestrel HTTPS binding of the parent endpoint. |
-| **UserAccounts** | Keeps the inventory of local standard (non-admin, non-built-in) Windows accounts, read via Win32 (`NetUserEnum`, `NetUserGetLocalGroups`) and re-checked every 15 s; changes are broadcast at once. State owner of the state area `UserAccounts` (ADR-010): stores per SID whether the account is under parental control (`AccountSelections`), keeps the selection of accounts that temporarily become admins, forgets it when the SID is deleted (US-003). |
+| **UserAccounts** | Keeps the inventory of local standard (non-admin, non-built-in, not the setup leftover `defaultuser0`) Windows accounts, read via Win32 (`NetUserEnum`, `NetUserGetLocalGroups`) and re-checked every 15 s; changes are broadcast at once. State owner of the state area `UserAccounts` (ADR-010): stores per SID whether the account is under parental control (`AccountSelections`), keeps the selection of accounts that temporarily become admins, forgets it when the SID is deleted (US-003). |
 | **Pairing** | Manages the pairing lifecycle: generates a 6-digit code on explicit request (`StartPairing`), binds it to the requesting connection, enforces 5-minute expiry and one guess per code, stores paired devices (token hash only) in SQLite. Sends the code to all tray clients, or to the Event Log when none is connected. Rejects unpaired clients. |
 | **AppDiscovery** | Scans installed applications (registry, Start Menu, file metadata). Resolves human-readable display names. Caches the name dictionary. Supports re-scan on demand. |
-| **Logging** | Configures the `Microsoft.Extensions.Logging` pipeline for file output with the EagleEye rolling file provider (`EagleEye.Shared/Logging`, §8.10; first used by the service in US-003). Supports runtime log-level switching (normal ↔ debug) via parent app command. Manages rolling log files (50 MB max, 3 files retained). In debug mode, logs method traces with parameter values and full stack traces. Never logs sensitive data. |
+| **Logging** | Configures the `Microsoft.Extensions.Logging` pipeline for file output with the EagleEye rolling file provider (`EagleEye.Shared/Logging`, §8.10; first used by the service in US-003). Supports runtime log-level switching (normal ↔ debug) via parent app command. Manages rolling log files (50 MB max, 3 files, 5 days) in the admin-only folder `%ProgramData%\EagleEye\logs\`. In debug mode, logs method traces with parameter values and full stack traces. Never logs sensitive data. |
 
 ### 5.3 Level 2 — EagleEye.Shared
 
@@ -743,7 +743,7 @@ Both ports are constants (`ServiceDefaults`) until the service gets its YAML con
 | `%ProgramData%\EagleEye\EagleEye.TrayClient.yaml` | TrayClient runtime configuration (service URL, overlay preferences) | SYSTEM (r/w), admin (r/w) |
 | `%ProgramData%\EagleEye\EagleEye.Service.db` | SQLite database — per-user config, statistics, paired devices, app-name cache | SYSTEM (r/w) |
 | `%ProgramData%\EagleEye\EagleEye.TrayClient.db` | SQLite database — cached display state (optional, lightweight) | Standard user (r/w) |
-| `%ProgramData%\EagleEye\EagleEye.Service-NNN.log` | Service rolling log files (50 MB max, 3 files) | SYSTEM (r/w) |
+| `%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log` | Service rolling log files (50 MB max, 3 files, 5 days) | SYSTEM and Administrators only; folder `logs\` with inheritance removed, set by the installer and re-applied at every service start (US-003, FR-SVC-100) |
 | `%ProgramData%\EagleEye\EagleEye.TrayClient-NNN.log` | TrayClient rolling log files (50 MB max, 3 files) | Standard user (r/w) |
 | `%ProgramData%\EagleEye\certs\` | Auto-generated self-signed certificate `eagleeye.pfx` (DPAPI LocalMachine, §8.1) | SYSTEM and Administrators only (inheritance removed) |
 
@@ -1024,15 +1024,15 @@ Debug mode can be toggled at runtime for the Service via a parent app command (n
 |---------|-------|
 | Maximum file size | 50 MB per log file |
 | Maximum file count | 3 rolling files per application (oldest deleted when a 4th would be created) |
-| Maximum age | Files older than 5 days are deleted, except the current file (FR-SVC-103; combined with the file count as proposed in US-003 plan Q-1) |
-| File location | Same OS-standard application data directory as the SQLite database and YAML config |
+| Maximum age | Files older than 5 days are deleted, except the current file (FR-SVC-103; combined with the file count, Michael 2026-10-07, US-003 plan Q-1) |
+| File location | Same OS-standard application data directory as the SQLite database and YAML config; for the service its subfolder `logs\` (admin-only, see below) |
 | Naming | `{ApplicationName}-{sequence}.log` (e.g., `EagleEye.Service-001.log`) |
 
 Log file locations per component:
 
 | Component | Log Directory |
 |-----------|--------------|
-| EagleEye.Service | `%ProgramData%\EagleEye\` |
+| EagleEye.Service | `%ProgramData%\EagleEye\logs\` — SYSTEM and Administrators only (FR-SVC-100 v1.3); the installer creates it like `certs\`, and the service re-applies the ACL at every start and writes no log file if that fails |
 | EagleEye.TrayClient | `%ProgramData%\EagleEye\` |
 | EagleEye.ParentApp (Windows) | `%LocalAppData%\EagleEye\` |
 | EagleEye.ParentApp (macOS) | `~/Library/Application Support/EagleEye/` |
@@ -1106,7 +1106,7 @@ All architectural decisions are recorded as ADRs in `02_Implementation/docs/arch
 | ADR-007 | Two-Machine Development and Manual Acceptance Testing | Accepted (§2 "Distribution" superseded by ADR-009) |
 | ADR-008 | Parent App Connectivity — Endpoints, TLS Trust and Pairing Protocol | Accepted |
 | ADR-009 | Windows Parent App Packaging and the ParentApp.Core Library | Accepted |
-| ADR-010 | Event-Driven State Propagation — Service Broadcasts with Revisions | Proposed — approved with the US-003 implementation plan |
+| ADR-010 | Event-Driven State Propagation — Service Broadcasts with Revisions | Accepted |
 
 ---
 

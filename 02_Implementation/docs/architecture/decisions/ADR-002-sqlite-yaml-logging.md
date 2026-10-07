@@ -128,10 +128,11 @@ The Service supports runtime switching between normal and debug mode via a paren
 
 ---
 
-## Implementation Notes (US-003, proposed with the US-003 implementation plan, 2026-10-07)
+## Implementation Notes (US-003, 2026-10-07; retention and location answered by Michael, provider approved with the US-003 implementation plan)
 
 - **File logging provider.** .NET 10 has no built-in file logging provider for `Microsoft.Extensions.Logging` (the console, debug, EventLog and EventSource providers are built in; files are not). The decision stays: `Microsoft.Extensions.Logging`, no third-party logging library. EagleEye implements a small provider of its own, `EagleEye.Shared/Logging/RollingFileLoggerProvider` (size-based rolling, retention, one line per entry), so that all components can use it. The service is the first user (US-003 AC-14 requires the service log file).
-- **Retention.** FR-SVC-103 additionally requires deleting log files older than 5 days. Proposed (US-003 plan, Q-1): apply both, at most 3 files and at most 5 days, never deleting the current file.
+- **Retention** (Michael, 2026-10-07, US-003 plan Q-1). FR-SVC-103 additionally requires deleting log files older than 5 days. Both apply: at most 3 files and at most 5 days, never deleting the current file.
+- **Service log location** (Michael, 2026-10-07, US-003 plan Q-2; FR-SVC-100 v1.3). The service writes its logs to the subfolder `%ProgramData%\EagleEye\logs\`, not next to the database. The folder is readable by SYSTEM and Administrators only (inheritance removed, well-known SIDs `S-1-5-18`, `S-1-5-32-544`), like `certs\` (ADR-008 §7): the installer creates it, and the service re-applies the ACL at every start. If that fails, the service writes no log file in that run (warning in the Event Log), so log content never becomes readable for standard users. The table above ("same directory as the SQLite database") is superseded for the service.
 
 ---
 

@@ -1,11 +1,12 @@
 # Implementation Plan: US-003 — Account Inventory and Selection of Accounts under Parental Control
 
-**Status**: Draft (for approval by Michael)
+**Status**: Draft (for approval by Michael; ADR-010 already accepted)
 **Date**: 2026-10-07
 **Author**: ARC
 **User story**: `02_Implementation/docs/requirements/user-stories/US-003/user-story.md` (approved 2026-10-07, 24 ACs, OQ-1 to OQ-8 answered)
 **Requirements**: `02_Implementation/docs/requirements/general-product-requirements.md` v1.3 (approved)
-**New ADRs**: ADR-010 — Event-driven state propagation (`02_Implementation/docs/architecture/decisions/ADR-010-event-driven-state-propagation.md`), status *Proposed — approved with this plan*
+**New ADRs**: ADR-010 — Event-driven state propagation (`02_Implementation/docs/architecture/decisions/ADR-010-event-driven-state-propagation.md`), status *Accepted (approved by Michael, 2026-10-07)*
+**Revision**: 2026-10-07 — Michael's answers to Q-1 to Q-6 recorded and the plan aligned (admin-only `logs\` folder, `defaultuser0` excluded); story AC-3/AC-14 and FR-SVC-070/FR-SVC-100 updated by PRO (commit `4c6d4ab`)
 
 ---
 
@@ -33,7 +34,7 @@ The Android target is built by `build.ps1` on Windows. The shared MAUI code (new
 | **EagleEye.ParentApp.Core** | `IParentHubClient`/`ParentHubClient`: new calls and the callback. New `ParentHubGateway` (current paired connection for feature models), `StateReplica<T>` (ADR-010 revision rule), `Accounts/UserAccountsModel`, view models `UserAccountsViewModel` + `UserAccountItemViewModel`, new texts. `ConnectionCoordinator`: four calls into the gateway. |
 | **EagleEye.ParentApp** | `SettingsView`: third section "User accounts on the EagleEye PC". DI registrations. |
 | **EagleEye.TrayClient** | None (story: out of scope). |
-| **Installers** | No script change. Version 0.3.0. Upgrade from 0.2.0 keeps `%ProgramData%\EagleEye\EagleEye.Service.db` (pairings) and applies migration 2 on first start. |
+| **Installers** | Service installer: creates `%ProgramData%\EagleEye\logs\` with an admin-only ACL (like `certs\`). Parent app installer: no change. Version 0.3.0. Upgrade from 0.2.0 keeps `%ProgramData%\EagleEye\EagleEye.Service.db` (pairings) and applies migration 2 on first start. |
 | **Scripts** | None. |
 | **Version** | `Directory.Build.props` → `0.3.0` (service reports `EagleEye_v0.3`). |
 
@@ -41,13 +42,13 @@ The Android target is built by `build.ps1` on Windows. The shared MAUI code (new
 
 ## Architecture Changes
 
-Applied in this commit, on the feature branch, as part of what Michael approves with this plan:
+Applied on the feature branch. ADR-010 and the ADR-010-driven amendments are **accepted** (Michael, 2026-10-07); the US-003-specific amendments (inventory, `AccountSelections`, file logging, `logs\` folder) are approved together with this plan:
 
 | Document | Change |
 |---|---|
 | `docs/architecture/decisions/ADR-010-event-driven-state-propagation.md` | **New** (Michael's general rule, see "New ADRs Required") |
 | ADR-003 | Header note: Pattern 3 refined by ADR-010; Rule 3 (server push on connect) replaced by client fetch |
-| ADR-002 | Implementation note: .NET has no built-in file logging provider; EagleEye uses its own small rolling file provider in `EagleEye.Shared/Logging` (still `Microsoft.Extensions.Logging`, still no third-party library) |
+| ADR-002 | Implementation note: .NET has no built-in file logging provider; EagleEye uses its own small rolling file provider in `EagleEye.Shared/Logging` (still `Microsoft.Extensions.Logging`, still no third-party library); retention 3 files and 5 days; service log folder `logs\`, SYSTEM and Administrators only |
 | arc42 §4.2, §5.2 | Technology mapping and Logging: own file provider; Communication: ADR-010 wording; UserAccounts: concrete design |
 | arc42 §5.3, §5.5 | New DTOs, `Logging/` in Shared; `ParentHubGateway`, `StateReplica`, `Accounts/` in Core |
 | arc42 §6.4 | Runtime view replaced: write path per ADR-010 (requestId, revision, broadcast incl. sender, ack) |
@@ -168,7 +169,7 @@ node "Service PC (Windows Developer Machine)" {
     component "ParentHub" as HUB
   }
   database "EagleEye.Service.db\nAccountSelections" as DB
-  file "EagleEye.Service-NNN.log" as LOG
+  file "logs\\EagleEye.Service-NNN.log\n(SYSTEM + Administrators only)" as LOG
 }
 
 node "Parent PC A" {
@@ -258,14 +259,16 @@ All classes behind interfaces and registered as singletons (except the hub and t
 |---|---|---|
 | `LocalAccountInfo` | UserAccounts | `record (string Sid, string UserName, string? FullName, bool IsDisabled, bool IsAdmin)`; one local account as Windows reports it. |
 | `ILocalAccountSource` / `NetApiLocalAccountSource` | UserAccounts | `IReadOnlyList<LocalAccountInfo> GetAccounts()`. Win32 via `[LibraryImport]` (source-generated P/Invoke) on `netapi32.dll`/`advapi32.dll`: `NetUserEnum` level 23 (`USER_INFO_23`: name, full name, flags, SID) with `FILTER_NORMAL_ACCOUNT`; `IsDisabled` = `UF_ACCOUNTDISABLE`; `IsAdmin` = `NetUserGetLocalGroups(…, LG_INCLUDE_INDIRECT)` contains the local group whose SID is `S-1-5-32-544` (name resolved once via `LookupAccountSid`, so "Administratoren" on German Windows works). Accounts linked to a Microsoft account are local SAM accounts and are returned like any other (AC-4). Buffers freed with `NetApiBufferFree` in `finally`. Any Win32 error → `Win32Exception` (caller handles). Thin interop, **not unit-tested**; verified manually. |
-| `AccountInventoryFilter` | UserAccounts | Pure, static. `IsBuiltIn(sid)`: relative ID (last SID component) is 500 Administrator, 501 Guest, 503 DefaultAccount or 504 WDAGUtilityAccount — by RID, so renamed or localized built-ins are caught (AC-3). `Standard(accounts)`: not built-in and not admin (AC-1, AC-2). Unit-tested. |
+| `AccountInventoryFilter` | UserAccounts | Pure, static. `IsBuiltIn(sid)`: relative ID (last SID component) is 500 Administrator, 501 Guest, 503 DefaultAccount or 504 WDAGUtilityAccount — by RID, so renamed or localized built-ins are caught (AC-3). `IsSetupLeftover(userName)`: user name equals `defaultuser0`, compared with `StringComparison.OrdinalIgnoreCase` (AC-3, FR-SVC-070; Michael 2026-10-07, Q-4). Windows gives this account no special SID or flag (it is an ordinary local account with a RID ≥ 1000), so the name is the only reliable identification. `Standard(accounts)`: not built-in, not the setup leftover, not admin (AC-1 to AC-3). Excluded accounts are excluded everywhere: never in the inventory, never in a snapshot, cannot be ticked (`SetParentalControl` → unknown account). Unit-tested. |
 | `AccountInventory` | UserAccounts | Immutable `record` of the current standard accounts (by SID) plus the set of **all** existing local SIDs (standard and admin; needed for AC-21/AC-22). `HasSameContent(other)` for change detection. |
 | `IAccountSelectionRepository` / `AccountSelectionRepository` | Data | Table `AccountSelections` (see Data Model). `LoadAllAsync()` → `Dictionary<sid, bool>`; `SetAsync(sid, userName, value, changedAtUtc)` (upsert); `DeleteMissingAsync(existingSids)` → number of deleted rows. Parameterized SQL, plain `using` (guidelines §3.4). |
 | `IUserAccountsBroadcaster` / `UserAccountsBroadcaster` | UserAccounts | `Task BroadcastAsync(UserAccountListDto snapshot)` → `IHubContext<ParentHub, IParentClientCallback>.Clients.Group(ParentHub.ParentsGroup).OnUserAccountsChanged(snapshot)`. Thin, unit-tested with a mocked hub context (pattern of `PairingCodeNotifier`). |
 | `IUserAccountService` / `UserAccountService` | UserAccounts | **State owner of the area `UserAccounts`** (ADR-010 §2, §9). Holds the current `AccountInventory`, the selections (loaded once from the repository) and the revision behind one `SemaphoreSlim`. Methods below. |
 | `AccountInventoryMonitor` | UserAccounts | `BackgroundService`. `CheckInterval = 15 s`. Loop: `PeriodicTimer(CheckInterval, timeProvider)` → `RefreshInventoryAsync`; exceptions are caught in the loop body and logged (guidelines §5.3), the loop continues. |
 | `ParentHub` (changed) | Communication | Two thin methods, see below. Constructor gains `IUserAccountService` (now 4 dependencies). |
-| `ServicePaths` / `IServicePaths` (changed) | root | New `LogDirectory` (= `DataDirectory`) and `LogFilePrefix = "EagleEye.Service"`. |
+| `ServicePaths` / `IServicePaths` (changed) | root | New `LogDirectory` (= `DataDirectory\logs`), `LogFilePrefix = "EagleEye.Service"`, `IsOverridden` (true when the Debug data-folder override is active). `EnsureDirectories` also creates `logs\`. |
+| `LogDirectorySecurity` (new) | Diagnostics | Pure: `Create()` returns the `DirectorySecurity` for `logs\` — inheritance removed (`SetAccessRuleProtection(true, false)`), exactly two rules: `S-1-5-18` (SYSTEM) and `S-1-5-32-544` (Administrators), `FullControl`, `ContainerInherit | ObjectInherit`, `Allow`; owner Administrators. Well-known SIDs, so German Windows works. Unit-tested. |
+| `LogDirectoryProtector` (new) | Diagnostics | `Protect(directory)`: creates `logs\` if missing and applies `LogDirectorySecurity.Create()` (`FileSystemAclExtensions.SetAccessControl`) on **every** start, so a folder created or altered by someone else is repaired. Skipped when `IsOverridden` (console mode as a normal user would lock itself out). Thin Windows wrapper, not unit-tested; verified manually. |
 | `Program` (changed) | root | File logging (below); DI for the new classes; `AddHostedService<AccountInventoryMonitor>()`; after `ServiceDatabase.InitializeAsync()`: `await IUserAccountService.InitializeAsync()` (first inventory and cleanup before Kestrel accepts connections). |
 
 **`UserAccountService` methods** (each runs inside the area lock):
@@ -319,7 +322,15 @@ The device name comes from the authenticated connection (`Context.Items`), never
 | `LogLineFormatter` | `yyyy-MM-dd HH:mm:ss.fff zzz [INF] Category: message`, then `Exception.ToString()` on following lines if present. Levels `TRC DBG INF WRN ERR CRT`. |
 | `RollingFileLogger` / `RollingFileLoggerProvider` | Standard `ILogger`/`ILoggerProvider` (`[ProviderAlias("File")]`), formatting the message with the `formatter` delegate. Scopes not supported (`BeginScope` returns a no-op). |
 
-`Program`: `logging.AddProvider(new RollingFileLoggerProvider(options, TimeProvider.System))`; filters: `EagleEye` at Information, `Microsoft` and `System` at Warning (the existing Event Log filters stay unchanged). Debug mode (YAML, FR-SVC-102) is not part of this story. Retention follows both ADR-002 (3 files) and FR-SVC-103 (5 days), see Open Question Q-1.
+**Admin-only log folder (AC-14, FR-SVC-100; Michael 2026-10-07, Q-2)**: the service log lives in `%ProgramData%\EagleEye\logs\`, readable and writable by SYSTEM and Administrators only. Protection follows `certs\` (ADR-008 §7) and adds a service-side guarantee, because the service is the one creating the log files:
+
+1. **Installer** (`setup.iss`, `[Code]`, idempotent, next to the `certs\` block): create `{commonappdata}\EagleEye\logs`, then `icacls "<logs>" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F`. Uninstall keeps the folder (like the rest of `%ProgramData%\EagleEye`).
+2. **Service start** (`Program`, before the host is built and before the file provider is added): `LogDirectoryProtector.Protect(paths.LogDirectory)`. If applying the ACL fails, the service writes a warning to the Event Log and **does not add the file provider** for this run — it never writes log files into a folder that might be readable by standard users. Everything else keeps running.
+3. Files inherit the folder ACL (`OI`), so every new `EagleEye.Service-NNN.log` is protected without per-file work.
+
+The rest of `%ProgramData%\EagleEye` keeps its ACL (Users read on the root, ADR-008 §7).
+
+`Program`: `logging.AddProvider(new RollingFileLoggerProvider(options, TimeProvider.System))`; filters: `EagleEye` at Information, `Microsoft` and `System` at Warning (the existing Event Log filters stay unchanged). Debug mode (YAML, FR-SVC-102) is not part of this story. Retention follows both ADR-002 (3 files) and FR-SVC-103 (5 days), never deleting the current file (Q-1, answered).
 
 ### EagleEye.ParentApp.Core
 
@@ -466,7 +477,9 @@ HUB --> C : snapshot rev 14 → list
 
 ### Installers and scripts
 
-- `installer/windows/setup.iss` and `parentapp-setup.iss`: **no change**. The version comes from `Directory.Build.props`. The service data folder and its ACLs already exist (US-002). The log files are created by the service under `%ProgramData%\EagleEye\` and inherit its ACL (SYSTEM and Administrators full control, Users read). Uninstall keeps `%ProgramData%\EagleEye\` (database with selections, logs), so AC-15 "after an update (re-install)" holds.
+- `installer/windows/setup.iss` (changed): create `%ProgramData%\EagleEye\logs\` and restrict it to SYSTEM and Administrators (inheritance removed, well-known SIDs), exactly like `certs\` (see "Admin-only log folder" above). Idempotent, so an upgrade from 0.2.0 gets the folder too.
+- `installer/windows/parentapp-setup.iss`: no change. The version of both comes from `Directory.Build.props`.
+- Uninstall keeps `%ProgramData%\EagleEye\` (database with selections, `logs\`), so AC-15 "after an update (re-install)" holds.
 - Upgrade 0.2.0 → 0.3.0: the service applies migration 2 on its first start; pairings are kept, so the parent apps stay paired.
 - `scripts/`: no change.
 
@@ -541,7 +554,7 @@ All steps run on the **Windows Developer Machine**, on branch `feature/US-003-mo
 | 2 | Service: file logging, data, inventory, state owner, hub | Windows |
 | 3 | ParentApp.Core: client, gateway, replica, model, view models, texts | Windows |
 | 4 | ParentApp (MAUI): settings section, DI; Windows + Android build | Windows |
-| 5 | Installers: build both, upgrade check | Windows |
+| 5 | Installers: `logs\` folder + ACL in `setup.iss`, build both, upgrade check | Windows |
 | 6 | Smoke check | Windows |
 | 7 | Coverage and clean-up | Windows |
 | 8 | Documentation and handover | Windows |
@@ -557,7 +570,7 @@ All steps run on the **Windows Developer Machine**, on branch `feature/US-003-mo
 4. `ParentHub` implements `IParentHub`, so the new interface members break the Service build until Step 2.4. Keep every commit buildable: commit the contract change together with Step 2.4 (or add the two hub methods in the same commit).
 
 ### Step 2: EagleEye.Service
-1. `ServicePaths`: `LogDirectory`, `LogFilePrefix`. `Program`: register the file provider and filters.
+1. `ServicePaths`: `LogDirectory` (`logs\`), `LogFilePrefix`, `IsOverridden`. `Diagnostics/LogDirectorySecurity`, `Diagnostics/LogDirectoryProtector`. `Program`: protect `logs\`, then register the file provider and filters (provider only if the protection succeeded or the override is active).
 2. `Data/`: migration 2; `IAccountSelectionRepository`, `AccountSelectionRepository`.
 3. `UserAccounts/`: `LocalAccountInfo`, `ILocalAccountSource`, `NetApiLocalAccountSource`, `AccountInventoryFilter`, `AccountInventory`, exceptions (`UnknownAccountException`, `AccountInventoryUnavailableException`), `IUserAccountsBroadcaster`, `UserAccountsBroadcaster`, `IUserAccountService`, `UserAccountService`, `AccountInventoryMonitor`.
 4. `ParentHub`: `GetUserAccounts`, `SetParentalControl`.
@@ -578,8 +591,9 @@ All steps run on the **Windows Developer Machine**, on branch `feature/US-003-mo
 3. `build.ps1`: Windows **and Android** targets, 0 warnings.
 
 ### Step 5: Installers
-1. `package-windows.ps1` → `EagleEye-Setup-0.3.0.exe`, `EagleEye-ParentApp-Setup-0.3.0.exe`.
-2. Note for Michael: install over 0.2.0 (upgrade path, keeps the pairing) — DEV cannot run the elevated service installer (US-001 lesson).
+1. `setup.iss`: create `logs\` and set its ACL (SYSTEM + Administrators, inheritance removed, well-known SIDs), idempotent, next to the `certs\` block.
+2. `package-windows.ps1` → `EagleEye-Setup-0.3.0.exe`, `EagleEye-ParentApp-Setup-0.3.0.exe`.
+3. Note for Michael: install over 0.2.0 (upgrade path, keeps the pairing) — DEV cannot run the elevated service installer (US-001 lesson).
 
 ### Step 6: Smoke check
 Service in console mode (Debug data-dir override), parent app (installed per user) paired against `localhost`: the section shows the local standard accounts; ticking one writes the log line and survives a service restart; creating a local standard account (needs admin; if DEV's shell is not elevated, Michael does this part) appears within 16 s.
@@ -599,7 +613,7 @@ Service in console mode (Debug data-dir override), parent app (installed per use
 |---|---|---|---|
 | AC-1 standard accounts, logged on or not | `NetApiLocalAccountSource` (all SAM accounts), `AccountInventoryFilter.Standard` (2.3) | filter: standard account kept | real enumeration |
 | AC-2 no admins | `IsAdmin` via indirect group membership, filter (2.3) | filter: admin removed | admin via "Administratoren", via nested group |
-| AC-3 no built-ins | filter by RID 500/501/503/504 (2.3) | filter: each RID removed, also renamed; RID 1000+ kept | — |
+| AC-3 no built-ins, no `defaultuser0` | filter by RID 500/501/503/504 and by name `defaultuser0` (2.3) | filter: each RID removed, also renamed; `defaultuser0` removed in any casing; `defaultuser1`, `defaultuser` and RID 1000+ kept; service: write for `defaultuser0`'s SID → unknown account | `defaultuser0` present on a test PC (if available) |
 | AC-4 Microsoft-account-linked | source returns SAM accounts (2.3) | — (source not unit-tested) | yes |
 | AC-5 SID identity, rename | `AccountSelections.Sid`, snapshot by SID (2.2, 2.3) | service: rename keeps selection, broadcasts new name | yes |
 | AC-6 third section | `SettingsView` (4.1) | — | yes |
@@ -634,7 +648,8 @@ Service in console mode (Debug data-dir override), parent app (installed per use
 | `LogLineFormatter` | Shared.Tests | each level code; with/without exception; timestamp format with offset |
 | `RollingFileWriter` | Shared.Tests | first file `-001`; continues the highest existing file below the limit; rolls over at the size limit; keeps newest 3; deletes non-current files older than 5 days (`FakeTimeProvider`); never deletes the current file; I/O error swallowed; concurrent writes do not interleave lines |
 | `RollingFileLogger`, `RollingFileLoggerProvider` | Shared.Tests | `IsEnabled` per level (`None` → false); null message skipped; exception written; `BeginScope` no-op; provider returns a logger per category and disposes the writer |
-| `AccountInventoryFilter` | Service.Tests | RIDs 500, 501, 503, 504 excluded (also when renamed); admin excluded; standard local and Microsoft-linked kept; malformed SID → not built-in |
+| `AccountInventoryFilter` | Service.Tests | RIDs 500, 501, 503, 504 excluded (also when renamed); `defaultuser0` excluded case-insensitively (`DefaultUser0`, `DEFAULTUSER0`); similar names (`defaultuser1`, `defaultuser00`, `xdefaultuser0`) kept; admin excluded; standard local and Microsoft-linked kept; malformed SID → not built-in |
+| `LogDirectorySecurity` | Service.Tests | inheritance protected (`AreAccessRulesProtected`), exactly two allow rules for `S-1-5-18` and `S-1-5-32-544`, `FullControl`, container and object inherit; no rule for Users (`S-1-5-32-545`), Authenticated Users or Everyone |
 | `AccountInventory` | Service.Tests | `HasSameContent`: equal; differs by added, removed, renamed, full name, disabled, admin flag |
 | `AccountSelectionRepository` | Service.Tests | in-memory: load empty; set new; upsert existing; `DeleteMissingAsync` deletes only missing, returns count; empty existing set handled |
 | `ServiceDatabase` | Service.Tests | migration 2 applied on top of 1 (existing `PairedDevices` rows survive), schema version 2 |
@@ -643,7 +658,7 @@ Service in console mode (Debug data-dir override), parent app (installed per use
 | `AccountInventoryMonitor` | Service.Tests | refresh every 15 s with `FakeTimeProvider`; exception logged, loop continues; stops on cancellation |
 | `ParentHub` (new methods) | Service.Tests | `GetUserAccounts` delegation and exception mapping; `SetParentalControl`: empty `requestId`, invalid/empty SID → `HubException("Invalid request.")`; device name from `Context.Items`; `UnknownAccountException` → "Unknown account."; other → logged + "The change could not be saved." |
 | `PairingAuthorizationHubFilter` | Service.Tests | (existing tests) plus: unpaired call of `GetUserAccounts` / `SetParentalControl` → "Not paired." |
-| `ServicePaths` | Service.Tests | `LogDirectory`, `LogFilePrefix` |
+| `ServicePaths` | Service.Tests | `LogDirectory` = `<data>\logs`, `LogFilePrefix`, `IsOverridden`; `EnsureDirectories` creates `logs\` (temp directory) |
 | `ParentHubGateway` | ParentApp.Tests | not connected → `InvokeAsync` throws; connected → call runs with timeout; `Connected`/`Disconnected` raised; events forwarded only from the current client and only while connected; switching clients unsubscribes the old one; same client set twice subscribes once |
 | `ConnectionCoordinator` | ParentApp.Tests | existing transitions plus sink calls: `SetConnected` on attach and on reconnect with `IsPaired`; `SetDisconnected` on reconnecting, closed, stop, pairing lost |
 | `StateReplica<T>` | ParentApp.Tests | applies higher revision; ignores equal and lower; reset accepts any revision ≥ 1; `Current` null after reset |
@@ -665,13 +680,14 @@ Service in console mode (Debug data-dir override), parent app (installed per use
 | Full name | Set in `lusrmgr.msc` → user → *Vollständiger Name*. Microsoft-linked accounts usually have a shortened user name (e.g. "micha") and the full name from the Microsoft account. |
 | Disabled flag | `lusrmgr.msc` → user → *Konto ist deaktiviert*. |
 | Admin ↔ standard | *Einstellungen → Konten → Andere Benutzer → Kontotyp ändern*, or group *Administratoren* in `lusrmgr.msc`. |
-| Built-in accounts | *Administrator*, *Gast*, *DefaultAccount*, *WDAGUtilityAccount* exist (mostly disabled) on every PC and must never appear, even if enabled or renamed. Windows sometimes leaves a technical standard account `defaultuser0` after setup; it **is** listed (see Open Question Q-4). |
+| Built-in accounts | *Administrator*, *Gast*, *DefaultAccount*, *WDAGUtilityAccount* exist (mostly disabled) on every PC and must never appear, even if enabled or renamed. Windows sometimes leaves a technical standard account `defaultuser0` after setup; it must **never** appear either (AC-3). To check it on a PC without it, Michael can create a standard account named `defaultuser0` (or `DefaultUser0`) for the test and delete it afterwards. |
 | Timing | Account changes on the PC appear in all connected apps within **about 16 s at most** (check every 15 s), typically 8 s; AC-19 to AC-21 allow 60 s. Ticks in app A appear in app B within about 1 s (AC-23 allows 5 s). |
 | Error case (AC-16) | Hardest to provoke: stop the service (`services.msc` → *EagleEye Service*) and tick within the ~1 s before the app notices the lost connection, or unplug the network of the second PC and tick there (no confirmation → error after 4 s, tick reverts). When the connection is lost, the list switches to "No data available" anyway (AC-8). If the service stored the change after all, the app shows the stored state after reconnecting, even though the error was shown. |
-| Service log (AC-14, AC-24) | `%ProgramData%\EagleEye\EagleEye.Service-001.log` (number grows at 50 MB). Readable while the service runs (Notepad, or `Get-Content -Wait` in PowerShell). Line example: `2026-10-08 19:42:07.123 +02:00 [INF] EagleEye.Service.UserAccounts.UserAccountService: Account max (S-1-5-21-…-1002): under parental control = yes (set by parent device Dad's laptop, request 7f3c…, revision 13).` Inventory changes: `Account inventory changed (revision 14): added [lena], removed [], changed [maximilian]; 3 standard accounts.` The same Information entries also go to the Event Log (*Anwendung*, source `EagleEye`), as in US-002. |
+| Service log (AC-14, AC-24) | `%ProgramData%\EagleEye\logs\EagleEye.Service-001.log` (number grows at 50 MB; at most 3 files, none older than 5 days except the current one). Readable **as administrator** while the service runs (Notepad started as admin, or `Get-Content -Wait` in an elevated PowerShell). Line example: `2026-10-08 19:42:07.123 +02:00 [INF] EagleEye.Service.UserAccounts.UserAccountService: Account max (S-1-5-21-…-1002): under parental control = yes (set by parent device Dad's laptop, request 7f3c…, revision 13).` Inventory changes: `Account inventory changed (revision 14): added [lena], removed [], changed [maximilian]; 3 standard accounts.` The same Information entries also go to the Event Log (*Anwendung*, source `EagleEye`), as in US-002. |
 | Persistence (AC-15) | `%ProgramData%\EagleEye\EagleEye.Service.db`, table `AccountSelections` (rows only for accounts ticked or unticked at least once). Readable with a SQLite tool as admin. |
 | Service console mode | DEV smoke check only: Debug build with `EAGLEEYE_DATA_DIR` (US-002). Not for TES. |
-| Not covered by unit tests | Win32 enumeration (local, Microsoft-linked, disabled, admin via nested group, German group names), real SignalR broadcast to two apps, timing, UI, installers, log file on the real system |
+| Log folder protection (AC-14) | As administrator: *Eigenschaften → Sicherheit* of `%ProgramData%\EagleEye\logs` (or `icacls "%ProgramData%\EagleEye\logs"`) shows only *SYSTEM* and *Administratoren*, no inherited entries. Logged on as the standard user `eagleeye-kid`: opening `C:\ProgramData\EagleEye\logs` in Explorer, or `Get-Content C:\ProgramData\EagleEye\logs\EagleEye.Service-001.log`, is denied (*Zugriff verweigert*); the rest of `C:\ProgramData\EagleEye` stays readable as before. Robustness: after deleting `logs\` as admin and restarting the service, the folder comes back with the same ACL. |
+| Not covered by unit tests | Win32 enumeration (local, Microsoft-linked, disabled, admin via nested group, German group names), real SignalR broadcast to two apps, timing, UI, installers, log file and the `logs\` ACL on the real system |
 
 ---
 
@@ -693,16 +709,22 @@ None of the ACs is changed. Points where the plan adds or interprets:
 
 ## Open Questions for Michael
 
-Each with a proposed answer. None blocks the start of DEV work if the proposal is accepted.
+All answered by Michael on 2026-10-07. The plan text is aligned with the answers.
+
+| ID | Question | Proposed answer | Answer |
+|---|---|---|---|
+| Q-1 | **Log retention.** ADR-002/arc42 say "50 MB per file, at most 3 files"; FR-SVC-103 says "50 MB per file, delete logs older than 5 days". Which applies? | **Both**: 50 MB per file, at most 3 files, and files older than 5 days are deleted (except the current one). | Answer (Michael, 2026-10-07): proposed answer accepted. |
+| Q-2 | **Log location.** FR-SVC-100 said "log files in a dedicated subfolder"; AC-14 and arc42 named `%ProgramData%\EagleEye\EagleEye.Service-NNN.log` (no subfolder). The data folder is readable for standard users, so a kid could read the log. | Keep the AC-14 path and accept the readability; alternative: subfolder `logs\` restricted to SYSTEM and Administrators. | Answer (Michael, 2026-10-07): **admin-only subfolder**. The log goes to `%ProgramData%\EagleEye\logs\`, SYSTEM + Administrators only, no read for standard users. AC-14 and FR-SVC-100 updated by PRO (`4c6d4ab`). Plan: installer and service start both set the ACL (see "Admin-only log folder"), `LogDirectorySecurity` unit-tested, manual check with `eagleeye-kid`. |
+| Q-3 | **Check interval** for account changes: 15 s (worst case about 16 s end to end, AC-19 to AC-21 allow 60 s). | 15 s, a constant until the service YAML configuration exists. | Answer (Michael, 2026-10-07): proposed answer accepted. |
+| Q-4 | **Technical standard accounts** such as `defaultuser0` (left over by Windows setup). Show them? | Show them. | Answer (Michael, 2026-10-07): **ignore `defaultuser0`**: never in the inventory, never sent to apps. AC-3 and FR-SVC-070 updated by PRO (`4c6d4ab`). Plan: exclusion by user name, case-insensitive (`AccountInventoryFilter.IsSetupLeftover`), unit-tested. |
+| Q-5 | **ADR-010 approval**, in particular two general defaults: (a) last write received wins; (b) the app fetches the state after each (re)connect instead of the service pushing it (changes ADR-003 Rule 3). | Approve both as written. | Answer (Michael, 2026-10-07): approved; both are general defaults. ADR-010 is Accepted. |
+| Q-6 | **Second parent app for AC-23/AC-24.** Is the second Windows PC from US-002 still available? | Yes, use it. | Answer (Michael, 2026-10-07): yes, the second Windows PC, as in US-002. |
+
+### New open point (not blocking)
 
 | ID | Question | Proposed answer |
 |---|---|---|
-| Q-1 | **Log retention.** ADR-002/arc42 say "50 MB per file, at most 3 files"; FR-SVC-103 says "50 MB per file, delete logs older than 5 days". Which applies? | **Both**: 50 MB per file, at most 3 files, and files older than 5 days are deleted (except the current one). |
-| Q-2 | **Log location.** FR-SVC-100 says "log files in a dedicated subfolder"; AC-14 and arc42 name `%ProgramData%\EagleEye\EagleEye.Service-NNN.log` (no subfolder). The data folder is readable for standard users, so a kid could read the log (account names, which accounts are controlled, device names; no secrets). | Keep the approved AC-14 path (root of `%ProgramData%\EagleEye\`) and accept the readability for now; PRO aligns the wording of FR-SVC-100 in the next requirements amendment. Alternative (needs an AC-14 change): subfolder `logs\` restricted to SYSTEM and Administrators by the installer. |
-| Q-3 | **Check interval** for account changes: 15 s (worst case about 16 s end to end, AC-19 to AC-21 allow 60 s). | 15 s, a constant until the service YAML configuration exists. |
-| Q-4 | **Technical standard accounts** such as `defaultuser0` (left over by Windows setup) are standard, non-built-in accounts. Show them? | Show them (the story's rule: every standard account except the four built-ins). The parent simply leaves them unticked. |
-| Q-5 | **ADR-010 approval**, in particular two general defaults: (a) last write received wins for every configuration area, no "someone else changed this meanwhile" rejection; (b) the app fetches the state after each (re)connect instead of the service pushing it (changes ADR-003 Rule 3). | Approve both as written; an area that needs conflict detection gets it in its own story. |
-| Q-6 | **Second parent app for AC-23/AC-24.** Is the second Windows PC from US-002 still available? | Yes, use it (one app on the service PC, one on the second PC). |
+| Q-7 | Windows setup occasionally leaves similar technical accounts with other names (e.g. `defaultuser1` or `defaultuser100000`, seen after failed setups or upgrades). AC-3 names only `defaultuser0`. Exclude the whole `defaultuser<digits>` pattern? | Keep exactly `defaultuser0` as approved in AC-3. If such an account shows up during testing, PRO extends AC-3; the filter change is one line. |
 
 ---
 
