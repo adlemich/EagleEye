@@ -1,9 +1,11 @@
 # EagleEye — Product Coding Guidelines
 
-*Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04)*
-*Maintainer: ARC Agent | Last Updated: 2026-10-04*
+*Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07)*
+*Maintainer: ARC Agent | Last Updated: 2026-10-07*
 
 > **Amendment 2026-10-04 (US-002, ADR-008, ADR-009)**: §10.1, §10.2, §10.4 (`ParentApp.Core`, Shared `Communication/` and `Data/`), §12.2 (pairing code in a topmost window), §16.1 (packaging per ADR-009, token storage via DPAPI `ISecretStore`).
+
+> **Amendment 2026-10-07 (Michael, US-002 deviation D-11)**: §3.4 and §8.2: plain `using` for SQLite commands, readers and transactions instead of `await using`.
 
 This document defines the coding standards all EagleEye components must follow. It complements but does not duplicate the system architecture (`arc42/system-architecture.md`) and ADRs — refer to those for architectural decisions, component responsibilities, and design rationale.
 
@@ -184,6 +186,7 @@ public class InvalidUserSidException : Exception { } // Don't do this
 
 - Implement `IAsyncDisposable` on types that hold database connections, SignalR connections, or file handles.
 - Use `await using` for scoped disposable resources.
+- **Exception — SQLite objects**: use plain `using` for `SqliteCommand`, `SqliteDataReader` and `SqliteTransaction` (Microsoft.Data.Sqlite). They dispose synchronously, so `await using` gains nothing. It only adds compiler-generated async-dispose branches that tests with in-memory SQLite cannot reach, which breaks the 100 % branch-coverage rule. (Michael, 2026-10-07; US-002 deviation D-11.)
 - Register disposable services correctly in DI (prefer `AddSingleton` with `IHostedService` for long-lived resources).
 
 ---
@@ -368,7 +371,7 @@ cmd.CommandText = $"SELECT * FROM UserConfig WHERE UserSid = '{userSid}'";
 - Use transactions for multi-statement writes:
 
 ```csharp
-await using var transaction = await connection.BeginTransactionAsync();
+using var transaction = await connection.BeginTransactionAsync(); // plain using, see §3.4
 try
 {
     // multiple writes
