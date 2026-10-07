@@ -1,9 +1,11 @@
 # EagleEye -- General Product Requirements
 
-*Status: Approved v1.3 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07)*
+*Status: Approved v1.3 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07); v1.4 amendment proposed 2026-10-07 with US-004, pending Michael's approval*
 *Approved: v1.0 by Michael*
 *Maintainer: PRO Agent*
 *Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07*
+
+> **v1.4 amendment (2026-10-07, directed by Michael, with US-004; proposed, pending approval)**: the service records the **apps** (Task Manager's "Apps" group, not background processes) started in the sessions of accounts under parental control: a permanent app inventory per account, a start/end history, and the daily usage **in seconds**, updated at least every 5 seconds. The parent app shows the usage per account and day as HH:MM. Changed: FR-SVC-012, FR-SVC-040, FR-SVC-041, FR-SVC-043, FR-SVC-044 to FR-SVC-047 (new), FR-APP-060.
 
 > **v1.3 amendment (2026-10-07, directed by Michael, with US-003)**: the service no longer monitors all standard accounts automatically. It keeps an inventory of the standard accounts, and the **parent selects which accounts are under parental control**. Only those are monitored. Changed: FR-SVC-010, FR-SVC-070, FR-SVC-071, FR-SVC-072 to FR-SVC-074 (new), FR-APP-020, FR-APP-022 (new), MU-013, §4.3 step 11.
 
@@ -104,7 +106,7 @@ The service runs as a background Windows service under the SYSTEM account. It is
 |----|-------------|
 | FR-SVC-010 | The service shall continuously monitor running processes for the standard (non-admin) local user accounts that the parent has placed under parental control (FR-SVC-072). Other accounts are not monitored. *(v1.3; was: all standard accounts)* |
 | FR-SVC-011 | The service shall detect when a monitored user starts a new process and check it against the allow-list configured for that user. |
-| FR-SVC-012 | The service shall track cumulative active usage time (in minutes) per allowed application per user per day. |
+| FR-SVC-012 | The service shall track cumulative active usage time **in seconds** per application per user per day, and keep it up to date at least every 5 seconds. An application counts as active while it is open (FR-SVC-046) and the user's Windows session is the session in use at the PC (signed in, unlocked, awake, not switched away). Days change at local midnight. *(v1.4; was: minutes, per allowed application)* |
 | FR-SVC-013 | For each detected process, the service shall attempt to resolve a human-readable display name. Resolution sources include (in priority order): (1) the executable's file version info / product name metadata, (2) the application's entry in Windows installed-programs registry, (3) an optional online lookup. |
 | FR-SVC-014 | The service shall maintain a local dictionary mapping process executable names to their resolved display names. Once resolved, a display name is cached so repeated lookups are avoided. |
 
@@ -146,10 +148,14 @@ The service classifies every process running in a standard user's session into o
 
 | ID | Requirement |
 |----|-------------|
-| FR-SVC-040 | The service shall collect per-user, per-application daily usage statistics (minutes used). |
-| FR-SVC-041 | The service shall serve collected statistics to parent apps on request. |
+| FR-SVC-040 | The service shall collect per-user, per-application daily usage statistics (seconds used, FR-SVC-012). *(v1.4; was: minutes)* |
+| FR-SVC-041 | The service shall serve collected statistics to parent apps on request, and push changes of the statistics to connected parent apps (FR-SVC-053). *(v1.4: made precise)* |
 | FR-SVC-042 | Statistics shall be stored on disk under the standard Windows application data folder (e.g. `%ProgramData%`), in separate files per child user account. |
-| FR-SVC-043 | Statistics shall be retained for 90 days at daily granularity (minutes of use per application per day). Data older than 90 days shall be automatically purged. |
+| FR-SVC-043 | Statistics shall be retained for 90 days at daily granularity (seconds of use per application per day). The start/end history (FR-SVC-045) is retained for 90 days as well. Data older than 90 days shall be automatically purged. The application inventory (FR-SVC-044) is not subject to this retention. *(v1.4: made precise)* |
+| FR-SVC-044 | The service shall keep, per user account, an inventory of the applications the user has started: one record per application, with at least the process name, the display name (FR-SVC-013) and the path of the executable. Records are kept without time limit while the account exists. *(v1.4)* |
+| FR-SVC-045 | The service shall store the start time and end time of every application instance in a history, and write both to its log files (FR-SVC-100). *(v1.4)* |
+| FR-SVC-046 | Only applications that the user started (by hand or in the user's name, e.g. Autostart) and that have a window of their own in the user's session are recorded, i.e. what Windows Task Manager lists in the "Apps" group. Background processes, services and Windows processes are not recorded. An application consisting of several processes is recorded as one application. *(v1.4)* |
+| FR-SVC-047 | When a user account is deleted on the Windows PC, the service shall purge all recorded data of that account (inventory, history, statistics). *(v1.4)* |
 
 #### 3.1.6 Remote Communication
 
@@ -292,7 +298,7 @@ The parent app is a single MAUI codebase deployed to Android, iOS, Windows and m
 
 | ID | Requirement |
 |----|-------------|
-| FR-APP-060 | The parent app shall display usage statistics per user, per application, per day. |
+| FR-APP-060 | The parent app shall display usage statistics per user, per application, per day: grouped by user account, then by day with the current day first, durations as HH:MM. *(v1.4: made precise)* |
 | FR-APP-061 | Statistics shall show actual minutes used vs. configured budget. |
 
 #### 3.3.7 Event Notifications
@@ -580,4 +586,4 @@ No open questions. The questions raised by the v1.1 amendment were answered by M
 
 ---
 
-*End of General Product Requirements — Approved v1.3*
+*End of General Product Requirements — Approved v1.3, v1.4 amendment pending*
