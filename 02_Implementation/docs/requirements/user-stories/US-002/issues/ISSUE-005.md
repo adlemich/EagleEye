@@ -1,6 +1,6 @@
 # ISSUE-005: Administrator gets "Zugriff verweigert" on the service certificate folder
 
-**Status**: Implemented (test-plan fix by TES, 2026-10-04). Becomes `Verified/Closed` when TC-002-02 passes in `docs/testing/US-002/test-run-02.md`.
+**Status**: Verified/Closed (TC-002-02 passed in `docs/testing/US-002/test-run-02.md`; closed by Michael, 2026-10-07)
 **User Story**: US-002
 **Found in**: docs/testing/US-002/test-run-01.md, TC-002-02 (supporting check, no AC)
 **Date**: 2026-10-04
@@ -83,3 +83,5 @@ Test instruction. TC-002-02 said only "In PowerShell", and setup S-8 did not say
 ### Re-test
 
 TC-002-02 in `docs/testing/US-002/test-run-02.md`, in an elevated terminal. Expected result unchanged (test plan TC-002-02). If it passes, TES sets this issue to `Verified/Closed`. If `icacls` still reports *Zugriff verweigert* in an elevated terminal, the issue is reopened as a product defect for DEV.
+
+**Verified**: TC-002-02 passed in an elevated terminal in `docs/testing/US-002/test-run-02.md`. Closed by Michael, 2026-10-07.

@@ -1,6 +1,6 @@
 # ISSUE-004: Pairing code popup is too small, code and text are cut off
 
-**Status**: Implemented
+**Status**: Verified/Closed
 **User Story**: US-002
 **Found in**: docs/testing/US-002/test-run-01.md, TC-002-12
 **Date**: 2026-10-04
@@ -96,3 +96,5 @@ The US-001 *App Infos* dialog (`02_Implementation/src/EagleEye.TrayClient/UI/Abo
 ### Re-test
 
 Install `03_Delivery/windows/EagleEye-Setup-0.2.0.exe` again over the installed 0.2.0 (it ends the tray client; it comes back at the next sign-in or via Start menu *EagleEye Tray*). Then re-run TC-002-11 and TC-002-12, ideally at 150 % and at least one other scaling level, in an admin and the kid session. The parent app installer did not change.
+
+**Verified**: TC-002-11 and TC-002-12 passed in `docs/testing/US-002/test-run-02.md` (build 0.2.0, rebuilt service installer). Closed by Michael, 2026-10-07.

@@ -1,6 +1,6 @@
 # US-002: Windows Parent App — Installation, Connection and Pairing
 
-**Status**: Implemented
+**Status**: Verified/Closed (closed by Michael, 2026-10-07, after `docs/testing/US-002/test-run-02.md`)
 **Created**: 2026-10-04
 **Approved**: by Michael, 2026-10-04 (status becomes `Analyzed` when the implementation plan is approved)
 **Component(s)**: EagleEye.ParentApp, EagleEye.Service, EagleEye.TrayClient, EagleEye.Shared

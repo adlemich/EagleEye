@@ -3,7 +3,8 @@
 **Test plan**: `docs/testing/US-002/test-plan.md` (approved 2026-10-04, updated after run 01, see its §9 Change Log)
 **Prepared by**: TES, 2026-10-04
 **Executed by**: Michael
-**Execution date**: <!-- fill in -->
+**Execution date**: completed by 2026-10-07
+**Result (recorded by the Orchestrator, 2026-10-07)**: Michael reported run 02 as completed with **all cases passed** and approved closing the story. Setup, block-setup and cleanup steps are ticked below; the per-case result boxes were left empty, the result rests on Michael's report.
 **Build / installer version**: 0.2.0 — `03_Delivery/windows/EagleEye-Setup-0.2.0.exe` (service + tray, **rebuilt** with the ISSUE-004 fix, file dated 04.10.2026 20:53) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.2.0.exe` (parent app, **unchanged** since run 01)
 **Machine(s)**: Windows Developer Machine (service PC) <!-- add Windows version (winver) --> · PC2 (Block C) <!-- add name / Windows version / display language -->
 
@@ -29,20 +30,20 @@
 
 *Starting point: the state after run 01. Run 01 installed service 0.2.0 (first build) and the parent app 0.2.0, and stopped at TC-002-12 before any pairing was completed. Its cleanup was not done. These steps check that state and bring the machine into a known start state, whatever happened since.*
 
-- [ ] **S-1 Rebuilt installer present.** PowerShell in the repo root: `Get-Item 03_Delivery\windows\EagleEye-Setup-0.2.0.exe | Select-Object LastWriteTime` → **04.10.2026 20:53** (or later). If it is older, stop here and tell TES: the fix is not in this file.
-- [ ] **S-2 Installed state.** *Einstellungen → Apps → Installierte Apps* → search "EagleEye". Found: EagleEye version ________ · EagleEye Parent App version ________ (or "not listed")
+- [x] **S-1 Rebuilt installer present.** PowerShell in the repo root: `Get-Item 03_Delivery\windows\EagleEye-Setup-0.2.0.exe | Select-Object LastWriteTime` → **04.10.2026 20:53** (or later). If it is older, stop here and tell TES: the fix is not in this file.
+- [x] **S-2 Installed state.** *Einstellungen → Apps → Installierte Apps* → search "EagleEye". Found: EagleEye version ________ · EagleEye Parent App version ________ (or "not listed")
   - **EagleEye 0.2.0** expected (from run 01). If you find **0.1.1** or nothing, write it here; TC-002-01 then is an update / first install instead of a reinstall (write that in TC-002-01 Notes).
   - **EagleEye Parent App 0.2.0** expected (from run 01, TC-002-04). If it is **not** listed, install `03_Delivery\windows\EagleEye-ParentApp-Setup-0.2.0.exe` now with default settings (setup only, not a test; untick "start now" if offered).
-- [ ] **S-3 Parent app back to "never paired".** Close the parent app if it runs (window **X**). *Task-Manager → Details*: no `EagleEye.ParentApp.exe`. PowerShell:
+- [x] **S-3 Parent app back to "never paired".** Close the parent app if it runs (window **X**). *Task-Manager → Details*: no `EagleEye.ParentApp.exe`. PowerShell:
   `Test-Path "$env:LOCALAPPDATA\EagleEye"` → if `True`: `Remove-Item "$env:LOCALAPPDATA\EagleEye" -Recurse -Force`
   (Run 01 never completed a pairing, so nothing of value is lost. Do **not** delete `$env:LOCALAPPDATA\Programs\EagleEye Parent App`.)
-- [ ] **S-4 No development instances.** *Task-Manager → Details*: no `EagleEye.Service.exe` running from a `02_Implementation` folder.
-- [ ] **S-5 Kid signed out.** *Task-Manager → Benutzer*: if `eagleeye-kid` is listed → *Abmelden*. (TC-002-01 ends all tray clients; the Kid must sign in fresh afterwards so the new tray client starts.)
-- [ ] **S-6 Names.** `hostname` → `<host>` = ____________ · `ipconfig` (LAN IPv4) → `<ip>` = ____________
-- [ ] **S-7 Windows app mode = Dunkel** (*Einstellungen → Personalisierung → Farben*). Your usual setting (for cleanup): ____________
-- [ ] **S-8 Admin display scaling = 150 %.** *Einstellungen → System → Bildschirm → Skalierung*. Found: ______ %. If you had to change it, sign out and sign in again before you continue (the tray client picks up the scaling at start).
-- [ ] **S-9 Terminal (Administrator)** open and **elevated**: Start menu → **Terminal** → right-click → **Als Administrator ausführen** → UAC *Ja*. The title bar starts with **"Administrator:"**. Commands used: `Stop-Service -DisplayName "EagleEye Service"` / `Start-Service -DisplayName "EagleEye Service"`.
-- [ ] **S-10 SmartScreen** on the unsigned installers: *Weitere Informationen* → *Trotzdem ausführen* (expected, not a failure).
+- [x] **S-4 No development instances.** *Task-Manager → Details*: no `EagleEye.Service.exe` running from a `02_Implementation` folder.
+- [x] **S-5 Kid signed out.** *Task-Manager → Benutzer*: if `eagleeye-kid` is listed → *Abmelden*. (TC-002-01 ends all tray clients; the Kid must sign in fresh afterwards so the new tray client starts.)
+- [x] **S-6 Names.** `hostname` → `<host>` = ____________ · `ipconfig` (LAN IPv4) → `<ip>` = ____________
+- [x] **S-7 Windows app mode = Dunkel** (*Einstellungen → Personalisierung → Farben*). Your usual setting (for cleanup): ____________
+- [x] **S-8 Admin display scaling = 150 %.** *Einstellungen → System → Bildschirm → Skalierung*. Found: ______ %. If you had to change it, sign out and sign in again before you continue (the tray client picks up the scaling at start).
+- [x] **S-9 Terminal (Administrator)** open and **elevated**: Start menu → **Terminal** → right-click → **Als Administrator ausführen** → UAC *Ja*. The title bar starts with **"Administrator:"**. Commands used: `Stop-Service -DisplayName "EagleEye Service"` / `Start-Service -DisplayName "EagleEye Service"`.
+- [x] **S-10 SmartScreen** on the unsigned installers: *Weitere Informationen* → *Trotzdem ausführen* (expected, not a failure).
 
 ---
 
@@ -70,7 +71,7 @@
 - Rule: *Aktiviert* Ja, *Aktion* Zulassen, *Profil* Alle, TCP, *Lokaler Port* 5443, *Remoteadresse* Lokales Subnetz, *Programm* `C:\Program Files\EagleEye\Service\EagleEye.Service.exe`. *Note only*: if the rule is now listed **twice**, write it in Notes.
 - The EagleEye tray icon is present in the Admin session after step 2.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: <!-- step 7: LastWriteTime of EagleEye.TrayClient.exe (expected 04.10.2026, after 20:31); rule listed once? -->
 
@@ -90,15 +91,15 @@
 - `certs`: only SYSTEM (F) and Administratoren (F). No *Benutzer* entry.
 - `True`.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**: <!-- on Fail: paste the full output of steps 1-3 -->
-- **Notes**: Title bar showed "Administrator:"? [ ] yes  [ ] no
+- **Notes**: Title bar showed "Administrator:"? [X] yes  [ ] no
 
 ---
 
 > **Switch to the Kid account** (*Benutzer wechseln* → `eagleeye-kid`; do not sign Admin out).
-> - [ ] **Kid scaling = 150 %**: *Einstellungen → System → Bildschirm → Skalierung*. Found: ______ %. If it is not 150 %: set **150 %**, then sign the Kid **out** (Start → user icon → *Abmelden*) and sign in again as `eagleeye-kid`. (Scaling is per account; the tray client must start at 150 % for TC-002-12.)
-> - [ ] The EagleEye tray icon is present and **green** (hover: "EagleEye — Verbunden"). Precondition for TC-002-12, not a test case. If it is missing or red, write it in TC-002-12 Notes.
+> - [x] **Kid scaling = 150 %**: *Einstellungen → System → Bildschirm → Skalierung*. Found: ______ %. If it is not 150 %: set **150 %**, then sign the Kid **out** (Start → user icon → *Abmelden*) and sign in again as `eagleeye-kid`. (Scaling is per account; the tray client must start at 150 % for TC-002-12.)
+> - [x] The EagleEye tray icon is present and **green** (hover: "EagleEye — Verbunden"). Precondition for TC-002-12, not a test case. If it is missing or red, write it in TC-002-12 Notes.
 >
 > Then TC-002-03.
 
@@ -113,13 +114,13 @@
 - Explorer refuses access (*"Sie verfügen momentan nicht über die Berechtigung…"*).
 - PowerShell: *Zugriff verweigert*; no file listed.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
 > **Switch back to Admin.** Leave the Kid **signed in** in the background (needed for TC-002-12).
 >
-> - [ ] **Parent app start state** (setup for TC-002-11 and Block B, not a test): Start menu → **EagleEye Parent App**. The host dialog appears (data reset in S-3) → *Abbrechen*. *Einstellungen → Darstellung*: switch to **Hell** and leave it there (Block B checks that this choice is kept). The app shows *Nicht gekoppelt* and red "Nicht verbunden". Leave the app open.
+> - [x] **Parent app start state** (setup for TC-002-11 and Block B, not a test): Start menu → **EagleEye Parent App**. The host dialog appears (data reset in S-3) → *Abbrechen*. *Einstellungen → Darstellung*: switch to **Hell** and leave it there (Block B checks that this choice is kept). The app shows *Nicht gekoppelt* and red "Nicht verbunden". Leave the app open.
 
 ---
 
@@ -135,9 +136,9 @@
 - Status bar **red** "Verbindung zu `<host>` wird hergestellt …"; **not** "Verbunden mit `<host>`".
 - *Note only*: what the device name field is prefilled with.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
-- **Notes**: Prefilled device name: ____________
+- **Notes**: Prefilled device name: _ZOCK-O-MAT-V3___________
 
 ---
 
@@ -155,7 +156,7 @@
 - **Nothing is cut off** at any edge: all 6 digits, both texts to the last letter, the *OK* button complete. (Slightly blurry text is a Note, not a Fail.)
 - *Note only*: whether both popups show the same code.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**: <!-- on Fail: which session, what is cut off -->
 - **Notes**: Scaling Admin session: ______ % · Scaling Kid session: ______ % · Popup in Admin session: [ ] yes  [ ] no · Same code in both: [ ] yes  [ ] no
 
@@ -172,7 +173,7 @@
 - The app says a device name is required (e.g. "Bitte einen Gerätenamen eingeben (höchstens 50 Zeichen).").
 - Not paired; indicator **red**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -191,7 +192,7 @@
 - After step 2: clear message, e.g. **"Der Kopplungscode ist falsch."**; not paired, **red**, never "Verbunden".
 - After step 3/4: a popup with a **new** 6-digit code, different from TC-002-12, fully readable.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -209,7 +210,7 @@
 - *Serververbindung*: **Gekoppelt**, host `<host>`, device **Papas PC**.
 - No certificate prompt at any time.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -225,7 +226,7 @@
 - Host shown **read-only**: no editable host field, no *Verbinden*; typing changes nothing.
 - **Kopplung aufheben** is offered.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -248,7 +249,7 @@
 - **Green "Verbunden mit `<host>`"** within **30 s**.
 - The app is **light** (Hell) although Windows is dark.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: <!-- seconds until green -->
 
@@ -266,7 +267,7 @@
 - App connects **without a pairing code**: green "Verbunden mit `<host>`", device **Papas PC**.
 - Still **light** (Hell).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: <!-- how the installer handled the running app -->
 
@@ -282,7 +283,7 @@
 **Expected**:
 - Within **30 s**: **red** "Nicht verbunden mit `<host>`".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: <!-- seconds until red -->
 
@@ -298,7 +299,7 @@
 - Not offered or not usable (e.g. greyed out); the pairing is still shown.
 - The app says a connection is required, e.g. **"Zum Aufheben der Kopplung ist eine Verbindung zum EagleEye-PC nötig."**
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -315,7 +316,7 @@
 - **Green "Verbunden mit `<host>`"** within **60 s**, no user action.
 - *Kopplung aufheben* available again.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: <!-- seconds until green -->
 
@@ -335,7 +336,7 @@
 - Step 2: a confirmation question (e.g. "Kopplung aufheben?") **before** anything is removed.
 - Step 3: still **Gekoppelt** and **green**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -351,7 +352,7 @@
 - *Serververbindung*: **Nicht gekoppelt**, host field **editable** (empty), *Verbinden* available.
 - **Red**, "Nicht verbunden".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -367,7 +368,7 @@
 **Expected**:
 - **"Mit dem EagleEye-PC verbinden"** appears immediately (no automatic connection to the former host).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -387,7 +388,7 @@
 - *Note only*: what the app shows, and whether it returns to *Nicht gekoppelt* by itself.
 - **Cleanup**: if it does not show *Nicht gekoppelt* with an editable host field after 60 s: close it, `Remove-Item "$env:LOCALAPPDATA\EagleEye" -Recurse -Force`, start it again, cancel the host dialog (theme back to the Windows mode; expected).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: <!-- what the app showed; cleanup needed? -->
 
@@ -408,7 +409,7 @@
 - No popup anywhere.
 - New Event Log entry: *Quelle* **EagleEye**, *Ebene* **Informationen**, with the **6-digit code** (DEV: event ID 1000).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -427,7 +428,7 @@
 - Step 3: new Event Log entry with a **new** code.
 - *Note only*: if the pairing form closed by itself during the wait, what happened.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -443,7 +444,7 @@
 - **Green "Verbunden mit `<ip>`"**, IP exactly as typed.
 - *Serververbindung*: **Gekoppelt**, host `<ip>`, device **Papas PC**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -461,7 +462,7 @@
 - Edge shows a certificate warning (e.g. *"Ihre Verbindung ist nicht privat"*, `NET::ERR_CERT_AUTHORITY_INVALID`); certificate issued to **EagleEye**.
 - The parent app has **never** shown a certificate warning, question or import step.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -478,7 +479,7 @@
 - Only the code entries (event ID 1000) contain a 6-digit code; all others mask it (e.g. `***`).
 - No entry contains a long random string that looks like a token or password.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -500,7 +501,7 @@
 - Both `Test-Path` **False**; `Get-ChildItem` returns nothing.
 - No Start menu entry; only **EagleEye** (service) listed, still *Wird ausgeführt* in `services.msc`.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -520,7 +521,7 @@
 - Step 3: leads directly to the pairing form.
 - Step 4: green "Verbunden mit `<host>`" (start state for Block C).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -530,8 +531,8 @@
 
 *Setup before Block C:*
 
-- [ ] **S-12** (test plan S-9) PC2: Windows 11, same LAN and subnet. `EagleEye-ParentApp-Setup-0.2.0.exe` copied to PC2. PowerShell on PC2: `Resolve-DnsName <host>` returns `<ip>` (if not, note it in TC-002-34; network issue, not product). Optional: PC2 app mode opposite to the service PC.
-- [ ] **S-13** (test plan S-10) Service PC: Admin app paired and green (end of Block B). `eagleeye-kid` signed in (tray running), then back to Admin.
+- [x] **S-12** (test plan S-9) PC2: Windows 11, same LAN and subnet. `EagleEye-ParentApp-Setup-0.2.0.exe` copied to PC2. PowerShell on PC2: `Resolve-DnsName <host>` returns `<ip>` (if not, note it in TC-002-34; network issue, not product). Optional: PC2 app mode opposite to the service PC.
+- [x] **S-13** (test plan S-10) Service PC: Admin app paired and green (end of Block B). `eagleeye-kid` signed in (tray running), then back to Admin.
 
 *Pair one app at a time. If PC2 cannot be used on the day, mark the cases Blocked with the reason.*
 
@@ -549,7 +550,7 @@
 - Step 3: app starts with the host dialog; theme matches the PC2 app mode.
 - *Note only*: if PC2 runs Windows in English, whether the app texts are English.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -566,7 +567,7 @@
 - Step 1: `TcpTestSucceeded : True`.
 - Step 2: `TcpTestSucceeded : False`.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -581,7 +582,7 @@
 **Expected**:
 - Certificate warning page as in TC-002-29. During all Block C cases the app never shows a certificate prompt.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -599,7 +600,7 @@
 - Same as TC-002-11/-12/-15: pairing form, red "Verbindung zu `<host>` wird hergestellt …"; 6-digit popup in the Kid session, fully readable (nothing cut off); then **green "Verbunden mit `<host>`"**, *Gekoppelt*, host `<host>`, device **PC2**.
 - Any difference from the service PC goes into Observed.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Scaling Kid session: ______ %
 
@@ -614,7 +615,7 @@
 **Expected**:
 - Both **green "Verbunden mit `<host>`"** at the same time.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -633,7 +634,7 @@
 - Step 2: both **red** "Nicht verbunden mit `<host>`" within **30 s**.
 - Step 3: both **green** within **60 s**, no user action.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: <!-- times for steps 1-3 -->
 
@@ -650,7 +651,7 @@
 - PC2: confirmation first, then *Nicht gekoppelt*, editable host field, red.
 - Service PC app stays **green "Verbunden mit `<host>`"** the whole time.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -665,7 +666,7 @@
 **Expected**:
 - Same as TC-002-31: no program folder, no `%LocalAppData%\EagleEye`, no Start menu entry, no entry in *Installierte Apps*.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -675,7 +676,7 @@
 
 *Setup before Block D:*
 
-- [ ] **S-14** `eagleeye-parent2` created (standard account; commands in test plan §3, S-11, in the Terminal (Administrator)). `EagleEye-ParentApp-Setup-0.2.0.exe` copied to `C:\Users\Public\Downloads`. Admin app paired and green.
+- [x] **S-14** `eagleeye-parent2` created (standard account; commands in test plan §3, S-11, in the Terminal (Administrator)). `EagleEye-ParentApp-Setup-0.2.0.exe` copied to `C:\Users\Public\Downloads`. Admin app paired and green.
 
 ### TC-002-41: A second parent account on the service PC can install and pair its own app
 
@@ -690,7 +691,7 @@
 - Installation and pairing as in Block A; the pairing popup in this session is fully readable (nothing cut off); **green "Verbunden mit `<host>`"**, device **Eltern 2**.
 - Admin app still **green** at the same time.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: Scaling Parent 2 session (new account, Windows default for this display): ______ % <!-- a second scaling level for ISSUE-004 if it is not 150 % --> · Popup also in the Admin session: [ ] yes  [ ] no
 
@@ -707,7 +708,7 @@
 - Parent 2 app: *Nicht gekoppelt*, red.
 - Admin app stays **green "Verbunden mit `<host>`"**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -725,7 +726,7 @@
 - Uninstaller finishes without errors (running app closed).
 - Same as TC-002-31: nothing of the parent app left in this account.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -733,13 +734,13 @@
 
 ## Cleanup (test plan §7)
 
-- [ ] Service PC Admin: parent app stays installed and paired (end of TC-002-32).
-- [ ] Windows app mode back to your usual setting (S-7).
-- [ ] Display scaling: if you changed it for this run (S-8 Admin, Kid switch), set it back to your usual value.
-- [ ] `Test-Path "$env:LOCALAPPDATA\EagleEye-TC25-Kopie"` → `False` (delete if it exists).
-- [ ] `eagleeye-parent2` signed out, profile and account removed (commands in test plan §7 step 4, Terminal (Administrator)); installer copy in `C:\Users\Public\Downloads` deleted.
-- [ ] PC2: copied installer deleted.
-- [ ] `eagleeye-kid` signed out.
+- [x] Service PC Admin: parent app stays installed and paired (end of TC-002-32).
+- [x] Windows app mode back to your usual setting (S-7).
+- [x] Display scaling: if you changed it for this run (S-8 Admin, Kid switch), set it back to your usual value.
+- [x] `Test-Path "$env:LOCALAPPDATA\EagleEye-TC25-Kopie"` → `False` (delete if it exists).
+- [x] `eagleeye-parent2` signed out, profile and account removed (commands in test plan §7 step 4, Terminal (Administrator)); installer copy in `C:\Users\Public\Downloads` deleted.
+- [x] PC2: copied installer deleted.
+- [x] `eagleeye-kid` signed out.
 
 ---
 

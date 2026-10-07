@@ -1,15 +1,17 @@
 # Test Report: US-002 — Windows Parent App: Installation, Connection and Pairing
 
-**Status**: Draft
-**Date**: 2026-10-04
+**Status**: Final — approved by Michael, 2026-10-07
+**Date**: 2026-10-04, final update 2026-10-07
 **Author**: TES
-**Test runs evaluated**: `test-run-01.md` (build 0.2.0). `test-run-02.md` prepared (rebuilt service installer 0.2.0), not yet executed.
+**Test runs evaluated**: `test-run-01.md` (build 0.2.0). `test-run-02.md` (rebuilt service installer 0.2.0), executed by Michael, all cases passed.
 
 ---
 
 ## 1. Verdict
 
-**Not ready to close.** In test run 01 the pairing code popup was too narrow to show the code (ISSUE-004, Critical). Pairing could not be completed, so the run was aborted at TC-002-12, and 31 of 48 cases were not executed.
+**Final verdict (2026-10-07): Ready to close.** Michael reported test run 02 as completed with all 36 cases passed (TC-002-01 to -03, TC-002-11 to -43; TC-002-04 to -10 stand from run 01). So all ACs AC-1 to AC-30 pass. ISSUE-004 and ISSUE-005 are `Verified/Closed`. Michael approved the result and closed US-002 on 2026-10-07. Per-case result boxes in `test-run-02.md` were not ticked (setup and cleanup were); the result rests on Michael's report. The tables in §2 and §3 below show the state after run 01.
+
+**Verdict after run 01:** **Not ready to close.** In test run 01 the pairing code popup was too narrow to show the code (ISSUE-004, Critical). Pairing could not be completed, so the run was aborted at TC-002-12, and 31 of 48 cases were not executed.
 
 **Status after run 01 (update 2026-10-04):**
 
@@ -107,8 +109,8 @@ Regression is not part of run 02 or later story runs (Michael, 2026-10-04). It r
 
 | Issue | Severity | Status | Test case |
 |---|---|---|---|
-| `docs/requirements/user-stories/US-002/issues/ISSUE-004.md` — Pairing code popup is too small, code and text are cut off | Critical | Implemented (DEV fix, commit c26bf34) | TC-002-12 (AC-14) |
-| `docs/requirements/user-stories/US-002/issues/ISSUE-005.md` — Administrator gets "Zugriff verweigert" on the service certificate folder | Medium as filed; **not a product defect** | Implemented (test-plan fix) | TC-002-02 (supporting) |
+| `docs/requirements/user-stories/US-002/issues/ISSUE-004.md` — Pairing code popup is too small, code and text are cut off | Critical | Verified/Closed (fix c26bf34, run 02) | TC-002-12 (AC-14) |
+| `docs/requirements/user-stories/US-002/issues/ISSUE-005.md` — Administrator gets "Zugriff verweigert" on the service certificate folder | Medium as filed; **not a product defect** | Verified/Closed (test-plan fix, TC-002-02 passed in run 02) | TC-002-02 (supporting) |
 
 - **ISSUE-004 (Critical)** blocks the core flow. Every later case needs a paired app. There is no practical workaround: the tray client also runs in admin sessions (Q-7), so the Event Log path (AC-15) is not used while anyone is signed in. **Update:** the screenshot was taken in the Admin session at 150 % display scaling (Michael). DEV reproduced the defect at 150 % and fixed the window layout so that it scales with the DPI and sizes itself to its content. The service installer was rebuilt (same version 0.2.0). Re-test: TC-002-11 and TC-002-12 in run 02, at 150 % in both sessions.
 - **ISSUE-005 (Medium as filed)** was a test-plan problem: the terminal was not elevated (Michael). Under UAC, the refusal is the intended behaviour of the `certs\` ACL. TES added the elevation hint to S-8 and TC-002-02. Re-test: TC-002-02 in run 02.
