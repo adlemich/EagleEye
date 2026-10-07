@@ -11,7 +11,7 @@
 
 > **Amendment 2026-10-07 (US-003, approved with the US-003 implementation plan)**: §9 (EagleEye file logging provider; service logs in the admin-only `logs\` folder), §10.1 (`Shared/Logging`, `Service/UserAccounts`, `ParentApp.Core/Accounts`).
 
-> **Amendment 2026-10-07 (US-004, ADR-011, ADR-012) — proposed, approved together with the US-004 implementation plan**: §10.1 (`Service/SessionAgent`, `Service/Monitoring`, `Service/Statistics`, `ParentApp.Core/Reports`), §12.1 (session agent, Win32 interop, monotonic durations).
+> **Amendment 2026-10-07 (US-004, ADR-011, ADR-012) — proposed, approved together with the US-004 implementation plan**: §10.1 (`Service/SessionAgent`, `Service/Monitoring`, `Service/Statistics`, `ParentApp.Core/Reports`), §12.1 (session agent, Win32 interop, monotonic durations), §12.4 (SYSTEM code and kid-controlled input, from the ADR-011 security analysis).
 
 This document defines the coding standards all EagleEye components must follow. It complements but does not duplicate the system architecture (`arc42/system-architecture.md`) and ADRs — refer to those for architectural decisions, component responsibilities, and design rationale.
 
@@ -623,6 +623,30 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 - Standard users cannot stop or uninstall the SYSTEM service (enforced by Windows SCM).
 - `%ProgramData%\EagleEye\` ACLs: SYSTEM full control, administrators full control, standard users read-only (except TrayClient log files and TrayClient database).
 - Never log or display certificate private keys, pairing tokens, or auth credentials.
+
+### 12.4 SYSTEM Code and Kid-Controlled Input *(US-004, ADR-011 Security Analysis; proposed with the US-004 plan)*
+
+Everything the kid's programs control is **untrusted input** for the SYSTEM service and the session agent: window classes and styles, process image paths, file content (PE resources, version info), Store package data, and the agent's reports.
+
+- **Never load kid-controlled files as code or through handlers.** No `LoadLibrary` of user files, no icon extraction, no `SHGetFileInfo`/`IShellItem`/shell extensions, no COM activation on user data, no `Process.Start` of user paths.
+- **Paths**: classify every path with `ProgramPathPolicy` before opening it. Only local fixed-drive files are opened. Never open UNC, `\\?\UNC\`, `\\.\` device, network or removable paths: as SYSTEM that would authenticate the computer account to a foreign server (NTLM relay). Decide trust on the final path (`GetFinalPathNameByHandle`).
+- **Impersonate** the session user (`ImpersonateLoggedOnUser`, revert in `finally`) for every file read done on behalf of a kid's program.
+- **Parsing**: only managed, bounds-checked parsers for files in user-writable locations (`VersionResourceReader`). The Windows version API is allowed only for admin-only locations. XML: `DtdProcessing.Prohibit`, `XmlResolver = null`, size limit. Every parser has a size limit, catches its own errors and returns "unknown". Names are sanitized (control and bidi characters, ≤ 256 characters).
+- **Identity**: decide special treatment (EagleEye's own programs, Explorer, ApplicationFrameHost) by **full path in the protected location**, never by process name or window class alone.
+- **The session agent**:
+  - never creates a window or message-only window, never pumps messages, installs no hooks, and uses no COM, shell, UIA or DPI API;
+  - calls only window functions that do not send messages (never `GetWindowText`, `SendMessage*`, `PostMessage*`);
+  - reads no window titles;
+  - calls `SetDefaultDllDirectories` first.
+- **Starting SYSTEM child processes**:
+  - hardened token (no privileges except `SeChangeNotify`, Administrators deny-only, write-restricted where possible);
+  - explicit process and thread security descriptors;
+  - explicit minimal environment (never inherited; no `DOTNET_*`/`COR_*`/`CORECLR_*` except `DOTNET_EnableDiagnostics=0`);
+  - absolute application name, fixed command line, current directory = installation folder;
+  - `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` with only the intended handles.
+- **Channels**: limit line length, item counts and queue sizes (keep-latest), and validate every identifier (PID → session, owner, creation time).
+- **Debug-only switches** (`EAGLEEYE_*` environment variables, Debug launchers) are inside `#if DEBUG`; Release builds must not contain them.
+- **Review**: changes to `SessionAgent/` and to the Win32 launcher or metadata code need a short security note in the implementation report: which of these rules apply, and how they are met.
 
 ---
 

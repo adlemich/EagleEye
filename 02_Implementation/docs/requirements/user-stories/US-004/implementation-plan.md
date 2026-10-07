@@ -10,6 +10,7 @@
 - ADR-012 — Usage accounting (`02_Implementation/docs/architecture/decisions/ADR-012-usage-accounting.md`)
 
 **Amended**: ADR-005 (Explorer, seconds, identity by path for recording), arc42, coding guidelines; all marked "proposed with the US-004 plan".
+**Revision 2026-10-07**: Michael's answers to Q-1 to Q-5 recorded. **Security analysis of the session agent** added to ADR-011 ("Security Analysis", threats T-1 to T-13, hardening §7). The resulting measures are built into the component design, steps, unit tests and Manual Verification Notes below (marked *(sec)*). New open questions Q-6 to Q-9.
 
 ---
 
@@ -49,7 +50,7 @@ Applied in this commit, on the feature branch, as part of what Michael approves 
 
 | Document | Change |
 |---|---|
-| `docs/architecture/decisions/ADR-011-session-agent-for-app-observation.md` | **New** |
+| `docs/architecture/decisions/ADR-011-session-agent-for-app-observation.md` | **New**, incl. §7 Hardening and the section "Security Analysis" (Michael's request, 2026-10-07) |
 | `docs/architecture/decisions/ADR-012-usage-accounting.md` | **New** |
 | ADR-005 | Amendment: recording is not classification; Explorer counted while a File Explorer window is open (OQ-3); seconds; identity by path for recording; display-name order |
 | arc42 §5.2 | Monitoring and Statistics components made concrete (session agent, sessions, usage tracker, usage state owner) |
@@ -58,7 +59,7 @@ Applied in this commit, on the feature branch, as part of what Michael approves 
 | arc42 §8.4, §8.6, §8.7 | Tables `AppRecords`, `AppInstances`, `DailyUsage`; retention; time tracking in seconds with the monotonic clock |
 | arc42 §8.3 | Usage state areas keyed by account and day (ADR-012 §6) |
 | arc42 §9, §11, §12 | ADR-011, ADR-012; risks R-10 (Apps rule differs from Task Manager), R-11 (agent memory); glossary "App", "Session agent", "Active" |
-| Coding guidelines §10.1, §12.1 | Folders `SessionAgent/`, `Monitoring/`, `Statistics/`, `ParentApp.Core/Reports/`; service rules for agent mode and Win32 interop |
+| Coding guidelines §10.1, §12.1, §12.4 *(sec)* | §12.4: rules for SYSTEM code and kid-controlled input. Folders `SessionAgent/`, `Monitoring/`, `Statistics/`, `ParentApp.Core/Reports/`; service rules for agent mode and Win32 interop |
 
 DEV updates the READMEs of Service, Shared, `ParentApp.Core` and ParentApp (Step 11).
 
@@ -194,8 +195,33 @@ PA --> HUB
 
 **Filters in the service** (`AgentReportProcessor`):
 - The process must run in the agent's session, and its owner SID must equal the session user's SID. Programs started with other credentials ("Run as administrator" with the parent's password) are not recorded (out of scope).
-- Never recorded: `EagleEye.TrayClient.exe`, `EagleEye.Service.exe` (AC-5).
+- Never recorded: EagleEye's own processes, identified by their **full path in the installation folder**, not by name *(sec, T-10)* (AC-5).
+- Kind `FileExplorer` only for `%SystemRoot%\explorer.exe`, and the Store-frame resolution only for `%SystemRoot%\System32\ApplicationFrameHost.exe`. Otherwise the window counts as an ordinary window of its own process *(sec, T-10)*.
 - Only sessions of controlled accounts have an agent at all (AC-1).
+
+### Decision 1a: security of the session agent *(sec)*
+
+Michael asked for a security analysis before approval. It is in ADR-011, section "Security Analysis" (threat model, attack surface, threats T-1 to T-13 with ratings, mitigations and residual risks, comparison of agent variants).
+
+**The decision stays a SYSTEM agent, now hardened** (ADR-011 §7). An agent running with the kid's own token would be enough to *see* the windows. It would not be enough to *trust* its reports: the kid could end it, inject into it or feed it fake data. System integrity is itself a protection: UIPI blocks window messages and hook injection from the kid's Medium-integrity processes. Hardening measures and where they land in this plan:
+
+| Measure (ADR-011 §7) | Threats | Class / step |
+|---|---|---|
+| Token: no privileges except `SeChangeNotify`, Administrators deny-only, write-restricted (fallback without it, if the runtime does not start), System integrity | T-5 | `AgentStartSpec`, `SessionAgentLauncher` (Step 3) |
+| Explicit process/thread DACL (kid: no access; Administrators: query, terminate, synchronize) | T-4 | `AgentStartSpec` (Step 3) |
+| Minimal explicit environment, `DOTNET_EnableDiagnostics=0`, current directory = install folder, absolute application name, fixed argument; handle list with the three pipe ends only | T-6, T-7 | `AgentStartSpec`, `SessionAgentLauncher` (Step 3) |
+| `SetDefaultDllDirectories`; startup hooks disabled in `runtimeconfig` | T-6 | `SessionAgentHost`, csproj (Step 2) |
+| No windows, hooks, message loop, COM, shell, UIA or DPI APIs; only non-messaging window functions; no titles; ≤ 20 000 windows per scan | T-3, T-9 | `WindowEnumerator`, `SessionAgentHost` (Step 2) |
+| Diagnostic line at agent start (token, integrity, privileges, write-restricted), logged by the service | T-5 | `AgentDiagnostics` (Step 2), supervisor (Step 3) |
+| Reports as untrusted input: 64 KB line limit, ≤ 1 000 entries, strict schema, PID validation, keep-latest queue per session | T-8 | `BoundedLineReader`, `AgentProtocol`, `AgentReportProcessor`, `UsageEventQueue` (Steps 2–5) |
+| Paths: local fixed drives only, final path, UNC/device/network/removable never opened | T-2 | `ProgramPathPolicy` (Step 4) |
+| File access impersonating the kid's token | T-2 | `Win32AppMetadataSource` (Step 4) |
+| Untrusted files parsed only by the managed `VersionResourceReader` (RT_VERSION only, ≤ 64 KB); Windows version API only for admin-only locations; no icons, shell APIs, COM, `LoadLibrary` of user files | T-1 | `VersionResourceReader`, `Win32AppMetadataSource` (Step 4) |
+| Store manifests: `XmlReader` with DTD prohibited, ≤ 1 MB; only service-built `ms-resource` references to `SHLoadIndirectString` | T-1 | `PackageManifestReader` (Step 4) |
+| Names sanitized (control characters, ≤ 256 characters) | T-1 | `DisplayNameSanitizer` (Step 4) |
+| 5 s merge of reopened apps; ≤ 30 instance log entries per app and hour, then a summary | T-12 | `UsageTracker`, `InstanceLogLimiter` (Step 5) |
+| Missing heartbeat (15 s) / exit → pause recording for the session, restart, Warning; Error after 3 failed restarts | T-9 | `SessionAgentSupervisor` (Step 3) |
+| Debug helpers compiled only in Debug | T-13 | `#if DEBUG` (Steps 3, 9) |
 
 ### Decision 2: session state "in use" (AC-12)
 
@@ -314,8 +340,9 @@ UsageService --> IUsageBroadcaster
 | Class | Folder | Responsibility | Tests |
 |---|---|---|---|
 | `Program` (changed) | root | First statement: `if (args.Contains("--session-agent")) return await SessionAgentHost.RunAsync(…)` — before log folder protection, host or database. Service mode: DI, `EagleEyeServiceLifetime` (only when running as a Windows service), start order (database → accounts → `UsageService.InitializeAsync` (close dangling instances, purge) → host). | manual |
-| `SessionAgentHost` | SessionAgent | Agent loop: every 1 s `WindowEnumerator.Enumerate()` → `AppWindowScanner.Scan` → `AgentReportPublisher` (writes a line on change or every 5 s). A background read on stdin; EOF → exit 0. Unexpected exception → stderr, exit 1. | manual (thin) |
-| `WindowEnumerator` | SessionAgent | Win32 (`[LibraryImport]`): `EnumWindows`; per window `IsWindowVisible`, `GetWindowRect`, `GetWindow(GW_OWNER)`, `GetWindowLongPtr(GWL_EXSTYLE)`, `DwmGetWindowAttribute(DWMWA_CLOAKED)`, `GetClassName`, `GetWindowThreadProcessId`; for `ApplicationFrameWindow` `EnumChildWindows` to find the `Windows.UI.Core.CoreWindow` with a different PID → `WindowInfo`. | manual |
+| `AgentDiagnostics` | SessionAgent | *(sec)* At agent start: writes one stderr line with token user, integrity level, enabled privileges and write-restricted yes/no (thin Win32). | manual |
+| `SessionAgentHost` | SessionAgent | First call *(sec)*: `SetDefaultDllDirectories(SYSTEM32 \| APPLICATION_DIR)`, then `AgentDiagnostics`. Agent loop: every 1 s `WindowEnumerator.Enumerate()` → `AppWindowScanner.Scan` → `AgentReportPublisher` (writes a line on change or every 5 s). A background read on stdin; EOF → exit 0. Unexpected exception → stderr, exit 1. | manual (thin) |
+| `WindowEnumerator` | SessionAgent | Win32 (`[LibraryImport]`): `EnumWindows`; per window `IsWindowVisible`, `GetWindowRect`, `GetWindow(GW_OWNER)`, `GetWindowLongPtr(GWL_EXSTYLE)`, `DwmGetWindowAttribute(DWMWA_CLOAKED)`, `GetClassName`, `GetWindowThreadProcessId`; for `ApplicationFrameWindow` `EnumChildWindows` to find the `Windows.UI.Core.CoreWindow` with a different PID → `WindowInfo`. *(sec)* Only these non-messaging functions; never `GetWindowText`, `SendMessage*`, `PostMessage*`; no window, hook, COM, shell, UIA or DPI API; stops after 20 000 windows and marks the scan `truncated`. | manual (code review against ADR-011 §7 item 8) |
 | `WindowInfo` | SessionAgent | `record (nint Handle, int ProcessId, string ClassName, bool IsVisible, int Width, int Height, bool HasOwner, long ExStyle, int Cloaked, int? HostedProcessId, string ProcessName)` | — |
 | `AppWindowRule` | SessionAgent | Pure: `Classify(WindowInfo) → AppWindowKind? (Window, FileExplorer)` and the reported PID (hosted PID for Store frames), ADR-011 §4. | **unit** |
 | `AppWindowScanner` | SessionAgent | Pure: windows → distinct `(pid, kind)` set, sorted. | **unit** |
@@ -324,17 +351,23 @@ UsageService --> IUsageBroadcaster
 | `EagleEyeServiceLifetime` | Monitoring | `WindowsServiceLifetime` subclass; `OnSessionChange`, `OnPowerEvent` → `UsageEventQueue`. | manual |
 | `ISessionSource` / `WtsSessionSource` | Monitoring | Win32 WTS → `IReadOnlyList<SessionInfo(SessionId, UserSid?, WtsState, IsLocked)>`. | manual |
 | `SessionStateTracker` | Monitoring | Applies events and reconciliation snapshots; `IsInUse(sessionId)`, `SessionsOf(sid)`, `AccountInUse(sid)`. | **unit** |
-| `IAgentLauncher` / `SessionAgentLauncher` | Monitoring | Win32: duplicate SYSTEM token, set `TokenSessionId`, pipes, `CreateProcessAsUser("<service exe>" --session-agent, desktop `WinSta0\Default`, `CREATE_NO_WINDOW`)` → `IAgentProcess` (`ReadLinesAsync`, `StopAsync`, `Exited`, `ProcessId`). | manual |
+| `IAgentLauncher` / `SessionAgentLauncher` | Monitoring | Win32 *(sec, ADR-011 §7 items 1–6)*: duplicate the SYSTEM token → `CreateRestrictedToken` (`DISABLE_MAX_PRIVILEGE`, Administrators deny-only, `WRITE_RESTRICTED` with S-1-5-12; fallback without write restriction, logged) → set `TokenSessionId`; three pipes; `STARTUPINFOEX` with a handle list of exactly the three pipe ends; security descriptors, environment block, application name, command line and current directory from `AgentStartSpec`; `CreateProcessAsUser(…, CREATE_NO_WINDOW \| CREATE_UNICODE_ENVIRONMENT \| EXTENDED_STARTUPINFO_PRESENT, desktop WinSta0\Default)` → `IAgentProcess` (`ReadLinesAsync` via `BoundedLineReader`, `StopAsync`, `Exited`, `ProcessId`). | manual |
+| `AgentStartSpec` | Monitoring | *(sec)* Pure: builds the agent's start parameters: absolute application name, command line `"<path>" --session-agent`, current directory, the minimal environment block (`SystemRoot`, `windir`, `SystemDrive`, `TEMP`/`TMP`, `PATH` = System32, `DOTNET_EnableDiagnostics=0`; nothing else), and the process/thread security descriptors in SDDL (SYSTEM full; Administrators `QUERY_LIMITED \| TERMINATE \| SYNCHRONIZE`; protected, no inheritance). | **unit** |
+| `BoundedLineReader` | Monitoring | *(sec)* Reads UTF-8 lines from the agent's stdout with a 64 KB limit; a longer line → `AgentProtocolException` (the supervisor restarts the agent and logs a warning). | **unit** |
 | `DevSessionAgentLauncher` | Monitoring | **Debug builds only**: starts the agent as a normal child process in the current session (`Process.Start` with redirected streams), so DEV can smoke-test without SYSTEM rights. Enabled with `EAGLEEYE_DEV_WATCH_SID=<sid>` (that SID is treated as controlled; see Step 9). | manual |
 | `AgentPlan` | Monitoring | Pure: `Compute(sessions, controlledSids, runningAgents, now)` → agents to start / stop; back-off 1, 5, 30 s after unexpected exits. | **unit** |
-| `SessionAgentSupervisor` | Monitoring | Applies the plan; reads agent lines → `AgentReportProcessor`; logs starts, exits, stderr; a missing heartbeat for 15 s → the agent is restarted and the session's apps are treated as unknown (credit stops, instances stay open). | **unit** (mocked launcher) |
+| `SessionAgentSupervisor` | Monitoring | Applies the plan; reads agent lines → `AgentReportProcessor`; logs starts, exits, stderr; a missing heartbeat for 15 s, an exit or a protocol error → recording for the session is **paused** (no credit, instances stay open), the agent is restarted with back-off and a Warning is logged; after 3 failed restarts in a row an Error "Usage recording for account … is not possible" *(sec, T-9)*. Logs the agent's diagnostic line (token, integrity, privileges) at Information. | **unit** (mocked launcher) |
 | `IProcessInspector` / `Win32ProcessInspector` | Monitoring | Win32: `OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION)`, `QueryFullProcessImageName`, `ProcessIdToSessionId`, `OpenProcessToken` → owner SID, `GetProcessTimes` → creation time, `GetPackageFullName` → `ProcessFacts`. | manual |
-| `IAppMetadataSource` / `Win32AppMetadataSource` | Monitoring | `FileVersionInfo.FileDescription`; package display name via `GetPackagePathByFullName` + manifest `DisplayName` + `SHLoadIndirectString` (`ms-resource:` values). | manual |
-| `AppNameResolver` | Monitoring | Pure order (ADR-012 §1): package display name → file description → process name without `.exe`; trims; cache per (path, package). | **unit** |
+| `IAppMetadataSource` / `Win32AppMetadataSource` | Monitoring | *(sec)* Runs while **impersonating the session user** (`ImpersonateLoggedOnUser`, reverted in `finally`). Applies `ProgramPathPolicy`: only local fixed-drive files, final path via `GetFinalPathNameByHandle`. Admin-only system locations → Windows version API (`GetFileVersionInfoEx`, MUI-localized); every other location → `VersionResourceReader`. Store package display name via `PackageManifestReader` + `SHLoadIndirectString` with a service-built `@{FullName?ms-resource://…}` reference. Never icons, shell APIs, COM or `LoadLibrary`. | manual |
+| `AppNameResolver` | Monitoring | Pure order (ADR-012 §1): package display name → file description → process name without `.exe`; sanitized by `DisplayNameSanitizer`; cache per (path, package). | **unit** |
+| `ProgramPathPolicy` | Monitoring | *(sec)* Pure: classifies a path (and its final path): `Remote` (UNC, `\\?\UNC\`, mapped network drive), `Device` (`\\.\`, `\\?\GLOBALROOT`, other device namespaces), `Removable`, `LocalTrusted` (under `%SystemRoot%`, `%ProgramFiles%`, `%ProgramFiles(x86)%`, `%ProgramFiles%\WindowsApps`; prefix check after normalization, no `..` tricks), `LocalUntrusted`. Strips `\\?\` for local paths, rejects paths over 32 767 characters. Also answers "is the real explorer / ApplicationFrameHost / EagleEye install path". Drive type and folder roots are injected (testable). | **unit** |
+| `VersionResourceReader` | Monitoring | *(sec)* Managed, bounds-checked reader (`System.Reflection.PortableExecutable.PEReader`, no native loading): finds `RT_VERSION`, ≤ 64 KB, parses `VS_VERSIONINFO` → `StringFileInfo` → `FileDescription` for the first translation; every malformed structure → `null` (never throws out). Files > 512 MB are not read. | **unit** |
+| `PackageManifestReader` | Monitoring | *(sec)* Reads `AppxManifest.xml` (≤ 1 MB) with `XmlReader` (`DtdProcessing.Prohibit`, `XmlResolver = null`); returns the literal `DisplayName` or the `ms-resource:` key; never passes raw `@…` strings on. | **unit** |
+| `DisplayNameSanitizer` | Monitoring | *(sec)* Removes control and format characters (incl. bidi overrides), trims, cuts at 256 characters; empty → `null`. | **unit** |
 | `AgentReportProcessor` | Monitoring | Validates PIDs (session, owner SID), applies the never-record list, maps to `ObservedApp(path, processName, displayName, kind, pids)` per account, caches by PID + creation time, enqueues `AppsObserved`. | **unit** |
-| `UsageEventQueue` | Statistics | Unbounded `Channel<UsageEvent>` (single reader). | **unit** |
+| `UsageEventQueue` | Statistics | `Channel<UsageEvent>` with a single reader. *(sec, T-8)* `AppsObserved` is kept **latest-only per session** (a newer report replaces an unprocessed older one), other events are few and bounded, so a flood cannot grow memory. | **unit** |
 | `DaySplitter` | Statistics | Pure: `(DateTimeOffset endLocal, TimeSpan length, TimeZoneInfo zone)` → parts per local date. | **unit** |
-| `UsageTracker` | Statistics | Pure state machine (Decision 3); outputs `UsageDelta` and `InstanceEvent`s; writes the start/end log entries. | **unit** |
+| `UsageTracker` | Statistics | Pure state machine (Decision 3); outputs `UsageDelta` and `InstanceEvent`s; writes the start/end log entries through `InstanceLogLimiter`. *(sec, T-12)* An app that disappears and reappears within 5 s continues the same instance. | **unit** |
 | `UsageAccountingLoop` | Statistics | `BackgroundService`: `PeriodicTimer(5 s, TimeProvider)` enqueues `Tick`; consumes the queue: session reconciliation, supervisor reconcile (controlled SIDs from `IUserAccountService`), tracker, `IUsageService.ApplyTickAsync`, midnight purge. Exceptions in one iteration are logged; the loop continues. `StopAsync` performs the service-stop sequence. | **unit** |
 | `IUsageService` / `UsageService` | Statistics | State owner (Decision 5), `InitializeAsync` (close dangling instances, purge), `RecordAppAsync`, `StartInstanceAsync`, `EndInstanceAsync`, `ApplyTickAsync`, `GetAccountUsageAsync`, `PurgeMissingAccountsAsync` (as `IAccountDataPurger`), `PurgeOldDataAsync`. One `SemaphoreSlim`, revision per account. | **unit** |
 | `IUsageBroadcaster` / `UsageBroadcaster` | Statistics | `OnDayUsageChanged` to group `Parents`. | **unit** |
@@ -533,22 +566,22 @@ All steps run on the **Windows Developer Machine**, on branch `feature/US-004-ap
 ### Step 2: Service — agent mode
 1. `WindowInfo`, `AppWindowRule`, `AppWindowScanner`, `AgentProtocol` (+ JSON source-generation context), `AgentReportPublisher`.
 2. `WindowEnumerator` (`[LibraryImport]`, `dwmapi`, `user32`).
-3. `SessionAgentHost`; `Program` branch for `--session-agent` as the very first statement.
+3. `SessionAgentHost`, `AgentDiagnostics`; `Program` branch for `--session-agent` as the very first statement. *(sec)* `SetDefaultDllDirectories` first; `EagleEye.Service.csproj`: `<RuntimeHostConfigurationOption Include="System.StartupHookProvider.IsSupported" Value="false" />` (or `StartupHookSupport=false`), verified in the published `runtimeconfig.json`.
 4. Check by hand: run `EagleEye.Service.exe --session-agent` in a console in DEV's own session; open and close Notepad, Calculator, a File Explorer window; the JSON lines appear on stdout; Ctrl+Z/Enter (EOF) ends it.
 
 ### Step 3: Service — sessions and agents
 1. `SessionInfo`, `ISessionSource`, `WtsSessionSource`, `SessionStateTracker`.
 2. `EagleEyeServiceLifetime` (registered only when `WindowsServiceHelpers.IsWindowsService()`).
-3. `IAgentLauncher`, `SessionAgentLauncher`, `DevSessionAgentLauncher` (Debug only, `EAGLEEYE_DEV_WATCH_SID`), `AgentPlan`, `SessionAgentSupervisor`.
+3. `AgentStartSpec`, `BoundedLineReader` *(sec)*, `IAgentLauncher`, `SessionAgentLauncher` (hardened token, handle list, explicit security descriptors, minimal environment; ADR-011 §7), `DevSessionAgentLauncher` (Debug only, `#if DEBUG`, `EAGLEEYE_DEV_WATCH_SID`), `AgentPlan`, `SessionAgentSupervisor`.
 
 ### Step 4: Service — process facts and names
 1. `ProcessFacts`, `IProcessInspector`, `Win32ProcessInspector`.
-2. `IAppMetadataSource`, `Win32AppMetadataSource`, `AppNameResolver`.
+2. *(sec)* `ProgramPathPolicy`, `VersionResourceReader`, `PackageManifestReader`, `DisplayNameSanitizer`; `IAppMetadataSource`, `Win32AppMetadataSource` (impersonation, trusted/untrusted split), `AppNameResolver`.
 3. `AgentReportProcessor`.
 
 ### Step 5: Service — usage
 1. Migration 3; `IUsageRepository`, `UsageRepository`.
-2. `UsageEvent` types, `UsageEventQueue`, `DaySplitter`, `UsageTracker`.
+2. `UsageEvent` types, `UsageEventQueue` (latest-only reports per session), `DaySplitter`, `UsageTracker` (5 s merge), `InstanceLogLimiter` *(sec)*.
 3. `IUsageBroadcaster`, `UsageBroadcaster`, `IUsageService`, `UsageService`, `IAccountDataPurger`.
 4. `IUserAccountService.GetControlledAccountsAsync`; purge hook in `InitializeAsync`/`RefreshInventoryAsync` (update existing tests).
 5. `UsageAccountingLoop` (incl. the service-stop sequence).
@@ -573,7 +606,7 @@ All steps run on the **Windows Developer Machine**, on branch `feature/US-004-ap
 DEV has no admin rights (US-001 lesson), so the real SYSTEM agent cannot be started by DEV. Smoke check in console mode (Debug build, `EAGLEEYE_DATA_DIR` as in US-002/US-003, plus `EAGLEEYE_DEV_WATCH_SID` = DEV's own SID, which makes the service treat DEV's own account as controlled and start the agent via `DevSessionAgentLauncher` in DEV's session):
 1. The Reports page of the installed 0.4.0 parent app (paired with `localhost`) shows DEV's account, Notepad appears within 15 s, the minutes grow, locking the session (Windows+L) stops the counting.
 2. The log file in the override folder shows start/end entries.
-3. **Also smoke-check the US-003 broadcast between two parent apps on one PC** (two Windows users or a second app instance as in the US-003 report), because US-003's push ACs were never verified manually (`docs/testing/US-003/test-report.md` §5) and US-004 depends on them (AC-22, AC-23).
+3. *(sec)* The agent's diagnostic line appears in the log (in console mode it shows DEV's own token; the SYSTEM values are checked by Michael in the test run).
 
 ### Step 10: Coverage and load
 1. `build.ps1`, `test.ps1`: 0 warnings, all green, 100 % line and branch coverage for the classes marked **unit** above.
@@ -593,7 +626,7 @@ DEV has no admin rights (US-001 lesson), so the real SYSTEM agent cannot be star
 | AC-2 start/stop ≤ 60 s, running apps | supervisor reconcile each tick, `MonitoringStopped` (3, 5) | plan: start on tick after selection, stop after untick/admin; tracker: already-running apps open instances "from now"; stop ends instances "monitoring stopped", data kept | timing |
 | AC-3 listed apps incl. Store apps | `AppWindowRule` (Store frame → hosted PID), `AppNameResolver` (package name) (2, 4) | rule: `ApplicationFrameWindow` with CoreWindow child → hosted PID; frame without child skipped; resolver: package name first | each listed app, de/en Windows |
 | AC-4 Explorer only with a window | rule: `explorer.exe` only `CabinetWClass` (2) | rule: `CabinetWClass` → FileExplorer; `Shell_TrayWnd`, `Progman`, `WorkerW` → none | yes |
-| AC-5 no background/Windows processes | rule (tool windows, owned, cloaked-by-app, shell classes), never-record list (2, 4) | rule: each exclusion; processor: `EagleEye.TrayClient.exe` dropped | OneDrive, tray |
+| AC-5 no background/Windows processes | rule (tool windows, owned, cloaked-by-app, shell classes), never-record list (2, 4) | rule: each exclusion; processor: EagleEye executables dropped by install path, a renamed copy elsewhere recorded *(sec)* | OneDrive, tray |
 | AC-6 multi-process = one app | grouping by path (4, 5) | processor: two PIDs same path → one app; tracker: two windows/processes → credited once, one instance | VS Code, Edge |
 | AC-7 app record | `UsageService.RecordAppAsync`, `UNIQUE(AccountSid, ProgramPath)` (5) | repository: insert once per account+path, case-insensitive path; second account own record | log, DB |
 | AC-8 display name | `AppNameResolver` (4) | package → description → `mygame` fallback; whitespace description → fallback | yes |
@@ -628,16 +661,16 @@ DEV has no admin rights (US-001 lesson), so the real SYSTEM agent cannot be star
 | DTOs | Shared.Tests | construction, equality; JSON round trip with web defaults incl. `DateOnly`, empty app list, null `LastChangeRequestId` |
 | `AppWindowRule` | Service.Tests | visible normal window → Window; invisible, zero size → none; cloaked by shell → counts; cloaked by app → none; owned window → none, owned + `WS_EX_APPWINDOW` → counts; tool window → none; shell classes → none; `ApplicationFrameWindow` with hosted PID → hosted PID, without → none; `explorer.exe` `CabinetWClass` → FileExplorer, other explorer classes → none; minimised (visible, iconic) → counts |
 | `AppWindowScanner` | Service.Tests | duplicates per PID merged; Store frame and its CoreWindow not double; sorted output |
-| `AgentProtocol` | Service.Tests | round trip; malformed JSON, missing fields, unknown kind, negative PID, > 1 000 entries → rejected; empty list valid |
+| `AgentProtocol` | Service.Tests | round trip; malformed JSON, missing fields, unknown kind, negative PID, > 1 000 entries, duplicate keys, deeply nested JSON, non-numeric PID → rejected; `truncated` flag; empty list valid |
 | `AgentReportPublisher` | Service.Tests | first scan emits; unchanged set → nothing until 5 s heartbeat; change emits at once; sequence increases |
 | `SessionStateTracker` | Service.Tests | lock/unlock events; disconnect (switch user); logoff removes; reconciliation overrides stale state; account in use if any session in use; unknown session ignored |
 | `AgentPlan` | Service.Tests | start for controlled logged-on sessions only (not uncontrolled, admin, session 0, no user); stop when untick/admin/logoff; restart after exit with back-off 1, 5, 30 s; reset after a stable minute |
-| `SessionAgentSupervisor` | Service.Tests | launches per plan; lines → processor; stderr → warning; exit → warning + restart; missing heartbeat 15 s → restart; stop closes all on shutdown; launcher failure logged, retried |
-| `AppNameResolver` | Service.Tests | package name wins; description; empty/whitespace description → process name without `.exe` (case-insensitive extension); metadata source throws → fallback + warning; cache hit does not call the source again |
-| `AgentReportProcessor` | Service.Tests | PID in other session → dropped; other owner → dropped; process gone → dropped; tray/service exe → dropped; two PIDs same path → one app with both PIDs; PID reuse (new creation time) → re-inspected; inspector called once per PID+creation; enqueues `AppsObserved` per account |
+| `SessionAgentSupervisor` | Service.Tests | launches per plan; lines → processor; stderr → warning; diagnostic line → Information; exit → pause + warning + restart; missing heartbeat 15 s → pause + restart; protocol error (too long, malformed) → restart; Error after 3 failed restarts in a row, reset after success; stop closes all on shutdown; launcher failure logged, retried |
+| `AppNameResolver` | Service.Tests | package name wins; description; empty/whitespace description → process name without `.exe` (case-insensitive extension); metadata source throws → fallback + warning; cache hit does not call the source again; sanitized result |
+| `AgentReportProcessor` | Service.Tests | PID in other session → dropped; other owner → dropped; process gone → dropped; EagleEye executables in the install folder → dropped, a renamed copy `C:\Users\kid\EagleEye.TrayClient.exe` → recorded *(sec)*; `FileExplorer` kind from a non-system `explorer.exe` or a Store frame from a process other than the real ApplicationFrameHost → treated as an ordinary window of its own process *(sec)*; two PIDs same path → one app with both PIDs; PID reuse (new creation time) → re-inspected; inspector called once per PID+creation; enqueues `AppsObserved` per account |
 | `DaySplitter` | Service.Tests | inside one day; across midnight; exactly at midnight; zero length; DST forward and back (23 h / 25 h days) |
-| `UsageTracker` | Service.Tests | open → instance start; close → end "closed"; credit only when in use; AC-24 scenario: Notepad open 13 min, of which 3 min locked → 600 s (± one tick); parallel apps both credited; two windows/processes same app once; across midnight split; gap > 15 s not credited + log; suspend/resume; wall clock ±1 h and time-zone change do not change seconds; monitoring stopped / session ended / service stopping reasons; already-running apps at start counted from now; fractions carried; two accounts separate |
-| `UsageEventQueue` | Service.Tests | FIFO, single reader, completes on shutdown |
+| `UsageTracker` | Service.Tests | open → instance start; close → end "closed"; credit only when in use; AC-24 scenario: Notepad open 13 min, of which 3 min locked → 600 s (± one tick); parallel apps both credited; two windows/processes same app once; across midnight split; gap > 15 s not credited + log; suspend/resume; wall clock ±1 h and time-zone change do not change seconds; monitoring stopped / session ended / service stopping reasons; already-running apps at start counted from now; fractions carried; two accounts separate; *(sec)* app gone and back within 5 s → same instance, after 6 s → new instance |
+| `UsageEventQueue` | Service.Tests | FIFO for non-report events; only the latest `AppsObserved` per session kept; 10 000 reports in a burst → bounded memory; completes on shutdown |
 | `UsageAccountingLoop` | Service.Tests | tick every 5 s; session reconciliation each tick; supervisor reconcile with controlled SIDs; midnight: purge + empty today broadcast once; exception in one iteration logged, loop continues; stop sequence ends instances and persists |
 | `UsageRepository`, `ServiceDatabase` | Service.Tests | schema version 3; migration 3 on a version-2 file keeps `PairedDevices` and `AccountSelections`; insert/find app record (path case-insensitive, per account); instance start/last seen/end; open instances query; daily upsert adds seconds; account usage query (today + days with usage, 90-day window); purge by age; purge by account cascades |
 | `UsageService` | Service.Tests | initialize closes dangling instances at last seen with reason and log; get usage: unknown SID → exception, today always present, newest first; apply tick: persists, revision per account increments, one broadcast per changed day, none when unchanged; broadcast failure → warning only; persistence failure → kept and retried; midnight snapshot; purge missing accounts only for missing SIDs; concurrency: serialized |
@@ -660,7 +693,7 @@ DEV has no admin rights (US-001 lesson), so the real SYSTEM agent cannot be star
 |---|---|
 | Artifacts | `03_Delivery/windows/EagleEye-Setup-0.4.0.exe` (service + tray, admin) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.4.0.exe`. Upgrade over 0.3.1 keeps pairings and selections. |
 | Test setup | Service PC with admin account (parent), `kid1` ticked, `kid2` not ticked (US-003). Parent app preferably on the second Windows PC, so the kid's session can be locked and switched freely. A stopwatch (phone). For AC-26 a second controlled account. |
-| Session agent | While `kid1` is logged on: Task Manager (as admin) → *Details*: a second `EagleEye.Service.exe` with user name *SYSTEM* and the session ID of `kid1` (column *Sitzungs-ID* can be added). None for `kid2` or the admin session (AC-1). As `kid1`, *Task beenden* on it is refused (*Zugriff verweigert*). Ending it as admin: a new agent appears within 1 to 30 s, with a warning in the log. |
+| Session agent | While `kid1` is logged on: Task Manager (as admin) → *Details*: a second `EagleEye.Service.exe` with user name *SYSTEM* and the session ID of `kid1` (column *Sitzungs-ID* can be added). None for `kid2` or the admin session (AC-1). As `kid1`, *Task beenden* on it is refused (*Zugriff verweigert*). Ending it as admin: a new agent appears within 1 to 30 s, with a warning in the log, and recording for `kid1` pauses until then (no usage counted in between). |
 | "Apps" group comparison | Compare the report with Task Manager → *Prozesse* → *Apps* in `kid1`'s session. A Store app (Calculator/Rechner) appears under its own name, not "Application Frame Host" (AC-3). File Explorer counts only while a File Explorer window is open (AC-4). OneDrive in the notification area, the EagleEye tray icon and the Windows processes of AC-5 never appear. If a program is listed that Task Manager puts under *Hintergrundprozesse*, record the program name and whether it had a visible window at that time (known limit, ADR-011 §4). |
 | Display names | In the service PC's Windows language (German Windows: "Editor", "Rechner", "Task-Manager", "Windows-Explorer"), also when the parent app runs in English. |
 | Timing | Usage in the service is updated every 5 s. The Reports page follows within about 6 s (bound 15 s, AC-22); a new app appears within about 7 s. Ticking `kid1` starts recording within 5 s; unticking stops it within 5 s (AC-2 allows 60 s). Deleting an account purges its data within about 15 s (AC-9 allows 60 s after the service notices it). |
@@ -670,7 +703,8 @@ DEV has no admin rights (US-001 lesson), so the real SYSTEM agent cannot be star
 | Service stop (AC-10, AC-15) | `net stop EagleEyeService` while apps are open → end entries with "(service stopping)"; after `net start` → new "App started" entries for the still-open apps. Killing the service process (Task Manager as admin, *Prozessstruktur beenden*) → at the next start, end entries "(service stopped unexpectedly)" with the last recorded time (≤ 5 s before the kill). |
 | Database | `%ProgramData%\EagleEye\EagleEye.Service.db` (admin, SQLite tool): `AppRecords` (one row per account + path, AC-7), `AppInstances` (history), `DailyUsage` (seconds per app and day). The 90-day purge (AC-11) cannot be waited for; it is covered by unit tests. Optional: as admin, back-date a `DailyUsage.Day` value to 91 days ago with a SQLite tool while the service is stopped; after the start it is gone. |
 | CPU (AC-25) | Task Manager → *Details*: there are **two** `EagleEye.Service.exe` processes while `kid1` is logged on (service and agent); add both CPU values. Expected well below 1 %. |
-| US-003 dependency | US-003's push ACs (AC-19 to AC-24 there) were not verified manually (`docs/testing/US-003/test-report.md` §5). US-004 AC-22 and AC-23 depend on the same mechanism. Recommendation: include TC-003-22 to TC-003-35 (or a subset with two parent apps) in the US-004 run. |
+| US-003 dependency | US-003's push ACs (AC-19 to AC-24 there) were not verified manually (`docs/testing/US-003/test-report.md` §5). US-004 AC-22 and AC-23 depend on the same mechanism, so a failure there may show up as a Reports page that does not follow. **Michael (Q-5): the US-004 run tests only the US-004 features; the skipped US-003 cases stay skipped.** |
+| Security checks *(sec)* | All as described in ADR-011 §7 / Security Analysis; Michael is the only one who can do them (SYSTEM, admin). (1) **Agent token**: the service log shows at agent start a line like `Session agent in session 2: user SYSTEM, integrity System, privileges SeChangeNotifyPrivilege, write-restricted yes` (or `no` with the documented fallback). (2) **Kid cannot touch the agent**: signed in as `kid1`, in PowerShell `Stop-Process -Id <agent PID> -Force` and in Task Manager *Task beenden* → access denied; the agent keeps running. (3) **Remote program**: as `kid1` run a program from a network share (e.g. a copy of `C:\Windows\System32\charmap.exe` on `\\<other PC>\share\`): it is recorded under its process name (`charmap`), not under "Zeichentabelle", and the log contains no file access error for the share; on the share's PC, no access by the service PC's computer account appears (optional). (4) **Renamed EagleEye name**: copy `C:\Windows\System32\charmap.exe` to `C:\Users\kid1\Desktop\EagleEye.TrayClient.exe` and start it as `kid1`: it **is** recorded. (5) **Flicker**: open and close Notepad 40 times within a few minutes: at most 30 start/end log lines for it in that hour plus a summary line; the report still shows correct usage. (6) **Release has no Debug switches**: setting `EAGLEEYE_DEV_WATCH_SID` or `EAGLEEYE_DATA_DIR` as a machine environment variable (admin) and restarting the service has no effect. |
 | Not covered by unit tests | Window enumeration and the "Apps" rule against real programs, Store app names, SYSTEM agent start in another session, WTS states and SCM events (lock, switch user, sleep), process inspection across sessions, installer, UI |
 
 ---
@@ -695,15 +729,24 @@ No AC is changed. Points the plan interprets or adds:
 
 ## Open Questions for Michael
 
-Each with a proposed answer. None blocks DEV if the proposal is accepted.
+### Answered (Michael, 2026-10-07)
+
+| ID | Question | Proposed answer | Answer |
+|---|---|---|---|
+| Q-1 | **Memory of the session agent.** Each watched session gets one extra `EagleEye.Service.exe` (SYSTEM) with about 30 to 40 MB of memory (CPU negligible). Acceptable? | Yes. Native AOT later if memory matters. | Answer (Michael, 2026-10-07): accepted as proposed. |
+| Q-2 | **Visibility of the agent.** The kid can see the agent in Task Manager → *Details* (user SYSTEM) but cannot end it. Compatible with AC-27? | Yes: AC-27 is about effects on the kid; a background process is not a notice. | Answer (Michael, 2026-10-07): accepted as proposed. |
+| Q-3 | **History while locked or switched away.** End the instance, or continue while the app is open? | Continue (D-4). | Answer (Michael, 2026-10-07): accepted as proposed. |
+| Q-4 | **Programs started with other credentials** are not recorded (story: out of scope). | Accept for US-004; revisit with the first enforcement story. | Answer (Michael, 2026-10-07): accepted as proposed. |
+| Q-5 | **US-003 regression in the US-004 run.** | TES includes TC-003-22 to TC-003-35 (or a subset). | Answer (Michael, 2026-10-07): **No.** The skipped US-003 cases stay skipped for now; the US-004 run tests only the US-004 features. The risk note stays in the Manual Verification Notes. |
+
+### New, from the security analysis (ADR-011)
 
 | ID | Question | Proposed answer |
 |---|---|---|
-| Q-1 | **Memory of the session agent.** Each watched session gets one extra `EagleEye.Service.exe` (SYSTEM) with about 30 to 40 MB of memory (CPU negligible). Acceptable? | Yes. If memory matters later (e.g. many kid sessions on one PC), the agent can become a small Native AOT executable without changing the design (needs the C++ build tools). |
-| Q-2 | **Visibility of the agent.** The kid can see the agent in Task Manager → *Details* (user SYSTEM) but cannot end it. Is that compatible with AC-27 ("the kid notices nothing")? | Yes: AC-27 is about effects on the kid (closed, blocked, slowed apps, tray messages); a background process is not a notice. Hiding processes is not possible without malware-like techniques. |
-| Q-3 | **History while locked or switched away.** Should an app instance end when the session is locked or switched away (and a new one start on return), or continue as long as the app is open? | Continue (D-4): the history records when an app was open; usage records when it counted. Fewer, more meaningful history entries. |
-| Q-4 | **Programs started with other credentials** ("Run as administrator" with the parent's password in the kid's session) are not recorded (story: out of scope). This leaves a gap for later enforcement. | Accept for US-004; revisit with the first enforcement story (it needs the parent's password, so it is a parent decision anyway). |
-| Q-5 | **US-003 regression in the US-004 run.** US-003's push ACs were not verified manually; US-004 AC-22/AC-23 depend on them. | TES includes the two-app cases TC-003-22 to TC-003-35 (or a subset) in the US-004 test plan. |
+| Q-6 | **Visibility of recording gaps (T-9).** If the session agent cannot run (repeated failures) or is restarted, usage is not recorded for that time. In US-004 this is visible **only in the service log** (Warning per restart, Error after 3 failed restarts). Should the parent see it in the app? | Not in US-004 (no new AC; keeps the story's scope). Add a "recording interrupted" indicator per account and day as an AC of the first budget/enforcement story, where gaps matter for limits. The data for it (pauses with start/end) is already in the log. |
+| Q-7 | **Evasion by window manipulation (T-10).** A tech-savvy kid can make a program's window a tool window or an owned window (e.g. with AutoHotkey), so it drops out of the "Apps" rule and its usage is not counted (Task Manager behaves similarly). | Accept for US-004 (observation only). Enforcement stays process-based and deny-by-default (ADR-005), so this cannot start blocked programs. The budget story decides whether allowed apps without an app window still count (e.g. counting the process while it runs). |
+| Q-8 | **Disguised names (T-11).** A kid can copy a game to a user folder with version info "Editor"; the report shows "Editor" (separate record, real path in log and database). | Accept for US-004; the parent can check the path in the log. Show the program path or publisher in the parent app together with allow-lists (later story). |
+| Q-9 | **Write-restricted token fallback (T-5).** If the .NET runtime or the desktop connection does not start under the write-restricted SYSTEM token, the agent runs without the write restriction (still no privileges, Administrators deny-only, System integrity, no windows). | Accept the fallback; DEV verifies in Step 3 together with Michael, and records which variant runs in the implementation report and the agent's diagnostic log line. |
 
 ---
 
