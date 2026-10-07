@@ -1,0 +1,960 @@
+# Test Plan: US-003 — Account Inventory and Selection of Accounts under Parental Control
+
+**Status**: Draft, for approval by Michael
+**Date**: 2026-10-07
+**Author**: TES
+**User Story**: `02_Implementation/docs/requirements/user-stories/US-003/user-story.md` (24 ACs, approved 2026-10-07)
+**Inputs used**: the user story; `02_Implementation/docs/requirements/user-stories/US-003/implementation-plan.md` ("Manual Verification Notes", "Deviations from the Story" D-1 to D-7, answers Q-1 to Q-7; only for setup, artifact locations and texts, not for expected behaviour); `02_Implementation/docs/architecture/decisions/ADR-010-event-driven-state-propagation.md`; the US-002 test documents (`docs/testing/US-002/test-plan.md`, `test-run-02.md`, `test-report.md`) for setup steps and lessons (ISSUE-004 scaling, ISSUE-005 elevated terminal). Black box: no source code was read.
+
+> **Written in parallel with DEV.** The implementation report `02_Implementation/docs/requirements/user-stories/US-003/implementation-report.md` did not exist yet. Places that depend on exact implemented texts or behaviour use the wording of the story and the plan and are marked `<!-- verify against implementation report -->`. TES aligns them after DEV's handover, before the run starts.
+
+---
+
+## 1. Scope
+
+**In scope**
+
+- Update of the service and the parent app from 0.2.0 to 0.3.0, keeping the pairing (supporting AC-15)
+- The admin-only service log folder `%ProgramData%\EagleEye\logs\` and the log entries named in AC-14 and AC-24
+- Inventory content: standard accounts only, no admins, no built-in accounts, no `defaultuser0`, local and Microsoft-linked accounts, disabled accounts (AC-1 to AC-4, AC-12)
+- The new settings section: position, states (no data, no accounts, loading, list), row format, sort order (AC-6 to AC-13)
+- Ticking and unticking: immediate save, log entry, persistence across app restart, service restart, reboot and re-install, error and revert, only while connected, default unticked (AC-14 to AC-18)
+- Account changes while the service runs: add, delete, rename, standard ↔ admin, disable, with the 60-second limit (AC-5, AC-19 to AC-22)
+- Two parent apps (service PC + second Windows PC): broadcast within 5 s, concurrent changes (AC-23, AC-24)
+
+**Out of scope** (as in the story): monitoring and enforcement (ticking has no visible effect on the kid's PC); application inventory; per-account configuration pages; parent apps for Android, iOS and macOS; domain and Entra ID accounts; the tray client; changing accounts from the parent app; protection against a kid pairing their own app (OQ-7).
+
+**Not tested in this plan, with reason**
+
+| Item | Reason |
+|---|---|
+| AC-2 "admin through another group" (nested group) | On a workgroup PC (no domain) Windows does not allow a local group inside the local group *Administratoren*, so indirect membership cannot be set up. Covered by DEV's design (`LG_INCLUDE_INDIRECT`); see §8 Q-6. |
+| Built-in accounts that are **enabled** or **renamed** (implementation plan, Manual Verification Notes) | Not required by AC-3. Enabling *Gast* would weaken the PC's security. The test relies on this: the built-in accounts are disabled, and disabled standard accounts *are* listed (AC-12). So if they are missing from the list, they were excluded as built-ins. |
+| English UI texts | Michael's Windows is German. English texts are covered by DEV's unit tests. If PC2 runs Windows in English, Block E records them as a bonus (Notes). |
+| Log retention (3 files, 5 days, 50 MB) | Not an AC of this story (Q-1, FR-SVC-103). It would need days or 150 MB of log. DEV's unit tests cover it. |
+| Regression | Story runs contain no regression cases (`02_Implementation/docs/testing/README.md` §3, TES rule 4). |
+
+## 2. Test Environment
+
+| Item | Value |
+|---|---|
+| Service PC | **Windows Developer Machine** (Windows 11 Pro, German UI), called *service PC*. `<host>` = its computer name (`hostname`). |
+| Second PC (**Block E only**) | **PC2**, the second Windows 11 PC from US-002 (same LAN and subnet). Michael confirmed it (implementation plan Q-6). |
+| Parent apps | **App A** = the parent app in Michael's admin account on the service PC, paired as **Papas PC** (end state of US-002). **App B** = the parent app on PC2, paired in Block E as **PC2**. |
+| Accounts on the service PC | **Admin** = Michael's administrator account. **Kid** = `eagleeye-kid` (standard, exists since US-001). Test accounts created in setup S-12 (table below). |
+| Builds under test | `03_Delivery/windows/EagleEye-Setup-0.3.0.exe` (service + tray, admin) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.3.0.exe` (parent app, per user) <!-- verify against implementation report --> |
+| Expected versions | *Installierte Apps*: **EagleEye 0.3.0** and **EagleEye Parent App 0.3.0**, publisher Michael Adler. Tray *App Infos*: `EagleEye_v0.3`. <!-- verify against implementation report --> |
+| Tools | Stopwatch (phone). **Terminal (Administrator)** (elevated, S-6) for every account change, service command and log-folder check. A second elevated terminal as **log monitor** (S-7). `lusrmgr.msc` (*Lokale Benutzer und Gruppen*), *Einstellungen → Konten → Andere Benutzer*, *Ressourcenmonitor* (`resmon`, Block C only). |
+| Time needed | Block A ≈ 30 min · Block B ≈ 30 min · Block C ≈ 45 min (contains a reboot) · Block D ≈ 35 min · Block E ≈ 40 min. Total ≈ 3 h; blocks can run on different days, in this order. |
+
+### Test accounts (created in S-12, removed in cleanup §7)
+
+| User name | Full name | Type | Purpose | Shown in the list as (expected) |
+|---|---|---|---|---|
+| `eagleeye-kid` | as it is (noted in S-10) | Standard | logged on (AC-1), AC-9, AC-21 unticked | `<full name> (eagleeye-kid)` or `eagleeye-kid` |
+| `ee-anna` | `anna Test` (lower-case *a* on purpose) | Standard | sort order (AC-10), rename, disable | `anna Test (ee-anna)` |
+| `ee-max` | `Max Test` | Standard | tick (AC-14), standard ↔ admin (AC-20, AC-21) | `Max Test (ee-max)` |
+| `ee-lena` | — (empty) | Standard | user name only (AC-11), delete (AC-22) | `ee-lena` |
+| `ee-gesperrt` | — (empty) | Standard, **disabled** | AC-12 | `ee-gesperrt (deaktiviert)` |
+| `defaultuser0` | — | Standard | must **not** appear (AC-3) | — (hidden) |
+| `defaultuser1` | — | Standard | look-alike, **must** appear (AC-3, Q-7) | `defaultuser1` |
+| `ee-admin` | `EE Admin` | **Administrator** | must not appear (AC-2) | — (hidden) |
+
+All test accounts except `eagleeye-kid` are **never logged on** (AC-1). Later cases add `ee-neu` (Block D) and `ee-zwei` (Block E) for a short time.
+
+### Test blocks
+
+| Block | Cases | Machine / accounts | Duration |
+|---|---|---|---|
+| **A** Update to 0.3.0, admin-only log folder | TC-003-01 to TC-003-07 (7) | Service PC / Admin + Kid | ≈ 30 min |
+| **B** Inventory content and display | TC-003-08 to TC-003-15 (8) | Service PC / Admin | ≈ 30 min |
+| **C** Selecting, saving, keeping, error | TC-003-16 to TC-003-23 (8) | Service PC / Admin | ≈ 45 min |
+| **D** Account changes while the service runs | TC-003-24 to TC-003-30 (7) | Service PC / Admin | ≈ 35 min |
+| **E** Two parent apps | TC-003-31 to TC-003-35 (5) | PC2 + service PC / Admin | ≈ 40 min |
+
+35 cases. Blocks build on each other (accounts and ticks), so run them in the order A → E. A break between blocks is fine; keep the service PC and the accounts as they are.
+
+### Conventions for expected results
+
+- **UI texts.** Michael's Windows is German, so the expected results quote the German texts. The story gives English examples with the German wording in brackets. A different wording with the same meaning is a **Note**, not a Fail (story, "Language of UI texts"; US-002 Decision Q-11). If you want a text changed, write the wanted text in Notes; TES routes it to PRO. **Exceptions**, agreed in the story (OQ-8, AC-6) and therefore Pass criteria: the section title **Benutzerkonten auf dem EagleEye-PC**, the checkbox label **Unter Elternkontrolle**, and the single menu entry **Einstellungen**. See §8 Q-3.
+- **Windows labels** are those of a German Windows 11 (*Lokale Benutzer und Gruppen*, *Vollständiger Name*, *Konto ist deaktiviert*, *Kontotyp ändern*, *Standardbenutzer*, *Administratoren*, *Zugriff verweigert*). If a label differs on your build, use the equivalent and write it in Notes.
+- **Timing.**
+  - *Account changes on the service PC* (AC-19 to AC-21): start the stopwatch when the change is done (the PowerShell command has returned, or you clicked *OK* / *Übernehmen* in the Windows dialog). Stop it when the account list in the parent app shows the change. **Limit 60 s.** The design checks every 15 s, so expect about 1 to 16 s; anything up to 60 s is a Pass. Over 60 s is a Fail. Do not touch the parent app while timing.
+  - *Ticks* (AC-14, AC-16, AC-23, AC-24): **limit 5 s**. Start at the click. For AC-14 the proof is the log line in the log monitor (S-7).
+  - *Connection*: bounds as in US-002 (red within 30 s after the service stops, green within 60 s after it starts).
+  - Where the story gives no limit, slowness is a Note, not a Fail.
+- **Display scaling 150 %.** The service PC runs at 150 % (US-002, ISSUE-004). In every case that looks at the new section: if any text, row or checkbox is cut off, write it in Observed and mark the case **Fail**.
+- **Row being saved.** While a tick is being saved, the row's checkbox may be greyed out for up to 4 s (implementation plan D-4). That is expected. <!-- verify against implementation report -->
+- **Unspecified behaviour** you notice is a Note; TES routes it to PRO.
+- **No regression cases** (testing README §3).
+
+### Service log files as evidence (new rule from 0.3.0)
+
+The service writes its log to `%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log` (e.g. `-001`). The folder is **admin-only**, so every log command runs in a **Terminal (Administrator)**. <!-- verify against implementation report -->
+
+- **Log monitor** (S-7): an elevated terminal that shows new log lines live. Several cases read the result there (AC-14, AC-24).
+- **Copy the log files** (`02_Implementation/docs/testing/README.md` §4) with the command **LOG-COPY** below:
+  - **at the end of every run** (or of every block, if you stop between blocks) → folder `run-01-service-logs`
+  - **right after any Fail** → folder `run-01-service-logs\after-TC-003-NN` (NN = the failed case)
+  - **before TC-003-06** deletes the log folder → folder `run-01-service-logs\before-TC-003-06`
+- Reference the copy in the case's **Notes** (e.g. "logs: `evidence/run-01-service-logs/after-TC-003-16/`").
+- Before committing, look through the copies. They contain user names, SIDs and device names, nothing secret (the service never logs secrets or pairing codes). If they contain names of real family accounts you do not want on GitHub, tell TES; TES masks them.
+
+**LOG-COPY** (Terminal (Administrator), in the repo root; replace `<subfolder>`):
+
+```powershell
+Set-Location <your EagleEye repo folder>     # the folder that contains 02_Implementation
+$dst = Join-Path "02_Implementation\docs\testing\US-003\evidence" "<subfolder>"
+New-Item -ItemType Directory -Force $dst | Out-Null
+Copy-Item "$env:ProgramData\EagleEye\logs\*.log" $dst -Force
+Get-ChildItem $dst
+```
+
+**LOG-WATCH** (log monitor, Terminal (Administrator)):
+
+```powershell
+$log = Get-ChildItem "$env:ProgramData\EagleEye\logs\EagleEye.Service-*.log" | Sort-Object LastWriteTime | Select-Object -Last 1
+$log.FullName
+Get-Content $log.FullName -Tail 15 -Wait
+```
+
+After every service restart, reinstall, reboot or deletion of the log folder: press *Strg+C* in the log monitor and run LOG-WATCH again (a new file may have been started).
+
+**LOG-FIND** (search all log files for an account, Terminal (Administrator)):
+
+```powershell
+Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<user name>" | Select-Object -Last 10 | ForEach-Object Line
+```
+
+Expected log lines (from the implementation plan; wording differences are Notes, the content named in AC-14 is the Pass criterion: **user name** and **new state yes/no**): <!-- verify against implementation report -->
+
+```text
+2026-10-08 19:42:07.123 +02:00 [INF] EagleEye.Service.UserAccounts.UserAccountService: Account ee-max (S-1-5-21-…-1002): under parental control = yes (set by parent device Papas PC, request 7f3c…, revision 13).
+… [INF] …: Account inventory changed (revision 14): added [ee-neu], removed [], changed []; 7 standard accounts.
+… [INF] …: Forgot the parental-control selection of 1 deleted account(s): S-1-5-21-….
+… [INF] …: Account inventory loaded: 6 standard accounts, 2 under parental control.
+```
+
+### EXPECTED-LIST command
+
+Shows which accounts Windows considers standard accounts, as a reference for the list in the app (Terminal (Administrator)):
+
+```powershell
+$adminSids = Get-LocalGroupMember -SID "S-1-5-32-544" | ForEach-Object { $_.SID.Value }
+Get-LocalUser |
+  Where-Object { $adminSids -notcontains $_.SID.Value -and $_.SID.Value -notmatch '-(500|501|503|504)$' -and $_.Name -ne 'defaultuser0' } |
+  Sort-Object Name | Format-Table Name, FullName, Enabled -AutoSize
+```
+
+If `Get-LocalGroupMember` fails with "Failed to compare two elements…" (a known Windows problem with orphaned group members), use `net localgroup Administratoren` instead and compare by hand.
+
+## 3. Setup Instructions
+
+**Before Block A** (service PC, Admin). Start state expected from US-002: service **0.2.0** installed and running; App A (**0.2.0**) installed in your Admin account and paired as **Papas PC** with `<host>`.
+
+1. **S-1 Installers present.** PowerShell in the repo root: `Get-Item 03_Delivery\windows\EagleEye-Setup-0.3.0.exe, 03_Delivery\windows\EagleEye-ParentApp-Setup-0.3.0.exe | Select-Object Name, LastWriteTime`. Both exist. Note the dates in the run header. <!-- verify against implementation report -->
+2. **S-2 Installed state.** *Einstellungen → Apps → Installierte Apps* → search "EagleEye": **EagleEye 0.2.0** and **EagleEye Parent App 0.2.0**. If you find something else, write it down; TC-003-01/-02 then note the actual starting version.
+3. **S-3 App A paired and green.** Start App A: green **"Verbunden mit `<host>`"**, *Serververbindung* **Gekoppelt**, device **Papas PC**. If it is not paired, pair it now (setup only; host `<host>`, device **Papas PC**, code from the tray popup in your Admin session). TC-003-02 needs a paired 0.2.0 app.
+4. **S-4 No development instances.** *Task-Manager → Details*: no `EagleEye.Service.exe` from a `02_Implementation` folder, no second `EagleEye.ParentApp.exe`.
+5. **S-5 Admin display scaling = 150 %** (*Einstellungen → System → Bildschirm → Skalierung*). Note the value.
+6. **S-6 Terminal (Administrator).** Start menu → **Terminal** → right-click → **Als Administrator ausführen** → UAC *Ja*. The title bar starts with **"Administrator:"**. A normal terminal in your Admin account is **not** enough: with UAC it has no administrator rights (US-002, ISSUE-005). Use it for every command marked *Terminal (Administrator)*. Service commands:
+   ```powershell
+   Stop-Service -DisplayName "EagleEye Service"
+   Start-Service -DisplayName "EagleEye Service"
+   Restart-Service -DisplayName "EagleEye Service"
+   ```
+7. **S-7 Log monitor.** A **second** Terminal (Administrator) (same way as S-6). It is used from TC-003-04 on (the log folder exists only after the update). Place it next to App A so you see both.
+8. **S-8 Kid signed out.** *Task-Manager → Benutzer*: if `eagleeye-kid` is listed → *Abmelden*.
+9. **S-9 Names.** `hostname` → `<host>` = ________.
+10. **S-10 Existing local accounts.** Terminal (Administrator): `Get-LocalUser | Format-Table Name, FullName, Enabled, SID -AutoSize`. Note: (a) the full name of `eagleeye-kid` (may be empty); (b) **any other standard account** besides `eagleeye-kid` (e.g. a real family account; run the EXPECTED-LIST command, §2); (c) whether `defaultuser0` or `defaultuser1` already exists. TC-003-08 needs to know (b); S-12 needs (c).
+11. **S-11 SmartScreen** on the unsigned installers: *Weitere Informationen* → *Trotzdem ausführen* (expected, not a failure).
+
+**Before TC-003-10** (Block B, after TC-003-09):
+
+12. **S-12 Create the test accounts.** Terminal (Administrator). If S-10 found `defaultuser0` or `defaultuser1` already, leave out its `New-LocalUser` line (the existing account serves the same purpose; write it in TC-003-11 Notes).
+    ```powershell
+    $pw = Read-Host -AsSecureString "Password for the EagleEye test accounts"
+    $usersGroup = (Get-LocalGroup -SID "S-1-5-32-545").Name
+    New-LocalUser -Name "ee-anna"      -FullName "anna Test" -Password $pw -PasswordNeverExpires
+    New-LocalUser -Name "ee-max"       -FullName "Max Test"  -Password $pw -PasswordNeverExpires
+    New-LocalUser -Name "ee-lena"                            -Password $pw -PasswordNeverExpires
+    New-LocalUser -Name "ee-gesperrt"                        -Password $pw -PasswordNeverExpires
+    New-LocalUser -Name "defaultuser0"                       -Password $pw -PasswordNeverExpires
+    New-LocalUser -Name "defaultuser1"                       -Password $pw -PasswordNeverExpires
+    New-LocalUser -Name "ee-admin"     -FullName "EE Admin"  -Password $pw -PasswordNeverExpires
+    "ee-anna","ee-max","ee-lena","ee-gesperrt","defaultuser0","defaultuser1" | ForEach-Object { Add-LocalGroupMember -Group $usersGroup -Member $_ }
+    Add-LocalGroupMember -SID "S-1-5-32-544" -Member "ee-admin"
+    Disable-LocalUser -Name "ee-gesperrt"
+    "done: $(Get-Date -Format HH:mm:ss)"
+    ```
+    The last line prints the time at which the script finished: start the stopwatch for TC-003-10 then. Use the same password for all; you never need to sign in with these accounts. (`ee-admin` exists for a few seconds as a standard account before it joins *Administratoren*. If it appears briefly in the app and then disappears, that is expected; it must be gone at the end of TC-003-10.)
+
+**Before Block C**: none (state from Block B). **Before Block D**: none.
+
+**Before Block E** (PC2):
+
+13. **S-13 PC2.** Windows 11, same LAN and subnet as the service PC. Copy `EagleEye-ParentApp-Setup-0.3.0.exe` to PC2. The parent app is **not** installed on PC2 (it was uninstalled in US-002, TC-002-40); if it is, uninstall it first (*Installierte Apps*) and delete `%LOCALAPPDATA%\EagleEye` on PC2. Note PC2's display scaling and display language.
+14. **S-14 Place both screens** so you can see App A and App B at the same time (needed for the 5-second checks). App A on the settings page, green.
+
+## 4. Acceptance Criteria Coverage
+
+| AC | Test case(s) |
+|---|---|
+| AC-1 | TC-003-10 (logged-on Kid and never-logged-on test accounts) |
+| AC-2 | TC-003-08, TC-003-10, TC-003-27 (nested-group part not testable, §1) |
+| AC-3 | TC-003-11 |
+| AC-4 | TC-003-15 (needs a Microsoft account, §8 Q-1) |
+| AC-5 | TC-003-25 |
+| AC-6 | TC-003-02 |
+| AC-7 | TC-003-31 |
+| AC-8 | TC-003-19 |
+| AC-9 | TC-003-08 |
+| AC-10 | TC-003-13, TC-003-32 |
+| AC-11 | TC-003-12, TC-003-32 |
+| AC-12 | TC-003-14, TC-003-26 |
+| AC-13 | TC-003-02, TC-003-20, TC-003-30, TC-003-32 |
+| AC-14 | TC-003-16, TC-003-17 (save and log entry); TC-003-03, TC-003-04, TC-003-05, TC-003-06 (admin-only log folder); TC-003-07 *(supporting)* |
+| AC-15 | TC-003-18 (app restart), TC-003-20 (service restart), TC-003-21 (reboot), TC-003-22 (re-install); TC-003-01, TC-003-02 *(supporting: update 0.2.0 → 0.3.0 keeps the pairing)* |
+| AC-16 | TC-003-23 |
+| AC-17 | TC-003-19, TC-003-31 |
+| AC-18 | TC-003-02 (first inventory after the update), TC-003-10, TC-003-24, TC-003-29 |
+| AC-19 | TC-003-10 (add), TC-003-24 (add), TC-003-25 (rename), TC-003-29 (delete), TC-003-30 (app not connected at the change), TC-003-34 (pushed to two apps) |
+| AC-20 | TC-003-08, TC-003-27 |
+| AC-21 | TC-003-09 (never ticked → unticked), TC-003-28 (ticked before → ticked again) |
+| AC-22 | TC-003-29 |
+| AC-23 | TC-003-33 |
+| AC-24 | TC-003-35 |
+
+All 24 ACs have at least one case. AC-7, AC-23 and AC-24 get their result only in Block E (PC2). AC-4 depends on §8 Q-1.
+
+## 5. Test Cases
+
+### Block A — Update to 0.3.0 and the admin-only log folder
+
+*Service PC · Admin, one visit to the Kid account. Start state: setup S-1 to S-11 done, App A (0.2.0) green.*
+
+#### TC-003-01: Service update 0.2.0 → 0.3.0 *(supporting)*
+
+- **Verifies**: — (supporting: prerequisite for AC-14 and AC-15; the update keeps the pairing)
+- **Machine / account**: Service PC / Admin (+ Terminal (Administrator))
+- **Precondition**: EagleEye 0.2.0 installed, service running, App A (0.2.0) open and green
+
+**Steps**
+
+1. Run `03_Delivery\windows\EagleEye-Setup-0.3.0.exe` with default settings and finish the wizard. Leave App A open.
+2. If no EagleEye tray icon is visible in your Admin session: Start menu → **EagleEye Tray**. Tray icon → *App Infos*.
+3. *Installierte Apps* → search "EagleEye".
+4. `services.msc` → **EagleEye Service**.
+5. Terminal (Administrator): `Test-Path "$env:ProgramData\EagleEye\logs"` and `Test-Path "$env:ProgramData\EagleEye\EagleEye.Service.db"`
+6. Look at App A (still 0.2.0) for up to 60 s.
+
+**Expected result**
+
+- The wizard finishes without an error and does not ask about firewall, port or certificate.
+- *App Infos* shows **EagleEye_v0.3**. <!-- verify against implementation report -->
+- *Installierte Apps*: **EagleEye** listed **once**, version **0.3.0**.
+- **EagleEye Service**: *Wird ausgeführt*.
+- Both `Test-Path`: **True** (log folder created; database kept).
+- App A turns green **"Verbunden mit `<host>`"** again within 60 s without a pairing code (the service kept the pairing).
+
+#### TC-003-02: Parent app update keeps the pairing and shows the new section with all accounts unticked
+
+- **Verifies**: AC-6, AC-13, AC-18 (first inventory after the update); supporting AC-15 (pairing kept)
+- **Machine / account**: Service PC / Admin
+- **Precondition**: TC-003-01 done; App A open, green
+
+**Steps**
+
+1. With App A still open, run `03_Delivery\windows\EagleEye-ParentApp-Setup-0.3.0.exe` with default settings (note how it handles the running app). Start the app (last wizard page or Start menu).
+2. *Installierte Apps* → "EagleEye Parent App".
+3. Look at the navigation menu and the settings page from top to bottom (scroll if needed).
+
+**Expected result**
+
+- The installer finishes without errors; *Installierte Apps*: **EagleEye Parent App 0.3.0**.
+- App A connects **without a pairing code**: green "Verbunden mit `<host>`", *Gekoppelt*, device **Papas PC**.
+- The menu still has only **Einstellungen**.
+- The settings page has three sections in this order: **Darstellung**, **Serververbindung**, **Benutzerkonten auf dem EagleEye-PC**.
+- The new section shows (after at most a short "Wird geladen …") one row per standard account found in S-10 (at least `eagleeye-kid`), each with a checkbox **Unter Elternkontrolle**, and **no** checkbox is ticked.
+- At 150 %, nothing in the section is cut off.
+- *Note only*: the instruction text above the rows (expected "Markieren Sie die Konten, die unter Elternkontrolle stehen."). <!-- verify against implementation report -->
+
+#### TC-003-03: The log folder is restricted to SYSTEM and Administratoren
+
+- **Verifies**: AC-14 (admin-only log folder)
+- **Machine / account**: Service PC / Admin, **Terminal (Administrator)**
+- **Precondition**: TC-003-01 done
+
+**Steps**
+
+0. Check that the terminal's title bar starts with **"Administrator:"**. In a non-elevated terminal step 2 ends with *Zugriff verweigert*; that is Windows UAC, not a product error.
+1. `icacls "$env:ProgramData\EagleEye\logs"`
+2. `Get-ChildItem "$env:ProgramData\EagleEye\logs"`
+3. `icacls "$env:ProgramData\EagleEye"` (for comparison)
+
+**Expected result**
+
+- Step 1: exactly two entries, `NT-AUTORITÄT\SYSTEM:(OI)(CI)(F)` and `VORDEFINIERT\Administratoren:(OI)(CI)(F)`. **No** *Benutzer*, *Authentifizierte Benutzer* or *Jeder* entry. No entry carries `(I)` (nothing inherited). <!-- verify against implementation report -->
+- Step 2: at least one file `EagleEye.Service-001.log` (the number may be higher).
+- Step 3: unchanged from US-002: SYSTEM (F), Administratoren (F), Benutzer (RX).
+
+#### TC-003-04: The service writes its log file, readable for the administrator *(supporting)*
+
+- **Verifies**: — (supporting AC-14: the log file exists and is usable as evidence)
+- **Machine / account**: Service PC / Admin, log monitor (S-7)
+- **Precondition**: TC-003-03 done
+
+**Steps**
+
+1. In the log monitor run **LOG-WATCH** (§2). Note the file name it prints.
+2. Look at the lines shown.
+3. Open the same file in Notepad started as administrator (Start → *Editor* → right-click → *Als Administrator ausführen* → *Datei → Öffnen*), without stopping the service. Close Notepad without saving.
+
+**Expected result**
+
+- Lines in the format `yyyy-MM-dd HH:mm:ss.fff +02:00 [INF] Category: message`. <!-- verify against implementation report -->
+- A line from this service start like **"Account inventory loaded: N standard accounts, 0 under parental control."** (N = number of standard accounts from S-10). <!-- verify against implementation report -->
+- Notepad opens the file while the service runs.
+- No line contains a pairing code, a password or a long random string that looks like a token.
+
+> **Switch to the Kid account** (*Benutzer wechseln* → `eagleeye-kid`; do not sign Admin out).
+
+#### TC-003-05: The kid cannot read the log folder, but the rest of the data folder as before
+
+- **Verifies**: AC-14 (logs folder readable by administrators only)
+- **Machine / account**: Service PC / Kid
+- **Precondition**: signed in as `eagleeye-kid`
+
+**Steps**
+
+1. Explorer → address bar `C:\ProgramData\EagleEye\logs` → Enter. (Do **not** click *Fortsetzen*; it would ask for admin credentials.)
+2. PowerShell (normal): `Get-ChildItem C:\ProgramData\EagleEye\logs`
+3. PowerShell: `Get-Content C:\ProgramData\EagleEye\logs\EagleEye.Service-001.log -TotalCount 3` (use the file name from TC-003-04)
+4. PowerShell: `Get-ChildItem C:\ProgramData\EagleEye`
+
+**Expected result**
+
+- Step 1: Explorer refuses access (*"Sie verfügen momentan nicht über die Berechtigung…"*).
+- Steps 2 and 3: **Zugriff verweigert**; no file name and no log line is shown.
+- Step 4: the folder content is listed as before (at least `logs`, `certs`, the database file); no error.
+
+> **Switch back to Admin.** Leave the Kid **signed in** in the background (TC-003-10 checks that a logged-on account is listed).
+
+#### TC-003-06: A deleted log folder comes back with the same protection
+
+- **Verifies**: AC-14 (admin-only log folder, robustness)
+- **Machine / account**: Service PC / Admin, Terminal (Administrator)
+- **Precondition**: TC-003-05 done
+
+**Steps**
+
+1. **First save the current logs**: LOG-COPY with `<subfolder>` = `run-01-service-logs\before-TC-003-06`.
+2. In the log monitor press *Strg+C*.
+3. Terminal (Administrator):
+   ```powershell
+   Stop-Service -DisplayName "EagleEye Service"
+   Remove-Item "$env:ProgramData\EagleEye\logs" -Recurse -Force
+   Test-Path "$env:ProgramData\EagleEye\logs"
+   Start-Service -DisplayName "EagleEye Service"
+   icacls "$env:ProgramData\EagleEye\logs"
+   Get-ChildItem "$env:ProgramData\EagleEye\logs"
+   ```
+4. Run LOG-WATCH again in the log monitor.
+
+**Expected result**
+
+- `Test-Path` after the deletion: **False**.
+- After the start: `icacls` shows the same two entries as TC-003-03 (SYSTEM and Administratoren, F, no `(I)`, no *Benutzer*).
+- A new log file (`EagleEye.Service-001.log`) exists, and the log monitor shows a new "Account inventory loaded …" line.
+- App A goes red while the service is stopped and green again within 60 s (not the subject of this case; write it in Notes if not).
+
+#### TC-003-07: A loosened log folder is repaired at the next service start *(supporting)*
+
+- **Verifies**: — (supporting AC-14; implementation plan: the service applies the ACL on every start)
+- **Machine / account**: Service PC / Admin, Terminal (Administrator)
+- **Precondition**: TC-003-06 done
+
+**Steps**
+
+1. Give standard users read access by hand, as an attacker with admin rights or a careless tool might:
+   ```powershell
+   icacls "$env:ProgramData\EagleEye\logs" /grant "*S-1-5-32-545:(OI)(CI)RX"
+   icacls "$env:ProgramData\EagleEye\logs"
+   ```
+2. `Restart-Service -DisplayName "EagleEye Service"`, then `icacls "$env:ProgramData\EagleEye\logs"`.
+3. In the log monitor: *Strg+C*, LOG-WATCH again.
+
+**Expected result**
+
+- Step 1: the output now also lists `VORDEFINIERT\Benutzer:(OI)(CI)(RX)` (the grant worked).
+- Step 2: the *Benutzer* entry is **gone**; only SYSTEM and Administratoren remain, as in TC-003-03. <!-- verify against implementation report -->
+- If the *Benutzer* entry is still there after step 2: mark **Fail** and remove it by hand (`icacls "$env:ProgramData\EagleEye\logs" /remove:g "*S-1-5-32-545"`) so the folder is protected again.
+
+### Block B — Inventory content and display
+
+*Service PC · Admin. Start state: end of Block A (App A 0.3.0 green, Kid signed in in the background, log monitor running). Keep App A on the settings page with the account section visible.*
+
+#### TC-003-08: With no standard account, the section says so
+
+- **Verifies**: AC-9, AC-20 (standard → admin disappears), AC-2
+- **Machine / account**: Service PC / Admin, Terminal (Administrator)
+- **Precondition**: the test accounts of S-12 do **not** exist yet. The only standard accounts are those from S-10 (b), normally just `eagleeye-kid`. If there are others (e.g. a real family account), see §8 Q-2 before this case.
+
+**Steps**
+
+1. Make every standard account from S-10 (b) an administrator for a moment (here: `eagleeye-kid`):
+   ```powershell
+   Add-LocalGroupMember -SID "S-1-5-32-544" -Member "eagleeye-kid"
+   ```
+   Start the stopwatch when the command returns.
+2. Watch App A. Stop the stopwatch when the section changes.
+3. Run the EXPECTED-LIST command (§2): it returns no account.
+
+**Expected result**
+
+- Within **60 s**: the section shows **"Keine Nicht-Administrator-Konten vorhanden"** and no rows (note the seconds).
+- The log monitor shows an "Account inventory changed … removed [eagleeye-kid] … 0 standard accounts." line. <!-- verify against implementation report -->
+
+#### TC-003-09: An account that becomes standard again and was never ticked appears unticked
+
+- **Verifies**: AC-21 (not ticked before → not ticked), AC-19 (timing)
+- **Machine / account**: Service PC / Admin, Terminal (Administrator)
+- **Precondition**: TC-003-08 done
+
+**Steps**
+
+1. Undo step 1 of TC-003-08:
+   ```powershell
+   Remove-LocalGroupMember -SID "S-1-5-32-544" -Member "eagleeye-kid"
+   ```
+   Start the stopwatch when the command returns.
+2. Watch App A; stop the stopwatch when the row appears.
+
+**Expected result**
+
+- Within **60 s** the row for `eagleeye-kid` is back, **not ticked** (note the seconds).
+- "Keine Nicht-Administrator-Konten vorhanden" is gone.
+
+> **Setup S-12 now**: create the test accounts (§3). Start the stopwatch for TC-003-10 when the script prints "done".
+
+#### TC-003-10: New standard accounts appear unticked; administrators do not
+
+- **Verifies**: AC-1, AC-2, AC-18, AC-19 (add)
+- **Machine / account**: Service PC / Admin (Kid signed in in the background)
+- **Precondition**: S-12 just finished, stopwatch running
+
+**Steps**
+
+1. Watch App A; stop the stopwatch when the new rows have appeared.
+2. Compare the rows with the output of the EXPECTED-LIST command (§2).
+
+**Expected result**
+
+- Within **60 s** after the script finished, these rows are shown (plus any other standard account from S-10): `eagleeye-kid` (signed in) and `ee-anna`, `ee-max`, `ee-lena`, `ee-gesperrt`, `defaultuser1` (never signed in) — the same set as the EXPECTED-LIST output.
+- **None** of the new rows is ticked.
+- **Not** shown: `ee-admin`, your own Admin account, *Administrator*.
+- The log monitor shows an "Account inventory changed … added [...]" line naming the new accounts (`ee-admin` and `defaultuser0` are not named, except `ee-admin` in a short-lived add/remove pair, see S-12). <!-- verify against implementation report -->
+
+#### TC-003-11: Built-in accounts and `defaultuser0` are hidden, `defaultuser1` is not
+
+- **Verifies**: AC-3
+- **Machine / account**: Service PC / Admin, Terminal (Administrator)
+- **Precondition**: TC-003-10 done
+
+**Steps**
+
+1. `Get-LocalUser | Format-Table Name, Enabled, SID -AutoSize` — find *Gast*, *DefaultAccount*, *WDAGUtilityAccount* (SIDs ending in -501, -503, -504), `defaultuser0`, `defaultuser1`.
+2. Look at the list in App A.
+3. LOG-FIND with `<user name>` = `defaultuser0`.
+
+**Expected result**
+
+- Step 1: the built-in accounts exist (normally disabled); `defaultuser0` and `defaultuser1` are enabled standard accounts.
+- App A shows **no** row for *Gast*, *DefaultAccount*, *WDAGUtilityAccount* or **`defaultuser0`**, although they are not administrators (and although disabled accounts are listed, TC-003-14).
+- App A **does** show a row **`defaultuser1`** (Q-7: only exactly `defaultuser0` is excluded).
+- Step 3: no log line names `defaultuser0`.
+
+#### TC-003-12: Rows show "full name (user name)", or the user name alone
+
+- **Verifies**: AC-11
+- **Machine / account**: Service PC / Admin
+- **Precondition**: TC-003-10 done
+
+**Steps**
+
+1. Read the text of each row.
+
+**Expected result**
+
+- `anna Test (ee-anna)` and `Max Test (ee-max)` (full name, then the user name in brackets).
+- `ee-lena` and `defaultuser1` (no full name → user name only, no empty brackets).
+- `eagleeye-kid` follows the same rule, according to its full name from S-10.
+
+#### TC-003-13: Rows are sorted alphabetically, ignoring upper and lower case
+
+- **Verifies**: AC-10
+- **Machine / account**: Service PC / Admin
+- **Precondition**: TC-003-10 done
+
+**Steps**
+
+1. Read the order of the rows from top to bottom. Look at each row's checkbox and its label.
+
+**Expected result**
+
+- Order (the `eagleeye-kid` row at its alphabetical place by its shown name):
+  1. `anna Test (ee-anna)`
+  2. `defaultuser1`
+  3. `eagleeye-kid` (if it has no full name)
+  4. `ee-gesperrt (deaktiviert)`
+  5. `ee-lena`
+  6. `Max Test (ee-max)`
+- In particular `anna Test` comes **before** `Max Test` (a case-sensitive sort would put "Max" first).
+- Each row has one checkbox labelled **Unter Elternkontrolle**, showing the stored state (all unticked at this point).
+- At 150 %, no row text or label is cut off.
+
+#### TC-003-14: A disabled account is listed with "(deaktiviert)" and can be ticked
+
+- **Verifies**: AC-12
+- **Machine / account**: Service PC / Admin
+- **Precondition**: TC-003-10 done; log monitor running
+
+**Steps**
+
+1. Find the row of `ee-gesperrt`.
+2. Tick **Unter Elternkontrolle** in that row.
+
+**Expected result**
+
+- The row reads **`ee-gesperrt (deaktiviert)`**. <!-- verify against implementation report -->
+- The checkbox can be ticked and stays ticked; within 5 s the log monitor shows a line naming `ee-gesperrt` with **yes**.
+
+#### TC-003-15: An account linked to a Microsoft account is listed
+
+- **Verifies**: AC-4
+- **Machine / account**: Service PC / Admin
+- **Precondition**: a Microsoft account that may be added to this PC as a standard user (§8 Q-1). If none is available, mark **Blocked** ("no Microsoft account available") and continue.
+
+**Steps**
+
+1. *Einstellungen → Konten → Andere Benutzer* (older builds: *Familie und andere Benutzer*) → *Konto hinzufügen* → enter the e-mail address of the Microsoft account → finish. The new account is a standard user by default (check: *Kontotyp* = *Standardbenutzer*).
+2. If no row appears within 60 s: sign in once with that account (*Benutzer wechseln*), sign out again, switch back to Admin. Write in Notes whether step 2 was needed.
+3. Terminal (Administrator): `Get-LocalUser | Where-Object PrincipalSource -eq MicrosoftAccount | Format-Table Name, FullName`
+4. Look at App A.
+
+**Expected result**
+
+- Step 3 lists the account (local user name, often shortened, e.g. `micha`).
+- App A shows a row for it in the form `<full name> (<user name>)` (or the user name alone if Windows has no full name), not ticked.
+- **Cleanup** (§7 step 3): remove the account after the run, unless you want to keep it.
+
+### Block C — Selecting, saving, keeping, error
+
+*Service PC · Admin. Start state: end of Block B. Ticked so far: `ee-gesperrt` (TC-003-14). Log monitor running.*
+
+#### TC-003-16: Ticking saves at once and writes a log entry
+
+- **Verifies**: AC-14
+- **Machine / account**: Service PC / Admin, log monitor
+- **Precondition**: App A green, section shows the list
+
+**Steps**
+
+1. Look for a *Speichern* (save) button anywhere on the settings page.
+2. Tick **Unter Elternkontrolle** for `Max Test (ee-max)`; start the stopwatch at the click.
+3. Watch the row and the log monitor.
+4. Tick `anna Test (ee-anna)` and `ee-lena` as well (needed for later cases).
+
+**Expected result**
+
+- There is **no** save button.
+- Within **5 s** the log monitor shows a line naming **`ee-max`** with **yes** (e.g. "Account ee-max (S-1-5-21-…): under parental control = yes (set by parent device Papas PC, …)"). <!-- verify against implementation report -->
+- The checkbox stays ticked (the row may be greyed out for a moment while saving). No error text.
+- Step 4: two more log lines, `ee-anna` yes and `ee-lena` yes.
+- *Note only*: whether the same entry appears in the Event Log (*Anwendung*, source **EagleEye**).
+
+#### TC-003-17: Unticking saves at once and writes a log entry
+
+- **Verifies**: AC-14
+- **Machine / account**: Service PC / Admin, log monitor
+- **Precondition**: `ee-gesperrt` ticked (TC-003-14)
+
+**Steps**
+
+1. Untick `ee-gesperrt (deaktiviert)`; stopwatch at the click.
+2. Write down the resulting **tick record** (used until the end of Block D): ticked = `ee-anna`, `ee-lena`, `ee-max`; unticked = `defaultuser1`, `eagleeye-kid`, `ee-gesperrt`.
+
+**Expected result**
+
+- Within **5 s** a log line naming **`ee-gesperrt`** with **no**.
+- The checkbox stays unticked; no error text.
+
+#### TC-003-18: The ticks survive closing and restarting the parent app
+
+- **Verifies**: AC-15 (app restart)
+- **Machine / account**: Service PC / Admin
+- **Precondition**: tick record from TC-003-17
+
+**Steps**
+
+1. Close App A (window **X**). *Task-Manager*: no `EagleEye.ParentApp.exe`.
+2. Start App A from the Start menu. Wait for green.
+
+**Expected result**
+
+- The section shows the same rows and exactly the ticks of the tick record.
+
+#### TC-003-19: While the service is stopped, there is nothing to tick
+
+- **Verifies**: AC-8, AC-17
+- **Machine / account**: Service PC / Admin, Terminal (Administrator)
+- **Precondition**: App A green
+
+**Steps**
+
+1. `Stop-Service -DisplayName "EagleEye Service"`; stopwatch.
+2. Watch App A until the status bar is red.
+3. Look at the account section; try to find any checkbox.
+
+**Expected result**
+
+- Status bar **red** "Nicht verbunden mit `<host>`" within 30 s.
+- The section shows **"Keine Daten verfügbar"** and **no** rows and no checkboxes (the old list is not shown read-only).
+
+#### TC-003-20: After the service starts again, the list comes back with the same ticks
+
+- **Verifies**: AC-13, AC-15 (service restart)
+- **Machine / account**: Service PC / Admin, Terminal (Administrator)
+- **Precondition**: TC-003-19 (service stopped, app red)
+
+**Steps**
+
+1. `Start-Service -DisplayName "EagleEye Service"`; stopwatch. Do not touch App A.
+2. Watch the account section closely while the app reconnects.
+3. Log monitor: *Strg+C*, LOG-WATCH.
+
+**Expected result**
+
+- Green within **60 s**, without any action.
+- The section then shows the list with exactly the ticks of the tick record, without any action.
+- *Note only*: whether **"Wird geladen …"** was visible between "Keine Daten verfügbar" and the list (it may be too short to see; see §8 Q-4). <!-- verify against implementation report -->
+- The log shows "Account inventory loaded: … 3 under parental control." <!-- verify against implementation report -->
+
+#### TC-003-21: The ticks survive a reboot of the service PC
+
+- **Verifies**: AC-15 (reboot)
+- **Machine / account**: Service PC / Admin
+- **Precondition**: tick record unchanged. Before the reboot: save open work; the Kid session is ended by the reboot (expected).
+
+**Steps**
+
+1. Start → *Ein/Aus* → *Neu starten*.
+2. Sign in as Admin. Start App A (if it does not start by itself). Wait for green.
+3. Open the log monitor again (S-7, LOG-WATCH) and the Terminal (Administrator) (S-6).
+
+**Expected result**
+
+- App A green without a pairing code; the section shows exactly the ticks of the tick record.
+
+#### TC-003-22: The ticks survive a re-install of the service
+
+- **Verifies**: AC-15 (update / re-install)
+- **Machine / account**: Service PC / Admin
+- **Precondition**: App A green
+
+**Steps**
+
+1. Run `03_Delivery\windows\EagleEye-Setup-0.3.0.exe` again with default settings (same version over the installed one). Leave App A open.
+2. Wait until App A is green again (up to 60 s after the wizard finished). Log monitor: *Strg+C*, LOG-WATCH.
+
+**Expected result**
+
+- The wizard finishes without errors.
+- App A green without a pairing code; the section shows exactly the ticks of the tick record.
+- `icacls "$env:ProgramData\EagleEye\logs"` (Terminal (Administrator)) still shows only SYSTEM and Administratoren.
+
+#### TC-003-23: A change that cannot be saved shows an error and the checkbox returns
+
+- **Verifies**: AC-16
+- **Machine / account**: Service PC / Admin, *Ressourcenmonitor* (elevated), log monitor
+- **Precondition**: App A green; tick record unchanged (`ee-lena` ticked)
+
+How the failure is provoked: the service process is **paused** for about 20 s. The connection stays open (Windows still accepts the network data), but the service does not answer. The app therefore gets no confirmation and gives up after about 4 s (implementation plan D-5). Stopping the service does not work for this, because the app notices the closed connection at once and removes the list (TC-003-19). <!-- verify against implementation report -->
+
+**Steps**
+
+1. Start *Ressourcenmonitor*: Terminal (Administrator) → `resmon`. Tab **CPU** → list *Prozesse* → find `EagleEye.Service.exe`.
+2. Right-click `EagleEye.Service.exe` → **Prozess anhalten** → confirm. Note the clock time. **From now on, be quick:**
+3. Within 10 s: in App A **untick** `ee-lena`; start the stopwatch at the click.
+4. Watch the row and the section for 10 s. Stop the stopwatch when the error text appears.
+5. Right-click `EagleEye.Service.exe` → **Prozess fortsetzen** (at the latest 25 s after step 2).
+6. Watch App A and the log monitor for 15 s.
+7. LOG-FIND with `ee-lena`.
+
+**Expected result**
+
+- Steps 3–4: within **5 s** after the click, the section shows **"Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen."**, and the `ee-lena` checkbox is **ticked again** (the stored state). <!-- verify against implementation report -->
+- Steps 5–7: after the service continues, App A shows for `ee-lena` the state of the **last** log line for `ee-lena` (step 7). The service may store the queued untick after all; then the row becomes unticked by itself within a few seconds. Both outcomes are a Pass, as long as the app ends up equal to the log.
+- At no time does the app show a state different from the last log line for longer than 5 s.
+- *Note only*: whether the app went red / "Keine Daten verfügbar" during the pause (it should not within 25 s), and what the final state of `ee-lena` was.
+- **Afterwards**: make sure `ee-lena` is **ticked** again (tick it if needed). If the service did not continue, `Restart-Service -DisplayName "EagleEye Service"`.
+
+*Fallback, if you cannot pause the process*: on PC2 (Block E), with App B green, unplug PC2's network cable (or switch off its Wi-Fi) and untick a row in App B within 5 s. Expected the same error text and revert within 5 s. Write in Notes which method you used.
+
+### Block D — Account changes while the service runs
+
+*Service PC · Admin, Terminal (Administrator), log monitor. Start state: end of Block C, tick record of TC-003-17. App A on the settings page; do not touch it while timing.*
+
+#### TC-003-24: A new standard account appears unticked within 60 s
+
+- **Verifies**: AC-19 (add), AC-18
+- **Machine / account**: Service PC / Admin, Terminal (Administrator)
+- **Precondition**: App A green
+
+**Steps**
+
+1. `New-LocalUser -Name "ee-neu" -NoPassword; Add-LocalGroupMember -Group (Get-LocalGroup -SID "S-1-5-32-545").Name -Member "ee-neu"`; stopwatch when the command returns.
+2. Watch App A.
+
+**Expected result**
+
+- Within **60 s** a row **`ee-neu`**, **not ticked**, at its alphabetical place (between `ee-lena` and `Max Test (ee-max)`). Note the seconds.
+- The other rows keep their ticks.
+
+#### TC-003-25: A renamed account keeps its tick and shows the new name
+
+- **Verifies**: AC-5, AC-19 (rename)
+- **Machine / account**: Service PC / Admin, `lusrmgr.msc`
+- **Precondition**: `ee-anna` ticked
+
+**Steps**
+
+1. `lusrmgr.msc` → *Benutzer* → right-click **ee-anna** → *Umbenennen* → `ee-annika` → Enter. Stopwatch.
+2. Watch App A.
+
+**Expected result**
+
+- Within **60 s** the row reads **`anna Test (ee-annika)`** and is still **ticked**. There is no separate row for `ee-anna` any more.
+- Log monitor: "Account inventory changed … changed [ee-annika] …". <!-- verify against implementation report -->
+
+#### TC-003-26: Disabling and enabling an account updates its note and keeps its tick
+
+- **Verifies**: AC-12 (disabled note follows the account; plan D-6)
+- **Machine / account**: Service PC / Admin, `lusrmgr.msc`
+- **Precondition**: TC-003-25 (`ee-annika` ticked)
+
+**Steps**
+
+1. `lusrmgr.msc` → *Benutzer* → double-click **ee-annika** → tick **Konto ist deaktiviert** → *OK*. Stopwatch.
+2. Watch App A until the row changes.
+3. Untick **Konto ist deaktiviert** again → *OK*. Stopwatch. Watch App A.
+
+**Expected result**
+
+- Step 2: the row reads **`anna Test (ee-annika) (deaktiviert)`**, still **ticked**.
+- Step 3: the note disappears, still **ticked**.
+- The story gives no time limit for this change (it is not an add, delete or rename). Expected within 60 s like the others; slower is a **Note**, not a Fail. Note both times.
+
+#### TC-003-27: A ticked account that becomes an administrator disappears
+
+- **Verifies**: AC-20, AC-2
+- **Machine / account**: Service PC / Admin, *Einstellungen*
+- **Precondition**: `ee-max` ticked
+
+**Steps**
+
+1. *Einstellungen → Konten → Andere Benutzer* → **Max Test** / **ee-max** → *Kontotyp ändern* → **Administrator** → *OK*. Stopwatch at *OK*.
+2. Watch App A.
+
+**Expected result**
+
+- Within **60 s** the row `Max Test (ee-max)` disappears from the list. Note the seconds.
+- The other rows and their ticks are unchanged.
+- Log monitor: "Account inventory changed … removed [ee-max] …". <!-- verify against implementation report -->
+
+#### TC-003-28: The account that becomes standard again is ticked again
+
+- **Verifies**: AC-21 (ticked before → ticked again)
+- **Machine / account**: Service PC / Admin, *Einstellungen*
+- **Precondition**: TC-003-27 done
+
+**Steps**
+
+1. Same dialog → *Kontotyp ändern* → **Standardbenutzer** → *OK*. Stopwatch at *OK*.
+2. Watch App A.
+
+**Expected result**
+
+- Within **60 s** the row **`Max Test (ee-max)`** is back and **ticked**.
+
+#### TC-003-29: A deleted account is forgotten; a new account with the same name is unticked
+
+- **Verifies**: AC-19 (delete), AC-22, AC-18
+- **Machine / account**: Service PC / Admin, Terminal (Administrator)
+- **Precondition**: `ee-lena` ticked
+
+**Steps**
+
+1. `Remove-LocalUser -Name "ee-lena"`; stopwatch. Watch App A until the row is gone.
+2. LOG-FIND with `Forgot` as the pattern.
+3. Create it again with the same name:
+   ```powershell
+   New-LocalUser -Name "ee-lena" -NoPassword; Add-LocalGroupMember -Group (Get-LocalGroup -SID "S-1-5-32-545").Name -Member "ee-lena"
+   ```
+   Stopwatch. Watch App A.
+
+**Expected result**
+
+- Step 1: within **60 s** the row `ee-lena` disappears.
+- Step 2: a line "Forgot the parental-control selection of 1 deleted account(s): S-1-5-21-…". <!-- verify against implementation report -->
+- Step 3: within **60 s** a row **`ee-lena`** appears again, **not ticked** (a different account, new SID).
+
+#### TC-003-30: A parent app that was closed during a change shows the current list when it starts
+
+- **Verifies**: AC-19 (app not connected at the time of the change), AC-13
+- **Machine / account**: Service PC / Admin, Terminal (Administrator)
+- **Precondition**: `ee-neu` exists (TC-003-24)
+
+**Steps**
+
+1. Close App A (**X**); *Task-Manager*: no `EagleEye.ParentApp.exe`.
+2. `Remove-LocalUser -Name "ee-neu"`. Wait **30 s** (so the service has noticed the change before the app connects).
+3. Start App A; wait for green.
+
+**Expected result**
+
+- As soon as App A is connected, the list shows **no** `ee-neu` row; all other rows and ticks are as before (ticked: `anna Test (ee-annika)`, `Max Test (ee-max)`; unticked: the rest).
+
+### Block E — Two parent apps (PC2)
+
+*PC2 + service PC · Admin. Setup S-13, S-14 done. App A green on the settings page. Log monitor running.*
+
+#### TC-003-31: An unpaired app shows no accounts
+
+- **Verifies**: AC-7, AC-17
+- **Machine / account**: PC2 / any local account
+- **Precondition**: parent app not installed on PC2
+
+**Steps**
+
+1. On PC2 install `EagleEye-ParentApp-Setup-0.3.0.exe` with default settings and start the app.
+2. In the host dialog click *Abbrechen*. Look at the settings page.
+3. In *Serververbindung* enter `<host>` → *Verbinden* (pairing form appears). Look at the account section again. Do not pair yet.
+
+**Expected result**
+
+- Step 2: three sections; *Benutzerkonten auf dem EagleEye-PC* shows **"Keine Daten verfügbar"**, no rows, no checkboxes.
+- Step 3 (connected, pairing not finished): still **"Keine Daten verfügbar"**, no rows.
+- *Note only*: if PC2 runs Windows in English, the English texts ("User accounts on the EagleEye PC", "No data available").
+
+#### TC-003-32: After pairing, App B shows the same list as App A
+
+- **Verifies**: AC-13, AC-10, AC-11
+- **Machine / account**: PC2 + service PC / Admin
+- **Precondition**: TC-003-31, pairing form open on PC2
+
+**Steps**
+
+1. On the service PC read the pairing code from the tray popup in your Admin session (or the Kid's). On PC2: device name **PC2**, enter the code → *Koppeln*.
+2. Compare the account section of App B with App A row by row.
+
+**Expected result**
+
+- App B green "Verbunden mit `<host>`", *Gekoppelt*, device **PC2**.
+- App B's section shows the same rows in the same order with the same names and the same ticks as App A.
+- Nothing is cut off at PC2's display scaling (note it).
+
+#### TC-003-33: A tick in one app appears in the other within 5 s
+
+- **Verifies**: AC-23
+- **Machine / account**: PC2 + service PC / Admin
+- **Precondition**: both apps green, both on the settings page, both screens visible (S-14)
+
+**Steps**
+
+1. In **App A** tick `defaultuser1`. Stopwatch at the click. Watch App B; stop when its `defaultuser1` row is ticked.
+2. In **App B** untick `defaultuser1`. Stopwatch. Watch App A.
+3. In App B tick `ee-gesperrt`, then in App A untick it (one after the other, wait until both agree in between).
+
+**Expected result**
+
+- Each change appears in the other app within **5 s**, without any action there (note the times; expected about 1 s).
+- The app where you clicked keeps the new state; no error text.
+- Each change gives one log line, naming the device where it was made (*Papas PC* or *PC2*). <!-- verify against implementation report -->
+- End state: `defaultuser1` and `ee-gesperrt` unticked in both apps.
+
+#### TC-003-34: An account change on the service PC appears in both apps
+
+- **Verifies**: AC-19 (pushed to all connected parent apps)
+- **Machine / account**: PC2 + service PC / Admin, Terminal (Administrator)
+- **Precondition**: both apps green
+
+**Steps**
+
+1. `New-LocalUser -Name "ee-zwei" -NoPassword; Add-LocalGroupMember -Group (Get-LocalGroup -SID "S-1-5-32-545").Name -Member "ee-zwei"`; stopwatch. Watch both apps.
+2. `Remove-LocalUser -Name "ee-zwei"`; stopwatch. Watch both apps.
+
+**Expected result**
+
+- Step 1: within **60 s** both apps show a new unticked row `ee-zwei` (about at the same moment).
+- Step 2: within **60 s** the row disappears in both apps.
+
+#### TC-003-35: Changes at about the same time: the last one wins, both apps agree
+
+- **Verifies**: AC-24
+- **Machine / account**: PC2 + service PC / Admin, log monitor
+- **Precondition**: both apps green; `ee-lena` unticked in both
+
+**Steps**
+
+1. **Simultaneous clicks**: put one hand on each mouse. Click `ee-lena` in App A and App B **at the same moment** (both send "tick"). Wait 5 s.
+2. **Crossing clicks**: in App A untick `ee-lena`; **as fast as you can** (within about 1 s) click `ee-lena` in App B, whatever it shows at that moment. Wait 5 s.
+3. Repeat step 2 with the roles swapped (App B first, then App A).
+4. After each step, look at both apps and at the last two `ee-lena` lines in the log monitor (or LOG-FIND `ee-lena`). Write the final state per step in Notes.
+
+**Expected result**
+
+- After every step: at most **5 s** after the last click, **both apps show the same state** for `ee-lena`, and it is the state of the **last** `ee-lena` log line (the change received last).
+- Every click that reached the service has its own log line (with increasing revision numbers). <!-- verify against implementation report -->
+- No app shows a state different from the other for longer than 5 s. An error text in one app is a **Note** (not expected, but allowed by AC-16 if that app then shows the stored state).
+
+## 6. Regression
+
+None. Story test runs contain **no regression cases** (`02_Implementation/docs/testing/README.md` §3, TES rule 4). Regression runs only when Michael explicitly requests it before a major version release, as a separate run built from `02_Implementation/docs/testing/regression-checklist.md`.
+
+## 7. Cleanup
+
+After the run (keep EagleEye 0.3.0 installed; later stories build on it):
+
+1. **Service logs**: LOG-COPY with `<subfolder>` = `run-01-service-logs` (Terminal (Administrator)). Look through the copies before committing (§2).
+2. **Test accounts** (Terminal (Administrator)). This also checks once more that deletions are handled (the rows disappear from App A within 60 s):
+   ```powershell
+   "ee-annika","ee-anna","ee-max","ee-lena","ee-gesperrt","ee-neu","ee-zwei","defaultuser0","defaultuser1","ee-admin" |
+     ForEach-Object { if (Get-LocalUser -Name $_ -ErrorAction SilentlyContinue) { Remove-LocalUser -Name $_ } }
+   ```
+   Leave out `defaultuser0` / `defaultuser1` if they existed before the run (S-10). No user profiles were created (none of these accounts signed in), except for a Microsoft account from TC-003-15 if you signed in with it.
+3. **Microsoft account (TC-003-15)**, if added and not wanted: *Einstellungen → Konten → Andere Benutzer* → the account → *Entfernen* → *Konto und Daten löschen*.
+4. **`eagleeye-kid`**: is a standard account again (`Get-LocalGroupMember -SID "S-1-5-32-544"` does not list it; TC-003-09 removed it). It stays unticked. Sign it out if signed in.
+5. **Remaining tick**: none of the deleted accounts matters. The service forgets their selections by itself (AC-22).
+6. **PC2**: App B stays installed and paired (useful for later two-app stories). If you prefer a clean PC2: *Kopplung aufheben* → confirm, uninstall, delete the copied installer.
+7. **Display scaling**: back to your usual value if you changed it (S-5).
+
+## 8. Notes and Open Questions for Michael
+
+Found while writing this plan. Each has a proposed answer; none blocks the plan.
+
+| ID | Question | Proposed answer |
+|---|---|---|
+| Q-1 | **AC-4 needs an account linked to a Microsoft account** as a standard user on the service PC. Your own admin account does not count (admins are never listed). Do you have a spare Microsoft account (e.g. a family member's or a test account) you can add for the run? | Yes, add one in TC-003-15 and remove it afterwards. If none is available, TC-003-15 is **Blocked**, and AC-4 stays open until a later run; DEV cannot unit-test the Windows enumeration. |
+| Q-2 | **AC-9 needs zero standard accounts** for a moment. TC-003-08 makes `eagleeye-kid` an administrator for about a minute. If S-10 finds other standard accounts (e.g. real family accounts), they would have to be made administrators too. | Do it for `eagleeye-kid` only. If other standard accounts exist, make them administrators for the minute as well (they must not be signed in), or mark TC-003-08 **Blocked** and TES moves AC-9 to a later run. |
+| Q-3 | **Which texts are Pass criteria?** The story says wording differences are Notes. OQ-8 explicitly agreed the section title and the checkbox label. | Pass criteria: *Benutzerkonten auf dem EagleEye-PC*, *Unter Elternkontrolle*, single menu entry *Einstellungen*. All other texts: differences are Notes (as in US-002 §2). |
+| Q-4 | **"Wird geladen …" (AC-13)** is shown only while the list is fetched, normally a fraction of a second, so you may not see it. | Record it as a Note (seen / not seen). The AC-13 Pass rests on the list appearing with the stored ticks without any action; the loading state is covered by DEV's unit tests. |
+| Q-5 | **AC-16 failure method**: pausing `EagleEye.Service.exe` for about 20 s with *Ressourcenmonitor → Prozess anhalten*. It is harmless (the service continues where it stopped), but it is a manual intervention in a SYSTEM service. | Accept. Fallback: network cable of PC2 (TC-003-23). |
+| Q-6 | **AC-2 "admin through another group"** cannot be set up on a workgroup PC (Windows does not nest local groups). | Not tested manually; accepted with DEV's design. If the PC ever joins a domain, TES adds a case. |
+| Q-7 | **PC2 after the run**: keep App B installed and paired? | Yes, keep it (later stories need two apps again). |
+
+## 9. Change Log
+
+| Date | Change | Reason |
+|---|---|---|
+| 2026-10-07 | Plan written (in parallel with DEV); places marked `<!-- verify against implementation report -->` to be aligned after DEV's handover. | Step d started early at Michael's request. |
