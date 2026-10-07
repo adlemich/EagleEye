@@ -37,8 +37,20 @@ public sealed class UserAccountItemViewModel : ObservableObject
     public string DisplayName
     {
         get => _displayName;
-        internal set => SetProperty(ref _displayName, value);
+        internal set
+        {
+            if (SetProperty(ref _displayName, value))
+            {
+                OnPropertyChanged(nameof(CheckBoxAutomationName));
+            }
+        }
     }
+
+    /// <summary>
+    /// Accessible name of the checkbox, e.g. "Unter Elternkontrolle: eagleeye-kid" (ISSUE-006: the row
+    /// has no visible label any more; the column header labels it visually).
+    /// </summary>
+    public string CheckBoxAutomationName => AppTexts.Format(AppTexts.AccountCheckBoxNameFormat, DisplayName);
 
     /// <summary>The checkbox. Setting a new value (user input) sends it to the service.</summary>
     public bool IsUnderParentalControl

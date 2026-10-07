@@ -55,4 +55,6 @@
   <data name="AccountDisabledSuffix" xml:space="preserve"><value>(disabled)</value></data>
   <data name="AccountNameFormat" xml:space="preserve"><value>{0} ({1})</value></data>
   <data name="AccountSaveFailed" xml:space="preserve"><value>The change could not be saved. Please try again.</value></data>
+  <data name="AccountColumnHeader" xml:space="preserve"><value>Account</value></data>
+  <data name="AccountCheckBoxNameFormat" xml:space="preserve"><value>Under parental control: {0}</value></data>
 </root>

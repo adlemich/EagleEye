@@ -66,6 +66,8 @@ public static class AppTexts
     public static string AccountDisabledSuffix => Get(nameof(AccountDisabledSuffix));
     public static string AccountNameFormat => Get(nameof(AccountNameFormat));
     public static string AccountSaveFailed => Get(nameof(AccountSaveFailed));
+    public static string AccountColumnHeader => Get(nameof(AccountColumnHeader));
+    public static string AccountCheckBoxNameFormat => Get(nameof(AccountCheckBoxNameFormat));
 #pragma warning restore CS1591
 
     /// <summary>Formats a composite text with the current culture.</summary>

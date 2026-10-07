@@ -21,9 +21,9 @@ US-003 is implemented as planned in Steps 0 to 8. The service keeps an inventory
 | `EagleEye.ParentApp.Core` | `IParentHubClient`/`ParentHubClient`: two calls + callback handler (registered before `StartAsync`); `ParentHubGateway` (+ `IParentHubGateway`, `IPairedConnectionSink`, `ParentHubNotConnectedException`); `StateReplica<T>`; `Accounts/UserAccountsModel` (+ `IUserAccountsModel`, `AccountsLoadState`); view models `UserAccountsViewModel`, `UserAccountItemViewModel`, `AccountDisplayName`, `AccountsSectionState`; `ConnectionCoordinator` reports confirmed/lost connections to the gateway; 9 new texts (de/en) |
 | `EagleEye.ParentApp` (MAUI head) | `SettingsView`: third section; `MauiProgram`: gateway (as `IParentHubGateway` and `IPairedConnectionSink`), model, view model |
 | Installer | `setup.iss`: creates `%ProgramData%\EagleEye\logs\` with SYSTEM + Administrators only (idempotent, also on upgrade). `parentapp-setup.iss` unchanged |
-| Version | `Directory.Build.props` → `0.3.0` (service reports `EagleEye_v0.3`) |
+| Version | `Directory.Build.props` → `0.3.0`, patch `0.3.1` for ISSUE-006 (service reports `EagleEye_v0.3`) |
 
-**Build / test result** (Windows, final state): `build.ps1` 0 warnings, 0 errors for all six steps (Shared, Service, TrayClient, ParentApp.Core, ParentApp Windows, ParentApp Android). `test.ps1` all **921** unit tests pass (Shared 141, Service 303, TrayClient 40, ParentApp 437), 0 failed.
+**Build / test result** (Windows, final state): `build.ps1` 0 warnings, 0 errors for all six steps (Shared, Service, TrayClient, ParentApp.Core, ParentApp Windows, ParentApp Android). `test.ps1` all **928** unit tests pass (Shared 141, Service 303, TrayClient 40, ParentApp 444), 0 failed (0.3.1; 921 / ParentApp 437 at 0.3.0).
 
 ---
 
@@ -110,10 +110,10 @@ Coverage measured with coverlet (`dotnet test --collect:"XPlat Code Coverage"`),
 
 | Item | Value |
 |---|---|
-| Service + tray installer | `03_Delivery/windows/EagleEye-Setup-0.3.0.exe` (admin), built 2026-10-07 12:04, SHA-256 `055e09cf…bfeda3` |
-| Parent app installer | `03_Delivery/windows/EagleEye-ParentApp-Setup-0.3.0.exe` (per user, no admin), built 2026-10-07 12:11, SHA-256 `71ec14f4…ae1cea` |
+| Service + tray installer | `03_Delivery/windows/EagleEye-Setup-0.3.1.exe` (admin), built 2026-10-07 12:59, SHA-256 `6693dc9b362a60dd5fd7d30aa5e96e54ed50503ead11b66dc757df6c48434420` (service and tray code unchanged since 0.3.0) |
+| Parent app installer | `03_Delivery/windows/EagleEye-ParentApp-Setup-0.3.1.exe` (per user, no admin), built 2026-10-07 13:00, SHA-256 `d6e5efc5892825a0ad0c3ad9cac04a1d520f56d04cd7f7b114da52b5e8627918` |
 | Rebuild | `pwsh 02_Implementation/scripts/package-windows.ps1` (both) or `-Target Service` / `-Target ParentApp` |
-| Version | 0.3.0; the service reports `EagleEye_v0.3` (tray → *App Infos*) |
+| Version | 0.3.1 (patch for ISSUE-006, see §8); the service reports `EagleEye_v0.3` (tray → *App Infos*). The 0.3.0 installers are superseded. |
 
 ### Install and start
 
@@ -127,7 +127,9 @@ Coverage measured with coverlet (`dotnet test --collect:"XPlat Code Coverage"`),
 |---|---|---|
 | Section header (AC-6) | Benutzerkonten auf dem EagleEye-PC | User accounts on the EagleEye PC |
 | Instruction above the list | Markieren Sie die Konten, die unter Elternkontrolle stehen. | Tick the accounts that are under parental control. |
-| Label right of each checkbox (AC-10) | Unter Elternkontrolle | Under parental control |
+| Column header 1 (ISSUE-006) | Konto | Account |
+| Column header 2 (AC-10, ISSUE-006) | Unter Elternkontrolle | Under parental control |
+| Accessible name of each checkbox (ISSUE-006, not visible) | Unter Elternkontrolle: eagleeye-kid | Under parental control: eagleeye-kid |
 | Not paired / not connected / fetch failed (AC-7, AC-8) | Keine Daten verfügbar | No data available |
 | Connected, no standard accounts (AC-9) | Keine Nicht-Administrator-Konten vorhanden | No non-admin accounts available |
 | While fetching (AC-13) | Wird geladen … | Loading … |
@@ -135,7 +137,7 @@ Coverage measured with coverlet (`dotnet test --collect:"XPlat Code Coverage"`),
 | Disabled suffix (AC-12) | `Max Adler (max) (deaktiviert)` | `Max Adler (max) (disabled)` |
 | Error below the list (AC-16) | Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen. | The change could not be saved. Please try again. |
 
-Row layout: name on the left, then the checkbox, then the label "Unter Elternkontrolle". Rows are sorted by the shown name (German/English culture, ignoring case). While a row's change is pending (normally well below 1 s, at most 4 s), its checkbox is disabled; other rows stay usable. The error text stays until the next successful change or the next connect/disconnect.
+Table layout (0.3.1, ISSUE-006): a header row with the bold column titles "Konto" and "Unter Elternkontrolle", then one row per account with the shown name in column 1 and the checkbox centred in column 2 under its header; no per-row label. The header is only shown together with at least one row (not with "Keine Daten verfügbar", "Keine Nicht-Administrator-Konten vorhanden" or "Wird geladen …"). Columns have fixed widths (360 and 200 device-independent units), so header and rows line up and scale with the display; long names wrap. Rows are sorted by the shown name (German/English culture, ignoring case). While a row's change is pending (normally well below 1 s, at most 4 s), its checkbox is disabled; other rows stay usable. The error text stays until the next successful change or the next connect/disconnect.
 
 ### What to observe
 
@@ -168,3 +170,17 @@ Row layout: name on the left, then the checkbox, then the label "Unter Elternkon
 |---|---|
 | Steps 0 to 8 (code, unit tests, `build.ps1`, `test.ps1`, both installers, smoke check, docs) | Windows Developer Machine |
 | MacBook | Not used. `Shared` and `ParentApp.Core` stay free of Windows APIs (`LogDirectorySecurity` and the NetApi source are in the Service), so `build.ps1` / `test.ps1` keep working there after `git pull`. |
+
+---
+
+## 8. Patch 0.3.1 — ISSUE-006 (account list as a table)
+
+| Item | Content |
+|---|---|
+| Change | Settings section "Benutzerkonten auf dem EagleEye-PC" shows a two-column table: bold headers "Konto" / "Account" and "Unter Elternkontrolle" / "Under parental control", name in column 1, checkbox centred in column 2, no per-row label. Header only with rows. Each checkbox has the automation name "Unter Elternkontrolle: <name>" / "Under parental control: <name>". Details and root cause: `US-003/issues/ISSUE-006.md` §Resolution. |
+| New text keys | `AccountColumnHeader` (Konto / Account), `AccountCheckBoxNameFormat` (Unter Elternkontrolle: {0} / Under parental control: {0}) |
+| Code | `SettingsView.xaml`; `UserAccountItemViewModel.CheckBoxAutomationName` (raised again on rename); `AppTexts` + both resx; `Directory.Build.props` 0.3.1. Service, Shared and tray client code unchanged (installer 0.3.1 differs from 0.3.0 only in the version). |
+| Tests | +7 (ParentApp 444); `UserAccountItemViewModel`, `UserAccountsViewModel`, `AppTexts` at 100 % line and branch coverage. `build.ps1` 0 warnings (Windows + Android), `test.ps1` 928 passed. |
+| Installers | `03_Delivery/windows/EagleEye-Setup-0.3.1.exe` (12:59, `6693dc9b…48434420`), `03_Delivery/windows/EagleEye-ParentApp-Setup-0.3.1.exe` (13:00, `d6e5efc5…b8627918`) |
+| Deviation | None from ISSUE-006. Column widths are fixed (360 / 200 device-independent units) so that header and rows line up; MAUI has no shared column sizing across separate grids. |
+| Smoke check | Not completed: Michael's installed service 0.3.0 held ports 5443/5080, so the console service could not start; DEV did not pair against the installed service (one mistaken attempt was rejected with a wrong code, no device registered; see ISSUE-006). Visual check in light/dark mode and at 150 % plus the screenshot `docs/testing/US-003/evidence/ISSUE-006-after-fix.png` are left to Michael/TES. |

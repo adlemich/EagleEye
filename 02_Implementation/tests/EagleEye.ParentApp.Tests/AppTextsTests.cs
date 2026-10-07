@@ -80,13 +80,13 @@ public sealed class AppTextsTests
     }
 
     [Theory]
-    [InlineData("de-DE", "Benutzerkonten auf dem EagleEye-PC", "Unter Elternkontrolle")]
-    [InlineData("en-US", "User accounts on the EagleEye PC", "Under parental control")]
-    public void UserAccountTexts_PerLanguage(string culture, string section, string checkbox)
+    [InlineData("de-DE", "Benutzerkonten auf dem EagleEye-PC", "Unter Elternkontrolle", "Konto")]
+    [InlineData("en-US", "User accounts on the EagleEye PC", "Under parental control", "Account")]
+    public void UserAccountTexts_PerLanguage(string culture, string section, string checkbox, string accountColumn)
     {
-        var texts = TestSupport.InCulture(culture, () => (AppTexts.SectionUserAccounts, AppTexts.UnderParentalControl));
+        var texts = TestSupport.InCulture(culture, () => (AppTexts.SectionUserAccounts, AppTexts.UnderParentalControl, AppTexts.AccountColumnHeader));
 
-        Assert.Equal((section, checkbox), texts);
+        Assert.Equal((section, checkbox, accountColumn), texts);
     }
 
     private static string Read(string name) => (string)typeof(AppTexts).GetProperty(name)!.GetValue(null)!;

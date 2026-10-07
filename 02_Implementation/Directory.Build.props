@@ -7,7 +7,7 @@
       Product version, shared by all components. The service reports it as
       EagleEye_vMAJOR.MINOR and the Windows installer uses it as its version.
     -->
-    <VersionPrefix>0.3.0</VersionPrefix>
+    <VersionPrefix>0.3.1</VersionPrefix>
     <Product>EagleEye</Product>
     <Company>Michael Adler</Company>
   </PropertyGroup>

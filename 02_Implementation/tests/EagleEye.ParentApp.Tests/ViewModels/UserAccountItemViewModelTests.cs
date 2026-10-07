@@ -1,4 +1,5 @@
 using EagleEye.ParentApp.Core.ViewModels;
+using EagleEye.ParentApp.Tests.Fakes;
 using Xunit;
 
 namespace EagleEye.ParentApp.Tests.ViewModels;
@@ -39,6 +40,27 @@ public sealed class UserAccountItemViewModelTests
 
         Assert.Equal((true, 0), (_item.IsUnderParentalControl, _toggles.Count));
         Assert.Equal([nameof(UserAccountItemViewModel.IsUnderParentalControl)], notified);
+    }
+
+    [Theory]
+    [InlineData("de-DE", "Unter Elternkontrolle: max")]
+    [InlineData("en-US", "Under parental control: max")]
+    public void CheckBoxAutomationName_ContainsAccountName(string culture, string expected)
+    {
+        Assert.Equal(expected, TestSupport.InCulture(culture, () => _item.CheckBoxAutomationName));
+    }
+
+    [Fact]
+    public void DisplayName_Changed_NotifiesAutomationName()
+    {
+        var notified = new List<string?>();
+        _item.PropertyChanged += (_, e) => notified.Add(e.PropertyName);
+
+        _item.DisplayName = "maximilian";
+        _item.DisplayName = "maximilian";
+
+        Assert.Equal([nameof(UserAccountItemViewModel.DisplayName), nameof(UserAccountItemViewModel.CheckBoxAutomationName)], notified);
+        Assert.EndsWith(": maximilian", _item.CheckBoxAutomationName, StringComparison.Ordinal);
     }
 
     [Fact]

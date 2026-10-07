@@ -55,4 +55,6 @@
   <data name="AccountDisabledSuffix" xml:space="preserve"><value>(deaktiviert)</value></data>
   <data name="AccountNameFormat" xml:space="preserve"><value>{0} ({1})</value></data>
   <data name="AccountSaveFailed" xml:space="preserve"><value>Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen.</value></data>
+  <data name="AccountColumnHeader" xml:space="preserve"><value>Konto</value></data>
+  <data name="AccountCheckBoxNameFormat" xml:space="preserve"><value>Unter Elternkontrolle: {0}</value></data>
 </root>

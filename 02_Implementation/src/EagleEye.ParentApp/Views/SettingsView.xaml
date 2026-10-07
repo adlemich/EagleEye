@@ -74,16 +74,24 @@
                 <Label Text="{x:Static core:AppTexts.SectionUserAccounts}" Style="{StaticResource SectionHeader}" />
                 <Label Text="{Binding StatusText}" IsVisible="{Binding HasStatus}" />
                 <Label Text="{x:Static core:AppTexts.UserAccountsInstruction}" IsVisible="{Binding IsListVisible}" />
+                <!-- Account table (ISSUE-006): fixed column widths (device-independent units, so they scale
+                     with the display), so that the header and every row line up. Header only with rows. -->
+                <Grid ColumnDefinitions="360,200" ColumnSpacing="16" IsVisible="{Binding IsListVisible}">
+                    <Label Grid.Column="0" Text="{x:Static core:AppTexts.AccountColumnHeader}" FontAttributes="Bold" VerticalOptions="Center" />
+                    <Label Grid.Column="1" Text="{x:Static core:AppTexts.UnderParentalControl}" FontAttributes="Bold"
+                           HorizontalOptions="Center" HorizontalTextAlignment="Center" VerticalOptions="Center" />
+                </Grid>
                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding Accounts}" IsVisible="{Binding IsListVisible}" Spacing="2">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="vm:UserAccountItemViewModel">
-                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                <Label Grid.Column="0" Text="{Binding DisplayName}" VerticalOptions="Center" />
+                            <Grid ColumnDefinitions="360,200" ColumnSpacing="16">
+                                <Label Grid.Column="0" Text="{Binding DisplayName}" LineBreakMode="WordWrap" VerticalOptions="Center" />
                                 <CheckBox Grid.Column="1"
                                           IsChecked="{Binding IsUnderParentalControl, Mode=TwoWay}"
                                           IsEnabled="{Binding IsEnabled}"
+                                          SemanticProperties.Description="{Binding CheckBoxAutomationName}"
+                                          HorizontalOptions="Center"
                                           VerticalOptions="Center" />
-                                <Label Grid.Column="2" Text="{x:Static core:AppTexts.UnderParentalControl}" VerticalOptions="Center" />
                             </Grid>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
