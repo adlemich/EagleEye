@@ -17,15 +17,22 @@ EagleEye.ParentApp.Core/
 │   │   ParentHubClient          Bearer token, automatic reconnect for paired connections)
 │   ├── ParentHubClientFactory   Lets the coordinator be tested with mocked clients
 │   ├── ParentReconnectPolicy    Shared ReconnectSchedule (0, 2, 10, then every 30 s)
-│   └── ConnectionCoordinator    State machine: NotPaired, PairingConnecting, AwaitingCode,
-│                                PairedConnecting, PairedConnected, PairedDisconnected
+│   ├── ConnectionCoordinator    State machine: NotPaired, PairingConnecting, AwaitingCode,
+│   │                            PairedConnecting, PairedConnected, PairedDisconnected;
+│   │                            reports confirmed/lost connections to the gateway
+│   ├── ParentHubGateway         Current confirmed connection for feature models: Connected/Disconnected,
+│   │                            forwarded broadcasts, InvokeAsync with timeout (ADR-010)
+│   └── StateReplica<T>          Applies a snapshot only if its revision is higher (ADR-010 §4)
+├── Accounts/            UserAccountsModel: state area "UserAccounts" (fetch on connect, writes with
+│                        requestId/ack/broadcast confirmation, 4 s write timeout)
 ├── Data/
 │   ├── ParentDatabase           Shared SqliteDatabase: ServerConnections, AppSettings, Secrets
 │   ├── PairingStore             The one pairing (host, device ID/name, thumbprint); token via ISecretStore
 │   ├── SettingsStore            appearance.theme = light | dark (absent = follow the OS)
 │   └── ProtectedSecretStore     ISecretStore on the Secrets table + ISecretProtector (Windows: DPAPI)
-├── ViewModels/          MainViewModel, AppearanceViewModel, ServerConnectionViewModel,
-│                        StatusBarViewModel (CommunityToolkit.Mvvm, no source generators)
+├── ViewModels/          MainViewModel, AppearanceViewModel, ServerConnectionViewModel, UserAccountsViewModel,
+│                        UserAccountItemViewModel, AccountDisplayName, StatusBarViewModel
+│                        (CommunityToolkit.Mvvm, no source generators)
 ├── AppTexts.cs          Typed access to the localized texts
 └── Resources/           AppTexts.resx (German, default) and AppTexts.en.resx (English)
 ```
@@ -35,4 +42,5 @@ EagleEye.ParentApp.Core/
 - The coordinator reports `PairedConnected` (green) only after the service confirmed the pairing for the current connection (`GetPairingStatus`, US-002 AC-20).
 - The token never appears in `ConnectionState`, in `StoredPairing.ToString()` or in any log.
 - View models raise property changes on the UI thread: coordinator events are marshalled through `IUiDispatcher`, and view-model code does not use `ConfigureAwait(false)`.
+- Feature models never poll and never treat their replica as authoritative; snapshot updates never go through the user-input path of a view model (coding guidelines §7.5).
 - Every class except `ParentHubClient` (real SignalR, verified manually) has 100 % line and branch coverage.

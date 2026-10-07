@@ -73,6 +73,22 @@ public sealed class AppTextsTests
         Assert.Equal("Verbunden mit kid-pc", text);
     }
 
+    [Fact]
+    public void Format_TwoArguments_FormatsBoth()
+    {
+        Assert.Equal("Max Adler (max)", AppTexts.Format(AppTexts.AccountNameFormat, "Max Adler", "max"));
+    }
+
+    [Theory]
+    [InlineData("de-DE", "Benutzerkonten auf dem EagleEye-PC", "Unter Elternkontrolle", "Konto")]
+    [InlineData("en-US", "User accounts on the EagleEye PC", "Under parental control", "Account")]
+    public void UserAccountTexts_PerLanguage(string culture, string section, string checkbox, string accountColumn)
+    {
+        var texts = TestSupport.InCulture(culture, () => (AppTexts.SectionUserAccounts, AppTexts.UnderParentalControl, AppTexts.AccountColumnHeader));
+
+        Assert.Equal((section, checkbox, accountColumn), texts);
+    }
+
     private static string Read(string name) => (string)typeof(AppTexts).GetProperty(name)!.GetValue(null)!;
 
     private static string? GetResource(CultureInfo culture, string name)

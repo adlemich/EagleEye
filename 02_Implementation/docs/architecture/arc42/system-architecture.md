@@ -1,11 +1,13 @@
 # EagleEye — System Architecture
 
-*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04)*
-*Maintainer: ARC Agent | Last Updated: 2026-10-04*
+*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); US-003-specific parts proposed with the US-003 plan*
+*Maintainer: ARC Agent | Last Updated: 2026-10-07*
 
 > **Amendment 2026-10-03 (ADR-007)**: Windows desktop target added to the ParentApp; two-machine development; manual acceptance testing. Affected: §1.1, §2.1, §2.2, §3.2, §4.2, §5.5, §7, §8.10, §9. Amendments approved by Michael on 2026-10-03.
 >
 > **Amendment 2026-10-04 (US-002, ADR-008, ADR-009)**: two service endpoints (tray: HTTP loopback 5080; parent apps: HTTPS 5443), hub-to-port binding, certificate protection and pinning, explicit `StartPairing`, Windows parent app per-user installer, new `EagleEye.ParentApp.Core` library, Shared `Data/` and `Communication/`. Affected: §3.2, §5.1 to §5.5, §6.1, §7 (incl. §7.1, §7.1.1, §7.3, §7.4), §8.1 to §8.5, §9, §11, §12. ADR-008 and ADR-009 were approved by Michael with the US-002 implementation plan on 2026-10-04.
+>
+> **Amendment 2026-10-07 (ADR-010, accepted by Michael 2026-10-07)**: event-driven state propagation (service broadcasts full snapshots with revisions to all paired apps including the sender; clients fetch after every (re)connect instead of a server push; last write wins). Affected: §5.2 Communication, §5.3, §5.5, §6.4, §6.6, §8.3, §8.11, §9, §12. Affected: §4.2, §5.2, §5.3, §5.5, §6.4, §6.6 (new), §8.3, §8.4, §8.10, §8.11, §9, §11 R-8, §12.
 
 ---
 
@@ -206,7 +208,7 @@ end note
 | TrayClient UI | WinForms (`NotifyIcon`, `Form` for overlay) |
 | Data persistence | SQLite via `Microsoft.Data.Sqlite` (all application data) |
 | Application configuration | YAML via `YamlDotNet` (one file per application for runtime parameters) |
-| Logging | `Microsoft.Extensions.Logging` with .NET 10 built-in file logging provider |
+| Logging | `Microsoft.Extensions.Logging` with the EagleEye rolling file provider (`EagleEye.Shared/Logging`, §8.10) |
 | DI container | `Microsoft.Extensions.DependencyInjection` (built-in) |
 | Unit testing | xUnit + Moq |
 | Installer | Inno Setup |
@@ -296,16 +298,16 @@ PAIR --> COMM : pushes pairing code to tray
 
 | Internal Component | Responsibility |
 |-------------------|---------------|
-| **Communication** | Hosts two SignalR hubs on Kestrel, each bound to its own endpoint (ADR-008): `ParentHub` (`/hubs/parent`, HTTPS port 5443) for parent apps and `TrayHub` (`/hubs/tray`, HTTP `localhost:5080`) for tray clients. A default-deny hub filter allows only `[AllowUnpaired]` methods for unpaired parent connections. Routes incoming queries to the appropriate component, returns results. Pushes events and full-state snapshots to connected clients via SignalR groups (`Parents`, `Tray:{userSid}`). Broadcasts updated state to all clients after every mutation. Pushes complete state snapshot on client connect/reconnect. |
+| **Communication** | Hosts two SignalR hubs on Kestrel, each bound to its own endpoint (ADR-008): `ParentHub` (`/hubs/parent`, HTTPS port 5443) for parent apps and `TrayHub` (`/hubs/tray`, HTTP `localhost:5080`) for tray clients. A default-deny hub filter allows only `[AllowUnpaired]` methods for unpaired parent connections. Routes incoming queries and write commands to the state owner of the affected state area, returns results. Pushes events and full-state snapshots to connected clients via SignalR groups (`Parents`, `Tray:{userSid}`). Every stored change is broadcast as a full snapshot with a revision to all paired apps, including the sender (ADR-010). Clients fetch the full state themselves after every (re)connect; the service does not push on connect. |
 | **Monitoring** | Polls running processes at a configurable interval. Classifies processes as ignored/allowed/blocked. Tracks active usage time per allowed app. Detects pause-window and budget-expiry transitions. |
 | **Enforcement** | Terminates processes using the two-phase graceful-then-force pattern (ADR-006): sends `WM_CLOSE` first, waits up to the configurable timeout (default 30s), then calls `Process.Kill(entireProcessTree: true)`. Used for blocked-app kills (immediate, no warning), budget-expiry shutdowns (after budget warnings), and pause-window shutdowns (after pause warnings). Pushes enforcement events to all connected clients. |
 | **Configuration** | Reads and writes per-user configuration in the SQLite database (allow-lists, budgets, pause windows). Reads general settings from the YAML config file. Validates changes. Notifies other components on config update. |
 | **Statistics** | Accumulates per-user, per-app daily usage minutes. Persists to SQLite. Serves historical data (up to 90 days). Purges old data. |
 | **Certificates** | Generates a self-signed X.509 certificate on first run (ECDSA P-256, DPAPI-protected PFX, see §8.1). Loads and provides the certificate for the Kestrel HTTPS binding of the parent endpoint. |
-| **UserAccounts** | Discovers local standard (non-admin) Windows user accounts via Win32 API. Provides the list to the Communication component for parent-app queries. |
+| **UserAccounts** | Keeps the inventory of local standard (non-admin, non-built-in, not the setup leftover `defaultuser0`) Windows accounts, read via Win32 (`NetUserEnum`, `NetUserGetLocalGroups`) and re-checked every 15 s; changes are broadcast at once. State owner of the state area `UserAccounts` (ADR-010): stores per SID whether the account is under parental control (`AccountSelections`), keeps the selection of accounts that temporarily become admins, forgets it when the SID is deleted (US-003). |
 | **Pairing** | Manages the pairing lifecycle: generates a 6-digit code on explicit request (`StartPairing`), binds it to the requesting connection, enforces 5-minute expiry and one guess per code, stores paired devices (token hash only) in SQLite. Sends the code to all tray clients, or to the Event Log when none is connected. Rejects unpaired clients. |
 | **AppDiscovery** | Scans installed applications (registry, Start Menu, file metadata). Resolves human-readable display names. Caches the name dictionary. Supports re-scan on demand. |
-| **Logging** | Configures the `Microsoft.Extensions.Logging` pipeline for file output. Supports runtime log-level switching (normal ↔ debug) via parent app command. Manages rolling log files (50 MB max, 3 files retained). In debug mode, logs method traces with parameter values and full stack traces. Never logs sensitive data. |
+| **Logging** | Configures the `Microsoft.Extensions.Logging` pipeline for file output with the EagleEye rolling file provider (`EagleEye.Shared/Logging`, §8.10; first used by the service in US-003). Supports runtime log-level switching (normal ↔ debug) via parent app command. Manages rolling log files (50 MB max, 3 files, 5 days) in the admin-only folder `%ProgramData%\EagleEye\logs\`. In debug mode, logs method traces with parameter values and full stack traces. Never logs sensitive data. |
 
 ### 5.3 Level 2 — EagleEye.Shared
 
@@ -333,6 +335,8 @@ package "EagleEye.Shared" {
     class AppBudgetStatusDto
     class PairingStatusDto
     class PairingResultDto
+    class UserAccountListDto
+    class StateWriteAckDto
   }
   package "Constants" {
     class HubRoutes
@@ -346,6 +350,9 @@ package "EagleEye.Shared" {
   package "Data" {
     abstract class SqliteDatabase
   }
+  package "Logging" {
+    class RollingFileLoggerProvider
+  }
 }
 @enduml
 ```
@@ -353,10 +360,11 @@ package "EagleEye.Shared" {
 | Package | Contents |
 |---------|----------|
 | **Contracts** | `IParentHub` — methods the server exposes to parent apps (data queries with `Task<T>` return values, config/rule update commands, pairing). `IParentClientCallback` — callbacks the server invokes on parent apps (enforcement events, state-change broadcasts; empty in US-002). `ITrayHub` — methods the server exposes to tray clients (session registration, version query). `ITrayClientCallback` — callbacks the server invokes on tray clients (budget updates, warnings, pairing code display via `OnShowPairingCode`, enforcement notices). `AllowUnpairedAttribute` marks the `ParentHub` methods an unpaired connection may call (default deny, ADR-008). |
-| **Models** | DTOs for all data exchanged over SignalR: user accounts, app rules, budgets, pause windows, statistics, installed apps, paired devices, version info, budget status, pairing status and result (`PairingOutcome`). All state data is used as full-state snapshots in server broadcasts. Only the DTOs a story needs are created; the list above is the target set. |
+| **Models** | DTOs for all data exchanged over SignalR: user accounts, app rules, budgets, pause windows, statistics, installed apps, paired devices, version info, budget status, pairing status and result (`PairingOutcome`). All state data is used as full-state snapshots in server broadcasts. A snapshot DTO of a state area carries `Revision` and `LastChangeRequestId` (ADR-010 §3, e.g. `UserAccountListDto`); `StateWriteAckDto` acknowledges every write command. Only the DTOs a story needs are created; the list above is the target set. |
 | **Constants** | Hub route paths (`HubRoutes`: `/hubs/parent`, `/hubs/tray`), default values (`ServiceDefaults`: ports 5080 and 5443, timeouts, warning thresholds), pairing validation rules (`PairingRules`: 6-digit code, device name length, 5-minute code lifetime). |
 | **Communication** | Client-side reconnect timing used by TrayClient and ParentApp: `ReconnectSchedule` (automatic reconnect after a lost connection: 0, 2, 10 s, then every 30 s) and `ConnectBackoff` (initial connect: 1, 2, 4, 8, 16 s, capped at 30 s). |
 | **Data** | `SqliteDatabase`: abstract base for every component database. One long-lived connection, pragmas (WAL, `synchronous=NORMAL`, `busy_timeout`, `foreign_keys`), `PRAGMA integrity_check`, ordered transactional migrations with a `SchemaVersion` table, serialized access. Used by the service and the parent app so all databases are configured identically (§8.4). |
+| **Logging** | `RollingFileLoggerProvider`: the EagleEye file logging provider for `Microsoft.Extensions.Logging` (size-based rolling files, retention, line format; §8.10). Used by the service from US-003 on; TrayClient and ParentApp reuse it later. |
 
 ### 5.4 Level 2 — EagleEye.TrayClient
 
@@ -424,8 +432,9 @@ PA_SVC --> IOS
 
 | Internal Component | Project | Responsibility |
 |-------------------|---------|---------------|
-| **Communication** | Core | `ParentHubClient` wraps the SignalR `HubConnection` (Bearer token, certificate trust callback on both the HTTP handler and the WebSocket options). `CertificateTrustPolicy`: trust on first use, then pinned thumbprint (ADR-008 §3). `ConnectionCoordinator`: the connection and pairing state machine; never reports "connected" unless the service confirms the pairing; bounds every connect attempt and hub call to 15 s so an unreachable host ends in a clear error. `HostAddress` validates hostnames and IP addresses. |
-| **ViewModels** | Core | MVVM view models (CommunityToolkit.Mvvm) for each screen. Expose commands and observable properties. US-002: main window/navigation, status bar, appearance, server connection. |
+| **Communication** | Core | `ParentHubClient` wraps the SignalR `HubConnection` (Bearer token, certificate trust callback on both the HTTP handler and the WebSocket options). `CertificateTrustPolicy`: trust on first use, then pinned thumbprint (ADR-008 §3). `ConnectionCoordinator`: the connection and pairing state machine; never reports "connected" unless the service confirms the pairing; bounds every connect attempt and hub call to 15 s so an unreachable host ends in a clear error. `HostAddress` validates hostnames and IP addresses. `ParentHubGateway` gives feature models access to the current paired connection (calls, `Connected`/`Disconnected`, forwarded broadcasts) without growing the coordinator. `StateReplica<T>` applies the ADR-010 revision rule on the client. |
+| **Feature models** (e.g. `Accounts/`) | Core | Client side of one state area each (ADR-010): fetch after every (re)connect, apply broadcasts, write with correlation id, confirmation and timeout. US-003: `UserAccountsModel`. |
+| **ViewModels** | Core | MVVM view models (CommunityToolkit.Mvvm) for each screen. Expose commands and observable properties. US-002: main window/navigation, status bar, appearance, server connection. US-003: user accounts section. |
 | **Data** | Core | `ParentDatabase` (Shared `SqliteDatabase`), `PairingStore`, `SettingsStore`, `ProtectedSecretStore` (`ISecretStore` over the `Secrets` table; encryption delegated to `ISecretProtector`). See §8.4. |
 | **Abstractions** | Core | Small platform interfaces Core needs: `ISecretStore`, `ISecretProtector`, `IThemeService`, `IDialogService`, `IUiDispatcher`, `IAppDataPaths`. |
 | **AppTexts** | Core | All user-facing parent-app texts (German default, English). |
@@ -552,23 +561,40 @@ COMM -> TRAY : "Pause window active —\nall apps closed"
 
 ### 6.4 Configuration Update from Parent App
 
+Every write by a parent app follows ADR-010. The example uses a later configuration area (time budgets); US-003 implements the same path for the area `UserAccounts` (`SetParentalControl`).
+
 ```plantuml
 @startuml Config Update
 actor Parent
-participant "ParentApp" as APP
-participant "Service Hub" as SVC
-participant "Configuration" as CONF
+participant "ParentApp 1\n(sender)" as APP
+participant "ParentHub" as SVC
+participant "State owner\n(one writer per area)" as CONF
+database "SQLite" as DB
 participant "ParentApp 2" as APP2
 participant "TrayClient" as TRAY
 
 Parent -> APP : Change time budget\nfor Minecraft to 60 min
-APP -> SVC : UpdateTimeBudget(user, app, budget)
-SVC -> SVC : Verify authenticated parent
-SVC -> CONF : Write updated config
-CONF -> CONF : Persist to SQLite
-SVC -> APP : Ack: ConfigUpdated
-SVC -> APP2 : Push: ConfigUpdated\n(sync other parents)
-SVC -> TRAY : Push: BudgetChanged\n(update remaining-time display)
+APP -> APP : show requested value as pending\n(requestId r)
+APP -> SVC : SetTimeBudget(r, user, app, budget)
+SVC -> SVC : default-deny filter: paired connection?
+SVC -> CONF : delegate (validated input, device name)
+activate CONF
+CONF -> DB : store (transaction)
+CONF -> CONF : revision n → n+1, log
+CONF -> SVC : broadcast snapshot to group "Parents"
+SVC -> APP : OnXxxChanged(rev n+1, r, full snapshot)
+SVC -> APP2 : OnXxxChanged(rev n+1, r, full snapshot)
+SVC -> TRAY : Push: BudgetChanged\n(own group Tray:{sid}, later story)
+deactivate CONF
+SVC --> APP : StateWriteAckDto(n+1)
+APP -> APP : snapshot with own requestId applied\n→ write confirmed
+APP2 -> APP2 : rev n+1 > last → apply, update view
+note over APP
+  Rejected (HubException) or not confirmed
+  within the area's write timeout:
+  show the last confirmed snapshot again,
+  show an error, re-fetch if the outcome is unknown.
+end note
 @enduml
 ```
 
@@ -602,6 +628,38 @@ note over TRAY
   resume retry loop.
   Enforcement continues
   server-side regardless.
+end note
+@enduml
+```
+
+### 6.6 Service-Originated Change and (Re)connect of a Parent App
+
+ADR-010 §2 and §7, with the account inventory of US-003 as the example. The service checks the Windows accounts every 15 s and broadcasts only when something changed. A parent app fetches every area it shows after each (re)connect.
+
+```plantuml
+@startuml State Change and Reconnect
+participant "Windows\n(local accounts)" as WIN
+participant "AccountInventoryMonitor\n(every 15 s)" as MON
+participant "UserAccountService\n(state owner)" as UAS
+participant "ParentHub" as HUB
+participant "ParentApp A\n(connected)" as A
+participant "ParentApp B\n(reconnecting)" as B
+
+WIN -> WIN : account renamed / added /\ndeleted / admin rights changed
+MON -> UAS : RefreshInventoryAsync()
+UAS -> WIN : read accounts
+UAS -> UAS : differs → update stored selections,\nrevision n → n+1, log
+UAS -> HUB : broadcast (rev n+1, LastChangeRequestId = null)
+HUB -> A : OnUserAccountsChanged → view updated
+
+B -> HUB : connect (Bearer token)\n→ joins group "Parents"
+B -> HUB : GetPairingStatus() → paired
+B -> B : reset revisions, show "Loading …"
+B -> HUB : GetUserAccounts()
+HUB --> B : snapshot (rev n+1)
+note over B
+  A broadcast arriving during the fetch is applied
+  by the revision rule; the older of the two is ignored.
 end note
 @enduml
 ```
@@ -685,7 +743,7 @@ Both ports are constants (`ServiceDefaults`) until the service gets its YAML con
 | `%ProgramData%\EagleEye\EagleEye.TrayClient.yaml` | TrayClient runtime configuration (service URL, overlay preferences) | SYSTEM (r/w), admin (r/w) |
 | `%ProgramData%\EagleEye\EagleEye.Service.db` | SQLite database — per-user config, statistics, paired devices, app-name cache | SYSTEM (r/w) |
 | `%ProgramData%\EagleEye\EagleEye.TrayClient.db` | SQLite database — cached display state (optional, lightweight) | Standard user (r/w) |
-| `%ProgramData%\EagleEye\EagleEye.Service-NNN.log` | Service rolling log files (50 MB max, 3 files) | SYSTEM (r/w) |
+| `%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log` | Service rolling log files (50 MB max, 3 files, 5 days) | SYSTEM and Administrators only; folder `logs\` with inheritance removed, set by the installer and re-applied at every service start (US-003, FR-SVC-100) |
 | `%ProgramData%\EagleEye\EagleEye.TrayClient-NNN.log` | TrayClient rolling log files (50 MB max, 3 files) | Standard user (r/w) |
 | `%ProgramData%\EagleEye\certs\` | Auto-generated self-signed certificate `eagleeye.pfx` (DPAPI LocalMachine, §8.1) | SYSTEM and Administrators only (inheritance removed) |
 
@@ -795,17 +853,25 @@ The server pushes events to clients by invoking methods on the client callback i
 | `Parents` | All authenticated parent app connections | Config changes, enforcement events, account/app list changes |
 | `Tray:{userSid}` | TrayClient for a specific user session | Budget updates, warnings, pairing codes — scoped to that user |
 
-#### Pattern 3 — State Synchronization (server-authoritative)
+#### Pattern 3 — State Synchronization (server-authoritative, event-driven)
 
-The Windows service is the **single source of truth**. Four rules govern synchronization:
+The Windows service is the **single source of truth**. Changes are propagated event-driven through the service: a parent app sends its change to the service, the service stores it and broadcasts the stored state to all connected apps, including the sender. The sender uses the broadcast to confirm its write; the other apps use it as the trigger to update their views and local data. See ADR-010 (refines ADR-003 Pattern 3) for the full rules and rationale.
 
-1. **Every mutation triggers a broadcast.** When any state changes — parent command, internal event, timed action — the server broadcasts the updated state to all connected clients that need it. The calling parent app also receives the broadcast and replaces its local state with the server-confirmed version.
+1. **State areas.** State is partitioned into areas (US-003: `UserAccounts`; later e.g. `UserConfig` per SID, `PairedDevices`, `GeneralSettings`). Each area has a snapshot DTO with `Revision` and `LastChangeRequestId`, a query `GetXxx()`, a broadcast `OnXxxChanged(snapshot)` and write commands `SetXxx(Guid requestId, …)` returning `StateWriteAckDto(Revision)`.
 
-2. **Full state snapshots, not deltas.** Broadcasts carry the complete current state of the affected data (e.g., full `UserConfigDto`, full `List<PairedDeviceDto>`). No incremental deltas — this eliminates ordering bugs, missed-update drift, and reconciliation logic.
+2. **Every stored change triggers one broadcast.** The area's state owner in the service serializes writes, stores, increments the revision, logs, broadcasts the **full snapshot** to the group `Parents` (all paired connections, **including the sender**) and then returns the ack. Changes the service makes itself (e.g. Windows accounts changed) are broadcast the same way with `LastChangeRequestId = null`. Last write received wins.
 
-3. **Full state push on connect/reconnect.** When a client connects or reconnects, the server immediately pushes a complete state snapshot. Parent apps receive: all user accounts, config per user, today's stats, installed apps, paired devices. Tray clients receive: current budget status for their user, active pause-window state.
+3. **Confirmation.** The broadcast arrives before the ack (same connection, in order). The sender's write is confirmed when it applied a snapshot with its own `requestId` or a revision ≥ the ack's revision. Rejection (`HubException`) or no confirmation within the area's write timeout → the app shows the last confirmed snapshot again, shows an error, and re-fetches if the outcome is unknown.
 
-4. **Clients never cache state as authoritative.** Clients hold state in memory for display but never treat it as the source of truth. They send commands ("set budget to X"), and the server responds with the confirmed new state via broadcast. If a client needs current data, it uses what the server last pushed or invokes a query.
+4. **Ordering by revision.** Revisions are per area, in memory, strictly increasing during one service run. Clients apply a snapshot only if its revision is higher than the last applied one; this resolves query results and broadcasts overtaking each other.
+
+5. **Client fetches on (re)connect.** After every (re)connect with confirmed pairing, the client resets its revisions and fetches every area it shows. The service does not push state on connect (changed from the original ADR-003 Rule 3). Missed events are not replayed; the fetch is the recovery.
+
+6. **Full state snapshots, not deltas.** Large state is split into keyed areas rather than sent as deltas.
+
+7. **Clients never treat replicas as authoritative**, never poll, and never talk to each other. How the service learns about changes in its environment (events or periodic checks) is internal to the service.
+
+8. **Only paired apps.** Broadcasts go only to `Parents`; queries and writes are behind the default-deny filter (ADR-008 §4). Tray clients receive the state they display through their own groups and callbacks (later stories) and never write.
 
 ### 8.4 Data Persistence (SQLite)
 
@@ -816,6 +882,7 @@ All application data is stored in SQLite databases. Each EagleEye component has 
 - **UserConfig** — per-user allow-list, per-app time budgets (7 weekdays), pause windows (7 weekdays). Keyed by Windows SID (survives username renames).
 - **UsageStatistics** — per-user, per-app daily usage minutes. Indexed by date. Rows older than 90 days are purged automatically during the midnight maintenance cycle.
 - **PairedDevices** — registered parent apps with device names and authentication credentials.
+- **AccountSelections** — per Windows SID whether the account is under parental control (US-003, FR-SVC-072 to FR-SVC-074). A row exists only for accounts the parent has ticked or unticked; no row = not under parental control. Rows of accounts that became admins are kept; rows of deleted SIDs are removed. The account inventory itself is not stored: it is read from Windows. State revisions (ADR-010) are not stored either.
 - **AppNameCache** — dictionary mapping executable names to resolved human-readable display names.
 - **IgnoreList** — shipped list of essential Windows process names (read-only at runtime, seeded by installer/migration).
 
@@ -937,7 +1004,7 @@ Diagnosability is a primary design principle: **every EagleEye component writes 
 
 #### Framework
 
-- `Microsoft.Extensions.Logging` with the built-in .NET 10 file logging provider (no third-party sinks)
+- `Microsoft.Extensions.Logging` with the EagleEye rolling file provider `EagleEye.Shared/Logging/RollingFileLoggerProvider` (no third-party sinks). .NET has no built-in file logging provider, contrary to the original wording of ADR-002; the own provider is small (size-based rolling, retention, one line per entry) and keeps the "no third-party logging library" decision (ADR-002 implementation note, US-003). The service is the first user (US-003); TrayClient and ParentApp follow.
 - All components use the standard `ILogger<T>` / `ILoggerFactory` abstractions via DI
 
 #### Log Modes
@@ -957,14 +1024,15 @@ Debug mode can be toggled at runtime for the Service via a parent app command (n
 |---------|-------|
 | Maximum file size | 50 MB per log file |
 | Maximum file count | 3 rolling files per application (oldest deleted when a 4th would be created) |
-| File location | Same OS-standard application data directory as the SQLite database and YAML config |
+| Maximum age | Files older than 5 days are deleted, except the current file (FR-SVC-103; combined with the file count, Michael 2026-10-07, US-003 plan Q-1) |
+| File location | Same OS-standard application data directory as the SQLite database and YAML config; for the service its subfolder `logs\` (admin-only, see below) |
 | Naming | `{ApplicationName}-{sequence}.log` (e.g., `EagleEye.Service-001.log`) |
 
 Log file locations per component:
 
 | Component | Log Directory |
 |-----------|--------------|
-| EagleEye.Service | `%ProgramData%\EagleEye\` |
+| EagleEye.Service | `%ProgramData%\EagleEye\logs\` — SYSTEM and Administrators only (FR-SVC-100 v1.3); the installer creates it like `certs\`, and the service re-applies the ACL at every start and writes no log file if that fails |
 | EagleEye.TrayClient | `%ProgramData%\EagleEye\` |
 | EagleEye.ParentApp (Windows) | `%LocalAppData%\EagleEye\` |
 | EagleEye.ParentApp (macOS) | `~/Library/Application Support/EagleEye/` |
@@ -988,7 +1056,7 @@ Sensitive values are replaced with `***` in log output. This rule is enforced by
 | Service crash/restart | Budget tracking resumes from last persisted state. Configuration is intact in SQLite. |
 | TrayClient crash | Service continues enforcing. TrayClient auto-restarts via session Run key. |
 | ParentApp disconnects | Service continues enforcing stored rules. ParentApp reconnects automatically. |
-| SignalR connection lost (LAN) | Clients retry with exponential backoff. Service pushes full state on reconnect. |
+| SignalR connection lost (LAN) | Clients retry with exponential backoff. After reconnecting, clients fetch the full state of every area they show (ADR-010 §7); missed broadcasts are not replayed. |
 | Disk full / write error | Service logs error, continues enforcing from in-memory state. |
 
 ### 8.12 Dependency Injection
@@ -1038,6 +1106,7 @@ All architectural decisions are recorded as ADRs in `02_Implementation/docs/arch
 | ADR-007 | Two-Machine Development and Manual Acceptance Testing | Accepted (§2 "Distribution" superseded by ADR-009) |
 | ADR-008 | Parent App Connectivity — Endpoints, TLS Trust and Pairing Protocol | Accepted |
 | ADR-009 | Windows Parent App Packaging and the ParentApp.Core Library | Accepted |
+| ADR-010 | Event-Driven State Propagation — Service Broadcasts with Revisions | Accepted |
 
 ---
 
@@ -1135,7 +1204,7 @@ maint --> maint3
 | R-5 | SQLite database corruption on service crash | Very Low | High | SQLite WAL mode provides crash resilience out of the box. Regular `PRAGMA integrity_check` on startup. |
 | R-6 | Standard-user child kills TrayClient process | Low | Low | TrayClient is informational only; enforcement continues server-side. TrayClient restarts automatically. Consider process-protection techniques in later iterations. |
 | R-7 | Clock manipulation by child to circumvent budget/pause | Low | Medium | Service uses monotonic timers for budget countdown (not wall-clock). Pause-window checks use wall clock but service runs as SYSTEM — standard user cannot change system time. |
-| R-8 | Kid pairs their own parent app: the pairing code is shown in the kid's tray session (US-002 Q-1), and the per-user parent app installer needs no admin rights, so a kid can pair an app on the same PC or another device. From the first configuration story on, such an app could change the kid's own rules. | Medium | High | **Accepted risk** (Michael, 2026-10-04): no technical protection for now; revisit before or with the first configuration story. Candidate mitigations: show the code only in admin sessions / the Event Log, or require an admin confirmation on the service PC. Paired devices are visible and removable via device management (FR-APP-015). |
+| R-8 | Kid pairs their own parent app: the pairing code is shown in the kid's tray session (US-002 Q-1), and the per-user parent app installer needs no admin rights, so a kid can pair an app on the same PC or another device. From the first configuration story on, such an app could change the kid's own rules. | Medium | High | **Accepted risk** (Michael, 2026-10-04): no technical protection for now; revisit before or with the first configuration story. US-003 (first configuration story, OQ-7, Michael 2026-10-07): stays accepted, because the account selection has no effect yet; a protection must be decided before the first enforcement story. Candidate mitigations: show the code only in admin sessions / the Event Log, or require an admin confirmation on the service PC. Paired devices are visible and removable via device management (FR-APP-015). |
 | R-9 | Service certificate lost or regenerated (e.g. `%ProgramData%\EagleEye` deleted): every paired app rejects the new certificate (pin mismatch) | Low | Medium | Uninstalling the service keeps `%ProgramData%\EagleEye`. In US-002, recovery means reinstalling the parent app; a guided re-pairing follows with device management (ADR-008). |
 
 ---
@@ -1157,6 +1226,9 @@ maint --> maint3
 | **Parent** | The adult who configures EagleEye rules via the ParentApp. |
 | **Pause window** | A per-weekday time range (e.g., 20:00–09:00) during which all non-ignored applications are denied for a user, regardless of remaining budget. |
 | **Poll interval** | The frequency at which the Monitoring component enumerates running processes. |
+| **Revision** | Per state area, a number that the service increments with every stored change during one service run. Clients apply a snapshot only if its revision is higher than the last one they applied (ADR-010). |
+| **State area** | A unit of state with its own snapshot, revision, query, broadcast and write commands, e.g. `UserAccounts` (ADR-010). |
+| **Under parental control** | An account the parent has ticked in the parent app (US-003). Only these accounts will be monitored and enforced (FR-SVC-010 v1.3). |
 | **SID** | Windows Security Identifier — uniquely identifies a user account across renames. Used as the key for per-user config and stats files. |
 | **Time budget** | A daily allowance in minutes for a specific application, configured per user and per weekday. Resets at midnight. Does not carry over. |
 | **TrayClient** | The lightweight EagleEye executable running in the kid's Windows session, displaying notifications and remaining time. |

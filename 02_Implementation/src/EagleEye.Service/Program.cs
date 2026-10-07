@@ -4,14 +4,33 @@ using EagleEye.Service.Communication;
 using EagleEye.Service.Data;
 using EagleEye.Service.Diagnostics;
 using EagleEye.Service.Pairing;
+using EagleEye.Service.UserAccounts;
 using EagleEye.Shared.Constants;
 using EagleEye.Shared.Data;
+using EagleEye.Shared.Logging;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging.EventLog;
 
 var paths = ServicePaths.Resolve();
 paths.EnsureDirectories();
+
+// The log folder is readable by SYSTEM and Administrators only (US-003 AC-14). The ACL is applied on
+// every start; if that fails, no log file is written in this run (never into a folder standard users
+// could read). The console-mode override folder of DEV is not protected (it would lock DEV out).
+Exception? logProtectionError = null;
+if (!paths.IsOverridden)
+{
+    try
+    {
+        LogDirectoryProtector.Protect(paths.LogDirectory);
+    }
+    catch (Exception ex) when (ex is UnauthorizedAccessException or IOException or InvalidOperationException
+        or System.Security.Principal.IdentityNotMappedException)
+    {
+        logProtectionError = ex;
+    }
+}
 
 // Runs as a Windows service when started by the SCM, and as a console app otherwise
 // (development mode). UseWindowsService() also sets the content root to the install folder.
@@ -24,6 +43,16 @@ var host = Host.CreateDefaultBuilder(args)
         logging.Services.Configure<EventLogSettings>(settings => settings.SourceName = PairingCodeEventLog.SourceName);
         logging.AddFilter<EventLogLoggerProvider>("EagleEye", LogLevel.Information);
         logging.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);
+
+        // Service log file %ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log (ADR-002 note, FR-SVC-100, FR-SVC-103).
+        if (logProtectionError is null)
+        {
+            var options = new RollingFileOptions { Directory = paths.LogDirectory, FilePrefix = paths.LogFilePrefix };
+            logging.Services.AddSingleton<ILoggerProvider>(_ => new RollingFileLoggerProvider(options, TimeProvider.System));
+            logging.AddFilter<RollingFileLoggerProvider>("EagleEye", LogLevel.Information);
+            logging.AddFilter<RollingFileLoggerProvider>("Microsoft", LogLevel.Warning);
+            logging.AddFilter<RollingFileLoggerProvider>("System", LogLevel.Warning);
+        }
     })
     .ConfigureWebHostDefaults(webBuilder =>
     {
@@ -47,6 +76,7 @@ var host = Host.CreateDefaultBuilder(args)
 
             services.AddSingleton(_ => new ServiceDatabase(SqliteDatabase.BuildConnectionString(paths.DatabasePath)));
             services.AddSingleton<IPairedDeviceRepository, PairedDeviceRepository>();
+            services.AddSingleton<IAccountSelectionRepository, AccountSelectionRepository>();
 
             services.AddSingleton<IPairingCodeGenerator, PairingCodeGenerator>();
             services.AddSingleton<IPairingTokenService, PairingTokenService>();
@@ -55,6 +85,12 @@ var host = Host.CreateDefaultBuilder(args)
             services.AddSingleton<IParentConnectionRegistry, ParentConnectionRegistry>();
             services.AddSingleton<IPairingCodeNotifier, PairingCodeNotifier>();
             services.AddSingleton<IPairingManager, PairingManager>();
+
+            // State area "UserAccounts" (US-003, ADR-010).
+            services.AddSingleton<ILocalAccountSource, NetApiLocalAccountSource>();
+            services.AddSingleton<IUserAccountsBroadcaster, UserAccountsBroadcaster>();
+            services.AddSingleton<IUserAccountService, UserAccountService>();
+            services.AddHostedService<AccountInventoryMonitor>();
 
             services.AddSignalR()
                 .AddHubOptions<ParentHub>(options => options.AddFilter<PairingAuthorizationHubFilter>());
@@ -73,10 +109,20 @@ var host = Host.CreateDefaultBuilder(args)
     })
     .Build();
 
+if (logProtectionError is not null)
+{
+    host.Services.GetRequiredService<ILogger<ServicePaths>>().LogWarning(
+        logProtectionError,
+        "The log folder {LogDirectory} could not be restricted to SYSTEM and Administrators; no log file is written.",
+        paths.LogDirectory);
+}
+
 // A damaged database must stop the service with a clear log entry (coding guidelines §8.4).
+// The account inventory is read before Kestrel accepts connections (US-003 plan, Step 2.5).
 try
 {
     await host.Services.GetRequiredService<ServiceDatabase>().InitializeAsync();
+    await host.Services.GetRequiredService<IUserAccountService>().InitializeAsync();
 }
 catch (Exception ex) when (ex is SqliteException or InvalidDataException)
 {

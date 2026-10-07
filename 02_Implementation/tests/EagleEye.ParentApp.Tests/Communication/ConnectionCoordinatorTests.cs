@@ -21,6 +21,7 @@ public sealed class ConnectionCoordinatorTests : IAsyncLifetime
 
     private readonly Mock<IParentHubClientFactory> _factory = new();
     private readonly Mock<IPairingStore> _store = new();
+    private readonly Mock<IPairedConnectionSink> _sink = new();
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 10, 4, 12, 0, 0, TimeSpan.Zero));
     private readonly Queue<Mock<IParentHubClient>> _clients = new();
     private readonly List<(string? Token, CertificateTrustPolicy Trust)> _created = [];
@@ -37,7 +38,7 @@ public sealed class ConnectionCoordinatorTests : IAsyncLifetime
                 trust.Validate(TestSupport.Certificate);
                 return _clients.Count > 0 ? _clients.Dequeue().Object : NewClient().Object;
             });
-        _coordinator = new ConnectionCoordinator(_factory.Object, _store.Object, _time);
+        _coordinator = new ConnectionCoordinator(_factory.Object, _store.Object, _sink.Object, _time);
     }
 
     public Task InitializeAsync() => Task.CompletedTask;
@@ -639,6 +640,100 @@ public sealed class ConnectionCoordinatorTests : IAsyncLifetime
         await dispose;
 
         Assert.Single(_created);
+    }
+
+    // ---------- Paired connection sink (US-003, ADR-010) ----------
+
+    [Fact]
+    public async Task Sink_Attach_SetConnectedWithClient()
+    {
+        var client = await ConnectPairedAsync();
+
+        _sink.Verify(s => s.SetConnected(client.Object), Times.Once);
+    }
+
+    [Fact]
+    public async Task Sink_ServiceSaysNotPairedAtConnect_NeverConnected()
+    {
+        StorePairing();
+        EnqueueClient(status: NotPaired);
+
+        await _coordinator.InitializeAsync();
+        await _coordinator.PairedLoop;
+
+        _sink.Verify(s => s.SetConnected(It.IsAny<IParentHubClient>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Sink_Reconnecting_SetDisconnected()
+    {
+        var client = await ConnectPairedAsync();
+
+        client.Raise(c => c.Reconnecting += null);
+
+        _sink.Verify(s => s.SetDisconnected(), Times.Once);
+    }
+
+    [Fact]
+    public async Task Sink_ReconnectedAndPaired_SetConnectedAgain()
+    {
+        var client = await ConnectPairedAsync();
+        client.Raise(c => c.Reconnecting += null);
+
+        client.Raise(c => c.Reconnected += null);
+
+        _sink.Verify(s => s.SetConnected(client.Object), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task Sink_ReconnectedButPairingLost_SetDisconnectedAndNotConnected()
+    {
+        var client = await ConnectPairedAsync();
+        client.Raise(c => c.Reconnecting += null);
+        client.Setup(c => c.GetPairingStatusAsync(It.IsAny<CancellationToken>())).ReturnsAsync(NotPaired);
+
+        client.Raise(c => c.Reconnected += null);
+
+        _sink.Verify(s => s.SetConnected(It.IsAny<IParentHubClient>()), Times.Once);
+        _sink.Verify(s => s.SetDisconnected(), Times.AtLeast(2));
+    }
+
+    [Fact]
+    public async Task Sink_Closed_SetDisconnectedThenConnectedWithNewClient()
+    {
+        var client = await ConnectPairedAsync();
+        var next = EnqueueClient(status: Paired);
+
+        client.Raise(c => c.Closed += null);
+        await _coordinator.PairedLoop;
+
+        _sink.Verify(s => s.SetDisconnected(), Times.Once);
+        _sink.Verify(s => s.SetConnected(next.Object), Times.Once);
+    }
+
+    [Fact]
+    public async Task Sink_RemovePairing_SetDisconnected()
+    {
+        await ConnectPairedAsync();
+
+        await _coordinator.RemovePairingAsync();
+
+        _sink.Verify(s => s.SetDisconnected(), Times.Once);
+    }
+
+    [Fact]
+    public async Task Sink_ReplacedClientEvents_DoNotReachSink()
+    {
+        var old = await ConnectPairedAsync();
+        EnqueueClient(status: Paired);
+        old.Raise(c => c.Closed += null);
+        await _coordinator.PairedLoop;
+        _sink.Invocations.Clear();
+
+        old.Raise(c => c.Reconnecting += null);
+        old.Raise(c => c.Closed += null);
+
+        _sink.VerifyNoOtherCalls();
     }
 
     // ---------- Helpers ----------

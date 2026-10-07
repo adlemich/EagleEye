@@ -57,12 +57,29 @@ public static class AppTexts
     public static string InfoPairingLostFormat => Get(nameof(InfoPairingLostFormat));
     public static string ErrorStartup => Get(nameof(ErrorStartup));
     public static string OkButton => Get(nameof(OkButton));
+    public static string SectionUserAccounts => Get(nameof(SectionUserAccounts));
+    public static string UserAccountsInstruction => Get(nameof(UserAccountsInstruction));
+    public static string UnderParentalControl => Get(nameof(UnderParentalControl));
+    public static string AccountsNoData => Get(nameof(AccountsNoData));
+    public static string AccountsNone => Get(nameof(AccountsNone));
+    public static string AccountsLoading => Get(nameof(AccountsLoading));
+    public static string AccountDisabledSuffix => Get(nameof(AccountDisabledSuffix));
+    public static string AccountNameFormat => Get(nameof(AccountNameFormat));
+    public static string AccountSaveFailed => Get(nameof(AccountSaveFailed));
+    public static string AccountColumnHeader => Get(nameof(AccountColumnHeader));
+    public static string AccountCheckBoxNameFormat => Get(nameof(AccountCheckBoxNameFormat));
 #pragma warning restore CS1591
 
     /// <summary>Formats a composite text with the current culture.</summary>
     public static string Format(string format, object? argument)
     {
         return string.Format(CultureInfo.CurrentCulture, format, argument);
+    }
+
+    /// <summary>Formats a composite text with two arguments and the current culture.</summary>
+    public static string Format(string format, object? argument0, object? argument1)
+    {
+        return string.Format(CultureInfo.CurrentCulture, format, argument0, argument1);
     }
 
     /// <summary>Returns the text for the current UI culture.</summary>

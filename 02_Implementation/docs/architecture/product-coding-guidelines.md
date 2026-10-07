@@ -7,6 +7,10 @@
 
 > **Amendment 2026-10-07 (Michael, US-002 deviation D-11)**: §3.4 and §8.2: plain `using` for SQLite commands, readers and transactions instead of `await using`.
 
+> **Amendment 2026-10-07 (ADR-010, accepted by Michael 2026-10-07)**: §7.2 and §7.3 (broadcast includes the sender; client fetches after (re)connect instead of a server push), new §7.5 (checklist for a state area).
+
+> **Amendment 2026-10-07 (US-003) — proposed, approved together with the US-003 implementation plan**: §9 (EagleEye file logging provider; service logs in the admin-only `logs\` folder), §10.1 (`Shared/Logging`, `Service/UserAccounts`, `ParentApp.Core/Accounts`).
+
 This document defines the coding standards all EagleEye components must follow. It complements but does not duplicate the system architecture (`arc42/system-architecture.md`) and ADRs — refer to those for architectural decisions, component responsibilities, and design rationale.
 
 **Target runtime**: .NET 10 / C# 14 (LTS, supported until November 2028)
@@ -311,14 +315,15 @@ public async Task<UserConfigDto> GetUserConfig(string userSid)
 
 ### 7.2 Client Callbacks
 
-- Broadcast via groups, not individual client IDs: `Clients.Group("Parents").OnConfigUpdated(...)`.
-- Send full-state snapshots, not deltas (per ADR-003, Pattern 3).
-- Fire-and-forget from the server's perspective — do not await client acknowledgment.
+- Broadcast via groups, not individual client IDs: `Clients.Group("Parents").OnConfigUpdated(...)`. State broadcasts go to the **whole** group, including the connection whose write caused them — never `OthersInGroup` (ADR-010).
+- Send full-state snapshots with revision, not deltas (ADR-003 Pattern 3, ADR-010 §3).
+- Fire-and-forget from the server's perspective — do not await client acknowledgment. (The server awaits the *send* of a state broadcast inside the area lock, so that broadcasts leave in revision order; it never waits for the client.)
+- On the client, register every callback handler (`HubConnection.On`) **before** `StartAsync`.
 
 ### 7.3 Connection Lifecycle
 
 - Implement `OnConnectedAsync()` and `OnDisconnectedAsync()` to manage group membership and cleanup.
-- On parent-app connect: validate the auth token (ADR-004), add to `Parents` group, push full state snapshot.
+- On parent-app connect: validate the auth token (ADR-004), add to `Parents` group. **Do not push state on connect**: the client fetches every area it shows after `GetPairingStatus()` confirmed the pairing, and resets its revisions first (ADR-010 §7).
 - On tray-client connect: validate localhost origin, register SID, add to `Tray:{userSid}` group, push current budget state.
 - On disconnect: clean up group membership. Log the disconnection.
 
@@ -327,6 +332,33 @@ public async Task<UserConfigDto> GetUserConfig(string userSid)
 - Wrap every hub method body in try-catch.
 - Log the exception with `ILogger<ParentHub>.LogError()`.
 - Throw `HubException` with a sanitized message for the client. Never expose internal details (stack traces, file paths, SQL errors) to clients.
+
+### 7.5 State Areas — Event-Driven Propagation (ADR-010)
+
+Every piece of state a parent app reads or changes is a **state area**. When a story adds one, follow this checklist:
+
+**Contract (`EagleEye.Shared`, first):**
+
+- Snapshot DTO `record XxxDto(long Revision, Guid? LastChangeRequestId, …full state…)`.
+- Query `Task<XxxDto> GetXxx(…)` on `IParentHub` (not `[AllowUnpaired]`).
+- Broadcast `Task OnXxxChanged(XxxDto snapshot)` on `IParentClientCallback`.
+- Write commands `Task<StateWriteAckDto> SetXxx(Guid requestId, …)`; `requestId` is always the first parameter.
+
+**Service:**
+
+- One **state owner** singleton per area (`I<Area>Service`). It owns the revision (`long`, in memory, starts at 1) and one `SemaphoreSlim`. Inside the lock: validate → store (one transaction) → revision++ → log at Information (what changed, by which device, `requestId`, revision) → broadcast through an injected `I<Area>Broadcaster` → return the ack.
+- Every accepted write produces exactly one revision and one broadcast, also if nothing changed. Last write wins.
+- Changes the service makes itself use the same path with `requestId = null`.
+- A failed broadcast is logged as a warning and does not fail the write.
+- The hub method only validates input (`requestId != Guid.Empty`, identifiers) and maps exceptions to `HubException`. The device name for the log comes from the connection, not from parameters.
+
+**Parent app (`ParentApp.Core`):**
+
+- One feature model per area using `StateReplica<T>` (apply only higher revisions) and `IParentHubGateway` (calls, `Connected`/`Disconnected`, forwarded broadcasts).
+- On `Connected`: reset the replica, show loading, fetch. On `Disconnected`: reset; what the view shows then is a story decision.
+- Write: new `requestId`, show the requested value as pending, call with the area's write timeout; confirmed when a snapshot with the same `requestId` or a revision ≥ the ack's revision was applied. Otherwise show the last confirmed value, show an error, and re-fetch if the outcome is unknown.
+- Apply snapshots to view models without triggering writes (programmatic updates never go through the user-input path).
+- **Never** poll, never send state to other clients, never treat the replica as authoritative.
 
 ---
 
@@ -405,6 +437,7 @@ See ADR-002 for the logging decision and system architecture §8.10 for the logg
 
 ### 9.1 Usage Rules
 
+- File output goes through the EagleEye provider `EagleEye.Shared/Logging/RollingFileLoggerProvider` (.NET has no built-in file provider; ADR-002 implementation note). Do not add third-party logging libraries. The provider must never throw into the application: write errors are swallowed. The service writes its log files only into `%ProgramData%\EagleEye\logs\` after it has applied the admin-only ACL (SYSTEM + Administrators); never into a folder standard users can read.
 - Use `ILogger<T>` injected via DI. Never create loggers manually.
 - Use structured logging with message templates (not string interpolation):
 
@@ -457,6 +490,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 │   ├── Constants/                # HubRoutes, ServiceDefaults, PairingRules
 │   ├── Communication/            # ReconnectSchedule, ConnectBackoff (client reconnect timing)
 │   ├── Data/                     # SqliteDatabase base (pragmas, integrity check, migrations)
+│   ├── Logging/                  # RollingFileLoggerProvider (EagleEye file logging)
 │   └── Extensions/               # Shared extension methods
 ├── EagleEye.Service/             # Windows service
 │   ├── Communication/            # ParentHub, TrayHub, connection management
@@ -465,7 +499,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 │   ├── Configuration/            # ConfigurationManager, YAML reader
 │   ├── Statistics/               # StatisticsCollector, purge logic
 │   ├── Certificates/             # CertificateManager, TLS setup
-│   ├── UserAccounts/             # UserAccountDiscovery
+│   ├── UserAccounts/             # Account source (Win32), inventory, UserAccountService (state owner)
 │   ├── Pairing/                  # PairingManager, token generation
 │   ├── AppDiscovery/             # InstalledAppScanner, display-name resolver
 │   ├── Logging/                  # Log configuration, level switching
@@ -478,7 +512,8 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 │   └── Program.cs
 ├── EagleEye.ParentApp.Core/      # Plain net10.0 library, all parent-app logic without MAUI (ADR-009)
 │   ├── Abstractions/             # ISecretStore, ISecretProtector, IThemeService, IDialogService, ...
-│   ├── Communication/            # SignalR client, certificate trust, ConnectionCoordinator
+│   ├── Communication/            # SignalR client, certificate trust, ConnectionCoordinator, ParentHubGateway, StateReplica
+│   ├── Accounts/                 # Feature model of the state area UserAccounts (one folder per feature area)
 │   ├── Data/                     # SQLite (pairing, settings, secrets), YAML reader
 │   ├── ViewModels/               # MVVM view models
 │   └── Resources/                # AppTexts (de, en)
