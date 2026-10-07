@@ -128,6 +128,13 @@ The Service supports runtime switching between normal and debug mode via a paren
 
 ---
 
+## Implementation Notes (US-003, proposed with the US-003 implementation plan, 2026-10-07)
+
+- **File logging provider.** .NET 10 has no built-in file logging provider for `Microsoft.Extensions.Logging` (the console, debug, EventLog and EventSource providers are built in; files are not). The decision stays: `Microsoft.Extensions.Logging`, no third-party logging library. EagleEye implements a small provider of its own, `EagleEye.Shared/Logging/RollingFileLoggerProvider` (size-based rolling, retention, one line per entry), so that all components can use it. The service is the first user (US-003 AC-14 requires the service log file).
+- **Retention.** FR-SVC-103 additionally requires deleting log files older than 5 days. Proposed (US-003 plan, Q-1): apply both, at most 3 files and at most 5 days, never deleting the current file.
+
+---
+
 ## References
 
 - System Architecture: `02_Implementation/docs/architecture/arc42/system-architecture.md` — sections 4.1, 4.2, 7.1, 8.3, 8.4, 8.8
