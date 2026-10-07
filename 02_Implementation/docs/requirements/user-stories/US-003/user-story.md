@@ -183,8 +183,10 @@ Svc -> AppB : push: updated list
 Win -> Svc : account added / deleted / renamed / admin rights changed (noticed by the service)
 Svc -> AppA : push at once: updated inventory
 Svc -> AppB : push at once: updated inventory
-note over AppA, AppB : list updated on receipt;
+note over AppA, AppB
+list updated on receipt;
 at most 60 s after the change on the PC
+end note
 @enduml
 ```
 
