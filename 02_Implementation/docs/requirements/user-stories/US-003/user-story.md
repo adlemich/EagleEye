@@ -2,6 +2,7 @@
 
 **Status**: New
 **Created**: 2026-10-07
+**Approved**: by Michael, 2026-10-07 (status becomes `Analyzed` when the implementation plan is approved)
 **Component(s)**: EagleEye.Service, EagleEye.ParentApp, EagleEye.Shared
 **Platform(s)**: Windows (service) · ParentApp Windows
 
@@ -97,6 +98,7 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 | Date | Change | Source |
 |---|---|---|
 | 2026-10-07 | Story created; product requirements v1.3 amendment proposed | Michael's scope, written by PRO |
+| 2026-10-07 | Open questions OQ-1 to OQ-8 answered (proposed defaults accepted); ACs unchanged. Story and requirements v1.3 approved | Michael |
 
 ---
 
@@ -198,20 +200,20 @@ Svc -> AppB : updated list
 
 ---
 
-## Open Questions (for Michael)
+## Open Questions (answered by Michael, 2026-10-07)
 
-Each question has a proposed default. If Michael agrees with all defaults, the ACs stay as written.
+Each question had a proposed default. Michael accepted all of them, so the ACs stay as written.
 
-| ID | Question | Proposed default |
-|---|---|---|
-| OQ-1 | **How is a change saved?** Immediately on tick/untick, or with a "Save" button for the whole list? | Immediately on each tick/untick, no "Save" button (AC-14). Errors revert the checkbox (AC-16). |
-| OQ-2 | **Default for an account that appears for the first time.** Unticked (parent opts in) or ticked (safe side: a new kid account is controlled at once)? A kid cannot create accounts, so new accounts are created by a parent. | Unticked (AC-18). The parent decides explicitly. |
-| OQ-3 | **Which name is shown?** Accounts linked to a Microsoft account often have a cut-off user name (e.g. "micha") and a full name ("Michael Adler"). | Full name followed by the user name in brackets; user name only if there is no full name (AC-11). |
-| OQ-4 | **Disabled accounts.** Show them (marked "disabled") or hide them? | Show them with "(disabled)" and allow ticking (AC-12), so a temporarily disabled kid account keeps its setting. The built-in accounts are always hidden (AC-3). |
-| OQ-5 | **Paired but not connected.** Show "No data available" or the last known list (read-only)? | "No data available" (AC-8), so the app never shows outdated data. |
-| OQ-6 | **Account becomes admin and later standard again.** Should the service remember the earlier tick? | Yes, it remembers and restores the tick (AC-21). The account is not treated as under parental control while it is an admin account (AC-20, MU-014). |
-| OQ-7 | **Kid pairs their own parent app** (US-002 Decision Q-8, `01_Intend_and_Constraints/questions_and_answers.md` Q10.1: "revisit when configuration stories make it relevant"). This is the first story where a paired app changes configuration: a kid could untick their own account. | Keep it an accepted risk in this story, because the selection has no effect yet. Decide on a protection before the first enforcement story. |
-| OQ-8 | **Section name and checkbox label.** | Section "User accounts on the EagleEye PC" ("Benutzerkonten auf dem EagleEye-PC"), checkbox "Under parental control" ("Unter Elternkontrolle"). |
+| ID | Question | Proposed default | Answer |
+|---|---|---|---|
+| OQ-1 | **How is a change saved?** Immediately on tick/untick, or with a "Save" button for the whole list? | Immediately on each tick/untick, no "Save" button (AC-14). Errors revert the checkbox (AC-16). | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-2 | **Default for an account that appears for the first time.** Unticked (parent opts in) or ticked (safe side: a new kid account is controlled at once)? A kid cannot create accounts, so new accounts are created by a parent. | Unticked (AC-18). The parent decides explicitly. | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-3 | **Which name is shown?** Accounts linked to a Microsoft account often have a cut-off user name (e.g. "micha") and a full name ("Michael Adler"). | Full name followed by the user name in brackets; user name only if there is no full name (AC-11). | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-4 | **Disabled accounts.** Show them (marked "disabled") or hide them? | Show them with "(disabled)" and allow ticking (AC-12), so a temporarily disabled kid account keeps its setting. The built-in accounts are always hidden (AC-3). | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-5 | **Paired but not connected.** Show "No data available" or the last known list (read-only)? | "No data available" (AC-8), so the app never shows outdated data. | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-6 | **Account becomes admin and later standard again.** Should the service remember the earlier tick? | Yes, it remembers and restores the tick (AC-21). The account is not treated as under parental control while it is an admin account (AC-20, MU-014). | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-7 | **Kid pairs their own parent app** (US-002 Decision Q-8, `01_Intend_and_Constraints/questions_and_answers.md` Q10.1: "revisit when configuration stories make it relevant"). This is the first story where a paired app changes configuration: a kid could untick their own account. | Keep it an accepted risk in this story, because the selection has no effect yet. Decide on a protection before the first enforcement story. | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-8 | **Section name and checkbox label.** | Section "User accounts on the EagleEye PC" ("Benutzerkonten auf dem EagleEye-PC"), checkbox "Under parental control" ("Unter Elternkontrolle"). | Answer (Michael, 2026-10-07): proposed default accepted |
 
 ---
 

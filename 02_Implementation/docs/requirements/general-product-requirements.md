@@ -1,11 +1,11 @@
 # EagleEye -- General Product Requirements
 
-*Status: Approved v1.2 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04); v1.3 amendment proposed 2026-10-07 with US-003, pending Michael's approval*
+*Status: Approved v1.3 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07)*
 *Approved: v1.0 by Michael*
 *Maintainer: PRO Agent*
 *Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07*
 
-> **v1.3 amendment (2026-10-07, directed by Michael, with US-003; pending approval)**: the service no longer monitors all standard accounts automatically. It keeps an inventory of the standard accounts, and the **parent selects which accounts are under parental control**. Only those are monitored. Changed: FR-SVC-010, FR-SVC-070, FR-SVC-071, FR-SVC-072 to FR-SVC-074 (new), FR-APP-020, FR-APP-022 (new), MU-013, §4.3 step 11.
+> **v1.3 amendment (2026-10-07, directed by Michael, with US-003)**: the service no longer monitors all standard accounts automatically. It keeps an inventory of the standard accounts, and the **parent selects which accounts are under parental control**. Only those are monitored. Changed: FR-SVC-010, FR-SVC-070, FR-SVC-071, FR-SVC-072 to FR-SVC-074 (new), FR-APP-020, FR-APP-022 (new), MU-013, §4.3 step 11.
 
 > **v1.2 amendment (2026-10-04, directed by Michael, with US-002)**: the Windows parent app is no longer copy-deployed. It gets **its own, self-contained Windows installer**, separate from the service installer. Also new: light/dark appearance setting for all parent apps (FR-APP-083). Changed: §3.3.8 (FR-APP-083 new), FR-APP-092, §4.2 step 8, §9.5, §11 (Q-1 superseded by Q-4).
 
@@ -580,4 +580,4 @@ No open questions. The questions raised by the v1.1 amendment were answered by M
 
 ---
 
-*End of General Product Requirements — Approved v1.2, v1.3 amendment pending*
+*End of General Product Requirements — Approved v1.3*
