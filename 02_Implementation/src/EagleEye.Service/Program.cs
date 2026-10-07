@@ -4,6 +4,8 @@ using EagleEye.Service.Communication;
 using EagleEye.Service.Data;
 using EagleEye.Service.Diagnostics;
 using EagleEye.Service.Pairing;
+using EagleEye.Service.SessionAgent;
+using EagleEye.Service.Statistics;
 using EagleEye.Service.UserAccounts;
 using EagleEye.Shared.Constants;
 using EagleEye.Shared.Data;
@@ -12,7 +14,15 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging.EventLog;
 
+// Agent mode (ADR-011): the service executable started by the service inside a user session. It must not
+// touch the log folder, the database or the web host, so this is the very first statement.
+if (args.Contains(SessionAgentHost.Argument))
+{
+    return await SessionAgentHost.RunAsync(args);
+}
+
 var paths = ServicePaths.Resolve();
+var ports = EndpointPorts.Resolve();
 paths.EnsureDirectories();
 
 // The log folder is readable by SYSTEM and Administrators only (US-003 AC-14). The ACL is applied on
@@ -59,14 +69,15 @@ var host = Host.CreateDefaultBuilder(args)
         webBuilder.UseKestrel(kestrel =>
         {
             // Two endpoints (ADR-008 §1): tray clients over loopback HTTP, parent apps over TLS on all interfaces.
-            kestrel.ListenLocalhost(ServiceDefaults.ServicePort);
+            kestrel.ListenLocalhost(ports.TrayPort);
             var certificate = kestrel.ApplicationServices.GetRequiredService<ICertificateManager>().GetOrCreate();
-            kestrel.ListenAnyIP(ServiceDefaults.ParentPort, listen => listen.UseHttps(certificate));
+            kestrel.ListenAnyIP(ports.ParentPort, listen => listen.UseHttps(certificate));
         });
 
         webBuilder.ConfigureServices(services =>
         {
             services.AddSingleton(TimeProvider.System);
+            services.AddSingleton(ports);
             services.AddSingleton<IServicePaths>(paths);
             services.AddSingleton<IVersionProvider>(
                 new AssemblyVersionProvider(typeof(AssemblyVersionProvider).Assembly));
@@ -91,6 +102,9 @@ var host = Host.CreateDefaultBuilder(args)
             services.AddSingleton<IUserAccountsBroadcaster, UserAccountsBroadcaster>();
             services.AddSingleton<IUserAccountService, UserAccountService>();
             services.AddHostedService<AccountInventoryMonitor>();
+
+            // App observation and usage accounting (US-004, ADR-011, ADR-012).
+            services.AddUsageRecording();
 
             services.AddSignalR()
                 .AddHubOptions<ParentHub>(options => options.AddFilter<PairingAuthorizationHubFilter>());
@@ -118,11 +132,13 @@ if (logProtectionError is not null)
 }
 
 // A damaged database must stop the service with a clear log entry (coding guidelines §8.4).
-// The account inventory is read before Kestrel accepts connections (US-003 plan, Step 2.5).
+// The account inventory is read before Kestrel accepts connections (US-003 plan, Step 2.5); then instances left
+// open by a crash are closed and old usage is purged (US-004 plan, Decision 3).
 try
 {
     await host.Services.GetRequiredService<ServiceDatabase>().InitializeAsync();
     await host.Services.GetRequiredService<IUserAccountService>().InitializeAsync();
+    await host.Services.GetRequiredService<IUsageService>().InitializeAsync();
 }
 catch (Exception ex) when (ex is SqliteException or InvalidDataException)
 {

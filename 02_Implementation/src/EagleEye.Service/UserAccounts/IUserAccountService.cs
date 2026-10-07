@@ -36,4 +36,15 @@ public interface IUserAccountService
     /// increments the revision, logs and broadcasts (<c>LastChangeRequestId = null</c>).
     /// </summary>
     Task RefreshInventoryAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// The accounts under parental control now: standard accounts of the inventory with a stored tick, ordered by
+    /// user name (US-004 AC-1, AC-2). Empty while the inventory is unavailable.
+    /// </summary>
+    Task<IReadOnlyList<ControlledAccount>> GetControlledAccountsAsync(CancellationToken ct = default);
 }
+
+/// <summary>An account under parental control.</summary>
+/// <param name="Sid">The account's SID.</param>
+/// <param name="UserName">The logon name (for the log).</param>
+public sealed record ControlledAccount(string Sid, string UserName);

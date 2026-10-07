@@ -5,9 +5,9 @@ namespace EagleEye.Service.Communication;
 /// <summary>
 /// Binds each hub to its endpoint by the local port of the TCP connection, never by the
 /// <c>Host</c> header (ADR-008 §1): <c>/hubs/tray</c> only on the loopback port 5080,
-/// <c>/hubs/parent</c> only on the TLS port 5443. Anything else gets 404.
+/// <c>/hubs/parent</c> only on the TLS port (5443); see <see cref="EndpointPorts"/>. Anything else gets 404.
 /// </summary>
-public sealed class HubEndpointGuard(RequestDelegate next)
+public sealed class HubEndpointGuard(RequestDelegate next, EndpointPorts ports)
 {
     /// <summary>Handles the request.</summary>
     public Task InvokeAsync(HttpContext context)
@@ -17,8 +17,8 @@ public sealed class HubEndpointGuard(RequestDelegate next)
         var path = context.Request.Path;
         var localPort = context.Connection.LocalPort;
 
-        if (IsBlocked(path, HubRoutes.Tray, localPort, ServiceDefaults.ServicePort)
-            || IsBlocked(path, HubRoutes.Parent, localPort, ServiceDefaults.ParentPort))
+        if (IsBlocked(path, HubRoutes.Tray, localPort, ports.TrayPort)
+            || IsBlocked(path, HubRoutes.Parent, localPort, ports.ParentPort))
         {
             context.Response.StatusCode = StatusCodes.Status404NotFound;
             return Task.CompletedTask;

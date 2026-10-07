@@ -1,5 +1,6 @@
 using EagleEye.Service.Communication;
 using EagleEye.Service.Pairing;
+using EagleEye.Service.Statistics;
 using EagleEye.Service.UserAccounts;
 using EagleEye.Shared.Models;
 using Microsoft.AspNetCore.SignalR;
@@ -18,6 +19,7 @@ public sealed class ParentHubUserAccountsTests
     private static readonly Guid RequestId = Guid.Parse("7f3c0000-0000-0000-0000-000000000001");
 
     private readonly Mock<IUserAccountService> _userAccounts = new();
+    private readonly Mock<IUsageService> _usage = new();
     private readonly TestLogger<ParentHub> _logger = new();
     private readonly ParentHub _hub;
 
@@ -25,7 +27,7 @@ public sealed class ParentHubUserAccountsTests
     {
         var context = HubContextFactory.Create("connection-1");
         ParentConnectionState.SetPaired(context.Object, "device-1", DeviceName);
-        _hub = new ParentHub(Mock.Of<IPairingManager>(), Mock.Of<IParentConnectionRegistry>(), _userAccounts.Object, _logger)
+        _hub = new ParentHub(Mock.Of<IPairingManager>(), Mock.Of<IParentConnectionRegistry>(), _userAccounts.Object, _usage.Object, _logger)
         {
             Context = context.Object,
         };

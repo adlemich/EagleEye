@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using EagleEye.Service.Data;
+using EagleEye.Service.Statistics;
 using EagleEye.Service.UserAccounts;
 using EagleEye.Shared.Models;
 using Microsoft.Extensions.Logging;
@@ -30,6 +31,7 @@ public sealed class UserAccountServiceTests : IAsyncLifetime
     private readonly RecordingBroadcaster _broadcaster = new();
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 10, 8, 12, 0, 0, TimeSpan.Zero));
     private readonly TestLogger<UserAccountService> _logger = new();
+    private readonly Mock<IAccountDataPurger> _purger = new();
     private List<LocalAccountInfo> _accounts = [Administrator, Guest, Papa, Max, Anna, Leftover];
     private UserAccountService _service;
 
@@ -465,7 +467,7 @@ public sealed class UserAccountServiceTests : IAsyncLifetime
 
     private UserAccountService CreateService(IAccountSelectionRepository repository)
     {
-        return new UserAccountService(_source.Object, repository, _broadcaster, _time, _logger);
+        return new UserAccountService(_source.Object, repository, _broadcaster, _time, new Lazy<IAccountDataPurger>(_purger.Object), _logger);
     }
 
     private async Task<bool> IsTickedAsync(LocalAccountInfo account)

@@ -10,6 +10,8 @@
     <SelfContained>false</SelfContained>
     <!-- Source-generated P/Invoke ([LibraryImport], NetApiLocalAccountSource) needs unsafe code. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- ADR-011 §7 item 7: no startup hooks (DOTNET_STARTUP_HOOKS) in the service and the session agent. -->
+    <StartupHookSupport>false</StartupHookSupport>
   </PropertyGroup>
 
   <ItemGroup>

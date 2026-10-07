@@ -51,4 +51,12 @@ public interface IParentHub
     /// <param name="accountSid">The account's SID as delivered in <see cref="UserAccountDto.Sid"/>.</param>
     /// <param name="isUnderParentalControl">The new state.</param>
     Task<StateWriteAckDto> SetParentalControl(Guid requestId, string accountSid, bool isUnderParentalControl);
+
+    /// <summary>
+    /// Returns the recorded usage of one account (state areas "UsageDay:{sid}:{day}", ADR-012 §6):
+    /// today (always present, possibly without apps) and every other day of the last 90 days with
+    /// usage, newest first. Called after every (re)connect and when the parent selects another account.
+    /// </summary>
+    /// <param name="accountSid">SID of a standard account of the inventory (US-003), controlled or not.</param>
+    Task<AccountUsageDto> GetAccountUsage(string accountSid);
 }
