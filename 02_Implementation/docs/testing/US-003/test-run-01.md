@@ -4,12 +4,12 @@
 **Prepared by**: TES, 2026-10-07
 **Executed by**: Michael
 **Execution date**: <!-- fill in -->
-**Build / installer version**: 0.3.0 — `03_Delivery/windows/EagleEye-Setup-0.3.0.exe` (service + tray; DEV: built 2026-10-07 12:04, SHA-256 `055e09cf…bfeda3`; file date found in S-1: ________) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.3.0.exe` (parent app; DEV: built 2026-10-07 12:11, SHA-256 `71ec14f4…ae1cea`; file date found in S-1: ________). Starting builds for the upgrade: `EagleEye-Setup-0.2.0.exe`, `EagleEye-ParentApp-Setup-0.2.0.exe`.
+**Build / installer version**: 0.3.1 — `03_Delivery/windows/EagleEye-Setup-0.3.1.exe` (service + tray; DEV: built 2026-10-07 12:59, SHA-256 `6693dc9b…48434420`; file date found in S-1: ________) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.3.1.exe` (parent app; DEV: built 2026-10-07 13:00, SHA-256 `d6e5efc5…b8627918`; file date found in S-1: ________). Starting builds for the upgrade: `EagleEye-Setup-0.2.0.exe`, `EagleEye-ParentApp-Setup-0.2.0.exe`.
 **Machine(s)**: Windows Developer Machine (service PC) <!-- add Windows version (winver) --> · PC2 (Block E) <!-- add Windows version / display language / scaling / cable or Wi-Fi -->
 
-> **What this run covers**: all 35 cases of the test plan, TC-003-01 to TC-003-35. **TC-003-23 (AC-16) is executed in Block E** (it needs PC2's network cable); its number stays the same. **No regression cases** (testing README; regression runs only on your explicit request before a major version release).
+> **What this run covers**: all 36 cases of the test plan, TC-003-01 to TC-003-36. **TC-003-36** (ISSUE-006, account list as a table, patch 0.3.1) runs in Block B after TC-003-13. **TC-003-23 (AC-16) is executed in Block E** (it needs PC2's network cable); its number stays the same. **No regression cases** (testing README; regression runs only on your explicit request before a major version release).
 >
-> **Start state**: at the time of writing **nothing of EagleEye is installed** on the service PC. Setup S-2/S-3 first installs and pairs **0.2.0**, so that Block A can test the upgrade to 0.3.0.
+> **Start state**: at the last check, **EagleEye service 0.3.0** was installed on the service PC (your quick check; a 0.3.0 app on LEOSERV was paired to it). Setup S-2 removes it. Setup S-2/S-3 first installs and pairs **0.2.0**, so that Block A can test the upgrade to 0.3.1.
 >
 > **How to record**: tick exactly one result box per case (`[x]`). Fill in **Observed** for Fail/Blocked. Screenshots go into `docs/testing/US-003/evidence/` (e.g. `run01-tc13-list.png`); reference them in Notes. When you are done, or want to stop halfway, tell TES: *"test run 01 for US-003 is done"*.
 >
@@ -20,7 +20,7 @@
 >
 > **If there is no log file**: the service could not restrict the `logs\` folder and runs **without** a log file. Look in *Ereignisanzeige → Windows-Protokolle → Anwendung*, source **EagleEye**, for a warning like "The log folder … could not be restricted …; no log file is written." Mark the current case **Fail**, take a screenshot of the warning into `evidence/`, and use the Event Log instead of the log file from then on (it has the same entries).
 >
-> **Duration**: Setup incl. 0.2.0 install and pairing ≈ 20 min · Block A ≈ 30 min · Block B ≈ 30 min · Block C ≈ 40 min (reboot) · Block D ≈ 35 min · Block E ≈ 50 min. Run the blocks in this order; breaks between blocks are fine (leave accounts and ticks as they are).
+> **Duration**: Setup incl. removing 0.3.0, 0.2.0 install and pairing ≈ 25 min · Block A ≈ 30 min · Block B ≈ 40 min · Block C ≈ 40 min (reboot) · Block D ≈ 35 min · Block E ≈ 50 min. Run the blocks in this order; breaks between blocks are fine (leave accounts and ticks as they are).
 >
 > **Accounts**: **Admin** = your administrator account. **Kid** = `eagleeye-kid`. Test accounts (`ee-anna`, `ee-max`, `ee-lena`, `ee-gesperrt`, `defaultuser0`, `defaultuser1`, `ee-admin`) are created in S-12.
 > **Apps**: **App A** = parent app in your Admin account on the service PC (*Papas PC*). **App B** = parent app on PC2 (*PC2*, Block E).
@@ -75,25 +75,29 @@ Get-LocalUser |
 
 ## Setup (service PC, Admin) — before Block A
 
-*Goal of this setup: service **0.2.0** running and App A **0.2.0** paired as **Papas PC** with `<host>`, so that Block A can test the upgrade. At the time of writing nothing of EagleEye was installed (Orchestrator, 2026-10-07); S-2 handles whatever you find. Do **S-6** (Terminal (Administrator)) and **S-9** (`<host>`) first; S-2 and S-3 need them.*
+*Goal of this setup: service **0.2.0** running and App A **0.2.0** paired as **Papas PC** with `<host>`, so that Block A can test the upgrade. At the last check service 0.3.0 was installed (your quick check, Orchestrator 2026-10-07); S-2 handles whatever you find. Do **S-6** (Terminal (Administrator)) and **S-9** (`<host>`) first; S-2 and S-3 need them.*
 
 - [ ] **S-1 Installers present.** PowerShell in the repo root:
   ```powershell
-  Get-Item 03_Delivery\windows\EagleEye-Setup-0.2.0.exe, 03_Delivery\windows\EagleEye-ParentApp-Setup-0.2.0.exe, 03_Delivery\windows\EagleEye-Setup-0.3.0.exe, 03_Delivery\windows\EagleEye-ParentApp-Setup-0.3.0.exe | Select-Object Name, LastWriteTime
-  (Get-FileHash 03_Delivery\windows\EagleEye-Setup-0.3.0.exe).Hash
-  (Get-FileHash 03_Delivery\windows\EagleEye-ParentApp-Setup-0.3.0.exe).Hash
+  Get-Item 03_Delivery\windows\EagleEye-Setup-0.2.0.exe, 03_Delivery\windows\EagleEye-ParentApp-Setup-0.2.0.exe, 03_Delivery\windows\EagleEye-Setup-0.3.1.exe, 03_Delivery\windows\EagleEye-ParentApp-Setup-0.3.1.exe | Select-Object Name, LastWriteTime
+  (Get-FileHash 03_Delivery\windows\EagleEye-Setup-0.3.1.exe).Hash -eq '6693DC9B362A60DD5FD7D30AA5E96E54ED50503EAD11B66DC757DF6C48434420'
+  (Get-FileHash 03_Delivery\windows\EagleEye-ParentApp-Setup-0.3.1.exe).Hash -eq 'D6E5EFC5892825A0AD0C3AD9CAC04A1D520F56D04CD7F7B114DA52B5E8627918'
   ```
-  All four exist. 0.3.0 dates **07.10.2026 12:04** (service) / **12:11** (parent app), or later if DEV rebuilt. Hashes: service starts **055E09CF** … ends **BFEDA3**; parent app starts **71EC14F4** … ends **AE1CEA**. If not: stop and tell TES. Dates written in the header.
+  All four exist. 0.3.1 dates **07.10.2026 12:59** (service) / **13:00** (parent app). Both hash lines print **True**. If not: stop and tell TES. Dates written in the header.
 - [ ] **S-2 Bring the service PC to 0.2.0.** *Installierte Apps* → "EagleEye"; Terminal (Administrator): `Get-Service -DisplayName "EagleEye Service" -ErrorAction SilentlyContinue`.
   Found: EagleEye ________ · EagleEye Parent App ________ (write "none" if not listed)
-  - **Nothing installed** (expected):
+  - **EagleEye 0.3.0 or 0.3.1 installed** (expected: service 0.3.0 from your quick check):
+    a. *Installierte Apps* → **EagleEye** → *…* → *Deinstallieren*. If **EagleEye Parent App** 0.3.x is installed here, close it and uninstall it too.
+    b. Continue with steps 1 to 4 below. Step 1 **must** delete `%ProgramData%\EagleEye` (test plan §8 Q-8): its database has the 0.3 schema.
+    c. **LEOSERV**: its 0.3.0 app loses its pairing with step 1. Remove the pairing or uninstall it there, or just leave it **closed** for the whole run (it must not take part as a third parent app). Done: [ ] unpaired/uninstalled  [ ] left closed
+  - **Nothing installed**:
     1. Terminal (Administrator): `Test-Path "$env:ProgramData\EagleEye"` → if **True**: `Remove-Item "$env:ProgramData\EagleEye" -Recurse -Force` (leftovers of earlier installations; test plan §8 Q-8). Was it there? [ ] yes [ ] no
     2. Close every parent app. PowerShell: `Test-Path "$env:LOCALAPPDATA\EagleEye"` → if **True**: `Remove-Item "$env:LOCALAPPDATA\EagleEye" -Recurse -Force`.
     3. Run `03_Delivery\windows\EagleEye-Setup-0.2.0.exe` with defaults. If no tray icon appears in your Admin session: Start menu → **EagleEye Tray**.
     4. Run `03_Delivery\windows\EagleEye-ParentApp-Setup-0.2.0.exe` with defaults.
   - **EagleEye 0.2.0 and EagleEye Parent App 0.2.0**: keep both; go to S-3.
   - **Only one of them in 0.2.0**: install the missing one (step 3 or 4 above; delete nothing).
-  - **Anything in 0.3.0 or another version**: **stop** and tell TES.
+  - **Any other version** (not 0.2.0, 0.3.0 or 0.3.1): **stop** and tell TES.
   - Check: *Installierte Apps* = EagleEye **0.2.0** + EagleEye Parent App **0.2.0**; `services.msc` → **EagleEye Service** *Wird ausgeführt*; Terminal (Administrator): `Test-Path "$env:ProgramData\EagleEye\logs"` → ______ (expected **False** on 0.2.0).
 - [ ] **S-3 Pair App A with 0.2.0.** Start **EagleEye Parent App**. If it is already green "Verbunden mit `<host>`", *Gekoppelt*, **Papas PC**: done. Otherwise: host dialog (or *Serververbindung*) → `<host>` → *Verbinden* → code from the popup **"EagleEye – Eltern-App koppeln"** in your Admin session (no popup: *Ereignisanzeige → Anwendung*, newest **EagleEye** entry, event ID 1000) → device name **Papas PC** → *Koppeln*. Result: green "Verbunden mit `<host>`", *Gekoppelt*, **Papas PC**. If pairing with 0.2.0 fails, stop and tell TES. Leave App A open.
 - [ ] **S-4 No development instances** (*Task-Manager → Details*: no `EagleEye.Service.exe` from a `02_Implementation` folder, only one `EagleEye.ParentApp.exe`).
@@ -110,13 +114,13 @@ Get-LocalUser |
 
 ---
 
-## Block A — Update to 0.3.0 and the admin-only log folder (Admin, one visit to Kid) · ≈ 30 min
+## Block A — Update to 0.3.1 and the admin-only log folder (Admin, one visit to Kid) · ≈ 30 min
 
-### TC-003-01: Service update 0.2.0 → 0.3.0 *(supporting)*
+### TC-003-01: Service update 0.2.0 → 0.3.1 *(supporting)*
 
 *Supporting (prerequisite for AC-14, AC-15) · Service PC / Admin (+ Terminal (Administrator)) · 0.2.0 installed, App A open and green*
 
-1. Run `03_Delivery\windows\EagleEye-Setup-0.3.0.exe` with defaults, finish. Leave App A open.
+1. Run `03_Delivery\windows\EagleEye-Setup-0.3.1.exe` with defaults, finish. Leave App A open.
 2. If no tray icon in your Admin session: Start menu → **EagleEye Tray**. Tray icon → *App Infos*.
 3. *Installierte Apps* → "EagleEye".
 4. `services.msc` → **EagleEye Service**.
@@ -125,8 +129,8 @@ Get-LocalUser |
 
 **Expected**:
 - Wizard finishes without error; no question about firewall, port or certificate.
-- *App Infos*: **EagleEye_v0.3**.
-- **EagleEye** listed once, **0.3.0**. Service *Wird ausgeführt*.
+- *App Infos*: **EagleEye_v0.3** (`EagleEye_v0.3.1` would be a Note, not a Fail).
+- **EagleEye** listed once, **0.3.1**. Service *Wird ausgeführt*.
 - Both `Test-Path`: **True**.
 - App A green "Verbunden mit `<host>`" again within 60 s, no pairing code.
 
@@ -140,16 +144,16 @@ Get-LocalUser |
 
 *Verifies AC-6, AC-13, AC-18; supporting AC-15 · Service PC / Admin · App A open, green*
 
-1. With App A open, run `03_Delivery\windows\EagleEye-ParentApp-Setup-0.3.0.exe` with defaults (note how it handles the running app). Start the app.
+1. With App A open, run `03_Delivery\windows\EagleEye-ParentApp-Setup-0.3.1.exe` with defaults (note how it handles the running app). Start the app.
 2. *Installierte Apps* → "EagleEye Parent App".
 3. Look at the menu and the settings page top to bottom.
 
 **Expected**:
-- Installer without errors; **EagleEye Parent App 0.3.0**.
+- Installer without errors; **EagleEye Parent App 0.3.1**.
 - Green "Verbunden mit `<host>`" **without a pairing code**; *Gekoppelt*, **Papas PC**.
 - Menu: only **Einstellungen**.
 - Sections in this order: **Darstellung**, **Serververbindung**, **Benutzerkonten auf dem EagleEye-PC**.
-- The new section lists the standard accounts from S-10 (at least `eagleeye-kid`), each with a checkbox **Unter Elternkontrolle**, **none ticked**.
+- The new section lists the standard accounts from S-10 (at least `eagleeye-kid`), as a table with the headers **Konto** and **Unter Elternkontrolle** (one checkbox per row), **none ticked** (layout details: TC-003-36).
 - Nothing cut off at 150 %.
 
 - **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
@@ -272,9 +276,9 @@ Get-LocalUser |
 
 ---
 
-## Block B — Inventory content and display (Admin) · ≈ 30 min
+## Block B — Inventory content and display (Admin) · ≈ 40 min
 
-*Start state: end of Block A (App A 0.3.0 green, Kid signed in in the background, log monitor running). Keep App A on the settings page with the account section visible.*
+*Start state: end of Block A (App A 0.3.1 green, Kid signed in in the background, log monitor running). Keep App A on the settings page with the account section visible.*
 
 ### TC-003-08: With no standard account, the section says so
 
@@ -285,7 +289,7 @@ Get-LocalUser |
 3. EXPECTED-LIST → returns no account.
 
 **Expected**:
-- Within **60 s**: **"Keine Nicht-Administrator-Konten vorhanden"**, no rows.
+- Within **60 s**: **"Keine Nicht-Administrator-Konten vorhanden"**, no rows, no table header (*Konto* / *Unter Elternkontrolle*).
 - Log monitor: "Account inventory changed … removed [eagleeye-kid] … 0 standard accounts."
 
 - **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
@@ -393,12 +397,34 @@ Get-LocalUser |
 **Expected**:
 - Order (the `eagleeye-kid` row at its alphabetical place by its shown name): `anna Test (ee-anna)` · `defaultuser1` · `eagleeye-kid` · `ee-gesperrt (deaktiviert)` · `ee-lena` · `Max Test (ee-max)`.
 - `anna Test` **before** `Max Test`.
-- One checkbox **Unter Elternkontrolle** per row, all unticked.
+- One checkbox per row in the column **Unter Elternkontrolle**, all unticked.
 - Nothing cut off at 150 %.
 
 - **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**: <!-- on Fail: the order you saw -->
 - **Notes**:
+
+---
+
+### TC-003-36: The account list is a two-column table with headers (ISSUE-006)
+
+*Verifies the ISSUE-006 fix (patch 0.3.1), AC-10 · Service PC / Admin, 150 % · TC-003-13 done (rows listed, all unticked)*
+
+1. Look at the account section in the current theme. Screenshot of the whole section (*Win+Umschalt+S*) → `evidence/ISSUE-006-after-fix.png`.
+2. *Darstellung*: switch to the other mode (**Hell** ↔ **Dunkel**). Look again. Screenshot → `evidence/ISSUE-006-after-fix-2.png`. Switch back.
+3. Empty states: TC-003-08 and TC-003-19 check that **no** table header is shown with "Keine Nicht-Administrator-Konten vorhanden" / "Keine Daten verfügbar". If you see "Wird geladen …" in TC-003-20, check that no header is shown with it either.
+
+**Expected**:
+- Two columns with a header row **Konto** | **Unter Elternkontrolle**, in **bold**, set apart as headers.
+- Column 1: the account name as before (e.g. `anna Test (ee-anna)`, `ee-gesperrt (deaktiviert)`). Column 2: the checkbox, aligned **under its header** in every row.
+- **No** row repeats the text "Unter Elternkontrolle"; no label at the far right of the rows.
+- Section title and instruction "Markieren Sie die Konten, die unter Elternkontrolle stehen." unchanged above the table.
+- Light **and** dark mode: everything clearly readable; at 150 % nothing cut off (long names may wrap in column 1).
+- On Pass, TES sets ISSUE-006 to `Verified/Closed` after the evaluation.
+
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Observed**:
+- **Notes**: Theme of screenshot 1: [ ] Hell  [ ] Dunkel · Header seen together with "Wird geladen …"? [ ] no  [ ] yes  [ ] not seen
 
 ---
 
@@ -507,7 +533,7 @@ Get-LocalUser |
 
 **Expected**:
 - **Red** "Nicht verbunden mit `<host>`" within 30 s.
-- Section: **"Keine Daten verfügbar"**, **no** rows, no checkboxes (no read-only old list).
+- Section: **"Keine Daten verfügbar"**, **no** rows, no checkboxes, no table header (no read-only old list).
 
 - **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
@@ -555,7 +581,7 @@ Get-LocalUser |
 
 *Verifies AC-15 · Service PC / Admin · App A green*
 
-1. Run `03_Delivery\windows\EagleEye-Setup-0.3.0.exe` again with defaults. Leave App A open.
+1. Run `03_Delivery\windows\EagleEye-Setup-0.3.1.exe` again with defaults. Leave App A open.
 2. Wait until App A is green (up to 60 s after the wizard). Log monitor: *Strg+C*, LOG-WATCH.
 3. Terminal (Administrator): `icacls "$env:ProgramData\EagleEye\logs"`
 
@@ -704,14 +730,14 @@ Get-LocalUser |
 
 *Order: TC-003-31, -32, -33, **-23**, -34, -35. Setup before Block E:*
 
-- [ ] **S-13** PC2: Windows 11, same LAN and subnet, connected **by network cable** if possible (TC-003-23 unplugs it; test plan §8 Q-9). `EagleEye-ParentApp-Setup-0.3.0.exe` copied to PC2. Parent app **not** installed on PC2 (else uninstall it and delete `%LOCALAPPDATA%\EagleEye` there). PC2 scaling: ______ % · display language: ______ · network: [ ] cable  [ ] Wi-Fi
+- [ ] **S-13** PC2: Windows 11, same LAN and subnet, connected **by network cable** if possible (TC-003-23 unplugs it; test plan §8 Q-9). `EagleEye-ParentApp-Setup-0.3.1.exe` copied to PC2. Parent app **not** installed on PC2 (else uninstall it and delete `%LOCALAPPDATA%\EagleEye` there). PC2 scaling: ______ % · display language: ______ · network: [ ] cable  [ ] Wi-Fi
 - [ ] **S-14** Both screens visible at the same time. App A green on the settings page; log monitor running.
 
 ### TC-003-31: An unpaired app shows no accounts
 
 *Verifies AC-7, AC-17 · PC2 / any local account · parent app not installed on PC2*
 
-1. Install `EagleEye-ParentApp-Setup-0.3.0.exe` on PC2 with defaults; start the app.
+1. Install `EagleEye-ParentApp-Setup-0.3.1.exe` on PC2 with defaults; start the app.
 2. Host dialog → *Abbrechen*. Look at the settings page.
 3. *Serververbindung*: `<host>` → *Verbinden* (pairing form). Look at the account section. Do not pair yet.
 
@@ -853,8 +879,8 @@ Get-LocalUser |
 | Block | Cases | Pass | Fail | Blocked | Skipped | Not executed |
 |---|---|---|---|---|---|---|
 | A (TC-003-01..07) | 7 | | | | | |
-| B (TC-003-08..15) | 8 | | | | | |
+| B (TC-003-08..15, TC-003-36) | 9 | | | | | |
 | C (TC-003-16..22) | 7 | | | | | |
 | D (TC-003-24..30) | 7 | | | | | |
 | E (TC-003-31..35, TC-003-23) | 6 | | | | | |
-| **Total** | **35** | | | | | |
+| **Total** | **36** | | | | | |
