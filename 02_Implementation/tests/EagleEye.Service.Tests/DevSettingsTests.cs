@@ -77,10 +77,3 @@ public sealed class DevSettingsTests
         }
     }
 }
-
-/// <summary>Tests that change process environment variables do not run in parallel with each other.</summary>
-[CollectionDefinition(Name, DisableParallelization = true)]
-public sealed class EnvironmentCollection
-{
-    public const string Name = "Environment variables";
-}

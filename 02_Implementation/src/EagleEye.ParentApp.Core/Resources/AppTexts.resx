@@ -57,4 +57,11 @@
   <data name="AccountSaveFailed" xml:space="preserve"><value>Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen.</value></data>
   <data name="AccountColumnHeader" xml:space="preserve"><value>Konto</value></data>
   <data name="AccountCheckBoxNameFormat" xml:space="preserve"><value>Unter Elternkontrolle: {0}</value></data>
+  <data name="MenuReports" xml:space="preserve"><value>Berichte</value></data>
+  <data name="ReportsAccountLabel" xml:space="preserve"><value>Konto</value></data>
+  <data name="ReportsTodayFormat" xml:space="preserve"><value>Heute, {0}</value></data>
+  <data name="ReportsColumnApp" xml:space="preserve"><value>App</value></data>
+  <data name="ReportsColumnUsage" xml:space="preserve"><value>Nutzung (HH:MM)</value></data>
+  <data name="ReportsNoUsageToday" xml:space="preserve"><value>Heute keine Nutzung aufgezeichnet</value></data>
+  <data name="ReportsNoControlledAccounts" xml:space="preserve"><value>Keine Konten unter Elternkontrolle. Konten unter Einstellungen auswählen.</value></data>
 </root>

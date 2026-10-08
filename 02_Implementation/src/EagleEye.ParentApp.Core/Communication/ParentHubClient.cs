@@ -43,9 +43,15 @@ internal sealed class ParentHubClient : IParentHubClient
 
         // Registered before StartAsync, so no broadcast is lost (coding guidelines §7.2).
         _connection.On<UserAccountListDto>(nameof(IParentClientCallback.OnUserAccountsChanged), snapshot => UserAccountsChanged?.Invoke(snapshot));
+        _connection.On<DayUsageDto>(nameof(IParentClientCallback.OnDayUsageChanged), snapshot => DayUsageChanged?.Invoke(snapshot));
     }
 
     public event Action<UserAccountListDto>? UserAccountsChanged;
+
+    public event Action<DayUsageDto>? DayUsageChanged;
+
+    public Task<AccountUsageDto> GetAccountUsageAsync(string accountSid, CancellationToken ct)
+        => _connection.InvokeAsync<AccountUsageDto>(nameof(IParentHub.GetAccountUsage), accountSid, ct);
 
     public Task<UserAccountListDto> GetUserAccountsAsync(CancellationToken ct)
         => _connection.InvokeAsync<UserAccountListDto>(nameof(IParentHub.GetUserAccounts), ct);

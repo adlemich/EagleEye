@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using EagleEye.Shared.Constants;
@@ -52,11 +53,30 @@ public sealed class HostAddress
         return false;
     }
 
-    /// <summary>Returns <c>https://&lt;host&gt;:5443/hubs/parent</c>.</summary>
+    /// <summary>
+    /// Returns <c>https://&lt;host&gt;:5443/hubs/parent</c>. In Debug builds the port is shifted by
+    /// <c>EAGLEEYE_DEV_PORT_OFFSET</c> (DEV smoke checks next to an installed service; never in Release).
+    /// </summary>
     public Uri ToParentHubUri()
     {
-        return new Uri($"https://{UriHost}:{ServiceDefaults.ParentPort}{HubRoutes.Parent}");
+        var port = ServiceDefaults.ParentPort;
+#if DEBUG
+        if (int.TryParse(Environment.GetEnvironmentVariable(DevPortOffsetVariable), NumberStyles.None, CultureInfo.InvariantCulture, out var offset)
+            && offset <= MaxDevPortOffset)
+        {
+            port += offset;
+        }
+#endif
+        return new Uri($"https://{UriHost}:{port}{HubRoutes.Parent}");
     }
+
+#if DEBUG
+    /// <summary>Debug only: offset added to the parent port (same variable as the service).</summary>
+    public const string DevPortOffsetVariable = "EAGLEEYE_DEV_PORT_OFFSET";
+
+    /// <summary>Debug only: largest accepted offset.</summary>
+    public const int MaxDevPortOffset = 50_000;
+#endif
 
     /// <inheritdoc />
     public override string ToString() => Display;

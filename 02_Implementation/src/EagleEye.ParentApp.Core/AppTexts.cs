@@ -68,6 +68,13 @@ public static class AppTexts
     public static string AccountSaveFailed => Get(nameof(AccountSaveFailed));
     public static string AccountColumnHeader => Get(nameof(AccountColumnHeader));
     public static string AccountCheckBoxNameFormat => Get(nameof(AccountCheckBoxNameFormat));
+    public static string MenuReports => Get(nameof(MenuReports));
+    public static string ReportsAccountLabel => Get(nameof(ReportsAccountLabel));
+    public static string ReportsTodayFormat => Get(nameof(ReportsTodayFormat));
+    public static string ReportsColumnApp => Get(nameof(ReportsColumnApp));
+    public static string ReportsColumnUsage => Get(nameof(ReportsColumnUsage));
+    public static string ReportsNoUsageToday => Get(nameof(ReportsNoUsageToday));
+    public static string ReportsNoControlledAccounts => Get(nameof(ReportsNoControlledAccounts));
 #pragma warning restore CS1591
 
     /// <summary>Formats a composite text with the current culture.</summary>

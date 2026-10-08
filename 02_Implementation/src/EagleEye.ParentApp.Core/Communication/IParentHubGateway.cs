@@ -21,6 +21,9 @@ public interface IParentHubGateway
     /// <summary>Broadcast of the area "UserAccounts", forwarded only from the current client while connected.</summary>
     event Action<UserAccountListDto>? UserAccountsChanged;
 
+    /// <summary>Broadcast of a usage day area (ADR-012 §6), forwarded only from the current client while connected.</summary>
+    event Action<DayUsageDto>? DayUsageChanged;
+
     /// <summary>Runs a hub call on the current connection with a timeout.</summary>
     /// <exception cref="ParentHubNotConnectedException">There is no confirmed connection.</exception>
     Task<T> InvokeAsync<T>(Func<IParentHubClient, CancellationToken, Task<T>> call, TimeSpan timeout);

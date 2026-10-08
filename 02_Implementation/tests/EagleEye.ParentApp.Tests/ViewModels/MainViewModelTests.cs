@@ -74,7 +74,7 @@ public sealed class MainViewModelTests : IAsyncLifetime
     }
 
     [Fact]
-    public void MenuItems_OnlySettings()
+    public void MenuItems_SettingsAndReports()
     {
         var titles = TestSupport.InCulture("de-DE", () => new MainViewModel(
             _database,
@@ -82,7 +82,7 @@ public sealed class MainViewModelTests : IAsyncLifetime
             _coordinator.Object,
             new ServerConnectionViewModel(_coordinator.Object, _dialogs.Object, new ImmediateDispatcher())).MenuItems);
 
-        Assert.Equal([new NavigationItem(MainViewModel.SettingsKey, "Einstellungen")], titles);
+        Assert.Equal([new NavigationItem(MainViewModel.SettingsKey, "Einstellungen"), new NavigationItem(MainViewModel.ReportsKey, "Berichte")], titles);
     }
 
     [Fact]

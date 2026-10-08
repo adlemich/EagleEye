@@ -3,6 +3,7 @@ using Xunit;
 
 namespace EagleEye.ParentApp.Tests.Communication;
 
+[Collection("Environment variables")]
 public sealed class HostAddressTests
 {
     [Theory]
