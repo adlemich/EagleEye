@@ -85,8 +85,10 @@ public sealed class UsageAccountingLoop(
         using var timer = new PeriodicTimer(TickInterval, timeProvider);
         try
         {
-            while (await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false))
+            while (true)
             {
+                // The result is always true: the local timer is only disposed after the loop has ended.
+                _ = await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false);
                 queue.Enqueue(new UsageTick());
             }
         }

@@ -139,6 +139,57 @@ public sealed class ParentHubUserAccountsTests
         Assert.Equal(expected, ParentHub.IsValidSid(sid));
     }
 
+    [Fact]
+    public async Task GetAccountUsage_DelegatesToUsageService()
+    {
+        var usage = new AccountUsageDto(Sid, new DateOnly(2026, 10, 7), []);
+        _usage.Setup(u => u.GetAccountUsageAsync(Sid, It.IsAny<CancellationToken>())).ReturnsAsync(usage);
+
+        Assert.Same(usage, await _hub.GetAccountUsage(Sid));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("kid1")]
+    public async Task GetAccountUsage_InvalidSid_ThrowsInvalidRequest(string? sid)
+    {
+        var ex = await Assert.ThrowsAsync<HubException>(() => _hub.GetAccountUsage(sid!));
+
+        Assert.Equal(ParentHub.InvalidRequestMessage, ex.Message);
+        _usage.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task GetAccountUsage_UnknownAccount_ThrowsUnknownAccount()
+    {
+        _usage.Setup(u => u.GetAccountUsageAsync(Sid, It.IsAny<CancellationToken>())).ThrowsAsync(new UnknownAccountException());
+
+        var ex = await Assert.ThrowsAsync<HubException>(() => _hub.GetAccountUsage(Sid));
+
+        Assert.Equal(ParentHub.UnknownAccountMessage, ex.Message);
+    }
+
+    [Theory]
+    [MemberData(nameof(ServiceFailures))]
+    public async Task GetAccountUsage_ServiceFails_LogsAndThrowsUsageUnavailable(Exception failure)
+    {
+        _usage.Setup(u => u.GetAccountUsageAsync(Sid, It.IsAny<CancellationToken>())).ThrowsAsync(failure);
+
+        var ex = await Assert.ThrowsAsync<HubException>(() => _hub.GetAccountUsage(Sid));
+
+        Assert.Equal((ParentHub.UsageUnavailableMessage, true), (ex.Message, _logger.Has(LogLevel.Error, failure)));
+    }
+
+    [Fact]
+    public async Task GetAccountUsage_HubException_IsPassedThrough()
+    {
+        var original = new HubException("as is");
+        _usage.Setup(u => u.GetAccountUsageAsync(Sid, It.IsAny<CancellationToken>())).ThrowsAsync(original);
+
+        Assert.Same(original, await Assert.ThrowsAsync<HubException>(() => _hub.GetAccountUsage(Sid)));
+    }
+
     public static TheoryData<Exception> ServiceFailures => new()
     {
         new AccountInventoryUnavailableException(),

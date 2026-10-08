@@ -105,7 +105,7 @@ public sealed class UsageTracker(TimeProvider timeProvider, ILogger<UsageTracker
         ArgumentException.ThrowIfNullOrWhiteSpace(accountSid);
         ArgumentException.ThrowIfNullOrWhiteSpace(reason);
         Advance();
-        foreach (var (id, _) in _sessions.Where(s => StringComparer.OrdinalIgnoreCase.Equals(s.Value.Sid, accountSid)).ToList())
+        foreach (var id in SessionIdsOf(accountSid))
         {
             _sessions.Remove(id);
         }
@@ -172,9 +172,9 @@ public sealed class UsageTracker(TimeProvider timeProvider, ILogger<UsageTracker
     private void Reconcile(string sid, string? immediateEndReason)
     {
         var present = new Dictionary<string, ObservedApp>(StringComparer.OrdinalIgnoreCase);
-        foreach (var session in _sessions.Values.Where(s => StringComparer.OrdinalIgnoreCase.Equals(s.Sid, sid)))
+        foreach (var id in SessionIdsOf(sid))
         {
-            foreach (var (path, app) in session.Apps)
+            foreach (var (path, app) in _sessions[id].Apps)
             {
                 present.TryAdd(path, app);
             }
@@ -188,8 +188,13 @@ public sealed class UsageTracker(TimeProvider timeProvider, ILogger<UsageTracker
 
         var now = timeProvider.GetTimestamp();
         var wallNow = timeProvider.GetUtcNow();
-        foreach (var app in account.Open.Values.Where(a => !present.ContainsKey(a.Path)).ToList())
+        foreach (var app in account.Open.Values.ToList())
         {
+            if (present.ContainsKey(app.Path))
+            {
+                continue;
+            }
+
             if (immediateEndReason is not null)
             {
                 var endedUtc = app.GoneSince is { } gone ? wallNow - timeProvider.GetElapsedTime(gone, now) : wallNow;
@@ -213,6 +218,20 @@ public sealed class UsageTracker(TimeProvider timeProvider, ILogger<UsageTracker
             account.Open[path] = started;
             _events.Add(new InstanceStarted(started.Key, sid, path, started.ProcessName, started.DisplayName, wallNow));
         }
+    }
+
+    private List<int> SessionIdsOf(string sid)
+    {
+        var ids = new List<int>();
+        foreach (var (id, session) in _sessions)
+        {
+            if (StringComparer.OrdinalIgnoreCase.Equals(session.Sid, sid))
+            {
+                ids.Add(id);
+            }
+        }
+
+        return ids;
     }
 
     private void Credit(string sid, OpenApp app, TimeSpan length, DateTimeOffset wallNow)

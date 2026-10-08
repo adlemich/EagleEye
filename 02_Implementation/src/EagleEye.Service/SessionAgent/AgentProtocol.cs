@@ -95,6 +95,7 @@ public static class AgentProtocol
     AllowDuplicateProperties = false,
     MaxDepth = 4)]
 [JsonSerializable(typeof(AgentProtocol.WireReport))]
+[ExcludeFromCodeCoverage(Justification = "Source-generated serialization code; the protocol rules are tested through AgentProtocol.")]
 internal sealed partial class AgentProtocolJsonContext : JsonSerializerContext
 {
 }

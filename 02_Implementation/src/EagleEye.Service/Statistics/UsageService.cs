@@ -1,3 +1,4 @@
+using System.Globalization;
 using EagleEye.Service.Data;
 using EagleEye.Service.UserAccounts;
 using EagleEye.Shared.Models;
@@ -23,7 +24,7 @@ public sealed class UsageService(
 
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly UsageHistoryLog _history = new(logger, new InstanceLogLimiter(timeProvider));
-    private readonly Dictionary<(string Sid, string Path), long> _appIds = new(PathKeyComparer.Instance);
+    private readonly Dictionary<string, long> _appIds = new(StringComparer.Ordinal);
     private readonly Dictionary<long, long> _instanceIds = [];
     private readonly Dictionary<(long AppId, DateOnly Day), long> _pendingSeconds = [];
     private readonly Dictionary<long, DateTimeOffset> _pendingSeen = [];
@@ -63,7 +64,7 @@ public sealed class UsageService(
 
             foreach (var credit in output.Credits)
             {
-                if (_appIds.TryGetValue((credit.AccountSid, credit.ProgramPath), out var appId))
+                if (_appIds.TryGetValue(AppKey(credit.AccountSid, credit.ProgramPath), out var appId))
                 {
                     AddPending(appId, credit.Day, credit.Seconds);
                     _dirtyDays.Add((credit.AccountSid, credit.Day));
@@ -157,7 +158,7 @@ public sealed class UsageService(
             _history.NewApp(userName, started.DisplayName, started.ProcessName, started.ProgramPath);
         }
 
-        _appIds[(started.AccountSid, started.ProgramPath)] = record.AppId;
+        _appIds[AppKey(started.AccountSid, started.ProgramPath)] = record.AppId;
         var instanceId = await repository.StartInstanceAsync(record.AppId, started.StartedUtc, ct).ConfigureAwait(false);
         _instanceIds[started.InstanceKey] = instanceId;
         _history.Started(started.AccountSid, userName, started.DisplayName, started.ProcessName, started.ProgramPath, instanceId);
@@ -234,13 +235,14 @@ public sealed class UsageService(
         {
             logger.LogInformation(
                 "Purged usage data older than {CutoffDay}: {DayRows} daily entries, {Instances} history entries.",
-                cutoffDay, dayRows, instances);
+                cutoffDay.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), dayRows, instances);
         }
     }
 
     private void ForgetAccount(string sid)
     {
-        var appIds = _appIds.Where(a => StringComparer.OrdinalIgnoreCase.Equals(a.Key.Sid, sid)).ToList();
+        var prefix = sid.ToUpperInvariant() + "|";
+        var appIds = _appIds.Where(a => a.Key.StartsWith(prefix, StringComparison.Ordinal)).ToList();
         foreach (var (key, appId) in appIds)
         {
             _appIds.Remove(key);
@@ -300,14 +302,5 @@ public sealed class UsageService(
         }
     }
 
-    private sealed class PathKeyComparer : IEqualityComparer<(string Sid, string Path)>
-    {
-        public static readonly PathKeyComparer Instance = new();
-
-        public bool Equals((string Sid, string Path) x, (string Sid, string Path) y) =>
-            StringComparer.OrdinalIgnoreCase.Equals(x.Sid, y.Sid) && StringComparer.OrdinalIgnoreCase.Equals(x.Path, y.Path);
-
-        public int GetHashCode((string Sid, string Path) obj) =>
-            HashCode.Combine(StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Sid), StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Path));
-    }
+    private static string AppKey(string sid, string path) => $"{sid.ToUpperInvariant()}|{path.ToUpperInvariant()}";
 }

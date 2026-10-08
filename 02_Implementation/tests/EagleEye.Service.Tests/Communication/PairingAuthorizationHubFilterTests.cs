@@ -17,6 +17,7 @@ public sealed class PairingAuthorizationHubFilterTests
     [InlineData(nameof(ParentHub.RemovePairedDevice))]
     [InlineData(nameof(ParentHub.GetUserAccounts))]
     [InlineData(nameof(ParentHub.SetParentalControl))]
+    [InlineData(nameof(ParentHub.GetAccountUsage))]
     public async Task InvokeMethodAsync_UnpairedProtectedMethod_ThrowsNotPaired(string methodName)
     {
         var context = CreateInvocation(methodName, paired: false);
@@ -56,6 +57,7 @@ public sealed class PairingAuthorizationHubFilterTests
     [InlineData(nameof(ParentHub.GetPairingStatus))]
     [InlineData(nameof(ParentHub.GetUserAccounts))]
     [InlineData(nameof(ParentHub.SetParentalControl))]
+    [InlineData(nameof(ParentHub.GetAccountUsage))]
     public async Task InvokeMethodAsync_PairedOtherMethod_CallsNext(string methodName)
     {
         var context = CreateInvocation(methodName, paired: true);

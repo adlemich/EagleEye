@@ -1,20 +1,23 @@
+using System.Globalization;
+
 namespace EagleEye.Service.Statistics;
 
 /// <summary>
 /// Exact credited time per account, app and local day, emitted as whole seconds (ADR-012 §4): the remainder
-/// below one second is carried to the next output, so no time is lost systematically.
+/// below one second is carried to the next output, so no time is lost systematically. Account SIDs and program
+/// paths are compared ignoring case.
 /// </summary>
 public sealed class UsageAccumulator
 {
-    private readonly Dictionary<(string Sid, string Path, DateOnly Day), Entry> _entries = new(KeyComparer.Instance);
+    private readonly Dictionary<string, Entry> _entries = new(StringComparer.Ordinal);
 
     /// <summary>Adds credited time.</summary>
     public void Add(string sid, string path, DateOnly day, TimeSpan length)
     {
-        var key = (sid, path, day);
+        var key = string.Create(CultureInfo.InvariantCulture, $"{sid.ToUpperInvariant()}|{path.ToUpperInvariant()}|{day.DayNumber}");
         if (!_entries.TryGetValue(key, out var entry))
         {
-            entry = new Entry();
+            entry = new Entry(sid, path, day);
             _entries[key] = entry;
         }
 
@@ -33,11 +36,11 @@ public sealed class UsageAccumulator
             var whole = (long)Math.Floor(entry.Exact.TotalSeconds);
             if (whole > entry.Emitted)
             {
-                credits.Add(new UsageCredit(key.Sid, key.Path, key.Day, whole - entry.Emitted));
+                credits.Add(new UsageCredit(entry.Sid, entry.Path, entry.Day, whole - entry.Emitted));
                 entry.Emitted = whole;
             }
 
-            if (key.Day < oldestKeptDay)
+            if (entry.Day < oldestKeptDay)
             {
                 _entries.Remove(key);
             }
@@ -46,30 +49,16 @@ public sealed class UsageAccumulator
         return credits;
     }
 
-    private sealed class Entry
+    private sealed class Entry(string sid, string path, DateOnly day)
     {
+        public string Sid { get; } = sid;
+
+        public string Path { get; } = path;
+
+        public DateOnly Day { get; } = day;
+
         public TimeSpan Exact { get; set; }
 
         public long Emitted { get; set; }
-    }
-
-    private sealed class KeyComparer : IEqualityComparer<(string Sid, string Path, DateOnly Day)>
-    {
-        public static readonly KeyComparer Instance = new();
-
-        public bool Equals((string Sid, string Path, DateOnly Day) x, (string Sid, string Path, DateOnly Day) y)
-        {
-            return x.Day == y.Day
-                && StringComparer.OrdinalIgnoreCase.Equals(x.Sid, y.Sid)
-                && StringComparer.OrdinalIgnoreCase.Equals(x.Path, y.Path);
-        }
-
-        public int GetHashCode((string Sid, string Path, DateOnly Day) obj)
-        {
-            return HashCode.Combine(
-                StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Sid),
-                StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Path),
-                obj.Day);
-        }
     }
 }
