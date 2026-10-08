@@ -70,7 +70,7 @@ public static class PackageManifestReader
         var packageName = packageFullName[..separator];
         var uri = key.StartsWith("//", StringComparison.Ordinal) ? ResourcePrefix + key
             : key.StartsWith('/') ? $"{ResourcePrefix}//{packageName}{key}"
-            : key.Contains('/') ? $"{ResourcePrefix}//{packageName}/{key}"
+            : key.StartsWith("Resources/", StringComparison.OrdinalIgnoreCase) ? $"{ResourcePrefix}//{packageName}/{key}"
             : $"{ResourcePrefix}//{packageName}/Resources/{key}";
         return $"@{{{packageFullName}?{uri}}}";
     }

@@ -91,7 +91,9 @@ public sealed class PackageManifestReaderTests
     [InlineData("AppName", "@{Microsoft.WindowsCalculator_11.2405.2.0_x64__8wekyb3d8bbwe?ms-resource://Microsoft.WindowsCalculator/Resources/AppName}")]
     [InlineData("Resources/AppName", "@{Microsoft.WindowsCalculator_11.2405.2.0_x64__8wekyb3d8bbwe?ms-resource://Microsoft.WindowsCalculator/Resources/AppName}")]
     [InlineData("/Resources/AppName", "@{Microsoft.WindowsCalculator_11.2405.2.0_x64__8wekyb3d8bbwe?ms-resource://Microsoft.WindowsCalculator/Resources/AppName}")]
-    [InlineData("//Other/Resources/AppName", "@{Microsoft.WindowsCalculator_11.2405.2.0_x64__8wekyb3d8bbwe?ms-resource://Other/Resources/AppName}")]
+    [InlineData("AppName/Text", "@{Microsoft.WindowsCalculator_11.2405.2.0_x64__8wekyb3d8bbwe?ms-resource://Microsoft.WindowsCalculator/Resources/AppName/Text}")]
+    [InlineData("resources/AppName", "@{Microsoft.WindowsCalculator_11.2405.2.0_x64__8wekyb3d8bbwe?ms-resource://Microsoft.WindowsCalculator/resources/AppName}")]
+    [InlineData("//Other/Resources/AppName","@{Microsoft.WindowsCalculator_11.2405.2.0_x64__8wekyb3d8bbwe?ms-resource://Other/Resources/AppName}")]
     public void BuildResourceReference(string key, string expected)
     {
         Assert.Equal(expected, PackageManifestReader.BuildResourceReference("Microsoft.WindowsCalculator_11.2405.2.0_x64__8wekyb3d8bbwe", key));
