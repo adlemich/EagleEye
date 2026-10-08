@@ -59,7 +59,7 @@ public sealed class SessionAgentSupervisor(
         var plan = AgentPlan.Compute(sessions, controlled, SlotStates());
         foreach (var sessionId in plan.Stop)
         {
-            await StopSlotAsync(sessionId).ConfigureAwait(false);
+            await StopSlotAsync(SlotOf(sessionId)).ConfigureAwait(false);
         }
 
         RemoveIdleSlots(sessions, controlled);
@@ -88,7 +88,7 @@ public sealed class SessionAgentSupervisor(
         await _stopping.CancelAsync().ConfigureAwait(false);
         foreach (var slot in Snapshot())
         {
-            await StopSlotAsync(slot.SessionId).ConfigureAwait(false);
+            await StopSlotAsync(slot).ConfigureAwait(false);
         }
     }
 
@@ -205,8 +205,10 @@ public sealed class SessionAgentSupervisor(
                     return;
                 }
 
-                MarkReported(slot, agent);
-                sink.Process(slot.SessionId, slot.Sid, report);
+                if (MarkReported(slot, agent))
+                {
+                    sink.Process(slot.SessionId, slot.Sid, report);
+                }
             }
         }
         catch (AgentProtocolException ex)
@@ -242,14 +244,14 @@ public sealed class SessionAgentSupervisor(
         }
     }
 
-    private void MarkReported(Slot slot, IAgentProcess agent)
+    private bool MarkReported(Slot slot, IAgentProcess agent)
     {
         bool first;
         lock (_lock)
         {
             if (!ReferenceEquals(slot.Agent, agent))
             {
-                return;
+                return false;
             }
 
             first = !slot.Reported;
@@ -266,6 +268,8 @@ public sealed class SessionAgentSupervisor(
         {
             launcher.ReportWorking();
         }
+
+        return true;
     }
 
     private void MarkFault(Slot slot, IAgentProcess agent, string fault)
@@ -279,19 +283,19 @@ public sealed class SessionAgentSupervisor(
         }
     }
 
-    private async Task StopSlotAsync(int sessionId)
+    private async Task StopSlotAsync(Slot slot)
     {
         IAgentProcess? agent;
         lock (_lock)
         {
-            _slots.Remove(sessionId, out var slot);
-            agent = slot?.Agent;
+            _slots.Remove(slot.SessionId);
+            agent = slot.Agent;
         }
 
         if (agent is not null)
         {
             await StopAgentAsync(agent).ConfigureAwait(false);
-            logger.LogInformation("Session agent in session {SessionId} stopped.", sessionId);
+            logger.LogInformation("Session agent in session {SessionId} stopped.", slot.SessionId);
         }
     }
 
@@ -312,6 +316,14 @@ public sealed class SessionAgentSupervisor(
                     _slots.Remove(slot.SessionId);
                 }
             }
+        }
+    }
+
+    private Slot SlotOf(int sessionId)
+    {
+        lock (_lock)
+        {
+            return _slots[sessionId];
         }
     }
 

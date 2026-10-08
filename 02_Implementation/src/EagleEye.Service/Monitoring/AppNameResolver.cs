@@ -7,14 +7,14 @@ namespace EagleEye.Service.Monitoring;
 /// </summary>
 public sealed class AppNameResolver(IAppMetadataSource metadata, ILogger<AppNameResolver> logger)
 {
-    private readonly Dictionary<(string Path, string? Package), string> _cache = new(CacheKeyComparer.Instance);
+    private readonly Dictionary<string, string> _cache = new(StringComparer.Ordinal);
     private readonly Lock _lock = new();
 
     /// <summary>Returns the display name of the process's program.</summary>
     public string Resolve(ProcessFacts process)
     {
         ArgumentNullException.ThrowIfNull(process);
-        var key = (process.ImagePath, process.PackageFullName);
+        var key = $"{process.ImagePath.ToUpperInvariant()}|{process.PackageFullName?.ToUpperInvariant()}";
         lock (_lock)
         {
             if (_cache.TryGetValue(key, out var cached))
@@ -58,16 +58,5 @@ public sealed class AppNameResolver(IAppMetadataSource metadata, ILogger<AppName
         return DisplayNameSanitizer.Sanitize(found.PackageDisplayName)
             ?? DisplayNameSanitizer.Sanitize(found.FileDescription)
             ?? fallback;
-    }
-
-    private sealed class CacheKeyComparer : IEqualityComparer<(string Path, string? Package)>
-    {
-        public static readonly CacheKeyComparer Instance = new();
-
-        public bool Equals((string Path, string? Package) x, (string Path, string? Package) y) =>
-            StringComparer.OrdinalIgnoreCase.Equals(x.Path, y.Path) && StringComparer.OrdinalIgnoreCase.Equals(x.Package, y.Package);
-
-        public int GetHashCode((string Path, string? Package) obj) =>
-            HashCode.Combine(StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Path), obj.Package?.ToUpperInvariant());
     }
 }
