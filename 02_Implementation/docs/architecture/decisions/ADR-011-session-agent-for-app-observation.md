@@ -1,10 +1,10 @@
 # ADR-011: Session Agent for App Observation — a SYSTEM Helper per Watched Session
 
-**Status**: Accepted (approved by Michael with the US-004 implementation plan, 2026-10-07); amendment for graceful close proposed with the US-005 implementation plan
+**Status**: Accepted (approved by Michael with the US-004 implementation plan, 2026-10-07); amendment for graceful close approved with the US-005 implementation plan, 2026-10-10
 **Date**: 2026-10-07
 **Deciders**: ARC, Michael
 
-> **Amendment 2026-10-10 (US-005, ADR-013; proposed, approved with the US-005 implementation plan)**
+> **Amendment 2026-10-10 (US-005, ADR-013; approved by Michael with the US-005 implementation plan, 2026-10-10)**
 >
 > 1. **Command channel (§3, §6).** The service writes **command lines** to the agent's stdin; end of file still means "stop". One command exists: `{"cmd":"close","id":17,"targets":[{"pid":4711,"created":133420000000000000}]}` (at most 64 targets, line ≤ 4 KB, strict schema; anything else is ignored and reported on stderr). The agent answers on stdout with `{"closed":{"id":17,"windows":2,"missing":0}}`; report lines and answer lines share the stdout pipe and are told apart by their top-level property. Commands are handled on the scan thread between two scans, so no window function runs concurrently.
 > 2. **One allowed message call (§7 item 8).** For a close command the agent verifies each target's creation time (`OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION)` + `GetProcessTimes`), enumerates the top-level windows as in a scan, and calls **`PostMessageW(hwnd, WM_CLOSE, 0, 0)`** for every window that the "Apps" rule counts and that belongs to a target (for a Store app: the `ApplicationFrameWindow` whose `CoreWindow` child belongs to the target). `PostMessage` returns at once, so a hung window cannot block the agent. `SendMessage*` and every other message stay forbidden; the agent still creates no window and runs no message loop, so T-3 is unchanged.

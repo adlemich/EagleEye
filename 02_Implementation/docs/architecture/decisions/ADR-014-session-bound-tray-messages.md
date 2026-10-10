@@ -1,6 +1,6 @@
 # ADR-014: Session-Bound Tray Connections and the Kid's Message Box
 
-**Status**: Proposed — approved with the US-005 implementation plan
+**Status**: Accepted (approved by Michael with the US-005 implementation plan, 2026-10-10)
 **Date**: 2026-10-10
 **Deciders**: ARC, Michael
 
@@ -53,7 +53,7 @@ A small WinForms dialog `BreakTimeMessageDialog` instead of the Win32 `MessageBo
 - One dialog per tray client at a time; after "OK" the next message opens a new one (AC-32).
 - The title and the button follow the kid's Windows display language (`TrayTexts`, "OK" in both languages); the display text is shown exactly as stored (AC-31).
 
-The dialog is **not system-modal** in the old Windows 3.x sense: Win32 has no modal state across processes. "System-modal" in FR-TRAY-022 is implemented as *topmost, in front of every normal window, with the keyboard focus*. Other windows remain clickable behind it. Exclusive full-screen DirectX games are drawn above all windows by the display driver; the dialog appears when such a game is closed (by the close sequence, at the latest after 20 s).
+The dialog is **not system-modal** in the old Windows 3.x sense: Win32 has no modal state across processes. FR-TRAY-022 and AC-30 were reworded accordingly with the plan answers (topmost dialog, other windows usable); the original "system-modal" is implemented as *topmost, in front of every normal window, with the keyboard focus*. Other windows remain clickable behind it. Exclusive full-screen DirectX games are drawn above all windows by the display driver; the dialog appears when such a game is closed (by the close sequence, at the latest after 20 s).
 
 ### 4. What stays
 

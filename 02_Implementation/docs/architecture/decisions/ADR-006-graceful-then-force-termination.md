@@ -1,10 +1,10 @@
 # ADR-006: Graceful-Then-Force Process Termination Pattern
 
-**Status**: Accepted (amendment for blocked starts proposed with the US-005 implementation plan)
+**Status**: Accepted (amendment for blocked starts approved with the US-005 implementation plan, 2026-10-10)
 **Date**: 2026-09-20
 **Deciders**: Michael (project owner), ARC
 
-> **Amendment 2026-10-10 (US-005, ADR-013; proposed, approved with the US-005 implementation plan)**
+> **Amendment 2026-10-10 (US-005, ADR-013; approved by Michael with the US-005 implementation plan, 2026-10-10)**
 >
 > 1. **Who sends `WM_CLOSE`.** The service runs in session 0 and cannot reach windows in user sessions. The graceful phase is carried out by the **session agent** of the kid's session (ADR-011, amended): on a command from the service it posts `WM_CLOSE` (`PostMessageW`, never `SendMessage`) to **every app window** of the affected processes (for Store apps: the `ApplicationFrameWindow`). "Main window" and `Process.CloseMainWindow()` are not used.
 > 2. **Who terminates.** The **service** terminates with `TerminateProcess` on verified handles (PID + creation time). `Process.Kill(entireProcessTree: true)` is **not** used: it ignores session, owner and exemptions and would kill allowed apps started from the blocked program before a break time. The set of processes is the **kill set** of ADR-013 §5 (program path or single process, plus descendants, minus exemptions and other open apps), recomputed at the force step.

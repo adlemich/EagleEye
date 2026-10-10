@@ -1,6 +1,6 @@
 # ADR-013: Break-Time Enforcement at App Start — Blocked Starts, Close Sequence and Kill Set
 
-**Status**: Proposed — approved with the US-005 implementation plan
+**Status**: Accepted (approved by Michael with the US-005 implementation plan, 2026-10-10; §3 and §9 reflect his answers Q-1 and Q-2)
 **Date**: 2026-10-10
 **Deciders**: ARC, Michael
 
@@ -8,7 +8,7 @@
 
 ## Context
 
-US-005 is the first enforcement story. During a break time ("Ruhezeit", TC-010 to TC-014 v1.5) an app that a controlled account starts must be detected within 10 s after its first window appears, closed gracefully, terminated by force with all its processes if it has not closed 20 s later, and be gone at most 30 s after its first window appeared (FR-SVC-023 v1.5, US-005 AC-21 to AC-29). Apps already running when a break time begins keep running (AC-25). A blocked start creates no usage (AC-24) and is recorded in a history (FR-SVC-025, AC-35).
+US-005 is the first enforcement story. During a break time ("Ruhezeit", TC-010 to TC-014 v1.5) an app that a controlled account starts (start = creation of its first process) must be detected within 10 s after the start (or after its first window, if that appears more than 10 s later), closed gracefully, terminated by force with all its processes if it has not closed 20 s later, and be gone at most 30 s after the start (FR-SVC-023 v1.5, US-005 AC-21 to AC-29). Apps already running when a break time begins keep running (AC-25). A blocked start creates no usage (AC-24) and is recorded in a history (FR-SVC-025, AC-35).
 
 The existing design does not cover this as written:
 
@@ -35,25 +35,26 @@ The break-time rules are evaluated from an **in-memory snapshot** held by the ru
 An entry is in effect at the local date-time *t* of the service PC when it is active, the local weekday of *t* is ticked, and `start ≤ t.TimeOfDay < end'`, where `end' = 24:00` if the stored end is 23:59 and `end' = end` otherwise. Times are stored as minutes after midnight (`0 … 1439`).
 
 - Local time is `TimeZoneInfo.ConvertTime(TimeProvider.GetUtcNow(), TimeProvider.LocalTimeZone)`. Wall-clock semantics follow automatically: on the day clocks go forward, local times in the skipped hour never occur; on the day clocks go back, the repeated hour is in effect in both passes (OQ-5).
-- .NET caches `TimeZoneInfo.Local` for the life of the process. The accounting loop calls `TimeZoneInfo.ClearCachedData()` at every 5 s tick, so a change of the time zone takes effect within 5 s (OQ-5). A change of the zone is logged as a Warning (see Security, §8).
+- .NET caches `TimeZoneInfo.Local` for the life of the process. The accounting loop calls `TimeZoneInfo.ClearCachedData()` at every 5 s tick, so a change of the time zone takes effect within 5 s (OQ-5). A change of the zone is logged as a Warning and stored as a finding (§9).
 
 ### 3. What a blocked start is
 
-The agent reports the processes that have an app window (ADR-011 §3). An app is identified per account by its program path (ADR-012 §1). Per report of a controlled account, while at least one of the account's entries is in effect *now*:
+**A start is the creation of the app's first process** (decided by Michael with the US-005 plan, Q-1; story Terms, AC-21, FR-SVC-023). The app is still *recognised* by its window: the agent reports the processes that have an app window (ADR-011 §3), and an app is identified per account by its program path (ADR-012 §1). Per report of a controlled account that has at least one active entry:
 
-| Trigger | Condition | Kill set (§5) |
-|---|---|---|
-| **T1 — app opens** | An app (program path) that was **not open** for the account becomes open, i.e. the tracker would start a new instance. An app that reappears within the tracker's 5 s merge window (ADR-011 §7 item 17) is not a new start. | All processes of that program path in the session, plus their descendants |
-| **T2 — additional process** | A window process seen for the first time belongs to an app that **is** open (allowed, e.g. started before the break time), and the process was **created while an entry was in effect** (its creation time, converted to local time, lies in effect). | That process plus its descendants. The earlier processes of the app are not touched (AC-25). |
-| **Baseline** | The first report of an agent run (service start, agent start at sign-in or when the account becomes controlled, agent restart). The gate cannot know when these windows appeared. | An app counts as started (T1) if the **earliest creation time** of its window processes lies in effect; otherwise it is already running, and T2 applies to its single processes. |
+| Situation | Decision |
+|---|---|
+| The app (program path) is **open** for the account (the tracker has an instance, including its 5 s merge window) | Not a start. Further processes and sub-processes of an open app are never starts. |
+| The app is **being closed** (a close sequence of this account and path runs) | Not a new start. Newly reported window processes of it are excluded from usage and **added to the running sequence** (own close command; covered by its force step) (story OQ-17). |
+| The app **becomes open** (its first app window is reported; also the first report after a service or agent (re)start) | **Start time** = the **earliest creation time of the running processes with that program path** in the session, owned by the account. **Blocked** iff an entry of the account was in effect at that local time (AC-21: *t* = creation time of the first process). |
 
 Consequences, stated plainly:
-- **A start is the appearance of the app's first window** (AC-22 "after the app's first window appeared"), not the creation of the process. An app launched at 19:59 whose first window appears at 20:00:30 is blocked; an app whose window is already open at 20:00 keeps running (AC-25).
-- A program that waits **in the notification area** (Steam, Discord) and opens its window during a break time is a blocked start (T1): its app was not open before.
-- A **new window of a process that is already open** (e.g. a new Edge window of a running Edge) is not a start and is not blocked.
-- A second start of the same app during a close sequence is a blocked start of its own (OQ-17): the blocked process is excluded, so the app is "not open" and the new process triggers T1.
-- After a service or agent restart in the middle of a break time, apps that were started during a break time are blocked, apps started before are not.
-- Each blocked start records the entry in effect (the first in effect by entry order) for the history and the log.
+- An app whose first process was created before the break keeps running, even if its window appears only after the break began (slow start), and even after a service or agent restart (AC-25).
+- A program that waits **in the notification area** since before the break (Steam, Discord) and opens its window during the break is **not** blocked: its first process was created before (accepted consequence of Q-1).
+- An app started during a break while no agent was running (sign-in, agent restart, boot) is blocked when its window is first reported; detection is then later than 10 s (story AC-22 note).
+- Because the decision uses the creation time, a start in a break that is detected only after the break ended is still blocked.
+- The 10 s / 30 s bounds count from the start, or from the first window if that appears more than 10 s after the start (story AC-22).
+- Cost: only if the earliest creation time among the reported window processes lies in a break does the service read the process table to look for an older process of the same path.
+- Each blocked start records the entry in effect at the start time (the first by entry order) and its trigger (`app start` or `found at agent start`).
 
 ### 4. Close sequence (ADR-006 for blocked starts)
 
@@ -73,14 +74,14 @@ The **service** (full SYSTEM in session 0) terminates; the agent never terminate
 
 The kill set of a blocked start is computed in the service from a process snapshot (`CreateToolhelp32Snapshot`: PID, parent PID) and the process facts (`IProcessInspector`: session, owner SID, creation time, image path):
 
-- **Roots**: per §3 (all processes of the program path in the session, or the single process).
+- **Roots**: all processes of the program path in the session, owned by the account (plus processes added to the running sequence, §3).
 - **Descendants**: processes whose parent is in the set and that were created after their parent (PID-reuse guard), recursively.
 - **Always removed from the set**:
   - processes in another session or with another owner SID;
   - EagleEye's own programs (by installation path, ADR-011 §5);
   - the real `%SystemRoot%\explorer.exe` and `%SystemRoot%\System32\ApplicationFrameHost.exe` (by path; File Explorer windows are never closed, OQ-3);
   - the **enforcement ignore list** (§6);
-  - processes that belong to **another app that is open and not blocked** for the account (same program path as an open app), and their descendants. Example: Steam has been in the notification area since 19:00 and started a game at 19:30; opening Steam's window at 20:30 is a blocked start of Steam, but the game keeps running (AC-25).
+  - processes that belong to **another app that is open and not blocked** for the account (same program path as an open app), and their descendants. Example: Notepad has been open since 19:00; a program started in the break opens another Notepad process; when that program is blocked, the Notepad process stays, because Notepad is an open, allowed app (AC-25).
 
 A Store app's kill set is its app process (e.g. `CalculatorApp.exe`), never the shared `ApplicationFrameHost.exe`.
 
@@ -98,7 +99,11 @@ A **shipped, code-defined** list of Windows programs that are never closed or te
 - The agent's new capability is limited to `PostMessageW(hwnd, WM_CLOSE, 0, 0)` on windows it has itself classified as app windows of a PID the service named, after verifying the creation time (ADR-011 amendment). It still has no window, no message loop, no hooks and never uses `SendMessage*`. UIPI allows messages from System integrity to lower integrity; the agent's restricted token needs no object access for posting.
 - The command channel is the agent's inherited stdin pipe; only the service can write to it. The agent parses it strictly (line limit, schema).
 - Termination stays in the service, so the hardened agent does not need `PROCESS_TERMINATE` rights over the kid's processes.
-- **Bypass risks** (accepted or decided with the US-005 plan, see arc42 §11): a kid can change the **time zone** (Windows grants `SeTimeZonePrivilege` to Users by default) and so shift the local time out of a break time; a kid with tools can strip a window's app status (ADR-011 T-10) so that no app start is seen. Break-time enforcement is window-based by story; process-based deny-by-default enforcement (ADR-005) comes with allow-lists.
+- **Bypass risks** (accepted by Michael with the US-005 plan, Q-2, Q-3; arc42 R-13, R-14): a kid can change the **time zone** (Windows grants `SeTimeZonePrivilege` to Users by default) and so shift the local time out of a break time — the service detects, logs (Warning) and stores every such change as a finding (§9), but does not prevent it; a kid with tools can strip a window's app status (ADR-011 T-10) so that no app start is seen. Break-time enforcement is window-based by story; process-based deny-by-default enforcement (ADR-005) comes with allow-lists.
+
+### 9. Time-zone and clock findings (story AC-37, FR-SVC-026)
+
+At every 5 s tick, after `TimeZoneInfo.ClearCachedData()`, `TimeChangeMonitor` compares the local time zone with the previous tick (`Id`, `BaseUtcOffset`, `SupportsDaylightSavingTime`; regular DST transitions are not changes) and the elapsed wall-clock UTC time with the elapsed monotonic time (difference > 30 s = clock jump; intervals with suspend/resume or a gap > 15 s are not judged). Each change is logged as a Warning and stored in `TimeChangeFindings` (time, kind, old and new value, the controlled session in use at the time if exactly one — a hint, not proof; Windows does not report who changed the zone). The first tick after service start is the baseline. Retention 90 days; rows with an account are purged with the account. Not shown in the parent app in US-005.
 
 ---
 
@@ -115,8 +120,10 @@ A **shipped, code-defined** list of Windows programs that are never closed or te
 | `SendMessage(WM_CLOSE)` or `WM_SYSCOMMAND/SC_CLOSE` | `SendMessage` blocks on hung windows (ADR-011 T-9). `SC_CLOSE` behaves like `WM_CLOSE` for ordinary windows but is ignored by more apps; no gain. |
 | `WM_CLOSE` only to the "main window" (`CloseMainWindow`) | The main-window heuristic is not available across sessions and misses multi-window apps; all *app windows* of the process are closed, as the user would by clicking each close button. |
 | Block on process creation (ETW / WMI process-start events, kernel callbacks) | Detects console and background processes too, which the story exempts; still needs the window decision; kernel callbacks need a driver. The 1 s window scan meets the 10 s bound. |
-| "Start" = process creation time only | A program that waits in the notification area since before the break time could be opened at will during it (Discord, Steam). |
+| "Start" = appearance of the app's first window (ARC's first proposal) | Michael decided for the first process (Q-1): a slow app started before the break must not be blocked; the price is that a program waiting in the notification area since before the break may be opened during it. |
 | "Start" = every first-seen process, also after a restart | A service restart during a break time would close every app that is running, against AC-25. |
+| Additional processes of an open app created in a break are blocked (ARC's first proposal "T2") | Michael decided that further processes of an open app are not starts (Q-1). |
+| Removing the time-zone right from *Users* in the installer | Out of scope for US-005 (Q-2); a possible later hardening. |
 | Global configurable timeout (ADR-006, FR-SVC-021) | US-005 fixes 20 s (FR-SVC-023 v1.5); the YAML setting is not needed yet. |
 
 ---
@@ -134,7 +141,8 @@ A **shipped, code-defined** list of Windows programs that are never closed or te
 
 - Apps that hide in the notification area on close (Steam, Discord) or keep background processes (Edge with startup boost) usually end with outcome `terminated by force` after 20 s, although their window closed at once.
 - Store apps are often suspended rather than ended after their window closes; they are also often `terminated by force`.
-- Detection can exceed 10 s in rare windows: right after sign-in (the agent starts at the next 5 s tick), after an agent restart (back-off 1, 5, 30 s) or while the service starts. The baseline rule catches these starts late, not never.
+- Detection can exceed 10 s in rare windows: right after sign-in (the agent starts at the next 5 s tick), after an agent restart (back-off 1, 5, 30 s) or while the service starts. The creation-time rule catches these starts late, not never.
+- Programs waiting in the notification area since before a break can be opened during it (Q-1).
 - Window-based detection can be evaded by window-style manipulation (ADR-011 T-10) and by a time-zone change (§8).
 
 ### Neutral

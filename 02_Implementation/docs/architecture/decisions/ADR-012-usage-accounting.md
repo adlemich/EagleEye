@@ -1,10 +1,10 @@
 # ADR-012: Usage Accounting — Active Time, Clocks, Day Boundary, Persistence and Usage State Areas
 
-**Status**: Accepted (approved by Michael with the US-004 implementation plan, 2026-10-07); amendment proposed with the US-005 implementation plan
+**Status**: Accepted (approved by Michael with the US-004 implementation plan, 2026-10-07); amendment approved with the US-005 implementation plan, 2026-10-10
 **Date**: 2026-10-07
 **Deciders**: ARC, Michael
 
-> **Amendment 2026-10-10 (US-005, ADR-013; proposed, approved with the US-005 implementation plan)**: processes of a **blocked start** (break time, ADR-013) are removed from the agent's report before it reaches the `UsageTracker`. They create no app record, no instance, no daily-usage row and no "App started" log entry, also not while they are being closed (up to 30 s). They are recorded only in the history of blocked starts (`BlockedStarts`). The accounting tick additionally calls `TimeZoneInfo.ClearCachedData()`, so a time-zone change is seen within 5 s by the day split (§4) and by the break-time evaluation (ADR-013 §2).
+> **Amendment 2026-10-10 (US-005, ADR-013; approved by Michael with the US-005 implementation plan, 2026-10-10)**: processes of a **blocked start** (break time, ADR-013) are removed from the agent's report before it reaches the `UsageTracker`. They create no app record, no instance, no daily-usage row and no "App started" log entry, also not while they are being closed (up to 30 s). They are recorded only in the history of blocked starts (`BlockedStarts`). The accounting tick additionally calls `TimeZoneInfo.ClearCachedData()`, so a time-zone change is seen within 5 s by the day split (§4) and by the break-time evaluation (ADR-013 §2); the same tick records time-zone and clock changes as findings (ADR-013 §9, US-005 AC-37).
 
 ---
 
