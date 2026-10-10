@@ -71,6 +71,24 @@ public sealed class UsageTracker(TimeProvider timeProvider, ILogger<UsageTracker
         }
     }
 
+    /// <summary>
+    /// Whether the app (program path) is open for the account, including an app that disappeared less than
+    /// <see cref="MergeWindow"/> ago (US-005 Decision 3: such an app is not started again).
+    /// </summary>
+    public bool IsOpen(string accountSid, string programPath)
+    {
+        ArgumentNullException.ThrowIfNull(accountSid);
+        ArgumentNullException.ThrowIfNull(programPath);
+        return _accounts.TryGetValue(accountSid, out var account) && account.Open.ContainsKey(programPath);
+    }
+
+    /// <summary>The open program paths of every account (for the kill sets of US-005, ADR-013 §5).</summary>
+    public IReadOnlyDictionary<string, IReadOnlySet<string>> OpenPaths() =>
+        _accounts.ToDictionary(
+            a => a.Key,
+            a => (IReadOnlySet<string>)new HashSet<string>(a.Value.Open.Keys, StringComparer.OrdinalIgnoreCase),
+            StringComparer.OrdinalIgnoreCase);
+
     /// <summary>The latest apps of a session (its agent's report).</summary>
     public void ObserveApps(int sessionId, string accountSid, IReadOnlyList<ObservedApp> apps)
     {

@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using EagleEye.Service.Enforcement;
 using EagleEye.Service.Monitoring;
 using EagleEye.Service.Statistics;
 using EagleEye.Service.UserAccounts;
@@ -20,6 +21,7 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
     private readonly Mock<ISessionAgentSupervisor> _supervisor = new();
     private readonly Mock<IUsageService> _usage = new();
     private readonly Mock<IUserAccountService> _accounts = new();
+    private readonly Mock<IBreakTimeEnforcement> _enforcement = new();
     private readonly TestLogger<UsageAccountingLoop> _logger = new();
     private readonly ConcurrentQueue<(TrackerOutput Output, bool IsTick)> _applied = new();
     private List<SessionInfo> _currentSessions = [new(2, Kid, SessionConnectState.Active, false)];
@@ -30,6 +32,12 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         _time.SetLocalTimeZone(TestZones.Berlin);
+        _enforcement.Setup(e => e.Screen(It.IsAny<AppsObserved>(), It.IsAny<string>(), It.IsAny<Func<string, bool>>()))
+            .Returns<AppsObserved, string, Func<string, bool>>((observed, _, _) => observed);
+        _enforcement.Setup(e => e.OnTickAsync(It.IsAny<IReadOnlyDictionary<string, string>>(), It.IsAny<IReadOnlyList<SessionInUse>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _enforcement.Setup(e => e.PurgeOldDataAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _enforcement.Setup(e => e.StopAsync()).Returns(Task.CompletedTask);
         _sessions.Setup(s => s.GetSessions()).Returns(() => _currentSessions);
         _supervisor.Setup(s => s.IsObserving(It.IsAny<int>())).Returns(true);
         _accounts.Setup(a => a.GetControlledAccountsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => _controlled);
@@ -38,7 +46,7 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
             .Returns(Task.CompletedTask);
         _loop = new UsageAccountingLoop(
             _queue, _sessions.Object, _supervisor.Object, new UsageTracker(_time, new TestLogger<UsageTracker>()),
-            _usage.Object, _accounts.Object, _time, _logger);
+            _usage.Object, _accounts.Object, _enforcement.Object, _time, _logger);
         await _loop.StartAsync(CancellationToken.None);
         await WaitFor(() => Ticks() == 1);
     }
@@ -133,6 +141,7 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
         _queue.Enqueue(new SessionChanged(2, SessionChangeKind.Logoff));
 
         await WaitFor(() => Ended().Any(e => e.Reason == EndReasons.SessionEnded));
+        _enforcement.Verify(e => e.SessionEnded(2), Times.Once);
     }
 
     [Fact]
@@ -145,6 +154,7 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
         await TickAsync();
 
         Assert.Contains(Ended(), e => e.Reason == EndReasons.SessionEnded);
+        _enforcement.Verify(e => e.SessionEnded(2), Times.Once);
     }
 
     [Fact]
@@ -176,6 +186,49 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task SuspendAndResume_EnforcementRebaselines()
+    {
+        _queue.Enqueue(new PowerSuspended());
+        _queue.Enqueue(new PowerResumed());
+
+        await WaitFor(() => _enforcement.Invocations.Count(i => i.Method.Name == nameof(IBreakTimeEnforcement.PowerChanged)) == 2);
+    }
+
+    [Fact]
+    public async Task AppsObserved_ScreenedBeforeTheTracker_BlockedAppsNeverStart()
+    {
+        _enforcement.Setup(e => e.Screen(It.IsAny<AppsObserved>(), "kid1", It.IsAny<Func<string, bool>>()))
+            .Returns<AppsObserved, string, Func<string, bool>>((observed, _, isOpen) => isOpen(Notepad) ? observed : observed with { Apps = [] });
+
+        Observe();
+        await TickAsync();
+
+        Assert.Empty(Started());
+        _enforcement.Verify(e => e.PublishOpenApps(It.IsAny<IReadOnlyDictionary<string, IReadOnlySet<string>>>()), Times.AtLeast(2));
+    }
+
+    [Fact]
+    public async Task Tick_EnforcementGetsControlledAccountsAndSessionsInUse()
+    {
+        _currentSessions = [new(2, Kid, SessionConnectState.Active, false), new(3, "S-1-5-21-9", SessionConnectState.Active, false), new(4, Kid, SessionConnectState.Active, true)];
+
+        await TickAsync();
+
+        _enforcement.Verify(e => e.OnTickAsync(
+            It.Is<IReadOnlyDictionary<string, string>>(d => d[Kid] == "kid1"),
+            It.Is<IReadOnlyList<SessionInUse>>(s => s.Count == 1 && s[0] == new SessionInUse(2, Kid, "kid1")),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task Stop_StopsTheEnforcement()
+    {
+        await StopAsync();
+
+        _enforcement.Verify(e => e.StopAsync(), Times.Once);
+    }
+
+    [Fact]
     public async Task Midnight_PurgesAndPublishesTodayOnce()
     {
         _time.Advance(TimeSpan.FromHours(12));
@@ -183,6 +236,7 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
         await TickAsync();
 
         _usage.Verify(u => u.PurgeOldDataAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _enforcement.Verify(e => e.PurgeOldDataAsync(It.IsAny<CancellationToken>()), Times.Once);
         _usage.Verify(u => u.PublishTodayAsync(It.Is<IReadOnlyCollection<string>>(c => c.Single() == Kid), It.IsAny<CancellationToken>()), Times.Once);
     }
 

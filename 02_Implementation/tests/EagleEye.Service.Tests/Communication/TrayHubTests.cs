@@ -15,6 +15,8 @@ public sealed class TrayHubTests
     private readonly Mock<IVersionProvider> _versionProvider = new();
     private readonly Mock<ITrayConnectionTracker> _tracker = new();
     private readonly Mock<ILogger<TrayHub>> _logger = new();
+    private readonly Mock<ITrayClientIdentifier> _identifier = new();
+    private readonly TrayConnectionRegistry _registry = new();
 
     [Fact]
     public async Task GetServiceVersion_ReturnsVersionFromProvider()
@@ -35,7 +37,7 @@ public sealed class TrayHubTests
 
         await hub.OnConnectedAsync();
 
-        VerifyLogged(LogLevel.Information, "Tray client connected: " + ConnectionId, exception: null);
+        VerifyLogged(LogLevel.Information, "Tray client connected: " + ConnectionId + " (unverified).", exception: null);
     }
 
     [Theory]
@@ -74,7 +76,7 @@ public sealed class TrayHubTests
     public async Task OnConnectedAsync_NoHttpContext_Aborts()
     {
         var context = HubContextFactory.Create(ConnectionId, withHttpContext: false);
-        var hub = new TrayHub(_versionProvider.Object, _tracker.Object, _logger.Object) { Context = context.Object };
+        var hub = new TrayHub(_versionProvider.Object, _tracker.Object, _identifier.Object, _registry, _logger.Object) { Context = context.Object };
 
         await hub.OnConnectedAsync();
 
@@ -134,12 +136,65 @@ public sealed class TrayHubTests
         VerifyLogged(LogLevel.Information, "Tray client disconnected: " + ConnectionId, error);
     }
 
+    [Fact]
+    public async Task OnConnectedAsync_GenuineTrayClient_RegisteredWithSessionAndLogged()
+    {
+        var identity = new TrayClientIdentity(3, "S-1-5-21-1-2-3-1003", 4242);
+        _identifier.Setup(i => i.Identify(new IPEndPoint(IPAddress.Loopback, 5080), new IPEndPoint(IPAddress.Loopback, 50123))).Returns(identity);
+        var context = HubContextFactory.Create(ConnectionId, IPAddress.Loopback, localAddress: IPAddress.Loopback);
+        var hub = new TrayHub(_versionProvider.Object, _tracker.Object, _identifier.Object, _registry, _logger.Object) { Context = context.Object };
+
+        await hub.OnConnectedAsync();
+
+        Assert.Equal(ConnectionId, _registry.NewestOf(3));
+        VerifyLogged(LogLevel.Information, "Tray client connected: " + ConnectionId + " (session 3, verified).", exception: null);
+    }
+
+    [Fact]
+    public async Task OnConnectedAsync_NotTheTrayClient_Unverified()
+    {
+        var context = HubContextFactory.Create(ConnectionId, IPAddress.Loopback, localAddress: IPAddress.Loopback);
+        var hub = new TrayHub(_versionProvider.Object, _tracker.Object, _identifier.Object, _registry, _logger.Object) { Context = context.Object };
+
+        await hub.OnConnectedAsync();
+
+        Assert.Null(_registry.NewestOf(3));
+        VerifyLogged(LogLevel.Information, "Tray client connected: " + ConnectionId + " (unverified).", exception: null);
+    }
+
+    [Fact]
+    public async Task OnConnectedAsync_IdentificationFails_UnverifiedAndWarning()
+    {
+        var failure = new InvalidOperationException("table");
+        _identifier.Setup(i => i.Identify(It.IsAny<IPEndPoint>(), It.IsAny<IPEndPoint>())).Throws(failure);
+        var context = HubContextFactory.Create(ConnectionId, IPAddress.Loopback, localAddress: IPAddress.Loopback);
+        var hub = new TrayHub(_versionProvider.Object, _tracker.Object, _identifier.Object, _registry, _logger.Object) { Context = context.Object };
+
+        await hub.OnConnectedAsync();
+
+        VerifyLogged(LogLevel.Warning, $"The tray client behind connection {ConnectionId} could not be identified.", failure);
+        _tracker.Verify(t => t.Increment(), Times.Once);
+    }
+
+    [Fact]
+    public async Task OnDisconnectedAsync_Unregisters()
+    {
+        _identifier.Setup(i => i.Identify(It.IsAny<IPEndPoint>(), It.IsAny<IPEndPoint>())).Returns(new TrayClientIdentity(3, null, 1));
+        var context = HubContextFactory.Create(ConnectionId, IPAddress.Loopback, localAddress: IPAddress.Loopback);
+        var hub = new TrayHub(_versionProvider.Object, _tracker.Object, _identifier.Object, _registry, _logger.Object) { Context = context.Object };
+        await hub.OnConnectedAsync();
+
+        await hub.OnDisconnectedAsync(null);
+
+        Assert.Null(_registry.NewestOf(3));
+    }
+
     public static TheoryData<IPAddress> LoopbackAddresses => new() { IPAddress.Loopback, IPAddress.IPv6Loopback };
 
     private (TrayHub Hub, Mock<HubCallerContext> Context) CreateHub(IPAddress? remoteAddress)
     {
         var context = HubContextFactory.Create(ConnectionId, remoteAddress);
-        var hub = new TrayHub(_versionProvider.Object, _tracker.Object, _logger.Object) { Context = context.Object };
+        var hub = new TrayHub(_versionProvider.Object, _tracker.Object, _identifier.Object, _registry, _logger.Object) { Context = context.Object };
         return (hub, context);
     }
 

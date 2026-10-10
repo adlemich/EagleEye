@@ -35,6 +35,39 @@ public sealed class UsageTrackerTests
     }
 
     [Fact]
+    public void IsOpen_OpenAppAndWithinTheMergeWindow()
+    {
+        Observe(2, Kid, Notepad);
+        var open = _tracker.IsOpen(Kid.ToLowerInvariant(), Notepad.ToUpperInvariant());
+        Observe(2, Kid);
+        _time.Advance(TimeSpan.FromSeconds(4));
+        _tracker.Advance();
+        var withinMerge = _tracker.IsOpen(Kid, Notepad);
+        _time.Advance(TimeSpan.FromSeconds(2));
+        _tracker.Advance();
+
+        Assert.Equal((true, true, false, false), (open, withinMerge, _tracker.IsOpen(Kid, Notepad), _tracker.IsOpen(Kid2, Notepad)));
+    }
+
+    [Fact]
+    public void OpenPaths_PerAccount()
+    {
+        Observe(2, Kid, Notepad, Paint);
+        Observe(3, Kid2, Paint);
+
+        var paths = _tracker.OpenPaths();
+
+        Assert.Equal((2, 1, true), (paths[Kid].Count, paths[Kid2.ToLowerInvariant()].Count, paths[Kid].Contains(Notepad.ToUpperInvariant())));
+    }
+
+    [Fact]
+    public void IsOpen_Guards()
+    {
+        Assert.Throws<ArgumentNullException>(() => _tracker.IsOpen(null!, Notepad));
+        Assert.Throws<ArgumentNullException>(() => _tracker.IsOpen(Kid, null!));
+    }
+
+    [Fact]
     public void Tick_Active_CreditsSeconds()
     {
         Observe(2, Kid, Notepad);

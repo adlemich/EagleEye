@@ -14,10 +14,6 @@ internal static class SqlValues
     /// <summary>A UTC time as stored text.</summary>
     public static string Utc(DateTimeOffset value) => value.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
 
-    /// <summary>Parses a stored UTC time.</summary>
-    public static DateTimeOffset ParseUtc(string value) =>
-        DateTimeOffset.Parse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
-
     /// <summary>A local time as stored text.</summary>
     public static string Local(DateTime value) => value.ToString(LocalFormat, CultureInfo.InvariantCulture);
 
