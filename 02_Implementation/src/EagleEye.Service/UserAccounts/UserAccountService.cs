@@ -1,4 +1,5 @@
 using EagleEye.Service.Data;
+using EagleEye.Service.Statistics;
 using EagleEye.Shared.Models;
 
 namespace EagleEye.Service.UserAccounts;
@@ -16,6 +17,7 @@ public sealed class UserAccountService(
     IAccountSelectionRepository repository,
     IUserAccountsBroadcaster broadcaster,
     TimeProvider timeProvider,
+    Lazy<IAccountDataPurger> dataPurger,
     ILogger<UserAccountService> logger) : IUserAccountService, IDisposable
 {
     private const string ReadFailedMessage = "Reading the local accounts failed; the inventory is kept unchanged.";
@@ -48,6 +50,18 @@ public sealed class UserAccountService(
     public Task<UserAccountListDto> GetSnapshotAsync(CancellationToken ct = default) => LockedAsync(() =>
     {
         return Task.FromResult(BuildSnapshot(CurrentInventory()));
+    }, ct);
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<ControlledAccount>> GetControlledAccountsAsync(CancellationToken ct = default) => LockedAsync(() =>
+    {
+        IReadOnlyList<ControlledAccount> controlled = _inventory is null
+            ? []
+            : [.. _inventory.StandardAccounts.Values
+                .Where(a => _selections.GetValueOrDefault(a.Sid))
+                .OrderBy(a => a.UserName, StringComparer.OrdinalIgnoreCase)
+                .Select(a => new ControlledAccount(a.Sid, a.UserName))];
+        return Task.FromResult(controlled);
     }, ct);
 
     /// <inheritdoc />
@@ -135,7 +149,11 @@ public sealed class UserAccountService(
 
     private async Task ForgetDeletedAsync(AccountInventory inventory, CancellationToken ct)
     {
-        var forgotten = await repository.DeleteMissingAsync(inventory.AllSids.ToList(), ct).ConfigureAwait(false);
+        var existing = inventory.AllSids.ToList();
+
+        // US-004 AC-9, FR-SVC-047: recorded usage of deleted accounts goes too. Only after a successful read.
+        await dataPurger.Value.PurgeMissingAccountsAsync(existing, ct).ConfigureAwait(false);
+        var forgotten = await repository.DeleteMissingAsync(existing, ct).ConfigureAwait(false);
         if (forgotten.Count == 0)
         {
             return;

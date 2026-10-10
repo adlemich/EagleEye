@@ -51,6 +51,44 @@ public sealed class MainViewModelTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task StartAsync_Paired_SelectsReportsAndNotifies()
+    {
+        _coordinator.Setup(c => c.InitializeAsync())
+            .ReturnsAsync(new ConnectionState(ConnectionStatus.PairedConnecting, "kid-pc", "n", ConnectionMessage.None));
+        var changes = new List<string?>();
+        _viewModel.PropertyChanged += (_, e) => changes.Add(e.PropertyName);
+
+        await _viewModel.StartAsync();
+
+        Assert.Equal(
+            (_viewModel.MenuItems[1], MainViewModel.ReportsKey, nameof(MainViewModel.SelectedItem)),
+            (_viewModel.SelectedItem, _viewModel.SelectedItem.Key, Assert.Single(changes)));
+    }
+
+    [Fact]
+    public async Task StartAsync_NotPaired_StaysOnSettings()
+    {
+        _coordinator.Setup(c => c.InitializeAsync()).ReturnsAsync(ConnectionState.Initial);
+
+        await _viewModel.StartAsync();
+
+        Assert.Equal(MainViewModel.SettingsKey, _viewModel.SelectedItem.Key);
+    }
+
+    [Fact]
+    public async Task StartAsync_PairedAfterMenuWroteBackSettings_SelectsReports()
+    {
+        // The menu's two-way binding sets the default entry when it loads, before StartAsync runs.
+        _coordinator.Setup(c => c.InitializeAsync())
+            .ReturnsAsync(new ConnectionState(ConnectionStatus.PairedConnecting, "kid-pc", "n", ConnectionMessage.None));
+        _viewModel.SelectedItem = _viewModel.MenuItems[0];
+
+        await _viewModel.StartAsync();
+
+        Assert.Equal(MainViewModel.ReportsKey, _viewModel.SelectedItem.Key);
+    }
+
+    [Fact]
     public async Task StartAsync_InitializesDatabaseAndTheme()
     {
         _coordinator.Setup(c => c.InitializeAsync()).ReturnsAsync(ConnectionState.Initial);
@@ -74,7 +112,7 @@ public sealed class MainViewModelTests : IAsyncLifetime
     }
 
     [Fact]
-    public void MenuItems_OnlySettings()
+    public void MenuItems_SettingsAndReports()
     {
         var titles = TestSupport.InCulture("de-DE", () => new MainViewModel(
             _database,
@@ -82,7 +120,7 @@ public sealed class MainViewModelTests : IAsyncLifetime
             _coordinator.Object,
             new ServerConnectionViewModel(_coordinator.Object, _dialogs.Object, new ImmediateDispatcher())).MenuItems);
 
-        Assert.Equal([new NavigationItem(MainViewModel.SettingsKey, "Einstellungen")], titles);
+        Assert.Equal([new NavigationItem(MainViewModel.SettingsKey, "Einstellungen"), new NavigationItem(MainViewModel.ReportsKey, "Berichte")], titles);
     }
 
     [Fact]

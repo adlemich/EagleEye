@@ -6,7 +6,8 @@
              x:Class="EagleEye.ParentApp.Views.SettingsView">
 
     <ScrollView>
-        <VerticalStackLayout Spacing="8" MaximumWidthRequest="760" HorizontalOptions="Start">
+        <!-- Fills the content area, so the heading bars (ISSUE-007) span its full width. -->
+        <VerticalStackLayout Spacing="8">
 
             <Label Text="{x:Static core:AppTexts.MenuSettings}" Style="{StaticResource PageHeader}" />
 

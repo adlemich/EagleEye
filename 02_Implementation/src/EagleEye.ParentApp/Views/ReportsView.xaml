@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:core="clr-namespace:EagleEye.ParentApp.Core;assembly=EagleEye.ParentApp.Core"
+             xmlns:vm="clr-namespace:EagleEye.ParentApp.Core.ViewModels;assembly=EagleEye.ParentApp.Core"
+             x:Class="EagleEye.ParentApp.Views.ReportsView"
+             x:DataType="vm:ReportsViewModel">
+
+    <!-- Reports (US-004 AC-17 to AC-23). Tables with fixed column widths so header and rows line up and scale
+         with the display (lesson of US-003 ISSUE-006). -->
+    <ScrollView>
+        <!-- Fills the content area, so the heading bars (ISSUE-007) span its full width. -->
+        <VerticalStackLayout Spacing="8">
+
+            <Label Text="{x:Static core:AppTexts.MenuReports}" Style="{StaticResource PageHeader}" />
+
+            <HorizontalStackLayout Spacing="12" IsVisible="{Binding IsAccountSelectionVisible}">
+                <Label Text="{x:Static core:AppTexts.ReportsAccountLabel}" FontAttributes="Bold" VerticalOptions="Center" />
+                <Picker ItemsSource="{Binding Accounts}"
+                        SelectedItem="{Binding SelectedAccount, Mode=TwoWay}"
+                        MinimumWidthRequest="280"
+                        VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <Label Text="{Binding StatusText}" IsVisible="{Binding HasStatus}" />
+
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Days}" IsVisible="{Binding IsReportVisible}" Spacing="16">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:DayUsageViewModel">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="{Binding Heading}" Style="{StaticResource SectionHeader}" />
+                            <Label Text="{x:Static core:AppTexts.ReportsNoUsageToday}" IsVisible="{Binding ShowNoUsageToday}" />
+                            <Grid ColumnDefinitions="360,160" ColumnSpacing="16" IsVisible="{Binding HasRows}">
+                                <Label Grid.Column="0" Text="{x:Static core:AppTexts.ReportsColumnApp}" FontAttributes="Bold" />
+                                <Label Grid.Column="1" Text="{x:Static core:AppTexts.ReportsColumnUsage}" FontAttributes="Bold"
+                                       HorizontalTextAlignment="End" />
+                            </Grid>
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Rows}" Spacing="2">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:AppUsageRowViewModel">
+                                        <Grid ColumnDefinitions="360,160" ColumnSpacing="16">
+                                            <Label Grid.Column="0" Text="{Binding DisplayName}" LineBreakMode="WordWrap" />
+                                            <Label Grid.Column="1" Text="{Binding UsageText}" HorizontalTextAlignment="End" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentView>

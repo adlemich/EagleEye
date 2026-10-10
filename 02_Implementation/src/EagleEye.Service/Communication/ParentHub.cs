@@ -1,5 +1,6 @@
 using System.Security.Principal;
 using EagleEye.Service.Pairing;
+using EagleEye.Service.Statistics;
 using EagleEye.Service.UserAccounts;
 using EagleEye.Shared.Contracts;
 using EagleEye.Shared.Models;
@@ -18,6 +19,7 @@ public sealed class ParentHub(
     IPairingManager pairing,
     IParentConnectionRegistry registry,
     IUserAccountService userAccounts,
+    IUsageService usage,
     ILogger<ParentHub> logger) : Hub<IParentClientCallback>, IParentHub
 {
     /// <summary>Group of all paired parent connections.</summary>
@@ -31,6 +33,30 @@ public sealed class ParentHub(
     internal const string InvalidRequestMessage = "Invalid request.";
     internal const string UnknownAccountMessage = "Unknown account.";
     internal const string SaveFailedMessage = "The change could not be saved.";
+    internal const string UsageUnavailableMessage = "The usage is not available.";
+
+    /// <inheritdoc />
+    public async Task<AccountUsageDto> GetAccountUsage(string accountSid)
+    {
+        if (!IsValidSid(accountSid))
+        {
+            throw new HubException(InvalidRequestMessage);
+        }
+
+        try
+        {
+            return await usage.GetAccountUsageAsync(accountSid);
+        }
+        catch (UnknownAccountException)
+        {
+            throw new HubException(UnknownAccountMessage);
+        }
+        catch (Exception ex) when (ex is not HubException)
+        {
+            logger.LogError(ex, "Reading the usage of {AccountSid} failed.", accountSid);
+            throw new HubException(UsageUnavailableMessage);
+        }
+    }
 
     /// <inheritdoc />
     public async Task<UserAccountListDto> GetUserAccounts()

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using EagleEye.Service.Data;
+using EagleEye.Service.Statistics;
 using EagleEye.Service.UserAccounts;
 using EagleEye.Shared.Models;
 using Microsoft.Extensions.Logging;
@@ -30,6 +31,7 @@ public sealed class UserAccountServiceTests : IAsyncLifetime
     private readonly RecordingBroadcaster _broadcaster = new();
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 10, 8, 12, 0, 0, TimeSpan.Zero));
     private readonly TestLogger<UserAccountService> _logger = new();
+    private readonly Mock<IAccountDataPurger> _purger = new();
     private List<LocalAccountInfo> _accounts = [Administrator, Guest, Papa, Max, Anna, Leftover];
     private UserAccountService _service;
 
@@ -461,11 +463,77 @@ public sealed class UserAccountServiceTests : IAsyncLifetime
         Assert.False(await IsTickedAsync(lena));
     }
 
+    // ---------- US-004: controlled accounts and purge hook ----------
+
+    [Fact]
+    public async Task GetControlledAccountsAsync_TickedStandardAccountsOnlyByName()
+    {
+        await _service.InitializeAsync();
+        await _service.SetParentalControlAsync(RequestA, Max.Sid, true, Device);
+        await _service.SetParentalControlAsync(RequestA, Anna.Sid, true, Device);
+
+        Assert.Equal([new ControlledAccount(Anna.Sid, "anna"), new ControlledAccount(Max.Sid, "max")], await _service.GetControlledAccountsAsync());
+    }
+
+    [Fact]
+    public async Task GetControlledAccountsAsync_UntickedAndAdminExcluded()
+    {
+        await _service.InitializeAsync();
+        await _service.SetParentalControlAsync(RequestA, Max.Sid, true, Device);
+        await _service.SetParentalControlAsync(RequestA, Anna.Sid, false, Device);
+        _accounts = [Papa, Max with { IsAdmin = true }, Anna];
+        await _service.RefreshInventoryAsync();
+
+        Assert.Empty(await _service.GetControlledAccountsAsync());
+    }
+
+    [Fact]
+    public async Task GetControlledAccountsAsync_InventoryUnavailable_Empty()
+    {
+        _source.Setup(s => s.GetAccounts()).Throws(new Win32Exception(5));
+        await _service.InitializeAsync();
+
+        Assert.Empty(await _service.GetControlledAccountsAsync());
+    }
+
+    [Fact]
+    public async Task InitializeAsync_PurgesUsageOfMissingAccountsWithAllSids()
+    {
+        await _service.InitializeAsync();
+
+        _purger.Verify(p => p.PurgeMissingAccountsAsync(
+            It.Is<IReadOnlyCollection<string>>(sids => sids.Count == 6 && sids.Contains(Papa.Sid)), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RefreshInventoryAsync_Changed_PurgesUsage()
+    {
+        await _service.InitializeAsync();
+        _accounts = [Papa, Max];
+
+        await _service.RefreshInventoryAsync();
+
+        _purger.Verify(p => p.PurgeMissingAccountsAsync(
+            It.Is<IReadOnlyCollection<string>>(sids => sids.Count == 2), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RefreshInventoryAsync_EnumerationFails_NoPurge()
+    {
+        await _service.InitializeAsync();
+        _purger.Invocations.Clear();
+        _source.Setup(s => s.GetAccounts()).Throws(new Win32Exception(5));
+
+        await _service.RefreshInventoryAsync();
+
+        _purger.VerifyNoOtherCalls();
+    }
+
     // ---------- Helpers ----------
 
     private UserAccountService CreateService(IAccountSelectionRepository repository)
     {
-        return new UserAccountService(_source.Object, repository, _broadcaster, _time, _logger);
+        return new UserAccountService(_source.Object, repository, _broadcaster, _time, new Lazy<IAccountDataPurger>(_purger.Object), _logger);
     }
 
     private async Task<bool> IsTickedAsync(LocalAccountInfo account)

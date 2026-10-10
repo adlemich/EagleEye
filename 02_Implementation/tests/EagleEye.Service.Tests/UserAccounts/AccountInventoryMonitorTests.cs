@@ -11,7 +11,7 @@ public sealed class AccountInventoryMonitorTests : IAsyncLifetime
 {
     private static readonly TimeSpan Wait = TimeSpan.FromSeconds(5);
 
-    private readonly FakeTimeProvider _time = new();
+    private readonly TimerSignalingTimeProvider _time = new();
     private readonly Mock<IUserAccountService> _service = new();
     private readonly TestLogger<AccountInventoryMonitor> _logger = new();
     private readonly Channel<int> _calls = Channel.CreateUnbounded<int>();
@@ -29,7 +29,13 @@ public sealed class AccountInventoryMonitorTests : IAsyncLifetime
         _monitor = new AccountInventoryMonitor(_service.Object, _time, _logger);
     }
 
-    public Task InitializeAsync() => _monitor.StartAsync(CancellationToken.None);
+    public async Task InitializeAsync()
+    {
+        await _monitor.StartAsync(CancellationToken.None);
+
+        // .NET 10 runs ExecuteAsync via Task.Run: advance the clock only after the monitor created its timer.
+        await _time.TimerCreated.WaitAsync(Wait);
+    }
 
     public async Task DisposeAsync()
     {
@@ -104,7 +110,8 @@ public sealed class AccountInventoryMonitorTests : IAsyncLifetime
     {
         await _monitor.StopAsync(CancellationToken.None);
 
-        Assert.True(_monitor.ExecuteTask!.IsCompletedSuccessfully);
+        // .NET 10 starts ExecuteAsync with Task.Run: a stop before it ran leaves the task canceled, never faulted.
+        Assert.True(_monitor.ExecuteTask!.IsCompleted && !_monitor.ExecuteTask.IsFaulted);
     }
 
     private async Task<int> NextCallAsync() => await _calls.Reader.ReadAsync().AsTask().WaitAsync(Wait);
@@ -118,5 +125,20 @@ public sealed class AccountInventoryMonitorTests : IAsyncLifetime
         }
 
         Assert.True(condition());
+    }
+
+    /// <summary>A fake clock that signals when a timer is created.</summary>
+    private sealed class TimerSignalingTimeProvider : FakeTimeProvider
+    {
+        private readonly TaskCompletionSource _timerCreated = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Task TimerCreated => _timerCreated.Task;
+
+        public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
+        {
+            var timer = base.CreateTimer(callback, state, dueTime, period);
+            _timerCreated.TrySetResult();
+            return timer;
+        }
     }
 }

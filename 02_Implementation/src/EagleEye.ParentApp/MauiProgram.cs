@@ -2,6 +2,7 @@ using EagleEye.ParentApp.Core.Abstractions;
 using EagleEye.ParentApp.Core.Accounts;
 using EagleEye.ParentApp.Core.Communication;
 using EagleEye.ParentApp.Core.Data;
+using EagleEye.ParentApp.Core.Reports;
 using EagleEye.ParentApp.Core.ViewModels;
 using EagleEye.ParentApp.Services;
 using EagleEye.ParentApp.Views;
@@ -44,18 +45,24 @@ public static class MauiProgram
         // State area "UserAccounts" (US-003, ADR-010).
         services.AddSingleton<IUserAccountsModel, UserAccountsModel>();
 
+        // Usage areas (US-004, ADR-012).
+        services.AddSingleton<IAccountUsageModel, AccountUsageModel>();
+
         // Platform services.
         services.AddSingleton<IThemeService, MauiThemeService>();
         services.AddSingleton<IDialogService, MauiDialogService>();
         services.AddSingleton<IUiDispatcher, MauiUiDispatcher>();
+        services.AddSingleton<HeadingBarColorService>();
 
         // View models and views.
         services.AddSingleton<AppearanceViewModel>();
         services.AddSingleton<ServerConnectionViewModel>();
         services.AddSingleton<StatusBarViewModel>();
         services.AddSingleton<UserAccountsViewModel>();
+        services.AddSingleton<ReportsViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<SettingsView>();
+        services.AddSingleton<ReportsView>();
         services.AddSingleton<StatusBarView>();
         services.AddSingleton<MainPage>();
 

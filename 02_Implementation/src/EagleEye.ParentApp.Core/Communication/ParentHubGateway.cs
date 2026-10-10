@@ -12,7 +12,8 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
 {
     private readonly Lock _lock = new();
     private IParentHubClient? _subscribed;
-    private Action<UserAccountListDto>? _subscription;
+    private Action<UserAccountListDto>? _accountsSubscription;
+    private Action<DayUsageDto>? _usageSubscription;
     private IParentHubClient? _connected;
 
     /// <inheritdoc />
@@ -23,6 +24,9 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
 
     /// <inheritdoc />
     public event Action<UserAccountListDto>? UserAccountsChanged;
+
+    /// <inheritdoc />
+    public event Action<DayUsageDto>? DayUsageChanged;
 
     /// <inheritdoc />
     public bool IsConnected
@@ -46,11 +50,14 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
             {
                 if (_subscribed is not null)
                 {
-                    _subscribed.UserAccountsChanged -= _subscription;
+                    _subscribed.UserAccountsChanged -= _accountsSubscription;
+                    _subscribed.DayUsageChanged -= _usageSubscription;
                 }
 
-                _subscription = snapshot => Forward(client, snapshot);
-                client.UserAccountsChanged += _subscription;
+                _accountsSubscription = snapshot => Forward(client, () => UserAccountsChanged?.Invoke(snapshot));
+                _usageSubscription = snapshot => Forward(client, () => DayUsageChanged?.Invoke(snapshot));
+                client.UserAccountsChanged += _accountsSubscription;
+                client.DayUsageChanged += _usageSubscription;
                 _subscribed = client;
             }
 
@@ -90,7 +97,7 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
         return await call(client, cts.Token).ConfigureAwait(false);
     }
 
-    private void Forward(IParentHubClient sender, UserAccountListDto snapshot)
+    private void Forward(IParentHubClient sender, Action raise)
     {
         lock (_lock)
         {
@@ -100,6 +107,6 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
             }
         }
 
-        UserAccountsChanged?.Invoke(snapshot);
+        raise();
     }
 }

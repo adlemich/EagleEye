@@ -40,4 +40,10 @@ public interface IParentHubClient : IAsyncDisposable
 
     /// <summary>Calls <c>IParentHub.SetParentalControl</c>.</summary>
     Task<StateWriteAckDto> SetParentalControlAsync(Guid requestId, string accountSid, bool isUnderParentalControl, CancellationToken ct);
+
+    /// <summary>The service broadcast <c>IParentClientCallback.OnDayUsageChanged</c> (ADR-012 §6).</summary>
+    event Action<DayUsageDto>? DayUsageChanged;
+
+    /// <summary>Calls <c>IParentHub.GetAccountUsage</c>.</summary>
+    Task<AccountUsageDto> GetAccountUsageAsync(string accountSid, CancellationToken ct);
 }

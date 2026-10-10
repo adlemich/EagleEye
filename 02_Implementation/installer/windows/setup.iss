@@ -98,10 +98,14 @@ begin
 end;
 
 { Stops the service (net stop waits until it has stopped) and all tray client
-  instances in all sessions, so that their files can be replaced or removed. }
+  instances in all sessions, so that their files can be replaced or removed.
+  Session agents (US-004, ADR-011) are EagleEye.Service.exe processes in the users'
+  sessions; they exit when the service closes their input, and any agent still
+  exiting is ended here (install, upgrade and uninstall). }
 procedure StopServiceAndTray();
 begin
   RunHidden(NetExe(), 'stop ' + SvcName);
+  RunHidden(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#ServiceExe}');
   RunHidden(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#TrayExe}');
 end;
 

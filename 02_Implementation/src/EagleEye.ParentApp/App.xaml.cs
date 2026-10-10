@@ -1,3 +1,4 @@
+using EagleEye.ParentApp.Services;
 using EagleEye.ParentApp.Views;
 
 namespace EagleEye.ParentApp;
@@ -26,7 +27,7 @@ public partial class App : Application
     protected override Window CreateWindow(IActivationState? activationState)
     {
         // Resolved here, not in the constructor: the views need the styles loaded by InitializeComponent.
-        return new Window(_services.GetRequiredService<MainPage>())
+        var window = new Window(_services.GetRequiredService<MainPage>())
         {
             Title = WindowTitle,
             MinimumWidth = MinimumWidth,
@@ -34,5 +35,7 @@ public partial class App : Application
             Width = InitialWidth,
             Height = InitialHeight,
         };
+        _services.GetRequiredService<HeadingBarColorService>().Attach(window);
+        return window;
     }
 }

@@ -15,4 +15,11 @@ public interface IParentClientCallback
     /// <see cref="UserAccountListDto.Revision"/> is higher than the last applied revision.
     /// </summary>
     Task OnUserAccountsChanged(UserAccountListDto snapshot);
+
+    /// <summary>
+    /// The usage of one account on one day changed (ADR-012 §6). Sent to all paired apps at most once
+    /// per account every 5 s while apps are active, and at local midnight with the new, empty today.
+    /// Apply only if <see cref="DayUsageDto.Revision"/> is higher than the revision held for that day.
+    /// </summary>
+    Task OnDayUsageChanged(DayUsageDto snapshot);
 }

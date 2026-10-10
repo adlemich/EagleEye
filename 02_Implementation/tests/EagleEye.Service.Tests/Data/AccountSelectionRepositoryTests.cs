@@ -24,9 +24,9 @@ public sealed class AccountSelectionRepositoryTests : IAsyncLifetime
     public async Task DisposeAsync() => await _database.DisposeAsync();
 
     [Fact]
-    public async Task InitializeAsync_NewDatabase_IsAtSchemaVersion2()
+    public async Task InitializeAsync_NewDatabase_IsAtLatestSchemaVersion()
     {
-        Assert.Equal(2, await _database.GetSchemaVersionAsync());
+        Assert.Equal(3, await _database.GetSchemaVersionAsync());
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public sealed class AccountSelectionRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Migration2_OnExistingVersion1Database_KeepsPairedDevices()
+    public async Task Migrations_OnExistingVersion1Database_KeepPairedDevices()
     {
         var file = Path.Combine(Path.GetTempPath(), "eagleeye-tests", Guid.NewGuid().ToString("N") + ".db");
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);
@@ -127,7 +127,7 @@ public sealed class AccountSelectionRepositoryTests : IAsyncLifetime
             await database.InitializeAsync();
             var found = await new PairedDeviceRepository(database).FindByTokenHashAsync(new byte[32]);
 
-            Assert.Equal((2L, "device-1"), (await database.GetSchemaVersionAsync(), found?.DeviceId));
+            Assert.Equal((3L, "device-1"), (await database.GetSchemaVersionAsync(), found?.DeviceId));
         }
         finally
         {

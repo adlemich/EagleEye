@@ -25,13 +25,18 @@ EagleEye.ParentApp.Core/
 │   └── StateReplica<T>          Applies a snapshot only if its revision is higher (ADR-010 §4)
 ├── Accounts/            UserAccountsModel: state area "UserAccounts" (fetch on connect, writes with
 │                        requestId/ack/broadcast confirmation, 4 s write timeout)
+├── Reports/             AccountUsageModel: usage areas of the selected account (fetch on connect and on
+│                        selection, revision rule per day, 90-day and empty-day trimming)
+├── Appearance/         HeadingBarPalette: heading bar colours (platform accent or app primary #1E7B3A,
+│                        white or black text by WCAG contrast, ISSUE-007); RgbColor
 ├── Data/
 │   ├── ParentDatabase           Shared SqliteDatabase: ServerConnections, AppSettings, Secrets
 │   ├── PairingStore             The one pairing (host, device ID/name, thumbprint); token via ISecretStore
 │   ├── SettingsStore            appearance.theme = light | dark (absent = follow the OS)
 │   └── ProtectedSecretStore     ISecretStore on the Secrets table + ISecretProtector (Windows: DPAPI)
 ├── ViewModels/          MainViewModel, AppearanceViewModel, ServerConnectionViewModel, UserAccountsViewModel,
-│                        UserAccountItemViewModel, AccountDisplayName, StatusBarViewModel
+│                        UserAccountItemViewModel, AccountDisplayName, StatusBarViewModel, ReportsViewModel,
+│                        DayUsageViewModel, AppUsageRowViewModel, UsageDuration
 │                        (CommunityToolkit.Mvvm, no source generators)
 ├── AppTexts.cs          Typed access to the localized texts
 └── Resources/           AppTexts.resx (German, default) and AppTexts.en.resx (English)

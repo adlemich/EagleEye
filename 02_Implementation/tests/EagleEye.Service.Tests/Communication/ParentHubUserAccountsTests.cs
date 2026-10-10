@@ -1,5 +1,6 @@
 using EagleEye.Service.Communication;
 using EagleEye.Service.Pairing;
+using EagleEye.Service.Statistics;
 using EagleEye.Service.UserAccounts;
 using EagleEye.Shared.Models;
 using Microsoft.AspNetCore.SignalR;
@@ -18,6 +19,7 @@ public sealed class ParentHubUserAccountsTests
     private static readonly Guid RequestId = Guid.Parse("7f3c0000-0000-0000-0000-000000000001");
 
     private readonly Mock<IUserAccountService> _userAccounts = new();
+    private readonly Mock<IUsageService> _usage = new();
     private readonly TestLogger<ParentHub> _logger = new();
     private readonly ParentHub _hub;
 
@@ -25,7 +27,7 @@ public sealed class ParentHubUserAccountsTests
     {
         var context = HubContextFactory.Create("connection-1");
         ParentConnectionState.SetPaired(context.Object, "device-1", DeviceName);
-        _hub = new ParentHub(Mock.Of<IPairingManager>(), Mock.Of<IParentConnectionRegistry>(), _userAccounts.Object, _logger)
+        _hub = new ParentHub(Mock.Of<IPairingManager>(), Mock.Of<IParentConnectionRegistry>(), _userAccounts.Object, _usage.Object, _logger)
         {
             Context = context.Object,
         };
@@ -135,6 +137,57 @@ public sealed class ParentHubUserAccountsTests
     public void IsValidSid_ReturnsWhetherSyntacticallyValid(string? sid, bool expected)
     {
         Assert.Equal(expected, ParentHub.IsValidSid(sid));
+    }
+
+    [Fact]
+    public async Task GetAccountUsage_DelegatesToUsageService()
+    {
+        var usage = new AccountUsageDto(Sid, new DateOnly(2026, 10, 7), []);
+        _usage.Setup(u => u.GetAccountUsageAsync(Sid, It.IsAny<CancellationToken>())).ReturnsAsync(usage);
+
+        Assert.Same(usage, await _hub.GetAccountUsage(Sid));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("kid1")]
+    public async Task GetAccountUsage_InvalidSid_ThrowsInvalidRequest(string? sid)
+    {
+        var ex = await Assert.ThrowsAsync<HubException>(() => _hub.GetAccountUsage(sid!));
+
+        Assert.Equal(ParentHub.InvalidRequestMessage, ex.Message);
+        _usage.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task GetAccountUsage_UnknownAccount_ThrowsUnknownAccount()
+    {
+        _usage.Setup(u => u.GetAccountUsageAsync(Sid, It.IsAny<CancellationToken>())).ThrowsAsync(new UnknownAccountException());
+
+        var ex = await Assert.ThrowsAsync<HubException>(() => _hub.GetAccountUsage(Sid));
+
+        Assert.Equal(ParentHub.UnknownAccountMessage, ex.Message);
+    }
+
+    [Theory]
+    [MemberData(nameof(ServiceFailures))]
+    public async Task GetAccountUsage_ServiceFails_LogsAndThrowsUsageUnavailable(Exception failure)
+    {
+        _usage.Setup(u => u.GetAccountUsageAsync(Sid, It.IsAny<CancellationToken>())).ThrowsAsync(failure);
+
+        var ex = await Assert.ThrowsAsync<HubException>(() => _hub.GetAccountUsage(Sid));
+
+        Assert.Equal((ParentHub.UsageUnavailableMessage, true), (ex.Message, _logger.Has(LogLevel.Error, failure)));
+    }
+
+    [Fact]
+    public async Task GetAccountUsage_HubException_IsPassedThrough()
+    {
+        var original = new HubException("as is");
+        _usage.Setup(u => u.GetAccountUsageAsync(Sid, It.IsAny<CancellationToken>())).ThrowsAsync(original);
+
+        Assert.Same(original, await Assert.ThrowsAsync<HubException>(() => _hub.GetAccountUsage(Sid)));
     }
 
     public static TheoryData<Exception> ServiceFailures => new()

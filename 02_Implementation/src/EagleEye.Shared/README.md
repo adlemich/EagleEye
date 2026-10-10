@@ -17,7 +17,8 @@ Shared library used by all EagleEye components. This is the **API contract bound
 ```
 EagleEye.Shared/
 ├── Contracts/      SignalR hub interfaces (the API contract)
-├── Models/         DTOs, e.g. UserAccountDto, UserAccountListDto, StateWriteAckDto (ADR-010)
+├── Models/         DTOs, e.g. UserAccountDto, UserAccountListDto, StateWriteAckDto (ADR-010),
+│                   AppUsageDto, DayUsageDto, AccountUsageDto (ADR-012)
 ├── Constants/      HubRoutes, ServiceDefaults, PairingRules
 ├── Communication/  ReconnectSchedule, ConnectBackoff
 ├── Data/           SqliteDatabase base (pragmas, integrity check, migrations)

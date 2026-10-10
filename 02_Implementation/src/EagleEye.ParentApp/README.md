@@ -12,26 +12,32 @@ Cross-platform parent application built with .NET MAUI. One codebase targets And
 - Pair once with the 6-digit code shown on the service PC; afterwards connect by itself with the stored token
 - Show the connection state in the status bar; light/dark appearance (US-002)
 - Show the standard accounts of the service PC and tick the ones under parental control (US-003)
+- Show the daily app usage per account under parental control on the Reports page (US-004)
 - Later stories: app rules, time budgets, pause windows, statistics per kid
 
 ## Structure
 
 ```
 EagleEye.ParentApp/
-├── App.xaml(.cs)            Window "EagleEye" (min. 900 × 600), resolves MainPage
+├── App.xaml(.cs)            Window "EagleEye" (min. 900 × 600), resolves MainPage, attaches HeadingBarColorService
 ├── MauiProgram.cs           DI: Core services, platform services, view models, views
 ├── Views/
-│   ├── MainPage             Desktop layout: menu left, content right, status bar bottom (FR-APP-081)
+│   ├── MainPage             Desktop layout: menu left, content right, status bar bottom (FR-APP-081);
+│   │                        starts on Reports when paired, on Settings when not (ISSUE-007)
 │   ├── SettingsView         "Visual appearance", "Server connection" and "User accounts on the EagleEye PC"
+│   ├── ReportsView          Reports: account selection, one table per day (App | Nutzung (HH:MM)), US-004
 │   └── StatusBarView        Green/red indicator + status text
 ├── Services/                MauiThemeService, MauiDialogService, MauiUiDispatcher,
-│                            MauiAppDataPaths, MauiSecureStorageSecretStore (non-Windows)
+│                            MauiAppDataPaths, MauiSecureStorageSecretStore (non-Windows),
+│                            HeadingBarColorService (accent colour → resources HeadingBarBackgroundColor/TextColor)
 ├── Resources/
-│   ├── Styles/              Colors (light/dark via AppThemeBinding) and styles
+│   ├── Styles/              Colors (light/dark via AppThemeBinding) and styles; SectionHeader = heading bar
 │   └── AppIcon/             appicon.svg (MAUI icon), eagleeye.ico (exe and installer icon)
 └── Platforms/
-    ├── Windows/             WinUI App, app.manifest, DpapiSecretProtector (token: DPAPI CurrentUser)
-    ├── Android/             MainActivity, MainApplication, AndroidManifest (INTERNET)
+    ├── Windows/             WinUI App, app.manifest, DpapiSecretProtector (token: DPAPI CurrentUser),
+    │                        WindowsAccentColor (user accent colour + changes, UISettings)
+    ├── Android/             MainActivity, MainApplication, AndroidManifest (INTERNET),
+    │                        AndroidAccentColor (system accent colour, Material You)
     └── MacCatalyst/         AppDelegate, SceneDelegate, Program, Info.plist, Entitlements (not built yet)
 ```
 
