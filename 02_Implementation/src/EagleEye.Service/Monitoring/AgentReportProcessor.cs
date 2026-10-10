@@ -32,7 +32,7 @@ public sealed class AgentReportProcessor(
     private readonly Lock _lock = new();
 
     /// <inheritdoc />
-    public void Process(int sessionId, string accountSid, AgentReport report)
+    public void Process(int sessionId, string accountSid, long agentRun, AgentReport report)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountSid);
         ArgumentNullException.ThrowIfNull(report);
@@ -40,7 +40,7 @@ public sealed class AgentReportProcessor(
         {
             WarnIfTruncated(sessionId, report);
             var apps = Collect(sessionId, accountSid, report);
-            queue.Enqueue(new AppsObserved(sessionId, accountSid, apps));
+            queue.Enqueue(new AppsObserved(sessionId, accountSid, apps, agentRun));
         }
         catch (Exception ex)
         {
@@ -58,7 +58,7 @@ public sealed class AgentReportProcessor(
         }
 
         var current = new Dictionary<(int, long), ProcessFacts?>();
-        var apps = new Dictionary<string, (ProcessFacts Facts, SortedSet<int> Pids)>(StringComparer.OrdinalIgnoreCase);
+        var apps = new Dictionary<string, (ProcessFacts Facts, SortedDictionary<int, long> Processes)>(StringComparer.OrdinalIgnoreCase);
         foreach (var app in report.Apps)
         {
             if (Effective(app, sessionId, accountSid, previous, current) is not { } facts)
@@ -72,7 +72,7 @@ public sealed class AgentReportProcessor(
                 apps[facts.ImagePath] = entry;
             }
 
-            entry.Pids.Add(facts.ProcessId);
+            entry.Processes[facts.ProcessId] = facts.CreationTime;
         }
 
         lock (_lock)
@@ -81,7 +81,8 @@ public sealed class AgentReportProcessor(
         }
 
         return [.. apps.Values.Select(a => new ObservedApp(
-            a.Facts.ImagePath, Path.GetFileName(a.Facts.ImagePath), names.Resolve(a.Facts), [.. a.Pids]))];
+            a.Facts.ImagePath, Path.GetFileName(a.Facts.ImagePath), names.Resolve(a.Facts),
+            [.. a.Processes.Select(p => new ObservedProcess(p.Key, p.Value))]))];
     }
 
     /// <summary>The process that counts for the reported app, or null if nothing counts.</summary>

@@ -41,7 +41,7 @@ public sealed class AgentReportProcessorTests
 
         var apps = await ProcessAsync(Window(10));
 
-        Assert.Equal([(@"C:\Windows\System32\notepad.exe", "notepad.exe", "Editor", 10)], apps.Select(a => (a.ProgramPath, a.ProcessName, a.DisplayName, a.ProcessIds.Single())));
+        Assert.Equal([(@"C:\Windows\System32\notepad.exe", "notepad.exe", "Editor", 10)], apps.Select(a => (a.ProgramPath, a.ProcessName, a.DisplayName, a.Processes.Single().Pid)));
     }
 
     [Fact]
@@ -49,10 +49,10 @@ public sealed class AgentReportProcessorTests
     {
         AddProcess(10, @"C:\Windows\notepad.exe");
 
-        _processor.Process(Session, Kid, new AgentReport(1, false, [Window(10)]));
+        _processor.Process(Session, Kid, 1, new AgentReport(1, false, [Window(10)]));
         var observed = (AppsObserved)await _queue.DequeueAsync(CancellationToken.None);
 
-        Assert.Equal((Session, Kid), (observed.SessionId, observed.AccountSid));
+        Assert.Equal((Session, Kid, 1L), (observed.SessionId, observed.AccountSid, observed.AgentRun));
     }
 
     [Fact]
@@ -174,11 +174,11 @@ public sealed class AgentReportProcessorTests
     public async Task Process_TwoProcessesSamePath_OneAppWithBoth()
     {
         AddProcess(10, @"C:\a\Code.exe");
-        AddProcess(11, @"C:\A\code.exe");
+        AddProcess(11, @"C:\A\code.exe", created: 5);
 
         var apps = await ProcessAsync(Window(11), Window(10));
 
-        Assert.Equal([10, 11], apps.Single().ProcessIds);
+        Assert.Equal([new ObservedProcess(10, 1), new ObservedProcess(11, 5)], apps.Single().Processes);
     }
 
     [Fact]
@@ -230,7 +230,7 @@ public sealed class AgentReportProcessorTests
     {
         var failure = new InvalidOperationException("boom");
         _inspector.Setup(i => i.GetCreationTime(10)).Throws(failure);
-        _processor.Process(Session, Kid, new AgentReport(1, false, [Window(10)]));
+        _processor.Process(Session, Kid, 1, new AgentReport(1, false, [Window(10)]));
         AddProcess(11, @"C:\a\game.exe");
 
         Assert.Single(await ProcessAsync(Window(11)));
@@ -240,8 +240,8 @@ public sealed class AgentReportProcessorTests
     [Fact]
     public void Process_Guards_Throw()
     {
-        Assert.ThrowsAny<ArgumentException>(() => _processor.Process(Session, " ", new AgentReport(1, false, [])));
-        Assert.Throws<ArgumentNullException>(() => _processor.Process(Session, Kid, null!));
+        Assert.ThrowsAny<ArgumentException>(() => _processor.Process(Session, " ", 1, new AgentReport(1, false, [])));
+        Assert.Throws<ArgumentNullException>(() => _processor.Process(Session, Kid, 1, null!));
     }
 
     private static AgentApp Window(int pid) => new(pid, AgentAppKind.Window);
@@ -255,7 +255,7 @@ public sealed class AgentReportProcessorTests
 
     private async Task<IReadOnlyList<ObservedApp>> ProcessAsync(bool truncated, params AgentApp[] apps)
     {
-        _processor.Process(Session, Kid, new AgentReport(1, truncated, apps));
+        _processor.Process(Session, Kid, 1, new AgentReport(1, truncated, apps));
         return ((AppsObserved)await _queue.DequeueAsync(CancellationToken.None)).Apps;
     }
 }

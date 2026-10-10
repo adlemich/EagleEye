@@ -391,7 +391,7 @@ public sealed class UsageTrackerTests
         Assert.ThrowsAny<ArgumentException>(() => _tracker.StopAccount(Kid, " "));
     }
 
-    private static ObservedApp App(string path) => new(path, Path.GetFileName(path), path == Notepad ? "Editor" : "Paint", [1]);
+    private static ObservedApp App(string path) => new(path, Path.GetFileName(path), path == Notepad ? "Editor" : "Paint", [new ObservedProcess(1, 1)]);
 
     private void Observe(int session, string sid, params string[] paths) => _tracker.ObserveApps(session, sid, [.. paths.Select(App)]);
 

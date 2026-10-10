@@ -78,6 +78,60 @@ public static class AgentProtocol
         };
     }
 
+    /// <summary>Serializes a close command of the service as one line (ADR-013 §4).</summary>
+    public static string SerializeCloseCommand(CloseCommand command)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        var wire = new WireCommand(AgentCommandReader.CloseCommandName, command.Id, [.. command.Targets.Select(t => new WireTarget(t.Pid, t.Created))]);
+        return JsonSerializer.Serialize(wire, AgentProtocolJsonContext.Default.WireCommand);
+    }
+
+    /// <summary>Serializes the agent's answer to a close command as one line.</summary>
+    public static string SerializeCloseAnswer(CloseAnswer answer)
+    {
+        ArgumentNullException.ThrowIfNull(answer);
+        var wire = new WireAnswer(new WireClosed(answer.Id, answer.Windows, answer.Missing));
+        return JsonSerializer.Serialize(wire, AgentProtocolJsonContext.Default.WireAnswer);
+    }
+
+    /// <summary>Whether a stdout line of the agent is a close answer rather than a report.</summary>
+    public static bool IsCloseAnswer(string? line) => line is not null && line.StartsWith("{\"closed\":", StringComparison.Ordinal);
+
+    /// <summary>Parses the agent's answer to a close command strictly; <c>false</c> for anything else.</summary>
+    public static bool TryParseCloseAnswer(string? line, [NotNullWhen(true)] out CloseAnswer? answer)
+    {
+        answer = null;
+        WireAnswer? wire;
+        try
+        {
+            wire = line is null ? null : JsonSerializer.Deserialize(line, AgentProtocolJsonContext.Default.WireAnswer);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+
+        if (wire is null || wire.Closed is not { Id: >= 0, Windows: >= 0, Missing: >= 0 } closed)
+        {
+            return false;
+        }
+
+        answer = new CloseAnswer(closed.Id, closed.Windows, closed.Missing);
+        return true;
+    }
+
+    /// <summary>Wire form of a close command.</summary>
+    internal sealed record WireCommand(string Cmd, long Id, WireTarget[] Targets);
+
+    /// <summary>Wire form of a close target.</summary>
+    internal sealed record WireTarget(int Pid, long Created);
+
+    /// <summary>Wire form of a close answer line.</summary>
+    internal sealed record WireAnswer(WireClosed Closed);
+
+    /// <summary>Wire form of the content of a close answer.</summary>
+    internal sealed record WireClosed(long Id, int Windows, int Missing);
+
     /// <summary>Wire form of a report.</summary>
     internal sealed record WireReport(long Seq, bool Truncated, WireApp[] Apps);
 
@@ -95,6 +149,8 @@ public static class AgentProtocol
     AllowDuplicateProperties = false,
     MaxDepth = 4)]
 [JsonSerializable(typeof(AgentProtocol.WireReport))]
+[JsonSerializable(typeof(AgentProtocol.WireCommand))]
+[JsonSerializable(typeof(AgentProtocol.WireAnswer))]
 [ExcludeFromCodeCoverage(Justification = "Source-generated serialization code; the protocol rules are tested through AgentProtocol.")]
 internal sealed partial class AgentProtocolJsonContext : JsonSerializerContext
 {

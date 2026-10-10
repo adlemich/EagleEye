@@ -21,6 +21,7 @@ public sealed class DevSessionAgentLauncher : IAgentLauncher
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true,
+            StandardInputEncoding = AgentDiagnostics.StreamEncoding,
         };
         start.ArgumentList.Add(SessionAgentHost.Argument);
         return new DevAgentProcess(Process.Start(start)!); // Process.Start returns a process for a non-shell start.
@@ -43,6 +44,7 @@ public sealed class DevSessionAgentLauncher : IAgentLauncher
         private readonly Process _process;
         private readonly BoundedLineReader _reports;
         private readonly BoundedLineReader _errors;
+        private readonly SemaphoreSlim _writeGate = new(1, 1);
 
         public DevAgentProcess(Process process)
         {
@@ -59,6 +61,20 @@ public sealed class DevSessionAgentLauncher : IAgentLauncher
         public Task<string?> ReadReportLineAsync(CancellationToken ct) => _reports.ReadLineAsync(ct);
 
         public Task<string?> ReadErrorLineAsync(CancellationToken ct) => _errors.ReadLineAsync(ct);
+
+        public async Task WriteLineAsync(string line, CancellationToken ct)
+        {
+            await _writeGate.WaitAsync(ct).ConfigureAwait(false);
+            try
+            {
+                await _process.StandardInput.WriteAsync((line + "\n").AsMemory(), ct).ConfigureAwait(false);
+                await _process.StandardInput.FlushAsync(ct).ConfigureAwait(false);
+            }
+            finally
+            {
+                _writeGate.Release();
+            }
+        }
 
         public async Task StopAsync()
         {

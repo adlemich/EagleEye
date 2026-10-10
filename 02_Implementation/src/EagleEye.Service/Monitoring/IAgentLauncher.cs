@@ -34,6 +34,10 @@ public interface IAgentProcess : IAsyncDisposable
     /// <exception cref="AgentProtocolException">The line violates the protocol limits.</exception>
     Task<string?> ReadErrorLineAsync(CancellationToken ct);
 
+    /// <summary>Writes one command line to the agent's stdin (US-005, ADR-011 amendment). Thread-safe.</summary>
+    /// <exception cref="IOException">The pipe is broken (the agent exited).</exception>
+    Task WriteLineAsync(string line, CancellationToken ct);
+
     /// <summary>Asks the agent to stop (closes its stdin) and ends it if it has not exited after 2 s.</summary>
     Task StopAsync();
 }

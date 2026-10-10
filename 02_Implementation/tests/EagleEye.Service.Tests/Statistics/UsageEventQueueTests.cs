@@ -77,5 +77,5 @@ public sealed class UsageEventQueueTests
     private async Task<UsageEvent> Next() => await _queue.DequeueAsync(CancellationToken.None);
 
     private static AppsObserved Report(int session, int apps) =>
-        new(session, "S-1-5-21-1-2-3-1003", [.. Enumerable.Range(0, apps).Select(i => new ObservedApp($@"C:\a\{i}.exe", $"{i}.exe", $"{i}", [i + 1]))]);
+        new(session, "S-1-5-21-1-2-3-1003", [.. Enumerable.Range(0, apps).Select(i => new ObservedApp($@"C:\a\{i}.exe", $"{i}.exe", $"{i}", [new ObservedProcess(i + 1, 1)]))]);
 }

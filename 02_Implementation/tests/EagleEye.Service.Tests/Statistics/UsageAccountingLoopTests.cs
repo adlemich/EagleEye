@@ -239,7 +239,7 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
         _supervisor.Verify(s => s.StopAllAsync(), Times.Once);
     }
 
-    private static ObservedApp App() => new(Notepad, "notepad.exe", "Editor", [10]);
+    private static ObservedApp App() => new(Notepad, "notepad.exe", "Editor", [new ObservedProcess(10, 1)]);
 
     private void Observe() => _queue.Enqueue(new AppsObserved(2, Kid, [App()]));
 
