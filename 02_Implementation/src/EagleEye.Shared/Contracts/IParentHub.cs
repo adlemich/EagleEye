@@ -59,4 +59,60 @@ public interface IParentHub
     /// </summary>
     /// <param name="accountSid">SID of a standard account of the inventory (US-003), controlled or not.</param>
     Task<AccountUsageDto> GetAccountUsage(string accountSid);
+
+    /// <summary>
+    /// Returns the break times and the display text of one account (state area "AccountRules:{sid}", ADR-010).
+    /// Called after every (re)connect and when the parent selects another account on the Rules page.
+    /// </summary>
+    /// <param name="accountSid">SID of a standard account of the inventory (US-003), controlled or not.</param>
+    Task<AccountRulesDto> GetAccountRules(string accountSid);
+
+    /// <summary>
+    /// Adds an entry with the defaults of US-005 AC-7 (off, 20:00–23:59, all days) at the end.
+    /// Throws <c>HubException</c> when the account already has <see cref="BreakTimeRules.MaxEntriesPerAccount"/> entries.
+    /// </summary>
+    /// <param name="requestId">Client-generated correlation id, echoed in <see cref="AccountRulesDto.LastChangeRequestId"/>.</param>
+    /// <param name="accountSid">The account.</param>
+    Task<StateWriteAckDto> AddBreakTimeEntry(Guid requestId, string accountSid);
+
+    /// <summary>Deletes an entry. Throws <c>HubException</c> ("The entry no longer exists.") if it is gone.</summary>
+    /// <param name="requestId">Client-generated correlation id.</param>
+    /// <param name="accountSid">The account.</param>
+    /// <param name="entryId">The entry.</param>
+    Task<StateWriteAckDto> DeleteBreakTimeEntry(Guid requestId, string accountSid, long entryId);
+
+    /// <summary>Switches an entry on or off (AC-14).</summary>
+    /// <param name="requestId">Client-generated correlation id.</param>
+    /// <param name="accountSid">The account.</param>
+    /// <param name="entryId">The entry.</param>
+    /// <param name="isActive">The new state of the switch.</param>
+    Task<StateWriteAckDto> SetBreakTimeEntryActive(Guid requestId, string accountSid, long entryId, bool isActive);
+
+    /// <summary>
+    /// Sets the start or the end time in minutes after midnight (0 = 00:00, 1439 = 23:59 = "until midnight").
+    /// Validated against the stored other boundary: the end must be later than the start (AC-10).
+    /// </summary>
+    /// <param name="requestId">Client-generated correlation id.</param>
+    /// <param name="accountSid">The account.</param>
+    /// <param name="entryId">The entry.</param>
+    /// <param name="boundary">Which time is changed.</param>
+    /// <param name="minute">The new time, 0 … 1439.</param>
+    Task<StateWriteAckDto> SetBreakTimeEntryTime(Guid requestId, string accountSid, long entryId, BreakTimeBoundary boundary, int minute);
+
+    /// <summary>Ticks or unticks one weekday. At least one day must stay ticked (AC-11).</summary>
+    /// <param name="requestId">Client-generated correlation id.</param>
+    /// <param name="accountSid">The account.</param>
+    /// <param name="entryId">The entry.</param>
+    /// <param name="day">The weekday.</param>
+    /// <param name="isSelected">Whether the day is ticked.</param>
+    Task<StateWriteAckDto> SetBreakTimeEntryDay(Guid requestId, string accountSid, long entryId, DayOfWeek day, bool isSelected);
+
+    /// <summary>
+    /// Sets the display text (FR-APP-052). Line breaks are normalized to "\n". Empty or white space only →
+    /// the default text is restored (OQ-8). At most <see cref="BreakTimeRules.MaxDisplayTextLength"/> UTF-16 code units.
+    /// </summary>
+    /// <param name="requestId">Client-generated correlation id.</param>
+    /// <param name="accountSid">The account.</param>
+    /// <param name="text">The new text.</param>
+    Task<StateWriteAckDto> SetDisplayText(Guid requestId, string accountSid, string text);
 }

@@ -19,8 +19,8 @@ public static class UsageRecordingRegistration
         services.AddSingleton<IUsageService>(sp => sp.GetRequiredService<UsageService>());
         services.AddSingleton<IAccountDataPurger>(sp => sp.GetRequiredService<UsageService>());
 
-        // UserAccountService → purger (UsageService) → UserAccountService: Lazy breaks the construction cycle.
-        services.AddSingleton(sp => new Lazy<IAccountDataPurger>(sp.GetRequiredService<IAccountDataPurger>));
+        // UserAccountService → purgers (UsageService, BreakTimeService, …) → UserAccountService: Lazy breaks the cycle.
+        services.AddSingleton(sp => new Lazy<IEnumerable<IAccountDataPurger>>(sp.GetServices<IAccountDataPurger>));
 
         var systemRoot = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
         var roots = new ProgramPathRoots(

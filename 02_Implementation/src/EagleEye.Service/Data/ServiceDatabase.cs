@@ -9,6 +9,9 @@ namespace EagleEye.Service.Data;
 /// or unticked at least once, keyed by SID; no row means "not under parental control".
 /// Migration 3 creates <c>AppRecords</c> (app inventory, kept without time limit), <c>AppInstances</c> (history)
 /// and <c>DailyUsage</c> (seconds per app and local day) (US-004, ADR-012).
+/// Migration 4 creates <c>BreakTimeEntries</c> and <c>AccountDisplayTexts</c> (the rules of US-005, no row = default
+/// text), <c>BlockedStarts</c> (history of blocked starts, 90 days, ADR-013 §7) and <c>TimeChangeFindings</c>
+/// (time-zone and clock changes, 90 days, ADR-013 §9). History rows have no foreign keys: entries may be deleted later.
 /// </summary>
 /// <param name="connectionString">SQLite connection string, see <see cref="SqliteDatabase.BuildConnectionString"/>.</param>
 public sealed class ServiceDatabase(string connectionString) : SqliteDatabase(connectionString)
@@ -59,6 +62,61 @@ public sealed class ServiceDatabase(string connectionString) : SqliteDatabase(co
             PRIMARY KEY (AppId, Day)
         );
         CREATE INDEX IX_DailyUsage_Day ON DailyUsage (Day);
+        """,
+        """
+        CREATE TABLE BreakTimeEntries (
+            EntryId      INTEGER PRIMARY KEY AUTOINCREMENT,
+            AccountSid   TEXT NOT NULL,
+            IsActive     INTEGER NOT NULL CHECK (IsActive IN (0, 1)),
+            StartMinute  INTEGER NOT NULL CHECK (StartMinute BETWEEN 0 AND 1438),
+            EndMinute    INTEGER NOT NULL CHECK (EndMinute BETWEEN 1 AND 1439),
+            Days         INTEGER NOT NULL CHECK (Days BETWEEN 1 AND 127),
+            CreatedUtc   TEXT NOT NULL,
+            ChangedUtc   TEXT NOT NULL,
+            CHECK (EndMinute > StartMinute)
+        );
+        CREATE INDEX IX_BreakTimeEntries_Account ON BreakTimeEntries (AccountSid, EntryId);
+        CREATE TABLE AccountDisplayTexts (
+            AccountSid   TEXT PRIMARY KEY NOT NULL,
+            Text         TEXT NOT NULL,
+            ChangedUtc   TEXT NOT NULL
+        );
+        CREATE TABLE BlockedStarts (
+            BlockedStartId   INTEGER PRIMARY KEY AUTOINCREMENT,
+            AccountSid       TEXT NOT NULL,
+            UserName         TEXT NOT NULL,
+            StartedUtc       TEXT NOT NULL,
+            StartedLocal     TEXT NOT NULL,
+            DetectedUtc      TEXT NOT NULL,
+            DisplayName      TEXT NOT NULL,
+            ProcessName      TEXT NOT NULL,
+            ProgramPath      TEXT NOT NULL,
+            ProcessId        INTEGER NOT NULL,
+            Trigger          TEXT NOT NULL,
+            EntryId          INTEGER NOT NULL,
+            EntryStartMinute INTEGER NOT NULL,
+            EntryEndMinute   INTEGER NOT NULL,
+            EntryDays        INTEGER NOT NULL,
+            Weekday          TEXT NOT NULL,
+            Outcome          TEXT NULL,
+            SecondsUntilGone REAL NULL,
+            MessageState     TEXT NULL,
+            CompletedUtc     TEXT NULL
+        );
+        CREATE INDEX IX_BlockedStarts_DetectedUtc ON BlockedStarts (DetectedUtc);
+        CREATE INDEX IX_BlockedStarts_Account ON BlockedStarts (AccountSid);
+        CREATE TABLE TimeChangeFindings (
+            FindingId     INTEGER PRIMARY KEY AUTOINCREMENT,
+            DetectedUtc   TEXT NOT NULL,
+            DetectedLocal TEXT NOT NULL,
+            Kind          TEXT NOT NULL CHECK (Kind IN ('TimeZone', 'Clock')),
+            OldValue      TEXT NOT NULL,
+            NewValue      TEXT NOT NULL,
+            SessionId     INTEGER NULL,
+            AccountSid    TEXT NULL,
+            UserName      TEXT NULL
+        );
+        CREATE INDEX IX_TimeChangeFindings_DetectedUtc ON TimeChangeFindings (DetectedUtc);
         """,
     ];
 

@@ -4,6 +4,7 @@ using EagleEye.Service.Communication;
 using EagleEye.Service.Data;
 using EagleEye.Service.Diagnostics;
 using EagleEye.Service.Pairing;
+using EagleEye.Service.Rules;
 using EagleEye.Service.SessionAgent;
 using EagleEye.Service.Statistics;
 using EagleEye.Service.UserAccounts;
@@ -103,6 +104,13 @@ var host = Host.CreateDefaultBuilder(args)
             services.AddSingleton<IUserAccountService, UserAccountService>();
             services.AddHostedService<AccountInventoryMonitor>();
 
+            // State area "AccountRules" (US-005, ADR-010): break times and display texts.
+            services.AddSingleton<IBreakTimeRepository, BreakTimeRepository>();
+            services.AddSingleton<IAccountRulesBroadcaster, AccountRulesBroadcaster>();
+            services.AddSingleton<BreakTimeService>();
+            services.AddSingleton<IBreakTimeService>(sp => sp.GetRequiredService<BreakTimeService>());
+            services.AddSingleton<IAccountDataPurger>(sp => sp.GetRequiredService<BreakTimeService>());
+
             // App observation and usage accounting (US-004, ADR-011, ADR-012).
             services.AddUsageRecording();
 
@@ -139,6 +147,7 @@ try
     await host.Services.GetRequiredService<ServiceDatabase>().InitializeAsync();
     await host.Services.GetRequiredService<IUserAccountService>().InitializeAsync();
     await host.Services.GetRequiredService<IUsageService>().InitializeAsync();
+    await host.Services.GetRequiredService<IBreakTimeService>().InitializeAsync();
 }
 catch (Exception ex) when (ex is SqliteException or InvalidDataException)
 {

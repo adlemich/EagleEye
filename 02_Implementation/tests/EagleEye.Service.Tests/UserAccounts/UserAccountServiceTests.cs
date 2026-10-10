@@ -32,6 +32,7 @@ public sealed class UserAccountServiceTests : IAsyncLifetime
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 10, 8, 12, 0, 0, TimeSpan.Zero));
     private readonly TestLogger<UserAccountService> _logger = new();
     private readonly Mock<IAccountDataPurger> _purger = new();
+    private readonly Mock<IAccountDataPurger> _rulesPurger = new();
     private List<LocalAccountInfo> _accounts = [Administrator, Guest, Papa, Max, Anna, Leftover];
     private UserAccountService _service;
 
@@ -497,12 +498,14 @@ public sealed class UserAccountServiceTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task InitializeAsync_PurgesUsageOfMissingAccountsWithAllSids()
+    public async Task InitializeAsync_CallsEveryPurgerWithAllSids()
     {
         await _service.InitializeAsync();
 
         _purger.Verify(p => p.PurgeMissingAccountsAsync(
             It.Is<IReadOnlyCollection<string>>(sids => sids.Count == 6 && sids.Contains(Papa.Sid)), It.IsAny<CancellationToken>()), Times.Once);
+        _rulesPurger.Verify(p => p.PurgeMissingAccountsAsync(
+            It.Is<IReadOnlyCollection<string>>(sids => sids.Count == 6), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -527,13 +530,14 @@ public sealed class UserAccountServiceTests : IAsyncLifetime
         await _service.RefreshInventoryAsync();
 
         _purger.VerifyNoOtherCalls();
+        _rulesPurger.Verify(p => p.PurgeMissingAccountsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // ---------- Helpers ----------
 
     private UserAccountService CreateService(IAccountSelectionRepository repository)
     {
-        return new UserAccountService(_source.Object, repository, _broadcaster, _time, new Lazy<IAccountDataPurger>(_purger.Object), _logger);
+        return new UserAccountService(_source.Object, repository, _broadcaster, _time, new Lazy<IEnumerable<IAccountDataPurger>>([_purger.Object, _rulesPurger.Object]), _logger);
     }
 
     private async Task<bool> IsTickedAsync(LocalAccountInfo account)

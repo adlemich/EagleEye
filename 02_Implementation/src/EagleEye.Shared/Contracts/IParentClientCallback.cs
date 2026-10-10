@@ -22,4 +22,11 @@ public interface IParentClientCallback
     /// Apply only if <see cref="DayUsageDto.Revision"/> is higher than the revision held for that day.
     /// </summary>
     Task OnDayUsageChanged(DayUsageDto snapshot);
+
+    /// <summary>
+    /// The break times or the display text of one account changed (state area "AccountRules:{sid}").
+    /// Sent to all paired apps including the sender. Apply only if <see cref="AccountRulesDto.Revision"/>
+    /// is higher than the one held for that account.
+    /// </summary>
+    Task OnAccountRulesChanged(AccountRulesDto snapshot);
 }
