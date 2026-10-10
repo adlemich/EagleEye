@@ -21,6 +21,7 @@ public sealed class TrayTextsTests
         { "de-DE", () => TrayTexts.PairingCodeFormat, "Kopplungscode: {0}" },
         { "de-DE", () => TrayTexts.PairingInstruction, "Geben Sie diesen Code in der EagleEye-Eltern-App ein." },
         { "de-DE", () => TrayTexts.PairingValidityFormat, "Der Code ist {0} Minuten gültig." },
+        { "de-DE", () => TrayTexts.BreakMessageTitle, "EagleEye" },
     };
 
     public static TheoryData<string, Func<string>, string> EnglishTexts => new()
@@ -36,6 +37,7 @@ public sealed class TrayTextsTests
         { "en-US", () => TrayTexts.PairingCodeFormat, "Pairing code: {0}" },
         { "en-US", () => TrayTexts.PairingInstruction, "Enter this code in the EagleEye parent app." },
         { "en-US", () => TrayTexts.PairingValidityFormat, "The code is valid for {0} minutes." },
+        { "en-US", () => TrayTexts.BreakMessageTitle, "EagleEye" },
     };
 
     [Theory]
