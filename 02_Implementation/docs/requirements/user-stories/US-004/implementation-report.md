@@ -5,7 +5,7 @@
 **Branch**: `feature/US-004-app-usage-tracking`
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-004/implementation-plan.md` (approved 2026-10-07, Q-1 to Q-9 answered), ADR-011 (incl. Security Analysis), ADR-012, ADR-005 amendment, ADR-010
 **Machine(s) used**: Windows Developer Machine only (see §9)
-**Story status**: Implemented
+**Story status**: Verified/Closed (Michael, 2026-10-10)
 
 ---
 

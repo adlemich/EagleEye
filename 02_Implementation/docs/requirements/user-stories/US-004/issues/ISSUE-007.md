@@ -1,6 +1,6 @@
 # ISSUE-007: Section headings are hard to tell apart; Berichte should be the start page
 
-**Status**: Implemented
+**Status**: Verified/Closed (visual re-test on build 0.4.1 passed per Michael's report; closed by Michael, 2026-10-10)
 **User Story**: US-004
 **Found in**: `docs/testing/US-004/test-run-01.md` (Michael's change request after run 01; not a failed case)
 **Date**: 2026-10-10

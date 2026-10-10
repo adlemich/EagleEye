@@ -1,6 +1,6 @@
 # US-004: App Usage Tracking and Daily Usage Report
 
-**Status**: Implemented
+**Status**: Verified/Closed (closed by Michael, 2026-10-10; see `02_Implementation/docs/testing/US-004/test-report.md`)
 **Created**: 2026-10-07
 **Approved**: by Michael, 2026-10-07 (status becomes `Analyzed` when the implementation plan is approved)
 **Component(s)**: EagleEye.Service, EagleEye.ParentApp, EagleEye.Shared
@@ -114,6 +114,7 @@ References: FR-SVC-010, FR-SVC-012 (v1.4), FR-SVC-013, FR-SVC-040 (v1.4), FR-SVC
 | 2026-10-07 | Story approved; OQ-1 to OQ-11 answered (proposed defaults accepted); requirements v1.4 approved. ACs unchanged. | Michael |
 | 2026-10-07 | Implementation plan approved (incl. ADR-011 security analysis, ADR-012); status `Analyzed` | Michael |
 | 2026-10-08 | Implemented (version 0.4.0); see `02_Implementation/docs/requirements/user-stories/US-004/implementation-report.md`; status `Implemented` | DEV |
+| 2026-10-10 | Test run 01 (0.4.0): 23 Pass, 0 Fail, 11 Skipped, 1 not ticked; change request ISSUE-007 fixed in 0.4.1 and visually re-tested; story closed, status `Verified/Closed`; see `02_Implementation/docs/testing/US-004/test-report.md` | Michael |
 
 ---
 
