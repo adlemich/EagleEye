@@ -1,15 +1,13 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — US-003 Verified/Closed and merged into main (2026-10-07); next story not started
+description: EagleEye workflow status — US-004 run 01 done, change request ISSUE-007 implemented as 0.4.1, visual re-test pending (2026-10-10)
 metadata:
   type: project
 ---
 
-**As of 2026-10-07. Current: Phase 3, between stories. US-003 (account inventory + selection, build 0.3.1, ADR-010 event-driven state propagation) is `Verified/Closed` by Michael and merged into `main` (003ee9b); branch deleted. Run 01 was partial (18 Pass, 17 Skipped, 1 not ticked): Blocks D and E not run, so AC-4, 5, 7, 9, 16, 19-24 are not verified manually (listed in `docs/testing/US-003/test-report.md` §3, proposal: cover in a later run). Next: PRO starts US-004.**
+**As of 2026-10-10. Current: Phase 3, US-004 (app usage tracking), branch `feature/US-004-app-usage-tracking`.** Test run 01 on 0.4.0: 23 Pass, 0 Fail, 11 Skipped, TC-004-23 not ticked. Michael: skipped cases stay skipped, do not repeat them. His visual change request ISSUE-007 covers heading bars in the accent colour on Berichte and Einstellungen, plus Berichte as the start page. DEV implemented it as patch 0.4.1 (commits 4327f60, 2984c42; 1,513 unit tests green). **Next: Michael approves DEV step → quick visual re-test on LEOSERV (TES run 02, ISSUE-007 only) → test report → close → merge.** Before the merge, record the skipped and unticked cases in `docs/testing/US-004/test-report.md`.
 
-- Test run 02 passed (Michael's report, 2026-10-07). He ticked setup/cleanup steps but left the per-case result boxes empty; the run file and test report record that the result rests on his report.
-- ISSUE-004 (pairing-code window clipped at 150 %) and ISSUE-005 (non-elevated terminal, test-plan fix) are `Verified/Closed`.
-- D-11 decided 2026-10-07: coding guidelines §3.4/§8.2 now require plain `using` for SQLite command/reader/transaction; existing code aligned by DEV on main the same day (590 tests green, 100 % branch coverage kept). Still open from ARC: arc42 §7.1 install path lacks `Service\` subfolder; TrayHub SID registration is target design only. From DEV: tray *App Infos* dialog has the same fixed-pixel layout as ISSUE-004 (tight at 150 %, touches OK at 200 %), not filed as an issue.
-- Delivered builds: `03_Delivery/windows/EagleEye-Setup-0.2.0.exe`, `EagleEye-ParentApp-Setup-0.2.0.exe`. US-001: Verified/Closed (0.1.1).
+- Earlier: US-001 to US-003 Verified/Closed and merged; US-003 left AC-4, 5, 7, 9, 16, 19-24 unverified manually (its test report §3).
+- Open from ARC: arc42 §7.1 install path lacks `Service\` subfolder; TrayHub SID registration is target design only. From DEV: tray *App Infos* dialog is tight at 150 % (not filed).
 
-See [[eagleeye-workflow-gates]], [[us001-lessons]].
+See [[eagleeye-workflow-gates]], [[michael-closes-with-partial-runs]].
