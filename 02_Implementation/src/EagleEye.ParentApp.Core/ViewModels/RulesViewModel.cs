@@ -206,7 +206,7 @@ public sealed class RulesViewModel : ObservableObject, IBreakTimeRowHost
 
     private async Task<bool> SendAsync(Func<IAccountRulesModel, Task<bool>> write)
     {
-        var ok = await write(_rules).ConfigureAwait(false);
+        var ok = await write(_rules);
         _dispatcher.Post(() =>
         {
             ErrorText = ok ? string.Empty : AppTexts.AccountSaveFailed;

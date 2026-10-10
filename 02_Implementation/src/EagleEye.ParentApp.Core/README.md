@@ -27,6 +27,9 @@ EagleEye.ParentApp.Core/
 │                        requestId/ack/broadcast confirmation, 4 s write timeout)
 ├── Reports/             AccountUsageModel: usage areas of the selected account (fetch on connect and on
 │                        selection, revision rule per day, 90-day and empty-day trimming)
+├── Rules/               US-005: AccountRulesModel (area "AccountRules:{sid}" of the selected account, field-level
+│                        writes confirmed by snapshot, 4 s timeout), TimeOfDayText (7:30, 730, 7, 20.00 → HH:MM),
+│                        BreakTimeEditRules (end > start, ≥ 1 day, ≤ 20 entries)
 ├── Appearance/         HeadingBarPalette: heading bar colours (platform accent or app primary #1E7B3A,
 │                        white or black text by WCAG contrast, ISSUE-007); RgbColor
 ├── Data/
@@ -36,7 +39,9 @@ EagleEye.ParentApp.Core/
 │   └── ProtectedSecretStore     ISecretStore on the Secrets table + ISecretProtector (Windows: DPAPI)
 ├── ViewModels/          MainViewModel, AppearanceViewModel, ServerConnectionViewModel, UserAccountsViewModel,
 │                        UserAccountItemViewModel, AccountDisplayName, StatusBarViewModel, ReportsViewModel,
-│                        DayUsageViewModel, AppUsageRowViewModel, UsageDuration
+│                        DayUsageViewModel, AppUsageRowViewModel, UsageDuration, ControlledAccountSelection
+│                        (account picker of Reports and Rules), RulesViewModel, BreakTimeRowViewModel (US-005:
+│                        rows merged by entry id; typed or pending fields are never overwritten by snapshots)
 │                        (CommunityToolkit.Mvvm, no source generators)
 ├── AppTexts.cs          Typed access to the localized texts
 └── Resources/           AppTexts.resx (German, default) and AppTexts.en.resx (English)

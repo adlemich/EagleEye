@@ -14,7 +14,9 @@ Lightweight Windows tray application that runs in the **kid's user session**. In
 
 ```
 EagleEye.TrayClient/
-├── UI/            Tray icon, context menu, notification bubbles, TopMost overlay window
+├── UI/            Tray icon, context menu, pairing-code window, About dialog. US-005: BreakTimeMessagePresenter
+│                  (one message at a time, answers Shown/AlreadyOpen at once), BreakTimeMessageDialog (topmost,
+│                  OK/Enter only, Esc/Alt+F4 ignored, sign-out never blocked), ForegroundHelper (best-effort focus)
 └── Communication/ SignalR client — connects to EagleEye.Service on localhost
 ```
 

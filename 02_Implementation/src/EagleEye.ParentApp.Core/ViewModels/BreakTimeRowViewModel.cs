@@ -236,7 +236,7 @@ public sealed class BreakTimeRowViewModel : ObservableObject
 
     private async Task SendAsync(string field, Func<IAccountRulesModel, Task<bool>> write)
     {
-        await _host.SendAsync(write).ConfigureAwait(false);
+        await _host.SendAsync(write);
         _host.Post(() =>
         {
             if (--_pending[field] == 0)

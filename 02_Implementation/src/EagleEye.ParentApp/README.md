@@ -13,6 +13,7 @@ Cross-platform parent application built with .NET MAUI. One codebase targets And
 - Show the connection state in the status bar; light/dark appearance (US-002)
 - Show the standard accounts of the service PC and tick the ones under parental control (US-003)
 - Show the daily app usage per account under parental control on the Reports page (US-004)
+- Edit the break times and the display text per account under parental control on the Rules page (US-005)
 - Later stories: app rules, time budgets, pause windows, statistics per kid
 
 ## Structure
@@ -20,12 +21,17 @@ Cross-platform parent application built with .NET MAUI. One codebase targets And
 ```
 EagleEye.ParentApp/
 ├── App.xaml(.cs)            Window "EagleEye" (min. 900 × 600), resolves MainPage, attaches HeadingBarColorService
-├── MauiProgram.cs           DI: Core services, platform services, view models, views
+├── MauiProgram.cs           DI: Core services, platform services, view models, views; Windows: CheckBox MinWidth 0
+│                            (US-005, Rules table)
 ├── Views/
 │   ├── MainPage             Desktop layout: menu left, content right, status bar bottom (FR-APP-081);
 │   │                        starts on Reports when paired, on Settings when not (ISSUE-007)
 │   ├── SettingsView         "Visual appearance", "Server connection" and "User accounts on the EagleEye PC"
+│   ├── RulesView            Rules (US-005): account selection, break-time table edited in place (fixed columns
+│   │                        40 | 64 | 88 | 88 | 7 × 48), display text; times saved on leaving the field or Enter,
+│   │                        text on leaving the box; MainPage flushes typed values when the page changes
 │   ├── ReportsView          Reports: account selection, one table per day (App | Nutzung (HH:MM)), US-004
+| Nutzung (HH:MM)), US-004
 │   └── StatusBarView        Green/red indicator + status text
 ├── Services/                MauiThemeService, MauiDialogService, MauiUiDispatcher,
 │                            MauiAppDataPaths, MauiSecureStorageSecretStore (non-Windows),
@@ -67,5 +73,7 @@ All UI texts come from `EagleEye.ParentApp.Core/Resources/AppTexts*.resx` (Germa
 | Program files | `%LocalAppData%\Programs\EagleEye Parent App\` |
 | Database (pairing, settings) | `%LocalAppData%\EagleEye\EagleEye.ParentApp.db` |
 | Token | `Secrets` table of that database, encrypted with DPAPI (CurrentUser). MAUI `SecureStorage` is not used on Windows because it needs package identity. |
+
+Debug builds only: `EAGLEEYE_DEV_APP_DATA_DIR` moves the data folder (DEV smoke checks never touch the data of an installed parent app); `EAGLEEYE_DEV_PORT_OFFSET` shifts the parent port. Release builds contain neither.
 
 Uninstalling removes all three.

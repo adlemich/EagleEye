@@ -18,8 +18,10 @@ Shared library used by all EagleEye components. This is the **API contract bound
 EagleEye.Shared/
 ├── Contracts/      SignalR hub interfaces (the API contract)
 ├── Models/         DTOs, e.g. UserAccountDto, UserAccountListDto, StateWriteAckDto (ADR-010),
-│                   AppUsageDto, DayUsageDto, AccountUsageDto (ADR-012)
-├── Constants/      HubRoutes, ServiceDefaults, PairingRules
+│                   AppUsageDto, DayUsageDto, AccountUsageDto (ADR-012), AccountRulesDto, BreakTimeEntryDto,
+│                   BreakTimeDays, BreakTimeBoundary, BreakTimeMessageDto, KidMessageResult (US-005)
+├── Constants/      HubRoutes, ServiceDefaults, PairingRules, BreakTimeRules (limits, defaults, default display
+│                   text, line-break normalization, display-text validity incl. emojis, times)
 ├── Communication/  ReconnectSchedule, ConnectBackoff
 ├── Data/           SqliteDatabase base (pragmas, integrity check, migrations)
 └── Logging/        RollingFileLoggerProvider: EagleEye file logging (ADR-002 note), used by the service
