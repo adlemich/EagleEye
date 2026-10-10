@@ -632,29 +632,31 @@ All 27 ACs have at least one case. Security checks (no AC, implementation plan D
 - V1 − V0 = **2** (±1); the 3 minutes of sleep are not counted.
 - *Note only*: a line "Usage accounting paused for … s …" may appear.
 
-### Block E — Security checks *(sec)* (core security, one optional)
+### Block E — Security checks *(sec)* (core security)
 
-*Implementation plan Decision 1a and Manual Verification Notes "Security checks"; ADR-011 §7. No AC; a Fail is filed as an issue of US-004 with severity by impact.*
+*Implementation plan Decision 1a and Manual Verification Notes "Security checks"; ADR-011 §7. They include DEV's admin checks A to F (implementation report §7; check G is in TC-004-20). No AC; a Fail is filed as an issue of US-004 with severity by impact.*
 
-#### TC-004-23: The agent runs with the restricted SYSTEM token
+#### TC-004-23: The agent starts with the restricted SYSTEM token — which variant runs (DEV check A)
 
-- **Verifies**: — (security: ADR-011 §7, threat T-5)
+- **Verifies**: — (security: ADR-011 §7, threat T-5; plan Q-9; implementation report D-4)
 - **Machine / account**: Service PC / Admin, Terminal (Administrator)
-- **Precondition**: kid1 signed in (agent running)
+- **Precondition**: kid1 signed in (agent running, TC-004-03)
 
 **Steps**
 
-1. LOG-FIND with `<pattern>` = `Session agent in session`.
+1. LOG-FIND with `<pattern>` = `Session agent|write restriction`.
 
 **Expected result**
 
-- A line at the agent's start like "Session agent in session N: user SYSTEM, integrity System, privileges SeChangeNotifyPrivilege, write-restricted yes". <!-- verify against implementation report: exact format; "yes" or the documented fallback "no" (plan Q-9) -->
-- User **SYSTEM**, integrity **System**, **only** `SeChangeNotifyPrivilege` as privilege. Write-restricted **yes**, or **no** if DEV documented the fallback (write which one in Notes).
+- After kid1's sign-in: "Session agent started in session N (process P).", "Usage recording started for account eagleeye-kid (S-1-5-21-…) in session N." and then "Session agent in session N: diagnostics: user NT-AUTORITÄT\SYSTEM (S-1-5-18), integrity System, privileges SeChangeNotifyPrivilege, write-restricted yes".
+- User **SYSTEM**, integrity **System**, **only** `SeChangeNotifyPrivilege`.
+- **Write-restricted**: either **yes** (preferred), or the accepted fallback (plan Q-9): a Warning "Session agents exit at start with a write-restricted token; they run without the write restriction from now on (ADR-011 §7, Q-9)." and later agents with `write-restricted no`. Both are a Pass. **Record which variant runs** in Notes (DEV and ARC need this answer).
+- A Fail is: another user than SYSTEM, integrity other than System, any further privilege, or no diagnostic line at all.
 
-#### TC-004-24: The kid cannot end the agent
+#### TC-004-24: The kid cannot end the agent; the administrator can, and it is restarted (DEV check B)
 
-- **Verifies**: — (security: T-4, process DACL)
-- **Machine / account**: Service PC / kid1 (normal PowerShell, **not** K-TERM)
+- **Verifies**: — (security: T-4 process DACL, T-9 supervisor)
+- **Machine / account**: Service PC / kid1 (normal PowerShell, **not** K-TERM), then Admin (Terminal (Administrator))
 - **Precondition**: kid1 in front
 
 **Steps**
@@ -668,23 +670,24 @@ All 27 ACs have at least one case. Security checks (no AC, implementation plan D
    taskkill /F /PID $agent.Id
    ```
 2. Task-Manager (kid1) → *Details* → `EagleEye.Service.exe` (user SYSTEM) → right-click → *Task beenden*.
-3. Run the first three lines of step 1 again.
+3. Run the first three lines of step 1 again. Note the agent Id.
+4. *Benutzer wechseln* → Admin. Terminal (Administrator): **AGENTS**, then `taskkill /PID <agent Id> /F`. Note the time. After 30 s: **AGENTS**; LOG-FIND with `Session agent`.
 
 **Expected result**
 
 - Step 1 lists one agent in kid1's session. `Stop-Process` and `taskkill` fail with **Zugriff verweigert** / *Access is denied*.
-- Step 2: *Zugriff verweigert*.
-- Step 3: the agent still runs with the **same Id**.
+- Step 2: *Zugriff verweigert*. Step 3: the agent still runs with the **same Id**.
+- Step 4: as administrator `taskkill` **works**. The log shows the Warning "Session agent in session N exited with code 1; recording is paused, restarting in 00:00:01." and a new "Session agent started in session N (process P2)."; **AGENTS** shows a new agent (other Id) in kid1's session within **1 to 30 s**.
 
-#### TC-004-25: A program from a network share is recorded by its process name; the file is not opened
+#### TC-004-25: A program from a network share is recorded by its process name; the file is not opened (DEV check C)
 
-- **Verifies**: — (security: T-2, `ProgramPathPolicy`); AC-8 (fallback name)
+- **Verifies**: — (security: T-2, `ProgramPathPolicy`, impersonation); AC-8 (fallback name)
 - **Machine / account**: Service PC / Admin (share), then kid1
 - **Precondition**: none
 
 **Steps**
 
-1. Terminal (Administrator) — create a test share on the service PC:
+1. Terminal (Administrator) — create a test share on the service PC (a share on another PC works the same, implementation report §7 C):
    ```powershell
    New-Item -ItemType Directory -Force C:\EETest | Out-Null
    Copy-Item C:\Windows\System32\charmap.exe C:\EETest\charmap.exe
@@ -692,15 +695,15 @@ All 27 ACs have at least one case. Security checks (no AC, implementation plan D
    New-SmbShare -Name "eetest" -Path "C:\EETest" -ReadAccess $everyone
    ```
 2. As `eagleeye-kid`: Windows+R → `\\localhost\eetest\charmap.exe` → Enter. If Windows asks *"Möchten Sie diese Datei ausführen?"*: *Ausführen*. Keep it open **1 minute**, then close it.
-3. LOG-FIND with `eetest`; LOG-FIND with `Warning|WRN`. Report (App B or App A).
+3. LOG-FIND with `charmap`; LOG-FIND with `WRN|ERR`. Report (App B or App A).
 
 **Expected result**
 
 - The report shows a row **"charmap"** (process name without `.exe`), **not** "Zeichentabelle" (the file on the share is never opened).
-- Log: "New app for account eagleeye-kid: charmap (charmap.exe, \\localhost\eetest\charmap.exe)" or the same path in another UNC form. <!-- verify against implementation report: path form of share programs -->
-- No Warning or Error about reading or resolving the name of the share program.
+- Log: "New app for account eagleeye-kid: charmap (charmap.exe, <UNC path of the share>)". The exact form of the path (e.g. `\\localhost\eetest\charmap.exe`) does not matter.
+- No Warning or Error about reading the file or resolving the name of the share program.
 
-#### TC-004-26: A renamed copy named like EagleEye is recorded
+#### TC-004-26: A renamed copy named like EagleEye is recorded (DEV check D)
 
 - **Verifies**: — (security: T-10, never-record list by install path); AC-5 (EagleEye processes excluded only by path)
 - **Machine / account**: Service PC / kid1
@@ -718,53 +721,57 @@ All 27 ACs have at least one case. Security checks (no AC, implementation plan D
 
 **Expected result**
 
-- The program **is** recorded: a row in the report and "New app / App started … (EagleEye.TrayClient.exe, C:\Users\eagleeye-kid\…\Desktop\EagleEye.TrayClient.exe)" in the log.
-- Its name is the description from the copy's version information (e.g. "Zeichentabelle" or "Character Map") or "EagleEye.TrayClient". <!-- verify against implementation report: which name the managed version reader returns for a copy of a System32 program -->
+- The program **is** recorded: a row in the report and "New app for account eagleeye-kid: … (EagleEye.TrayClient.exe, C:\Users\eagleeye-kid\…\Desktop\EagleEye.TrayClient.exe)" plus "App started …" in the log.
+- Its row name comes from the copy's own version information, read by the managed reader because the copy is in a user folder (implementation report D-2): most likely **"Character Map"** (a System32 program keeps its localized name in a separate MUI file), possibly "Zeichentabelle"; if it has no description, "EagleEye.TrayClient". Any of these is a Pass; write the name in Notes.
 - The real tray client (in `C:\Program Files\EagleEye\…`) is still never recorded (TC-004-08).
 
-#### TC-004-27: Opening and closing Notepad 40 times gives at most 30 log lines plus a summary
+#### TC-004-27: Opening and closing Notepad 40 times gives at most 30 log lines plus a summary (DEV check E)
 
 - **Verifies**: — (security: T-12, log flooding)
 - **Machine / account**: Service PC / kid1, K-TERM
-- **Precondition**: start this case at the **beginning of a clock hour** (e.g. 15:00 to 15:05), and do not use Editor otherwise in that hour
+- **Precondition**: no other Editor use by kid1 in the hour after the start of this case. Plan the summary check (step 4) for about **65 minutes** later (e.g. during Block F); you do not have to wait idle.
 
 **Steps**
 
-1. Note the clock hour **H** (e.g. 15). Normal PowerShell as kid1 (takes about 8 minutes):
+1. In K-TERM note the start time: `$t0 = Get-Date; $t0`. Then in a **normal** PowerShell as kid1 (takes about 8 minutes):
    ```powershell
    1..40 | ForEach-Object { Start-Process notepad; Start-Sleep -Seconds 4; Stop-Process -Name Notepad -ErrorAction SilentlyContinue; Start-Sleep -Seconds 7 }
    ```
-2. K-TERM, after the loop (replace `15` by H):
+2. K-TERM, after the loop:
    ```powershell
-   $lines = Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "App (started|ended): account eagleeye-kid, Editor" | Where-Object { $_.Line -match "^$(Get-Date -Format yyyy-MM-dd) 15:" }
+   $lines = Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "App (started|ended): account eagleeye-kid, Editor" |
+     Where-Object { [datetime]::ParseExact($_.Line.Substring(0, 19), "yyyy-MM-dd HH:mm:ss", $null) -ge $t0 }
    $lines.Count
-   Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "Editor" | Select-Object -Last 5 | ForEach-Object Line
    ```
-3. Report: Editor value of today.
+3. Report: Editor value of today (*Note only*: the increase; the loop keeps Notepad open about 40 × 4 s ≈ 3 minutes).
+4. **About 65 minutes after `$t0`** (any elevated terminal): LOG-FIND with `further start/end entries`.
 
 **Expected result**
 
-- `$lines.Count` is **at most 30** (without the limit it would be 80).
-- One **summary line** for Editor in that hour (e.g. "… further start/end entries of Editor not logged …"). <!-- verify against implementation report: summary text and whether the limit is per clock hour -->
-- The report still shows Editor with a plausible increase (the loop keeps Notepad open about 40 × 4 s ≈ 3 minutes; *Note only*: the increase).
+- Step 2: `$lines.Count` is **at most 30** (without the limit it would be about 80).
+- Step 4: one line "<n> further start/end entries of account eagleeye-kid, Editor (C:\…\notepad.exe) were not logged in the last hour." with n ≈ (number of start/end events) − 30.
+- The report still shows Editor with a plausible increase.
 
-#### TC-004-28: Debug switches have no effect in the installed (Release) service
+#### TC-004-28: Debug switches have no effect in the installed (Release) service (DEV check F)
 
-- **Verifies**: — (security: T-13)
+- **Verifies**: — (security: T-13; implementation report D-5, D-6)
 - **Machine / account**: Service PC / Admin, Terminal (Administrator)
-- **Precondition**: kid1 signed out or in the background; no kid app open is needed
+- **Precondition**: kid1 signed out or in the background
+
+DEV's check F sets the variables machine-wide with `setx /M`. A machine-wide variable reaches a Windows service reliably only after a **reboot**; a service restart alone may not pass it on, and the check would then pass without testing anything. This case therefore gives the three Debug variables **directly to the service** through its registry value `Environment`, which Windows applies at every service start (§8 Q-8).
 
 **Steps**
 
-1. Terminal (Administrator) — give the service the two Debug variables (Windows passes the `Environment` value of a service to it at start; a machine-wide variable would only reach services after a reboot):
+1. Terminal (Administrator):
    ```powershell
-   $svc = (Get-Service -DisplayName "EagleEye Service").Name
+   $svc = (Get-Service -DisplayName "EagleEye Service").Name     # EagleEyeService
    $sid = ([Security.Principal.WindowsIdentity]::GetCurrent()).User.Value
-   New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\$svc" -Name Environment -PropertyType MultiString -Value @("EAGLEEYE_DEV_WATCH_SID=$sid", "EAGLEEYE_DATA_DIR=C:\EETest\data") -Force
+   New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\$svc" -Name Environment -PropertyType MultiString -Value @("EAGLEEYE_DEV_WATCH_SID=$sid", "EAGLEEYE_DEV_PORT_OFFSET=10000", "EAGLEEYE_DATA_DIR=C:\EETest\data") -Force
    Restart-Service -DisplayName "EagleEye Service"
+   netstat -ano | findstr "5443 5080 15443 15080"
    ```
 2. In your admin session start Editor, use it **1 minute**, close it. Wait 15 s.
-3. **AGENTS**; `Test-Path C:\EETest\data`; LOG-WATCH again (new lines must appear in `%ProgramData%\EagleEye\logs`); LOG-FIND with `account <your admin user name>`. App A: still paired and green? *Berichte*: values unchanged?
+3. **AGENTS**; `Test-Path C:\EETest\data`; LOG-WATCH again (new lines must appear in `%ProgramData%\EagleEye\logs`); LOG-FIND with `account <your admin user name>`. App A: still green? *Einstellungen*: is your admin account listed? *Berichte*: values unchanged?
 4. **Remove the variables** and restart:
    ```powershell
    Remove-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\$svc" -Name Environment
@@ -773,25 +780,32 @@ All 27 ACs have at least one case. Security checks (no AC, implementation plan D
 
 **Expected result**
 
-- No agent in your admin session; no log line names your admin account (it is **not** treated as controlled).
-- `Test-Path C:\EETest\data` → **False**; the log continues in `%ProgramData%\EagleEye\logs`; App A stays paired with the same data (the data folder did not change).
-- After step 4 everything as before.
+- Ports unchanged: **5443** (0.0.0.0) and **5080** (127.0.0.1) listening; **nothing** on 15443/15080 (`EAGLEEYE_DEV_PORT_OFFSET` ignored).
+- Your admin account does **not** appear in *Einstellungen* and is not recorded: no agent in your session, no log line names your account (`EAGLEEYE_DEV_WATCH_SID` ignored).
+- `Test-Path C:\EETest\data` → **False**; the log continues in `%ProgramData%\EagleEye\logs`; App A stays paired with the same data (`EAGLEEYE_DATA_DIR` ignored).
+- Agents of kid sessions still run as SYSTEM. After step 4 everything as before.
 
-#### TC-004-29 (optional): An agent ended by the administrator is restarted
+#### TC-004-29: A program renamed to explorer.exe is counted
 
-- **Verifies**: — (security: T-9, supervisor)
-- **Machine / account**: Service PC / Admin, Terminal (Administrator)
-- **Precondition**: kid1 signed in (background)
+- **Verifies**: — (security: T-10; implementation report D-1, `ExplorerWindow`); AC-4 (only the real Explorer is special)
+- **Machine / account**: Service PC / kid1, K-TERM
+- **Precondition**: none
 
 **Steps**
 
-1. **AGENTS**: note the agent's Id in kid1's session. `Stop-Process -Id <Id> -Force`. Note the time.
-2. Wait 30 s. **AGENTS**; LOG-FIND with `Session agent`.
+1. Normal PowerShell as kid1:
+   ```powershell
+   $dir = Join-Path $env:USERPROFILE "EETest"
+   New-Item -ItemType Directory -Force $dir | Out-Null
+   Copy-Item C:\Windows\System32\charmap.exe (Join-Path $dir "explorer.exe")
+   Start-Process (Join-Path $dir "explorer.exe")
+   ```
+2. Keep its window open **2 minutes** (stopwatch), close it. LOG-FIND (K-TERM) with `EETest\\explorer.exe`. Report.
 
 **Expected result**
 
-- Within **30 s** a **new** agent (other Id) in kid1's session.
-- A **Warning** "Session agent in session N exited with code …; restarting in …" and a new "Session agent started …". (Recording for kid1 pauses until then; not observable here because the session is in the background.)
+- The program **is** recorded with its own path: log "New app for account eagleeye-kid: … (explorer.exe, C:\Users\eagleeye-kid\EETest\explorer.exe)" and a report row with about "00:02" (±1). Its name is the copy's description (e.g. "Character Map") or "explorer"; write it in Notes.
+- It is **not** merged into "Windows-Explorer", and the real "Windows-Explorer" row does not grow (no File Explorer window was open).
 
 ### Block F — Account deletion and long checks
 

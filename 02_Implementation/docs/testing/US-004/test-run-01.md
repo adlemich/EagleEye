@@ -65,22 +65,22 @@ query user
 
 ## Setup — before Block A (service PC, Admin) · ≈ 35 min
 
-- [ ] **S-1 Installers present.** `Get-Item 03_Delivery\windows\EagleEye-Setup-0.4.0.exe, 03_Delivery\windows\EagleEye-ParentApp-Setup-0.4.0.exe | Select-Object Name, LastWriteTime`; `(Get-FileHash <file>).Hash` for each; compare with the implementation report. Dates in the header. <!-- verify against implementation report -->
-- [ ] **S-2 Installed state** (*Installierte Apps* → "EagleEye"; `services.msc`): EagleEye ______ · EagleEye Parent App ______ (expected **0.3.1 / 0.3.1**, service running).
+- [x] **S-1 Installers present.** `Get-Item 03_Delivery\windows\EagleEye-Setup-0.4.0.exe, 03_Delivery\windows\EagleEye-ParentApp-Setup-0.4.0.exe | Select-Object Name, LastWriteTime`; `(Get-FileHash <file>).Hash` for each; compare with the implementation report. Dates in the header. <!-- verify against implementation report -->
+- [x] **S-2 Installed state** (*Installierte Apps* → "EagleEye"; `services.msc`): EagleEye ______ · EagleEye Parent App ______ (expected **0.3.1 / 0.3.1**, service running).
   - Parent app missing → install `EagleEye-ParentApp-Setup-0.3.1.exe`, pair in S-3.
   - Service missing, another version, or already 0.4.0 → **stop** and tell TES.
-- [ ] **S-3 App A green**, *Gekoppelt*, **Papas PC** (else pair; code from the tray popup in the admin session).
+- [x] **S-3 App A green**, *Gekoppelt*, **Papas PC** (else pair; code from the tray popup in the admin session).
 - [ ] **S-4 Leftover US-003 accounts** removed (Terminal (Administrator)):
   ```powershell
   "ee-annika","ee-anna","ee-max","ee-lena","ee-gesperrt","ee-neu","ee-zwei","defaultuser0","defaultuser1","ee-admin" |
     ForEach-Object { if (Get-LocalUser -Name $_ -ErrorAction SilentlyContinue) { Remove-LocalUser -Name $_ } }
   ```
   Other standard accounts (stay unticked): ____________
-- [ ] **S-5 Admin scaling** ______ % (expected 150 %).
-- [ ] **S-6 Terminal (Administrator)** open. Service commands: `Stop-Service` / `Start-Service` / `Restart-Service -DisplayName "EagleEye Service"`.
-- [ ] **S-7 Log monitor**: second Terminal (Administrator) with LOG-WATCH.
-- [ ] **S-8** `hostname` → `<host>` = ____________
-- [ ] **S-9 New kid accounts** (Terminal (Administrator)):
+- [x] **S-5 Admin scaling** ______ % (expected 150 %).
+- [x] **S-6 Terminal (Administrator)** open. Service commands: `Stop-Service` / `Start-Service` / `Restart-Service -DisplayName "EagleEye Service"`.
+- [x] **S-7 Log monitor**: second Terminal (Administrator) with LOG-WATCH.
+- [x] **S-8** `hostname` → `<host>` = ____________
+- [x] **S-9 New kid accounts** (Terminal (Administrator)):
   ```powershell
   $pw = Read-Host -AsSecureString "Password for ee-kid2 and ee-kid3"
   $usersGroup = (Get-LocalGroup -SID "S-1-5-32-545").Name
@@ -88,10 +88,10 @@ query user
   New-LocalUser -Name "ee-kid3" -Password $pw -PasswordNeverExpires
   "ee-kid2","ee-kid3" | ForEach-Object { Add-LocalGroupMember -Group $usersGroup -Member $_ }
   ```
-- [ ] **S-10 First sign-in** of `ee-kid2` and `ee-kid3` (*Benutzer wechseln*): desktop ready, scaling 150 %, **sign out**. Also sign out `eagleeye-kid` if signed in.
-- [ ] **S-11 Selection (0.3.1)**: App A → *Einstellungen*: **eagleeye-kid** and **ee-kid3** ticked; **ee-kid2** and all others unticked.
-- [ ] **S-12 SmartScreen**: *Weitere Informationen* → *Trotzdem ausführen* (expected).
-- [ ] **S-13 K-TERM understood**: in the kid's session, Start → **Terminal** → right-click → **Als Administrator ausführen** → enter **your admin** user name and password. It is not recorded for the kid; ignore it in reports and Task-Manager comparisons. Close it before signing the kid out.
+- [x] **S-10 First sign-in** of `ee-kid2` and `ee-kid3` (*Benutzer wechseln*): desktop ready, scaling 150 %, **sign out**. Also sign out `eagleeye-kid` if signed in.
+- [x] **S-11 Selection (0.3.1)**: App A → *Einstellungen*: **eagleeye-kid** and **ee-kid3** ticked; **ee-kid2** and all others unticked.
+- [x] **S-12 SmartScreen**: *Weitere Informationen* → *Trotzdem ausführen* (expected).
+- [x] **S-13 K-TERM understood**: in the kid's session, Start → **Terminal** → right-click → **Als Administrator ausführen** → enter **your admin** user name and password. It is not recorded for the kid; ignore it in reports and Task-Manager comparisons. Close it before signing the kid out.
 
 ---
 
@@ -112,7 +112,7 @@ query user
 - App A green within 60 s without a code; **eagleeye-kid** and **ee-kid3** ticked, **ee-kid2** unticked.
 - Log: start lines, "Account inventory loaded: … 2 under parental control."; no Error. <!-- verify against implementation report -->
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -134,7 +134,7 @@ query user
 - Heading **"Heute, <today's date>"** and **"Heute keine Nutzung aufgezeichnet"**; no table header, no older days.
 - Nothing cut off at 150 %.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -155,7 +155,7 @@ query user
 - Step 3: a **second** `EagleEye.Service`, user SYSTEM, **SessionId of eagleeye-kid**; **none** in your session.
 - Step 4: "Session agent started in session N (process P)" and "Usage recording started for account eagleeye-kid (…) in session N.". <!-- verify against implementation report -->
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Session IDs: kid1 ____ · Admin ____
 
@@ -163,8 +163,8 @@ query user
 
 ## Block B — What is recorded and how much (core) · ≈ 75 min
 
-- [ ] **S-14 App B on LEOSERV**: install `EagleEye-ParentApp-Setup-0.4.0.exe` on LEOSERV; start; green and *Gekoppelt* → done; else *Kopplung aufheben* (if offered), connect to `<host>`, pair as **LEOSERV** (code from the tray popup in your admin session). App B → **Berichte** → **Konto** `eagleeye-kid`. LEOSERV scaling ____ %. Not available today? → write it here; TC-004-05 is Blocked.
-- [ ] Switch to `eagleeye-kid`; open **K-TERM** and run LOG-WATCH in it.
+- [x] **S-14 App B on LEOSERV**: install `EagleEye-ParentApp-Setup-0.4.0.exe` on LEOSERV; start; green and *Gekoppelt* → done; else *Kopplung aufheben* (if offered), connect to `<host>`, pair as **LEOSERV** (code from the tray popup in your admin session). App B → **Berichte** → **Konto** `eagleeye-kid`. LEOSERV scaling ____ %. Not available today? → write it here; TC-004-05 is Blocked.
+- [x] Switch to `eagleeye-kid`; open **K-TERM** and run LOG-WATCH in it.
 
 *Read the values in App B. Without LEOSERV, read them in App A after switching to Admin (switching stops the counting).*
 
@@ -182,7 +182,7 @@ query user
 - **V1 − V0 = 10 min**, e.g. "00:10" ("00:09" to "00:11"). "00:13" = Fail (locked time counted).
 - Log: "New app for account eagleeye-kid: Editor (Notepad.exe, <path>)" (first use), "App started …", "App ended … duration 00:13:xx (closed)" (instance continues while locked; usage 10). <!-- verify against implementation report -->
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: V0 ______ · V1 ______ · Duration in the log ______
 
@@ -202,7 +202,7 @@ query user
 - "00:03" at the latest at stopwatch **3:15**.
 - No click or reload needed.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Row appeared after ____ s · "00:03" at stopwatch ____
 
@@ -222,7 +222,7 @@ query user
 - One "New app" line per program with process name (e.g. `CalculatorApp.exe`) and full path.
 - Leave them open.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Program chosen: ____________ · its row name: ____________
 
@@ -241,7 +241,7 @@ query user
 - Step 2: row **"Windows-Explorer"** within 15 s, reaching "00:02" (±1).
 - Step 3: the value stops growing.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -260,7 +260,7 @@ query user
 - Every row is (or was) an *Apps* entry.
 - A *Hintergrundprozesse* program in the report: note name and whether it had a visible window (TES evaluates).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: OneDrive running for kid1? [ ] yes  [ ] no
 
@@ -279,7 +279,7 @@ query user
 - Edge, Editor and minimised Paint each **+3 min** (±1), not +6.
 - Close the second windows and Editor afterwards.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Edge ____ → ____ · Editor ____ → ____ · Paint ____ → ____
 
@@ -299,7 +299,7 @@ query user
 - **Zeichentabelle** with **"00:00"**.
 - Readable in light and dark; nothing cut off at 150 %. No older day.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -320,7 +320,7 @@ query user
 - `ee-kid2` not in **Konto**; eagleeye-kid's values unchanged.
 - Leave `ee-kid2` signed in with Editor open (TC-004-16).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -340,7 +340,7 @@ query user
 - Log: "New app for account ee-kid3: Editor (Notepad.exe, …)".
 - Sign `ee-kid3` out.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: K1 ______
 
@@ -356,7 +356,7 @@ query user
 - No app closed, blocked or noticeably slowed down.
 - No new tray message, popup or icon change; no EagleEye window. (The SYSTEM agent in Task-Manager → *Details* is accepted, plan Q-2.)
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -377,7 +377,7 @@ query user
 - Step 1: **"Keine Daten verfügbar"**, **no** *Konto*, no days, no tables.
 - Step 2: green within 60 s; **Konto** and the same days and values as before, without any action.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: "Wird geladen …" visible? [ ] yes  [ ] no
 
@@ -392,7 +392,7 @@ query user
 **Expected**:
 - `ee-kid3`: only **Editor**. `eagleeye-kid`: its Block B apps. Each at once (after at most a short "Wird geladen …").
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -417,7 +417,7 @@ query user
 - Step 5: `ee-kid2` back with its Editor value (data kept).
 - *Optional*: admin ↔ standard (*Kontotyp ändern*) instead of untick: recording stops within 60 s.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Seconds: start ____ · stop ____
 
@@ -434,7 +434,7 @@ query user
 - Step 1: within 60 s **"Keine Konten unter Elternkontrolle. Konten unter Einstellungen auswählen."**, no *Konto*.
 - Step 2: **Konto** with both, the first selected, usage unchanged.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -456,7 +456,7 @@ query user
 - Step 2: V0 + **2** (±1), not growing in the admin session.
 - Step 3: V1 − V0 = **3** (±1), not 6.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Re-install check from TC-004-20 (no new "New app … Editor" line)? [ ] yes  [ ] not checked
 
@@ -477,7 +477,7 @@ query user
 - V1 − V0 = **3** (±1): the 2 min without service not counted.
 - App B "Keine Daten verfügbar" while stopped, back by itself.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -495,7 +495,7 @@ query user
 - Same days, apps and values for both accounts.
 - (Next Editor use: no new "New app … Editor" line; noted in TC-004-18 or the next case.)
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -513,7 +513,7 @@ query user
 - "App ended: … Editor … (service stopped unexpectedly)", end at most **5 s** before step 1.
 - New "App started" for the open Editor.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: Restarted by Windows itself? [ ] yes  [ ] no
 
@@ -531,7 +531,7 @@ query user
 - V1 − V0 = **2** (±1).
 - *Note only*: "Usage accounting paused for … s …".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -573,7 +573,7 @@ query user
 - `Stop-Process` and `taskkill`: **Zugriff verweigert**. Task-Manager: *Zugriff verweigert*.
 - Step 3: agent still running, **same Id**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Agent Id ______
 
@@ -598,7 +598,7 @@ query user
 - "New app for account eagleeye-kid: charmap (charmap.exe, \\localhost\eetest\charmap.exe)" (or another UNC form). <!-- verify against implementation report -->
 - No Warning/Error about reading the share program.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -620,7 +620,7 @@ query user
 - It **is** recorded: report row and log "New app / App started … (EagleEye.TrayClient.exe, C:\Users\eagleeye-kid\…\Desktop\EagleEye.TrayClient.exe)".
 - Name: "Zeichentabelle", "Character Map" or "EagleEye.TrayClient". <!-- verify against implementation report -->
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**: Row name: ____________
 
@@ -647,7 +647,7 @@ query user
 - One **summary line** for Editor in that hour. <!-- verify against implementation report: summary text, per clock hour? -->
 - Editor grew plausibly (~3 min).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Count ____ · Summary line: ____________
 
@@ -675,7 +675,7 @@ query user
 - `Test-Path` **False**; log continues in `%ProgramData%\EagleEye\logs`; App A paired with the same data.
 - After step 4 as before.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -692,7 +692,7 @@ query user
 - New agent (other Id) within **30 s**.
 - Warning "Session agent in session N exited with code …; restarting in …" and a new "Session agent started …".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -717,7 +717,7 @@ query user
 - Log: "Purged all recorded data of deleted account S-1-5-21-…: 1 apps, … history entries, … daily entries." <!-- verify against implementation report -->
 - Step 3: new `ee-kid3` → "Heute keine Nutzung aufgezeichnet".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: Seconds ____
 
@@ -734,7 +734,7 @@ query user
 **Expected**:
 - V1 − V0 = **4** (±1); no ±60 min jump, nothing negative.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -760,7 +760,7 @@ query user
 - Log: "Purged usage data older than …: 1 daily entries, …".
 - Restore if wanted: stop, copy the backup back, start.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -778,7 +778,7 @@ query user
 - One start and one end line, duration ~00:10:xx.
 - The page moves to the new "Heute, …" by itself.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -793,7 +793,7 @@ query user
 **Expected**:
 - **"Heute, <today>"** with "Heute keine Nutzung aufgezeichnet"; below it the run day's date (without "Heute") with its table.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -811,7 +811,7 @@ query user
 - Sum of both **< 2 %** on average (expected < 1 %).
 - No visible stutter difference.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: CPU values: ____________
 
@@ -819,28 +819,26 @@ query user
 
 ## Cleanup (test plan §7)
 
-- [ ] **LOG-COPY** → `run-01-service-logs`; copies looked through.
-- [ ] Share removed: `Remove-SmbShare -Name "eetest" -Force`; `Remove-Item C:\EETest -Recurse -Force`.
-- [ ] `EagleEye.TrayClient.exe` copy deleted from kid1's desktop.
-- [ ] Service `Environment` value gone (TC-004-28).
-- [ ] Clock automatic and correct (TC-004-31).
-- [ ] `eagleeye-kid`, `ee-kid2` signed out; `ee-kid2` (and a re-created `ee-kid3`) removed:
+- [x] **LOG-COPY** → `run-01-service-logs`; copies looked through.
+- [x] Share removed: `Remove-SmbShare -Name "eetest" -Force`; `Remove-Item C:\EETest -Recurse -Force`.
+- [x] `EagleEye.TrayClient.exe` copy deleted from kid1's desktop.
+- [x] Service `Environment` value gone (TC-004-28).
+- [x] Clock automatic and correct (TC-004-31).
+- [x] `eagleeye-kid`, `ee-kid2` signed out; `ee-kid2` (and a re-created `ee-kid3`) removed:
   ```powershell
   foreach ($n in "ee-kid2","ee-kid3") {
     Get-CimInstance Win32_UserProfile | Where-Object LocalPath -like "*\$n" | Remove-CimInstance
     if (Get-LocalUser -Name $n -ErrorAction SilentlyContinue) { Remove-LocalUser -Name $n }
   }
   ```
-- [ ] `eagleeye-kid` stays ticked (or untick, your choice).
-- [ ] LEOSERV: App B stays installed and paired.
+- [x] `eagleeye-kid` stays ticked (or untick, your choice).
+- [x] LEOSERV: App B stays installed and paired.
 
 ---
 
 ## General Feedback
 
-<!-- Anything that does not fit a test case: usability remarks, wanted text changes, ideas, surprises. -->
-
----
+Functionality is good, seems to be stable and expected. I like to do some tweaks on the usability and visual style. See screenshots in  evidence witth prefix "visuals_"
 
 ## Summary (filled in by TES after evaluation)
 
