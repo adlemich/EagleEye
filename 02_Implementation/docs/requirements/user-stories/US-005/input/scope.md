@@ -28,3 +28,10 @@ Table columns in the mock: delete (trash icon) · An/Aus · Start-Zeit · End-Ze
   - If not: the app starts and is usable, and usage time is logged.
   - If a rule is active: the process is terminated right away. Through the tray client, the kid sees the display text configured in the parent app, in a **system-modal message box** (topmost) that must be acknowledged with **OK**.
 - **Colours.** The mock may show poor colouring. Use only the standard colours that follow light/dark mode, no special colours. Don't take the mock too seriously in this regard.
+
+## Clarifications (Michael, 2026-10-10)
+
+1. **Apps already running when a break starts** are out of scope. They are handled in the next user story ("approaching a usage limitation"). US-005 only checks at app start.
+2. **"Active or disabled (in general)" = the per-entry switch (An/Aus).** Ticked: the entry is active and is evaluated at runtime. Not ticked: it behaves as if it did not exist (not evaluated), but the record remains so it can be activated later. There is no separate main switch.
+3. **No breaks across midnight within one entry.** The end time is always later than the start time; a break from 20:00 to 07:00 is entered as two entries (20:00 to 23:59 and 00:00 to 07:00). This is intended as a usability choice: an entry such as "20:00 to 07:00, Monday" would be ambiguous. **End time 23:59 is treated as midnight**, i.e. the break lasts until the end of the day.
+4. **Display text: one per account.** Rules are bound to a monitored account, so the text belongs to the account and changes with the account drop-down.
