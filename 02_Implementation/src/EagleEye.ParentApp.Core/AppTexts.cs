@@ -75,6 +75,26 @@ public static class AppTexts
     public static string ReportsColumnUsage => Get(nameof(ReportsColumnUsage));
     public static string ReportsNoUsageToday => Get(nameof(ReportsNoUsageToday));
     public static string ReportsNoControlledAccounts => Get(nameof(ReportsNoControlledAccounts));
+    public static string MenuRules => Get(nameof(MenuRules));
+    public static string RulesAccountLabel => Get(nameof(RulesAccountLabel));
+    public static string RulesSectionBreakTimes => Get(nameof(RulesSectionBreakTimes));
+    public static string RulesAddEntry => Get(nameof(RulesAddEntry));
+    public static string RulesColumnOnOff => Get(nameof(RulesColumnOnOff));
+    public static string RulesColumnStart => Get(nameof(RulesColumnStart));
+    public static string RulesColumnEnd => Get(nameof(RulesColumnEnd));
+    public static string RulesDayMonday => Get(nameof(RulesDayMonday));
+    public static string RulesDayTuesday => Get(nameof(RulesDayTuesday));
+    public static string RulesDayWednesday => Get(nameof(RulesDayWednesday));
+    public static string RulesDayThursday => Get(nameof(RulesDayThursday));
+    public static string RulesDayFriday => Get(nameof(RulesDayFriday));
+    public static string RulesDaySaturday => Get(nameof(RulesDaySaturday));
+    public static string RulesDaySunday => Get(nameof(RulesDaySunday));
+    public static string RulesNoEntries => Get(nameof(RulesNoEntries));
+    public static string RulesDisplayTextLabel => Get(nameof(RulesDisplayTextLabel));
+    public static string RulesDeleteEntry => Get(nameof(RulesDeleteEntry));
+    public static string RulesInvalidTime => Get(nameof(RulesInvalidTime));
+    public static string RulesEndBeforeStart => Get(nameof(RulesEndBeforeStart));
+    public static string RulesNoDaySelected => Get(nameof(RulesNoDaySelected));
 #pragma warning restore CS1591
 
     /// <summary>Formats a composite text with the current culture.</summary>

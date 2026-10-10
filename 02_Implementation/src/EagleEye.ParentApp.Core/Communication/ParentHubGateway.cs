@@ -14,6 +14,7 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
     private IParentHubClient? _subscribed;
     private Action<UserAccountListDto>? _accountsSubscription;
     private Action<DayUsageDto>? _usageSubscription;
+    private Action<AccountRulesDto>? _rulesSubscription;
     private IParentHubClient? _connected;
 
     /// <inheritdoc />
@@ -27,6 +28,9 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
 
     /// <inheritdoc />
     public event Action<DayUsageDto>? DayUsageChanged;
+
+    /// <inheritdoc />
+    public event Action<AccountRulesDto>? AccountRulesChanged;
 
     /// <inheritdoc />
     public bool IsConnected
@@ -52,12 +56,15 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
                 {
                     _subscribed.UserAccountsChanged -= _accountsSubscription;
                     _subscribed.DayUsageChanged -= _usageSubscription;
+                    _subscribed.AccountRulesChanged -= _rulesSubscription;
                 }
 
                 _accountsSubscription = snapshot => Forward(client, () => UserAccountsChanged?.Invoke(snapshot));
                 _usageSubscription = snapshot => Forward(client, () => DayUsageChanged?.Invoke(snapshot));
                 client.UserAccountsChanged += _accountsSubscription;
                 client.DayUsageChanged += _usageSubscription;
+                _rulesSubscription = snapshot => Forward(client, () => AccountRulesChanged?.Invoke(snapshot));
+                client.AccountRulesChanged += _rulesSubscription;
                 _subscribed = client;
             }
 

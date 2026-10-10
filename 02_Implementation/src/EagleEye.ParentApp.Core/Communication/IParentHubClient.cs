@@ -46,4 +46,28 @@ public interface IParentHubClient : IAsyncDisposable
 
     /// <summary>Calls <c>IParentHub.GetAccountUsage</c>.</summary>
     Task<AccountUsageDto> GetAccountUsageAsync(string accountSid, CancellationToken ct);
+
+    /// <summary>The service broadcast <c>IParentClientCallback.OnAccountRulesChanged</c> (US-005).</summary>
+    event Action<AccountRulesDto>? AccountRulesChanged;
+
+    /// <summary>Calls <c>IParentHub.GetAccountRules</c>.</summary>
+    Task<AccountRulesDto> GetAccountRulesAsync(string accountSid, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.AddBreakTimeEntry</c>.</summary>
+    Task<StateWriteAckDto> AddBreakTimeEntryAsync(Guid requestId, string accountSid, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.DeleteBreakTimeEntry</c>.</summary>
+    Task<StateWriteAckDto> DeleteBreakTimeEntryAsync(Guid requestId, string accountSid, long entryId, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.SetBreakTimeEntryActive</c>.</summary>
+    Task<StateWriteAckDto> SetBreakTimeEntryActiveAsync(Guid requestId, string accountSid, long entryId, bool isActive, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.SetBreakTimeEntryTime</c>.</summary>
+    Task<StateWriteAckDto> SetBreakTimeEntryTimeAsync(Guid requestId, string accountSid, long entryId, BreakTimeBoundary boundary, int minute, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.SetBreakTimeEntryDay</c>.</summary>
+    Task<StateWriteAckDto> SetBreakTimeEntryDayAsync(Guid requestId, string accountSid, long entryId, DayOfWeek day, bool isSelected, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.SetDisplayText</c>.</summary>
+    Task<StateWriteAckDto> SetDisplayTextAsync(Guid requestId, string accountSid, string text, CancellationToken ct);
 }

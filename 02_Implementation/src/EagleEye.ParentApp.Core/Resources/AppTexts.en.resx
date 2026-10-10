@@ -64,4 +64,24 @@
   <data name="ReportsColumnUsage" xml:space="preserve"><value>Usage (HH:MM)</value></data>
   <data name="ReportsNoUsageToday" xml:space="preserve"><value>No usage recorded today</value></data>
   <data name="ReportsNoControlledAccounts" xml:space="preserve"><value>No accounts under parental control. Select accounts under Settings.</value></data>
+  <data name="MenuRules" xml:space="preserve"><value>Rules</value></data>
+  <data name="RulesAccountLabel" xml:space="preserve"><value>Account</value></data>
+  <data name="RulesSectionBreakTimes" xml:space="preserve"><value>Break times</value></data>
+  <data name="RulesAddEntry" xml:space="preserve"><value>Add new entry</value></data>
+  <data name="RulesColumnOnOff" xml:space="preserve"><value>On/Off</value></data>
+  <data name="RulesColumnStart" xml:space="preserve"><value>Start time</value></data>
+  <data name="RulesColumnEnd" xml:space="preserve"><value>End time</value></data>
+  <data name="RulesDayMonday" xml:space="preserve"><value>Mo</value></data>
+  <data name="RulesDayTuesday" xml:space="preserve"><value>Tu</value></data>
+  <data name="RulesDayWednesday" xml:space="preserve"><value>We</value></data>
+  <data name="RulesDayThursday" xml:space="preserve"><value>Th</value></data>
+  <data name="RulesDayFriday" xml:space="preserve"><value>Fr</value></data>
+  <data name="RulesDaySaturday" xml:space="preserve"><value>Sa</value></data>
+  <data name="RulesDaySunday" xml:space="preserve"><value>Su</value></data>
+  <data name="RulesNoEntries" xml:space="preserve"><value>No break times defined.</value></data>
+  <data name="RulesDisplayTextLabel" xml:space="preserve"><value>Display text:</value></data>
+  <data name="RulesDeleteEntry" xml:space="preserve"><value>Delete entry</value></data>
+  <data name="RulesInvalidTime" xml:space="preserve"><value>Enter a time between 00:00 and 23:59.</value></data>
+  <data name="RulesEndBeforeStart" xml:space="preserve"><value>The end time must be later than the start time.</value></data>
+  <data name="RulesNoDaySelected" xml:space="preserve"><value>Select at least one day.</value></data>
 </root>

@@ -64,4 +64,24 @@
   <data name="ReportsColumnUsage" xml:space="preserve"><value>Nutzung (HH:MM)</value></data>
   <data name="ReportsNoUsageToday" xml:space="preserve"><value>Heute keine Nutzung aufgezeichnet</value></data>
   <data name="ReportsNoControlledAccounts" xml:space="preserve"><value>Keine Konten unter Elternkontrolle. Konten unter Einstellungen auswählen.</value></data>
+  <data name="MenuRules" xml:space="preserve"><value>Regeln</value></data>
+  <data name="RulesAccountLabel" xml:space="preserve"><value>Konto</value></data>
+  <data name="RulesSectionBreakTimes" xml:space="preserve"><value>Ruhezeiten</value></data>
+  <data name="RulesAddEntry" xml:space="preserve"><value>Eintrag hinzufügen</value></data>
+  <data name="RulesColumnOnOff" xml:space="preserve"><value>An/Aus</value></data>
+  <data name="RulesColumnStart" xml:space="preserve"><value>Start-Zeit</value></data>
+  <data name="RulesColumnEnd" xml:space="preserve"><value>End-Zeit</value></data>
+  <data name="RulesDayMonday" xml:space="preserve"><value>MO</value></data>
+  <data name="RulesDayTuesday" xml:space="preserve"><value>DI</value></data>
+  <data name="RulesDayWednesday" xml:space="preserve"><value>MI</value></data>
+  <data name="RulesDayThursday" xml:space="preserve"><value>DO</value></data>
+  <data name="RulesDayFriday" xml:space="preserve"><value>FR</value></data>
+  <data name="RulesDaySaturday" xml:space="preserve"><value>SA</value></data>
+  <data name="RulesDaySunday" xml:space="preserve"><value>SO</value></data>
+  <data name="RulesNoEntries" xml:space="preserve"><value>Keine Ruhezeiten festgelegt.</value></data>
+  <data name="RulesDisplayTextLabel" xml:space="preserve"><value>Anzeige Text:</value></data>
+  <data name="RulesDeleteEntry" xml:space="preserve"><value>Eintrag löschen</value></data>
+  <data name="RulesInvalidTime" xml:space="preserve"><value>Bitte eine Uhrzeit zwischen 00:00 und 23:59 eingeben.</value></data>
+  <data name="RulesEndBeforeStart" xml:space="preserve"><value>Die End-Zeit muss nach der Start-Zeit liegen.</value></data>
+  <data name="RulesNoDaySelected" xml:space="preserve"><value>Mindestens ein Tag muss ausgewählt sein.</value></data>
 </root>

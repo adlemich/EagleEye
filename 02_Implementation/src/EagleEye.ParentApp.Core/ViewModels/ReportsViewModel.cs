@@ -39,6 +39,7 @@ public sealed class ReportsViewModel : ObservableObject
 {
     private readonly IUserAccountsModel _accounts;
     private readonly IAccountUsageModel _usage;
+    private readonly ControlledAccountSelection _selection = new();
     private AccountOption? _selectedAccount;
     private ReportsState _state = ReportsState.NoData;
 
@@ -54,7 +55,7 @@ public sealed class ReportsViewModel : ObservableObject
     }
 
     /// <summary>The controlled accounts (AC-17).</summary>
-    public ObservableCollection<AccountOption> Accounts { get; } = [];
+    public ObservableCollection<AccountOption> Accounts => _selection.Accounts;
 
     /// <summary>The days, today first (AC-18).</summary>
     public ObservableCollection<DayUsageViewModel> Days { get; } = [];
@@ -108,10 +109,8 @@ public sealed class ReportsViewModel : ObservableObject
 
     private void Apply()
     {
-        MergeAccounts();
-        SelectedAccount = _selectedAccount is { } selected && Accounts.FirstOrDefault(a => a.Sid == selected.Sid) is { } still
-            ? still
-            : Accounts.FirstOrDefault();
+        _selection.Merge(_accounts);
+        SelectedAccount = _selection.Choose(_selectedAccount);
         State = _accounts.LoadState switch
         {
             AccountsLoadState.NotAvailable => ReportsState.NoData,
@@ -126,34 +125,6 @@ public sealed class ReportsViewModel : ObservableObject
         };
         OnPropertyChanged(nameof(IsAccountSelectionVisible));
         MergeDays();
-    }
-
-    private void MergeAccounts()
-    {
-        var snapshot = _accounts.LoadState == AccountsLoadState.Ready ? _accounts.Snapshot : null;
-        var comparer = AccountDisplayName.Comparer;
-        var desired = (snapshot?.Accounts ?? [])
-            .Where(a => a.IsUnderParentalControl)
-            .Select(a => new AccountOption(a.Sid, AccountDisplayName.Format(a)))
-            .OrderBy(a => a.DisplayName, comparer)
-            .ToList();
-        for (var index = Accounts.Count - 1; index >= 0; index--)
-        {
-            if (!desired.Contains(Accounts[index]))
-            {
-                Accounts.RemoveAt(index);
-            }
-        }
-
-        // Unchanged entries keep their relative order (a renamed account is a new entry), so inserting the new
-        // entries at their positions gives the sorted list.
-        for (var index = 0; index < desired.Count; index++)
-        {
-            if (!Accounts.Contains(desired[index]))
-            {
-                Accounts.Insert(index, desired[index]);
-            }
-        }
     }
 
     private void MergeDays()
