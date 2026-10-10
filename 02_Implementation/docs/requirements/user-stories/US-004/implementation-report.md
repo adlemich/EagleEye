@@ -23,9 +23,9 @@ US-004 is implemented as planned in Steps 0 to 11. The service starts a hardened
 | `EagleEye.ParentApp.Core` | Hub client calls + callback, gateway forwarding, `Reports/AccountUsageModel`, `ReportsViewModel`, `DayUsageViewModel`, `AppUsageRowViewModel`, `UsageDuration`, menu entry, 7 texts (de/en), Debug-only parent port offset |
 | `EagleEye.ParentApp` | `Views/ReportsView` (tables with fixed column widths), `MainPage` page switching, DI |
 | Installer | `setup.iss`: ends remaining `EagleEye.Service.exe` processes (agents) after `net stop` (install, upgrade, uninstall) |
-| Version | `0.4.0` (service reports `EagleEye_v0.4`) |
+| Version | `0.4.0`, patch `0.4.1` for ISSUE-007 (service reports `EagleEye_v0.4`) |
 
-**Build / test result** (Windows, final state): `build.ps1` 0 warnings, 0 errors for all six steps (Shared, Service, TrayClient, ParentApp.Core, ParentApp Windows, ParentApp Android). `test.ps1` all **1 494** unit tests pass (Shared 146, Service 782, TrayClient 40, ParentApp 526), 0 failed.
+**Build / test result** (Windows, final state): `build.ps1` 0 warnings, 0 errors for all six steps (Shared, Service, TrayClient, ParentApp.Core, ParentApp Windows, ParentApp Android). `test.ps1` all **1 513** unit tests pass (Shared 146, Service 782, TrayClient 40, ParentApp 545), 0 failed (0.4.1; 1 494 / ParentApp 526 at 0.4.0).
 
 ---
 
@@ -145,9 +145,9 @@ Preparation (admin account): install `03_Delivery/windows/EagleEye-Setup-0.4.0.e
 
 | Item | Value |
 |---|---|
-| Service + tray installer | `03_Delivery/windows/EagleEye-Setup-0.4.0.exe` (admin), built 2026-10-08 07:14, SHA-256 `657e4d020203c8268f55643ddf636f03bd015ccc509a97d8e192362110deb4e4` |
-| Parent app installer | `03_Delivery/windows/EagleEye-ParentApp-Setup-0.4.0.exe` (per user), built 2026-10-08 07:15, SHA-256 `6f88c838ae60ac2a65ee476c01746a7bb31fbcf0617050ee6bb26258b28b9749` |
-| Version | 0.4.0; the service reports `EagleEye_v0.4`. Upgrade over 0.3.1 keeps pairings and selections; migration 3 runs at the first start. |
+| Service + tray installer | `03_Delivery/windows/EagleEye-Setup-0.4.1.exe` (admin), built 2026-10-10 10:31, SHA-256 `2565b31e023f30bca2123b2540953742a2ea4ffb441f0f8b4fd0d9c05cd41fbe` (service and tray code unchanged since 0.4.0) |
+| Parent app installer | `03_Delivery/windows/EagleEye-ParentApp-Setup-0.4.1.exe` (per user), built 2026-10-10 10:32, SHA-256 `274d82fc90b44249f3c29c18ad75269162d922edc64235d2bbbe87b1b74ed472` |
+| Version | 0.4.1 (patch for ISSUE-007, see §10); the service reports `EagleEye_v0.4`. Upgrade over 0.3.1 keeps pairings and selections; migration 3 runs at the first start. The 0.4.0 installers are superseded. |
 
 ### UI texts as implemented (de / en)
 
@@ -163,7 +163,7 @@ Preparation (admin account): install `03_Delivery/windows/EagleEye-Setup-0.4.0.e
 | No controlled account (AC-20) | Keine Konten unter Elternkontrolle. Konten unter Einstellungen auswählen. | No accounts under parental control. Select accounts under Settings. |
 | While fetching (AC-20) | Wird geladen … | Loading … |
 
-Layout: page header, then "Konto" with a drop-down of the accounts under parental control (names as in Settings, e.g. "Max Adler (max)"), then per day a bold heading and a two-column table (360 / 160 units, usage right-aligned; header row only when the day has rows). Usage is rounded down to minutes ("00:00" below one minute).
+Layout: page header, then "Konto" with a drop-down of the accounts under parental control (names as in Settings, e.g. "Max Adler (max)"), then per day a heading bar (0.4.1, ISSUE-007: full width, accent colour background, see §10) and a two-column table (360 / 160 units, usage right-aligned; header row only when the day has rows). Usage is rounded down to minutes ("00:00" below one minute).
 
 ### Log entries (service log, Information unless noted)
 
@@ -217,3 +217,18 @@ Warning: The session agent in session 2 found more than 20000 windows; its repor
 |---|---|
 | Steps 0 to 11 | Windows Developer Machine |
 | MacBook | Not used. `Shared` and `ParentApp.Core` contain no Windows APIs (the Debug port offset in `HostAddress` is plain environment access), so `build.ps1`/`test.ps1` keep working there. |
+
+---
+
+## 10. Patch 0.4.1 — ISSUE-007 (heading bars, Reports as start page)
+
+| Item | Content |
+|---|---|
+| Change | (1) Reports day headings and (3) the Settings section headings *Darstellung*, *Serververbindung*, *Benutzerkonten auf dem EagleEye-PC* ("auf", not the mockup's "aud") use one shared style `SectionHeader`: a full-width bar in the platform accent colour with white or black text, padding 14 × 6, font size 16, regular weight as in the mockup. (2) A paired app starts on *Berichte* with the menu entry selected; an unpaired app starts on *Einstellungen* with the pairing flow as before. Page titles, *Konto* picker, column headers, rows, menu and status bar are unchanged. Details and root cause: `US-004/issues/ISSUE-007.md` §Resolution. |
+| Accent colour | Windows: the user's accent colour (`UISettings.GetColorValue(UIColorType.Accent)`, `Platforms/Windows/WindowsAccentColor`), refreshed on `UISettings.ColorValuesChanged` and whenever the window is activated. Android: the system accent colour `system_accent1_600` (Material You). iOS / macOS: no platform reader yet, the app's primary colour `#1E7B3A` (also the default in `Colors.xaml`). The colours are app resources (`HeadingBarBackgroundColor`, `HeadingBarTextColor`) used as dynamic resources, so a change applies at once. They are the same in light and dark mode. |
+| Text colour | `HeadingBarPalette.TextFor` (Core): white when its WCAG contrast with the bar is at least 4.5:1, otherwise black (black then has at least 4.6:1). Windows default blue `#0078D4` → white (4.5:1, as in the mockup); light accent colours such as yellow `#FFB900` → black. |
+| Code | Core: `Appearance/{HeadingBarPalette, RgbColor}.cs`, `ViewModels/MainViewModel.cs`. MAUI head: `Services/HeadingBarColorService.cs`, `Platforms/Windows/WindowsAccentColor.cs`, `Platforms/Android/AndroidAccentColor.cs`, `Resources/Styles/{Styles, Colors}.xaml`, `Views/{ReportsView, SettingsView}.xaml` (outer stack fills the content area instead of max. 760 units, so the bars reach the right edge), `App.xaml.cs`, `MauiProgram.cs`, READMEs; `Directory.Build.props` 0.4.1. Service, Shared and tray client code unchanged (installer 0.4.1 differs from 0.4.0 only in the version). |
+| Tests | +19 (ParentApp 545): `Appearance/HeadingBarPaletteTests` (fallback, Windows blue, dark and light accents, the 4.5 boundary on both sides, luminance, contrast ratio), `MainViewModelTests` (paired → Reports with one change notification, not paired → Settings, paired after the menu wrote back Settings → Reports). `HeadingBarPalette`, `RgbColor`, `MainViewModel` at 100 % line and branch coverage. `build.ps1` 0 warnings (Windows + Android), `test.ps1` 1 513 passed. |
+| Installers | `03_Delivery/windows/EagleEye-Setup-0.4.1.exe` (10:31, `2565b31e…cd41fbe`), `03_Delivery/windows/EagleEye-ParentApp-Setup-0.4.1.exe` (10:32, `274d82fc…b74ed472`); full hashes in §8 |
+| Deviation | Two layout points beyond the issue text: the outer page stacks on both pages now fill the content area (needed for the full-width bar of the mockup); long texts (instruction, error text) can therefore use the full width. The headings lost their bold weight to match the mockup; switching back to bold is one setter in `Styles.xaml`. |
+| Smoke check | Windows Developer Machine (`ZOCK-O-MAT-V3`, 150 % scaling, dark mode, orange-red accent colour), Michael's installed service 0.4.0 not touched. (a) Debug parent app paired with the Debug console service on the offset ports (as in §8, `EAGLEEYE_DEV_PORT_OFFSET=10000`): opens on *Berichte*, menu entry selected, day bars "Heute, 10.10.2026" / "08.10.2026" full width in the accent colour with white text; *Einstellungen* shows the three bars. The first attempt still opened on *Einstellungen*: the menu's two-way binding writes the first entry back when it loads, and a guard "keep the user's choice" took that as a user choice; the guard was removed before the commit. (b) `EagleEye-ParentApp-Setup-0.4.1.exe` installed per user (file version 0.4.1.0, product version `0.4.1+4327f60…`), started with the Debug app data set aside (unpaired: *Einstellungen*, host entry, bars shown), uninstalled; the Debug app data was put back. Not checked by DEV: light mode, changing the accent colour while the app runs, Android, LEOSERV. |
