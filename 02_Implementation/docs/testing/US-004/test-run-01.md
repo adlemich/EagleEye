@@ -838,8 +838,9 @@ query user
 
 ## General Feedback
 
-Functionality is good, seems to be stable and expected. I like to do some tweaks on the usability and visual style. See screenshots in  evidence witth prefix "visuals_"
-
+Functionality is good, seems to be stable and expected. I like to do some tweaks on the usability and visual style. See screenshots in  evidence witth prefix "visuals_". 
+  
+Usability: When the parent app is starting, it should open "Reports" tab as default start view.
 ## Summary (filled in by TES after evaluation)
 
 | Block | Cases | Pass | Fail | Blocked | Skipped | Not executed |
