@@ -1,15 +1,16 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — US-004 Verified/Closed and merged into main (2026-10-10, build 0.4.1); next story not started
+description: EagleEye workflow status — US-005 break times implemented as 0.5.0, waiting for Michael's approval of step c (2026-10-10)
 metadata:
   type: project
 ---
 
-**As of 2026-10-10. Current: Phase 3, between stories. US-004 (app usage tracking, build 0.4.1) is `Verified/Closed` by Michael and merged into main; the branch is deleted. Next: PRO starts US-005.**
+**As of 2026-10-10. Current: Phase 3, US-005 "Break times", branch `feature/US-005-break-times`, step c done (DEV implemented 0.5.0: 2,107 unit tests green; installers `03_Delivery/windows/EagleEye-*-0.5.0.exe`). Next: Michael approves → TES writes the manual test plan (step d).** The story is `Implemented`; plan and ADR-013/014 are approved.
 
-- Run 01 on 0.4.0: 23 Pass, 0 Fail, 11 Skipped, TC-004-23 not ticked. Michael's ruling: skipped cases stay skipped, no repeat. Not verified manually: AC-11, AC-14, AC-16, AC-25, and the security checks TC-004-23, -25, -26, -29. TC-004-23 also leaves ARC's plan question Q-9 (which write-restriction variant runs) open. All listed in `docs/testing/US-004/test-report.md`.
-- ISSUE-007 (accent-colour heading bars, Berichte as start page): change request after run 01, fixed in 0.4.1, visual re-test "All good" per Michael (no run file). iOS/macOS use the fallback colour #1E7B3A for now.
-- Earlier: US-001 to US-003 Verified/Closed; US-003 left AC-4, 5, 7, 9, 16, 19-24 unverified manually.
-- Open from ARC: arc42 §7.1 install path lacks `Service\` subfolder; TrayHub SID registration is target design only. From DEV: tray *App Infos* dialog is tight at 150 % (not filed).
+- Michael's binding decisions: a start = creation of the app's first process; detection ≤ 10 s, graceful close, force after 20 s (≤ 30 s). The limits count from the first window if it comes more than 10 s after the start (PRO interpretation, flagged to Michael). Time-zone/clock changes are logged and stored (`TimeChangeFindings`); the installer hardening is deferred. The dialog is topmost, not system-modal. Accessibility tools are blocked. Running apps at break start are left to the next story ("approaching a usage limitation").
+- TES must include TC-004-23 (agent token) and a graceful-close check under the real SYSTEM token (plan Q-8), plus DEV report §7 items.
+- DEV D-13 fixed a US-004 defect: the parent app crashed on a service restart while a 2nd+ account was selected (Reports too). Fixed on this branch only.
+- US-004 Verified/Closed and merged (0.4.1); untested ACs in `docs/testing/US-004/test-report.md`.
+- Subagent runs hit API rate limits twice; resume via SendMessage works, agents push at checkpoints.
 
 See [[eagleeye-workflow-gates]], [[michael-closes-with-partial-runs]].
