@@ -6,7 +6,8 @@ namespace EagleEye.ParentApp.Core.ViewModels;
 
 /// <summary>
 /// The main window (FR-APP-081, US-002 AC-8): navigation menu ("Settings", "Reports"), the
-/// selected page, and the start sequence (database, theme, connection, host dialog if not paired).
+/// selected page, and the start sequence (database, theme, connection, start page, host dialog
+/// if not paired).
 /// </summary>
 public sealed class MainViewModel(
     ParentDatabase database,
@@ -26,7 +27,9 @@ public sealed class MainViewModel(
     /// <summary>The navigation menu entries.</summary>
     public IReadOnlyList<NavigationItem> MenuItems { get; } = [new NavigationItem(SettingsKey, AppTexts.MenuSettings), new NavigationItem(ReportsKey, AppTexts.MenuReports)];
 
-    /// <summary>The selected menu entry (the first one by default).</summary>
+    /// <summary>
+    /// The selected menu entry: Settings until <see cref="StartAsync"/> has chosen the start page.
+    /// </summary>
     public NavigationItem SelectedItem
     {
         get => _selectedItem ?? MenuItems[0];
@@ -34,8 +37,9 @@ public sealed class MainViewModel(
     }
 
     /// <summary>
-    /// Opens the database, applies the theme, starts the connection and, when the app is not
-    /// paired, shows the host dialog (AC-11). Runs once.
+    /// Opens the database, applies the theme and starts the connection. A paired app starts on
+    /// Reports (US-004 ISSUE-007); an unpaired app stays on Settings and shows the host dialog
+    /// (AC-11). Runs once.
     /// </summary>
     public async Task StartAsync()
     {
@@ -51,6 +55,11 @@ public sealed class MainViewModel(
         if (state.Status == ConnectionStatus.NotPaired)
         {
             await serverConnection.PromptForHostAsync();
+        }
+        else
+        {
+            // Always: the menu's two-way binding writes the first entry back when it loads.
+            SelectedItem = MenuItems.First(item => item.Key == ReportsKey);
         }
     }
 }

@@ -20,6 +20,12 @@
     <Color x:Key="ErrorDark">#F2B8B5</Color>
     <Color x:Key="BorderDark">#3A423E</Color>
 
+    <!-- Heading bar (US-004 ISSUE-007), the same in both themes. Defaults: the app's primary colour with
+         white text. Services/HeadingBarColorService replaces them at start with the platform accent colour
+         (Windows: the user's accent colour) and a readable text colour. -->
+    <Color x:Key="HeadingBarBackgroundColor">#1E7B3A</Color>
+    <Color x:Key="HeadingBarTextColor">#FFFFFF</Color>
+
     <!-- Connection indicator (like the tray client): readable on both themes. -->
     <SolidColorBrush x:Key="StatusConnectedBrushLight" Color="#1E9E46" />
     <SolidColorBrush x:Key="StatusConnectedBrushDark" Color="#3DDC6E" />

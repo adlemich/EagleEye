@@ -9,7 +9,8 @@
     <!-- Reports (US-004 AC-17 to AC-23). Tables with fixed column widths so header and rows line up and scale
          with the display (lesson of US-003 ISSUE-006). -->
     <ScrollView>
-        <VerticalStackLayout Spacing="8" MaximumWidthRequest="760" HorizontalOptions="Start">
+        <!-- Fills the content area, so the heading bars (ISSUE-007) span its full width. -->
+        <VerticalStackLayout Spacing="8">
 
             <Label Text="{x:Static core:AppTexts.MenuReports}" Style="{StaticResource PageHeader}" />
 

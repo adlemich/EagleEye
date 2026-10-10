@@ -52,6 +52,7 @@ public static class MauiProgram
         services.AddSingleton<IThemeService, MauiThemeService>();
         services.AddSingleton<IDialogService, MauiDialogService>();
         services.AddSingleton<IUiDispatcher, MauiUiDispatcher>();
+        services.AddSingleton<HeadingBarColorService>();
 
         // View models and views.
         services.AddSingleton<AppearanceViewModel>();

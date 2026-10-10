@@ -19,21 +19,25 @@ Cross-platform parent application built with .NET MAUI. One codebase targets And
 
 ```
 EagleEye.ParentApp/
-├── App.xaml(.cs)            Window "EagleEye" (min. 900 × 600), resolves MainPage
+├── App.xaml(.cs)            Window "EagleEye" (min. 900 × 600), resolves MainPage, attaches HeadingBarColorService
 ├── MauiProgram.cs           DI: Core services, platform services, view models, views
 ├── Views/
-│   ├── MainPage             Desktop layout: menu left, content right, status bar bottom (FR-APP-081)
+│   ├── MainPage             Desktop layout: menu left, content right, status bar bottom (FR-APP-081);
+│   │                        starts on Reports when paired, on Settings when not (ISSUE-007)
 │   ├── SettingsView         "Visual appearance", "Server connection" and "User accounts on the EagleEye PC"
 │   ├── ReportsView          Reports: account selection, one table per day (App | Nutzung (HH:MM)), US-004
 │   └── StatusBarView        Green/red indicator + status text
 ├── Services/                MauiThemeService, MauiDialogService, MauiUiDispatcher,
-│                            MauiAppDataPaths, MauiSecureStorageSecretStore (non-Windows)
+│                            MauiAppDataPaths, MauiSecureStorageSecretStore (non-Windows),
+│                            HeadingBarColorService (accent colour → resources HeadingBarBackgroundColor/TextColor)
 ├── Resources/
-│   ├── Styles/              Colors (light/dark via AppThemeBinding) and styles
+│   ├── Styles/              Colors (light/dark via AppThemeBinding) and styles; SectionHeader = heading bar
 │   └── AppIcon/             appicon.svg (MAUI icon), eagleeye.ico (exe and installer icon)
 └── Platforms/
-    ├── Windows/             WinUI App, app.manifest, DpapiSecretProtector (token: DPAPI CurrentUser)
-    ├── Android/             MainActivity, MainApplication, AndroidManifest (INTERNET)
+    ├── Windows/             WinUI App, app.manifest, DpapiSecretProtector (token: DPAPI CurrentUser),
+    │                        WindowsAccentColor (user accent colour + changes, UISettings)
+    ├── Android/             MainActivity, MainApplication, AndroidManifest (INTERNET),
+    │                        AndroidAccentColor (system accent colour, Material You)
     └── MacCatalyst/         AppDelegate, SceneDelegate, Program, Info.plist, Entitlements (not built yet)
 ```
 

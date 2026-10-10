@@ -27,6 +27,8 @@ EagleEye.ParentApp.Core/
 │                        requestId/ack/broadcast confirmation, 4 s write timeout)
 ├── Reports/             AccountUsageModel: usage areas of the selected account (fetch on connect and on
 │                        selection, revision rule per day, 90-day and empty-day trimming)
+├── Appearance/         HeadingBarPalette: heading bar colours (platform accent or app primary #1E7B3A,
+│                        white or black text by WCAG contrast, ISSUE-007); RgbColor
 ├── Data/
 │   ├── ParentDatabase           Shared SqliteDatabase: ServerConnections, AppSettings, Secrets
 │   ├── PairingStore             The one pairing (host, device ID/name, thumbprint); token via ISecretStore
