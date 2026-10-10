@@ -17,6 +17,9 @@ internal sealed class BreakTimeMessageDialog : Form
     private const int TextMaxHeight = 360;
     private const int ButtonMinWidth = 88;
 
+    private const string EmojiFontFamily = "Segoe UI Emoji";
+
+    private readonly Font _textFont;
     private bool _acknowledged;
 
     /// <summary>Creates the dialog for the text (line breaks already in the platform's form).</summary>
@@ -51,7 +54,10 @@ internal sealed class BreakTimeMessageDialog : Form
         okButton.Click += (_, _) => Acknowledge();
         AcceptButton = okButton;
 
-        Controls.Add(CreateLayout(displayText, okButton));
+        // GDI draws emojis only from an emoji font (smoke check: boxes with the dialog font). "Segoe UI Emoji" also has the
+        // Latin letters, so the whole text uses it, monochrome (ADR-014 §3, AC-31).
+        _textFont = new Font(EmojiFontFamily, Font.SizeInPoints, FontStyle.Regular, GraphicsUnit.Point);
+        Controls.Add(CreateLayout(displayText, okButton, _textFont));
         ResumeLayout(false);
         PerformLayout();
     }
@@ -81,7 +87,18 @@ internal sealed class BreakTimeMessageDialog : Form
         Close();
     }
 
-    private static TableLayoutPanel CreateLayout(string displayText, Button okButton)
+    /// <inheritdoc />
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _textFont.Dispose();
+        }
+
+        base.Dispose(disposing);
+    }
+
+    private static TableLayoutPanel CreateLayout(string displayText, Button okButton, Font textFont)
     {
         var layout = new TableLayoutPanel
         {
@@ -98,19 +115,20 @@ internal sealed class BreakTimeMessageDialog : Form
             Margin = new Padding(0, 0, Spacing, 0),
         };
         layout.Controls.Add(icon, 0, 0);
-        layout.Controls.Add(CreateText(displayText), 1, 0);
+        layout.Controls.Add(CreateText(displayText, textFont), 1, 0);
         layout.Controls.Add(okButton, 1, 1);
         return layout;
     }
 
     /// <summary>The text in a panel that scrolls only when the text is very long.</summary>
-    private static Panel CreateText(string displayText)
+    private static Panel CreateText(string displayText, Font textFont)
     {
         var label = new Label
         {
             AutoSize = true,
             MaximumSize = new Size(TextMaxWidth, 0),
             UseMnemonic = false,
+            Font = textFont,
             Text = displayText,
             Margin = Padding.Empty,
         };
