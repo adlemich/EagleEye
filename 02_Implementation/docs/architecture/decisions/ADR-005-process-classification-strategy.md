@@ -1,6 +1,6 @@
 # ADR-005: Process Classification Strategy — Ignore, Allow, Block
 
-**Status**: Accepted (amended for usage recording with US-004, proposed with the US-004 implementation plan)
+**Status**: Accepted (amended for usage recording with US-004; amendment for break-time enforcement proposed with the US-005 implementation plan)
 **Date**: 2026-09-20
 **Deciders**: Michael (project owner), ARC
 
@@ -11,6 +11,11 @@
 > 3. **Seconds** (FR-SVC-012 v1.4): usage is tracked in seconds, credited at least every 5 s, with the "active" definition and clock rules of ADR-012. The sentence "Usage time is tracked (accumulated per poll interval)" below is refined by ADR-012.
 > 4. **Identity**: usage records identify an app by its full program path (US-004 OQ-2, ADR-012 §1). Matching for allow-lists (by executable name, below) is decided again when allow-lists come.
 > 5. **Display names**: the source order below is refined for recording by ADR-012 §1 (package display name for Store apps, then file description, then process name; no online lookup in US-004). The `AppNameCache` table is not introduced; the display name is stored with each app record.
+
+> **Amendment 2026-10-10 (US-005, ADR-013; proposed, approved with the US-005 implementation plan)**
+>
+> 1. **First enforcement: break times at app start.** US-005 enforces only break times, only for **apps** (US-004 definition, ADR-011 §4) and only at **app start** (ADR-013 §3). The allow-list tiers and the deny-by-default model below stay the target for the allow-list story.
+> 2. **Ignore list (Tier 1) as code, by path.** The enforcement ignore list is a shipped, code-defined list (`EnforcementIgnoreList`, ADR-013 §6), matched by **full path under `%SystemRoot%`**, not by executable name (a renamed program must not escape, ADR-011 T-10). The `IgnoreList` table is not introduced. Task Manager and the Settings app are not ignored (US-005 OQ-3).
 
 ---
 

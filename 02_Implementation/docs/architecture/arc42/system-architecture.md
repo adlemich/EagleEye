@@ -1,7 +1,7 @@
 # EagleEye — System Architecture
 
-*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); US-004 amendment proposed with the US-004 plan*
-*Maintainer: ARC Agent | Last Updated: 2026-10-07*
+*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); US-004 amendment proposed with the US-004 plan; US-005 amendment proposed with the US-005 plan*
+*Maintainer: ARC Agent | Last Updated: 2026-10-10*
 
 > **Amendment 2026-10-03 (ADR-007)**: Windows desktop target added to the ParentApp; two-machine development; manual acceptance testing. Affected: §1.1, §2.1, §2.2, §3.2, §4.2, §5.5, §7, §8.10, §9. Amendments approved by Michael on 2026-10-03.
 >
@@ -12,6 +12,8 @@
 > **Amendment 2026-10-07 (US-003, approved with the US-003 implementation plan)**: account inventory and selection, service file logging with an own rolling file provider in the admin-only folder `%ProgramData%\EagleEye\logs\`. Affected: §4.2, §5.2, §5.3, §5.5, §7.1, §8.4, §8.10, §11 R-8, §12.
 >
 > **Amendment 2026-10-07 (US-004, ADR-011, ADR-012) — proposed, approved together with the US-004 implementation plan**: session agent (the service executable in agent mode, SYSTEM, one per watched session) for app observation; usage accounting in seconds (active time, monotonic clock, day split, per-tick persistence); usage state areas per account and day; ADR-005 amended (Explorer, seconds). Affected: §5.2 (Monitoring, Statistics), §6.2 (new part 6.2.1), §7, §7.1, §8.3, §8.4, §8.6, §8.7, §9, §11 (R-10, R-11), §12.
+>
+> **Amendment 2026-10-10 (US-005, ADR-013, ADR-014) — proposed, approved together with the US-005 implementation plan**: break times per account (state area `AccountRules:{sid}` with field-level writes) and break-time enforcement **at app start**: blocked starts are decided in the accounting loop before usage accounting; the session agent posts `WM_CLOSE`, the service terminates the kill set after 20 s; history of blocked starts; the service binds tray connections to sessions itself and asks the tray client of the session to show the display text in a topmost dialog. ADR-003, ADR-005, ADR-006, ADR-011 and ADR-012 amended. Affected: §5.2 (Monitoring, Enforcement, Configuration, Communication), §5.4, §6.2 (new part 6.2.2, old 6.2.2 becomes 6.2.3), §8.3, §8.4, §8.6, §8.8, §8.9, §9, §11 (R-6, R-7 corrected, R-13, R-14), §12.
 
 ---
 
@@ -304,8 +306,8 @@ PAIR --> COMM : pushes pairing code to tray
 |-------------------|---------------|
 | **Communication** | Hosts two SignalR hubs on Kestrel, each bound to its own endpoint (ADR-008): `ParentHub` (`/hubs/parent`, HTTPS port 5443) for parent apps and `TrayHub` (`/hubs/tray`, HTTP `localhost:5080`) for tray clients. A default-deny hub filter allows only `[AllowUnpaired]` methods for unpaired parent connections. Routes incoming queries and write commands to the state owner of the affected state area, returns results. Pushes events and full-state snapshots to connected clients via SignalR groups (`Parents`, `Tray:{userSid}`). Every stored change is broadcast as a full snapshot with a revision to all paired apps, including the sender (ADR-010). Clients fetch the full state themselves after every (re)connect; the service does not push on connect. |
 | **Monitoring** | Observes the **apps** (Task Manager "Apps" group) in the sessions of accounts under parental control through a **session agent** per watched session: the service executable started in agent mode (`--session-agent`) as SYSTEM inside the session, scanning top-level windows about once per second and reporting `{pid, kind}` over an inherited anonymous pipe (ADR-011). Tracks session state ("in use": WTS `Active` and unlocked; SCM session and power events plus reconciliation). Resolves program path, owner and display name per process. *(US-004.)* Later: classifies processes as ignored/allowed/blocked (ADR-005) and detects pause-window and budget-expiry transitions. |
-| **Enforcement** | Terminates processes using the two-phase graceful-then-force pattern (ADR-006): sends `WM_CLOSE` first, waits up to the configurable timeout (default 30s), then calls `Process.Kill(entireProcessTree: true)`. Used for blocked-app kills (immediate, no warning), budget-expiry shutdowns (after budget warnings), and pause-window shutdowns (after pause warnings). Pushes enforcement events to all connected clients. |
-| **Configuration** | Reads and writes per-user configuration in the SQLite database (allow-lists, budgets, pause windows). Reads general settings from the YAML config file. Validates changes. Notifies other components on config update. |
+| **Enforcement** | Terminates processes using the two-phase graceful-then-force pattern (ADR-006): sends `WM_CLOSE` first, waits up to the configurable timeout (default 30s), then calls `Process.Kill(entireProcessTree: true)`. Used for blocked-app kills (immediate, no warning), budget-expiry shutdowns (after budget warnings), and pause-window shutdowns (after pause warnings). Pushes enforcement events to all connected clients. *(US-005, ADR-013, proposed)* First enforcement: **break times at app start**. `BreakTimeGate` in the accounting loop decides blocked starts before usage accounting (in-memory rules, local time of the service PC) and removes blocked processes from usage; `BlockedStartSequence` asks the tray client of the session to show the display text (ADR-014), has the **session agent** post `WM_CLOSE` to the app's windows, waits 20 s, then the **service** terminates the **kill set** (program path or process, plus descendants, minus ignore list, EagleEye, Explorer, frame host and other open apps) with `TerminateProcess`; history `BlockedStarts` and log. `Process.Kill(entireProcessTree: true)` is not used. |
+| **Configuration** | Reads and writes per-user configuration in the SQLite database (allow-lists, budgets, pause windows). Reads general settings from the YAML config file. Validates changes. Notifies other components on config update. *(US-005, proposed)* `BreakTimeService`: state owner of the state area `AccountRules:{sid}` (break-time entries and display text per account, ADR-010), with an in-memory snapshot used by the enforcement; purges the rules of deleted accounts. |
 | **Statistics** | Keeps the app inventory per account (forever, while the account exists), the start/end history (90 days) and the daily usage **in seconds** (90 days). Credits active time every 5 s with the monotonic clock and splits it at local midnight (ADR-012). Persists every tick in one transaction. State owner of the usage state areas `UsageDay:{sid}:{day}` (ADR-010, ADR-012 §6): serves `GetAccountUsage`, broadcasts changed days at most every 5 s. Purges old data and all data of deleted accounts. *(US-004.)* |
 | **Certificates** | Generates a self-signed X.509 certificate on first run (ECDSA P-256, DPAPI-protected PFX, see §8.1). Loads and provides the certificate for the Kestrel HTTPS binding of the parent endpoint. |
 | **UserAccounts** | Keeps the inventory of local standard (non-admin, non-built-in, not the setup leftover `defaultuser0`) Windows accounts, read via Win32 (`NetUserEnum`, `NetUserGetLocalGroups`) and re-checked every 15 s; changes are broadcast at once. State owner of the state area `UserAccounts` (ADR-010): stores per SID whether the account is under parental control (`AccountSelections`), keeps the selection of accounts that temporarily become admins, forgets it when the SID is deleted (US-003). |
@@ -388,7 +390,8 @@ TC_UI --> TC_COMM : user clicks (About, etc.)
 
 | Internal Component | Responsibility |
 |-------------------|---------------|
-| **Communication** | Connects to the service on `http://localhost:5080/hubs/tray`. Receives budget updates, warnings, pairing codes. Sends version query. Handles reconnect on disconnect (Shared `ReconnectSchedule`, `ConnectBackoff`). |
+| **Communication** | Connects to the service on `http://localhost:5080/hubs/tray`. Receives budget updates, warnings, pairing codes. Sends version query. Handles reconnect on disconnect (Shared `ReconnectSchedule`, `ConnectBackoff`). *(US-005, ADR-014, proposed)* The service binds the connection to the tray client's session itself (TCP owner process, installed path); the tray answers `ShowBreakTimeMessage` with a result (`Shown` / `AlreadyOpen`). |
+| **UI — break-time message** *(US-005, ADR-014, proposed)* | `BreakTimeMessageDialog`: topmost dialog with title "EagleEye", the account's display text (emojis monochrome) and "OK"; closes only with OK/Enter (not Esc/Alt+F4, never blocks sign-out); one at a time; tries to take the keyboard focus within Windows' foreground rules. |
 | **UI** | Manages the `NotifyIcon` (system tray), popup notifications (balloon tips), the pairing-code window (small topmost window, shown in the taskbar, closes at code expiry, replaced by a newer code; ADR-008 §6), remaining-time summary window, optional topmost overlay, About dialog, connection-status indicator. |
 
 ### 5.5 Level 2 — EagleEye.ParentApp
@@ -513,7 +516,37 @@ end
 @enduml
 ```
 
-#### 6.2.2 Enforcement (later stories)
+#### 6.2.2 Break Time — Blocked App Start (US-005; ADR-013, ADR-014; proposed)
+
+```plantuml
+@startuml Blocked Start
+participant "Kid's session\n(new app window)" as WIN
+participant "Session agent\n(SYSTEM)" as AG
+participant "Accounting loop\n+ BreakTimeGate" as GATE
+participant "BlockedStartSequence" as SEQ
+participant "TrayHub →\ntray client (session)" as TRAY
+database "SQLite\nBlockedStarts" as DB
+
+AG -> WIN : EnumWindows (≈1 s)
+AG -> GATE : report {pid, kind} (stdout)
+GATE -> GATE : controlled account? entry in effect\n(local weekday/time)? T1 / T2 / baseline
+GATE -> GATE : remove blocked PIDs from the report\n(no usage, no instance)
+GATE -> SEQ : start (t₀ = detection)
+SEQ -> DB : insert record (outcome open)
+SEQ -> TRAY : ShowBreakTimeMessage(text) → Shown / AlreadyOpen (≤ 3 s)
+SEQ -> AG : close command (stdin)
+AG -> WIN : PostMessageW(WM_CLOSE) to the app windows
+alt all processes of the kill set gone within 20 s
+  SEQ -> DB : outcome "closed gracefully"
+else still running at t₀ + 20 s
+  SEQ -> SEQ : recompute kill set,\nTerminateProcess (service, session 0)
+  SEQ -> DB : outcome "terminated by force"
+end
+SEQ -> SEQ : log entry (outcome, message state)
+@enduml
+```
+
+#### 6.2.3 Enforcement (later stories)
 
 ```plantuml
 @startuml Process Monitoring
@@ -891,7 +924,7 @@ The server pushes events to clients by invoking methods on the client callback i
 
 The Windows service is the **single source of truth**. Changes are propagated event-driven through the service: a parent app sends its change to the service, the service stores it and broadcasts the stored state to all connected apps, including the sender. The sender uses the broadcast to confirm its write; the other apps use it as the trigger to update their views and local data. See ADR-010 (refines ADR-003 Pattern 3) for the full rules and rationale.
 
-1. **State areas.** State is partitioned into areas (US-003: `UserAccounts`; later e.g. `UserConfig` per SID, `PairedDevices`, `GeneralSettings`). Each area has a snapshot DTO with `Revision` and `LastChangeRequestId`, a query `GetXxx()`, a broadcast `OnXxxChanged(snapshot)` and write commands `SetXxx(Guid requestId, …)` returning `StateWriteAckDto(Revision)`. *(US-004, proposed)* Usage is split into **keyed areas per account and day** (`UsageDay:{sid}:{day}`, `DayUsageDto`), fetched per account with `GetAccountUsage(sid)` and broadcast with `OnDayUsageChanged` only for changed days, at most every 5 s per account; it has no write commands (ADR-012 §6).
+1. **State areas.** State is partitioned into areas (US-003: `UserAccounts`; later e.g. `UserConfig` per SID, `PairedDevices`, `GeneralSettings`). Each area has a snapshot DTO with `Revision` and `LastChangeRequestId`, a query `GetXxx()`, a broadcast `OnXxxChanged(snapshot)` and write commands `SetXxx(Guid requestId, …)` returning `StateWriteAckDto(Revision)`. *(US-004, proposed)* Usage is split into **keyed areas per account and day** (`UsageDay:{sid}:{day}`, `DayUsageDto`), fetched per account with `GetAccountUsage(sid)` and broadcast with `OnDayUsageChanged` only for changed days, at most every 5 s per account; it has no write commands (ADR-012 §6). *(US-005, proposed)* Break times are the keyed area `AccountRules:{sid}` (`AccountRulesDto`: entries and display text of one account), fetched with `GetAccountRules(sid)`, broadcast with `OnAccountRulesChanged`, and changed with **field-level** write commands (add, delete, on/off, start or end time, one weekday, display text), so that "last write wins" applies per value and a write to an entry that another app deleted is rejected.
 
 2. **Every stored change triggers one broadcast.** The area's state owner in the service serializes writes, stores, increments the revision, logs, broadcasts the **full snapshot** to the group `Parents` (all paired connections, **including the sender**) and then returns the ack. Changes the service makes itself (e.g. Windows accounts changed) are broadcast the same way with `LastChangeRequestId = null`. Last write received wins.
 
@@ -915,6 +948,7 @@ All application data is stored in SQLite databases. Each EagleEye component has 
 
 - **UserConfig** — per-user allow-list, per-app time budgets (7 weekdays), pause windows (7 weekdays). Keyed by Windows SID (survives username renames).
 - **AppRecords**, **AppInstances**, **DailyUsage** *(US-004, migration 3, ADR-012)* — app inventory per account (identity: account SID + program path, kept forever while the account exists), start/end history (90 days, last-seen time for crash recovery) and seconds per app and local day (90 days). Foreign keys with `ON DELETE CASCADE` from `AppRecords`, so deleting an account's records purges everything. These replace the planned `UsageStatistics` table below; the `AppNameCache` is not needed (the display name is stored per app record).
+- **BreakTimeEntries**, **AccountDisplayTexts**, **BlockedStarts** *(US-005, migration 4, ADR-013, proposed)* — break-time entries per account SID (on/off, start and end minute, weekday bit mask, creation order), the display text per account (no row = default text), and the history of blocked starts (time of start and detection, account, app, entry in effect, outcome, seconds until gone, message state; no foreign keys, 90 days). These are the first part of the planned **UserConfig**.
 - *(original plan)* **UsageStatistics** — per-user, per-app daily usage minutes. Indexed by date. Rows older than 90 days are purged automatically during the midnight maintenance cycle.
 - **PairedDevices** — registered parent apps with device names and authentication credentials.
 - **AccountSelections** — per Windows SID whether the account is under parental control (US-003, FR-SVC-072 to FR-SVC-074). A row exists only for accounts the parent has ticked or unticked; no row = not under parental control. Rows of accounts that became admins are kept; rows of deleted SIDs are removed. The account inventory itself is not stored: it is read from Windows. State revisions (ADR-010) are not stored either.
@@ -981,7 +1015,7 @@ YAML files are parsed at startup using `YamlDotNet`. If a YAML file is missing, 
 
 ### 8.6 Statistics Retention
 
-Daily usage (`DailyUsage`, **seconds** of use per application per day per account) and the start/end history (`AppInstances`) in `EagleEye.Service.db` are retained for 90 days (FR-SVC-043 v1.4). Older data is purged at the first accounting tick after local midnight and at service start. The app inventory (`AppRecords`) has no age limit. When an account is deleted on the PC, all its data is purged after the next inventory check (FR-SVC-047, US-004).
+Daily usage (`DailyUsage`, **seconds** of use per application per day per account) and the start/end history (`AppInstances`) in `EagleEye.Service.db` are retained for 90 days (FR-SVC-043 v1.4). Older data is purged at the first accounting tick after local midnight and at service start. The app inventory (`AppRecords`) has no age limit. When an account is deleted on the PC, all its data is purged after the next inventory check (FR-SVC-047, US-004). *(US-005, proposed)* The history of blocked starts (`BlockedStarts`) is also kept for 90 days and purged with the usage data; the break-time entries and the display text have no age limit and are purged with the account.
 
 ### 8.7 Time Tracking and Budget Reset
 
@@ -994,6 +1028,8 @@ Daily usage (`DailyUsage`, **seconds** of use per application per day per accoun
 ### 8.8 Process Classification
 
 See ADR-005 for the full rationale, ignore-list examples, and alternatives considered.
+
+> *(US-005, ADR-013, proposed)* The first enforcement (break times) works on **apps at app start**, not on every process per poll cycle. The ignore list is a shipped code list matched by **full path under `%SystemRoot%`** (`EnforcementIgnoreList`), not a table matched by name. The tiers below remain the target for allow-lists.
 
 Every process running under a standard-user session is classified into exactly one of three tiers, evaluated in priority order:
 
@@ -1012,6 +1048,8 @@ Every process running under a standard-user session is classified into exactly o
 ### 8.9 Process Termination Pattern
 
 See ADR-006 for the full rationale, alternatives considered, and the complete termination sequence.
+
+> *(US-005, ADR-006 amendment, ADR-013, proposed)* Phase 1 is carried out by the **session agent** (`PostMessageW(WM_CLOSE)` to every app window of the affected processes; the service in session 0 cannot reach them). Phase 2 is `TerminateProcess` by the **service** on the computed **kill set**, not `Process.Kill(entireProcessTree: true)`. For break-time blocked starts the timeout is a fixed 20 s. The table below remains the target for budgets and allow-lists.
 
 All process terminations use a **two-phase graceful-then-force pattern**:
 
@@ -1145,6 +1183,10 @@ All architectural decisions are recorded as ADRs in `02_Implementation/docs/arch
 | ADR-010 | Event-Driven State Propagation — Service Broadcasts with Revisions | Accepted |
 | ADR-011 | Session Agent for App Observation — a SYSTEM Helper per Watched Session | Proposed — approved with the US-004 implementation plan |
 | ADR-012 | Usage Accounting — Active Time, Clocks, Day Boundary, Persistence and Usage State Areas | Proposed — approved with the US-004 implementation plan |
+| ADR-013 | Break-Time Enforcement at App Start — Blocked Starts, Close Sequence and Kill Set | Proposed — approved with the US-005 implementation plan |
+| ADR-014 | Session-Bound Tray Connections and the Kid's Message Box | Proposed — approved with the US-005 implementation plan |
+
+*(US-005, proposed)* Amendments marked in ADR-003 (tray groups replaced by ADR-014), ADR-005 (ignore list by path), ADR-006 (agent closes, service terminates the kill set, 20 s), ADR-011 (command channel, `PostMessageW(WM_CLOSE)`), ADR-012 (blocked processes not counted, time-zone refresh).
 
 ---
 
@@ -1240,13 +1282,15 @@ maint --> maint3
 | R-3 | MAUI limitations on macOS Catalyst | Medium | Medium | Validate tray-like features and window management on real hardware in the first user story. Fall back to menu-bar app pattern if needed. |
 | R-4 | WinForms topmost overlay z-order lost in some fullscreen games | Medium | Low | Documented as v1 limitation (no DirectX overlay). Use `WS_EX_TOPMOST` + timer-based re-assertion. |
 | R-5 | SQLite database corruption on service crash | Very Low | High | SQLite WAL mode provides crash resilience out of the box. Regular `PRAGMA integrity_check` on startup. |
-| R-6 | Standard-user child kills TrayClient process | Low | Low | TrayClient is informational only; enforcement continues server-side. TrayClient restarts automatically. Consider process-protection techniques in later iterations. |
-| R-7 | Clock manipulation by child to circumvent budget/pause | Low | Medium | Service uses monotonic timers for budget countdown (not wall-clock). Pause-window checks use wall clock but service runs as SYSTEM — standard user cannot change system time. |
+| R-6 | Standard-user child kills TrayClient process | Low | Low | TrayClient is informational only; enforcement continues server-side. TrayClient restarts automatically. Consider process-protection techniques in later iterations. *(US-005, proposed)*: then the break-time message is not shown; the app is closed anyway and the log says "message not shown" (US-005 OQ-9, AC-33). |
+| R-7 | Clock manipulation by child to circumvent budget/pause | Low | Medium | Service uses monotonic timers for budget countdown (not wall-clock). Pause-window checks use wall clock but service runs as SYSTEM — standard user cannot change system time. *(Corrected with US-005, proposed)*: a standard user **cannot** change the clock, but **can change the time zone** by default (`SeTimeZonePrivilege` is granted to Users), which shifts the local time used for break times. See R-13. |
 | R-8 | Kid pairs their own parent app: the pairing code is shown in the kid's tray session (US-002 Q-1), and the per-user parent app installer needs no admin rights, so a kid can pair an app on the same PC or another device. From the first configuration story on, such an app could change the kid's own rules. | Medium | High | **Accepted risk** (Michael, 2026-10-04): no technical protection for now; revisit before or with the first configuration story. US-003 (first configuration story, OQ-7, Michael 2026-10-07): stays accepted, because the account selection has no effect yet; a protection must be decided before the first enforcement story. Candidate mitigations: show the code only in admin sessions / the Event Log, or require an admin confirmation on the service PC. Paired devices are visible and removable via device management (FR-APP-015). |
 | R-9 | Service certificate lost or regenerated (e.g. `%ProgramData%\EagleEye` deleted): every paired app rejects the new certificate (pin mismatch) | Low | Medium | Uninstalling the service keeps `%ProgramData%\EagleEye`. In US-002, recovery means reinstalling the parent app; a guided re-pairing follows with device management (ADR-008). |
 | R-10 | The "Apps" window rule (ADR-011 §4) differs from Task Manager's undocumented rule for unusual programs (e.g. launchers or splash screens with an unowned visible window): such a program could be recorded although Task Manager lists it as a background process, or vice versa *(US-004, proposed)* | Medium | Low | The rule is pure and unit-tested; differences found in testing are added as cases. Usage is observation only in US-004. |
 | R-11 | Memory of the session agent: one extra .NET process (about 30 to 40 MB) per watched session *(US-004, proposed)* | Low | Low | Usually one kid session. If needed, the agent becomes a Native AOT executable (ADR-011 Alternatives). |
 | R-12 | A SYSTEM agent on the kid's desktop and SYSTEM parsing of kid-controlled data could be abused for privilege escalation; a kid can also under-report usage by manipulating window styles, or disguise app names *(US-004, proposed)* | Low (escalation) / Medium (evasion) | Critical / Medium | ADR-011 "Security Analysis" and §7 hardening: privilege-stripped System-integrity agent token, no windows/messages/hooks, explicit DACL and environment, path policy (no remote paths), impersonated and managed file parsing. Coding guidelines §12.4. Residual evasion and name disguise accepted for observation (US-004 Q-7, Q-8). |
+| R-13 | Kid escapes a break time by changing the Windows **time zone** (allowed for standard users by default); break times use the local time of the service PC (US-005 OQ-5) *(US-005, proposed)* | Medium | High | Decided with the US-005 plan (Q-2): the service logs every time-zone change as a Warning; proposed hardening: the installer removes the right "Change the time zone" from the Users group and restores it at uninstall. |
+| R-14 | Break-time enforcement is **window-based** (apps only, at app start): a kid with tools can strip a window's app status (ADR-011 T-10) or start programs without an app window, and they are not blocked; apps already running before a break time keep running (US-005 AC-25, next story) *(US-005, proposed)* | Medium | Medium | Accepted for US-005 (Q-3). Process-based deny-by-default enforcement comes with allow-lists (ADR-005); running apps are ended at the start of a break time by the next story (TC-042). |
 
 ---
 
@@ -1257,6 +1301,9 @@ maint --> maint3
 | **Active (usage)** | An app is active while it is open (Task Manager "Apps" group) and a session of its account is in use (unlocked, not switched away, PC awake) (US-004 AC-12, ADR-012). |
 | **App** | A program with a window of its own in the user's session, as listed in Task Manager's "Apps" group; identified per account by its program path (US-004, ADR-011, ADR-012). |
 | **Session agent** | The service executable started in agent mode as SYSTEM inside a watched user session; it reports the session's app windows to the service (ADR-011). |
+| **Break time (Ruhezeit)** | One entry of a controlled account: on/off, start and end time within one day (23:59 = midnight), weekdays. In effect from the start minute (inclusive) to the end minute (exclusive) in the local time of the service PC; app starts are blocked while one is in effect (US-005, TC-010 to TC-014). Called *pause window* in older parts of this document. |
+| **Blocked start** | An app start (first app window) of a controlled account while a break time is in effect; closed gracefully, after 20 s by force, recorded in `BlockedStarts` (ADR-013). |
+| **Kill set** | The processes ended for a blocked start: the app's program path (or the single new process) plus descendants, minus exemptions and other open apps (ADR-013 §5). |
 | **Allow-list** | The set of applications a parent has explicitly permitted a child to use. Everything not on this list (and not ignored) is blocked. |
 | **Blocked process** | A process that is neither on the ignore list nor the allow-list. Terminated on detection. |
 | **Budget** | See *Time budget*. |

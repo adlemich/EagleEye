@@ -1,7 +1,7 @@
 # EagleEye — Product Coding Guidelines
 
 *Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07)*
-*Maintainer: ARC Agent | Last Updated: 2026-10-07*
+*Maintainer: ARC Agent | Last Updated: 2026-10-10*
 
 > **Amendment 2026-10-04 (US-002, ADR-008, ADR-009)**: §10.1, §10.2, §10.4 (`ParentApp.Core`, Shared `Communication/` and `Data/`), §12.2 (pairing code in a topmost window), §16.1 (packaging per ADR-009, token storage via DPAPI `ISecretStore`).
 
@@ -12,6 +12,8 @@
 > **Amendment 2026-10-07 (US-003, approved with the US-003 implementation plan)**: §9 (EagleEye file logging provider; service logs in the admin-only `logs\` folder), §10.1 (`Shared/Logging`, `Service/UserAccounts`, `ParentApp.Core/Accounts`).
 
 > **Amendment 2026-10-07 (US-004, ADR-011, ADR-012) — proposed, approved together with the US-004 implementation plan**: §10.1 (`Service/SessionAgent`, `Service/Monitoring`, `Service/Statistics`, `ParentApp.Core/Reports`), §12.1 (session agent, Win32 interop, monotonic durations), §12.4 (SYSTEM code and kid-controlled input, from the ADR-011 security analysis).
+
+> **Amendment 2026-10-10 (US-005, ADR-013, ADR-014) — proposed, approved together with the US-005 implementation plan**: §12.2 (tray requests with a result, kid-facing acknowledged dialogs), §12.4 (the agent's single `PostMessageW(WM_CLOSE)` exception, terminating kid processes in the service, service → agent commands), §16.1 (editable tables, WinUI `CheckBox` width, typed times, save on blur, `\r` line breaks), §10.1 (folders `Service/Rules`, `Service/Enforcement`, `ParentApp.Core/Rules`).
 
 This document defines the coding standards all EagleEye components must follow. It complements but does not duplicate the system architecture (`arc42/system-architecture.md`) and ADRs — refer to those for architectural decisions, component responsibilities, and design rationale.
 
@@ -497,7 +499,8 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 ├── EagleEye.Service/             # Windows service
 │   ├── Communication/            # ParentHub, TrayHub, connection management
 │   ├── SessionAgent/             # Agent mode (--session-agent): window scan, "Apps" rule, protocol (ADR-011)
-│   ├── Enforcement/              # ProcessEnforcer, termination logic
+│   ├── Enforcement/              # Break-time gate, blocked-start sequence, kill set, process terminator (ADR-013, US-005)
+│   ├── Rules/                    # BreakTimeService (state owner AccountRules), schedule evaluation, repository access (US-005)
 │   ├── Configuration/            # ConfigurationManager, YAML reader
 │   ├── Statistics/               # UsageTracker, UsageService (usage state areas), accounting loop, purge (ADR-012)
 │   ├── Certificates/             # CertificateManager, TLS setup
@@ -516,6 +519,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 │   ├── Abstractions/             # ISecretStore, ISecretProtector, IThemeService, IDialogService, ...
 │   ├── Communication/            # SignalR client, certificate trust, ConnectionCoordinator, ParentHubGateway, StateReplica
 │   ├── Accounts/                 # Feature model of the state area UserAccounts (one folder per feature area)
+│   ├── Rules/                    # Feature model of the state area AccountRules (US-005)
 │   ├── Data/                     # SQLite (pairing, settings, secrets), YAML reader
 │   ├── ViewModels/               # MVVM view models
 │   └── Resources/                # AppTexts (de, en)
@@ -617,6 +621,8 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 - **No admin privileges required** — the TrayClient runs under the kid's standard-user account.
 - **UI thread marshalling**: All UI updates from SignalR callbacks must be marshalled to the UI thread via `Control.Invoke()` or `SynchronizationContext.Post()`. SignalR callbacks arrive on thread-pool threads.
 - **Connection resilience**: Use `HubConnectionBuilder` with `.WithAutomaticReconnect()` (Shared `ReconnectSchedule`) for automatic reconnection to the service on the loopback tray endpoint `http://localhost:5080/hubs/tray` (ADR-008).
+- *(US-005, ADR-014; proposed with the US-005 plan)* **Requests with a result** (`ShowBreakTimeMessage`): register with `On<TArg, TResult>`; the handler only posts the work to the UI thread and returns at once (never waits for user input; the service waits at most 3 s).
+- *(US-005)* **Kid-facing dialogs that must be acknowledged** are `Form`s with `TopMost = true`, `ShowInTaskbar = true`, no control box, `AcceptButton` = OK; Esc and Alt+F4 are ignored, but `CloseReason.WindowsShutDown` and `TaskManagerClosing` always close the form (never block sign-out). Text is shown exactly as received (no sanitizing of emojis or `U+200D`/`U+FE0F`), with `TextRenderer`/GDI. Foreground: `Activate()`; if not foreground afterwards, one synthetic Alt press/release (`SendInput`) and `SetForegroundWindow` (ADR-014 §3). The Win32 calls live in one small `NativeMethods`-style class.
 
 ### 12.3 Windows-Specific Security
 
@@ -635,7 +641,8 @@ Everything the kid's programs control is **untrusted input** for the SYSTEM serv
 - **Identity**: decide special treatment (EagleEye's own programs, Explorer, ApplicationFrameHost) by **full path in the protected location**, never by process name or window class alone.
 - **The session agent**:
   - never creates a window or message-only window, never pumps messages, installs no hooks, and uses no COM, shell, UIA or DPI API;
-  - calls only window functions that do not send messages (never `GetWindowText`, `SendMessage*`, `PostMessage*`);
+  - calls only window functions that do not send messages (never `GetWindowText`, `SendMessage*`, `PostMessage*`); *(US-005, ADR-011 amendment, proposed)* the **only** exception is `PostMessageW(hwnd, WM_CLOSE, 0, 0)` in the close command, to windows the agent itself classified as app windows of a target whose creation time it verified;
+  - never opens processes with rights beyond `PROCESS_QUERY_LIMITED_INFORMATION` (termination is done by the service);
   - reads no window titles;
   - calls `SetDefaultDllDirectories` first.
 - **Starting SYSTEM child processes**:
@@ -645,6 +652,8 @@ Everything the kid's programs control is **untrusted input** for the SYSTEM serv
   - absolute application name, fixed command line, current directory = installation folder;
   - `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` with only the intended handles.
 - **Channels**: limit line length, item counts and queue sizes (keep-latest), and validate every identifier (PID → session, owner, creation time).
+- *(US-005, ADR-013, proposed)* **Terminating kid processes** (service only): open by PID, verify the creation time **on the opened handle**, then `TerminateProcess` on that same handle; never terminate by PID alone and never use `Process.Kill(entireProcessTree: true)`. Never terminate processes of other sessions or owners, EagleEye's own programs, the real Explorer or ApplicationFrameHost, or anything on `EnforcementIgnoreList` (matched by full path).
+- *(US-005)* **Service → agent commands** are built only by the service from validated process facts; the agent parses them strictly (line limit, schema, target limit) like the service parses reports.
 - **Debug-only switches** (`EAGLEEYE_*` environment variables, Debug launchers) are inside `#if DEBUG`; Release builds must not contain them.
 - **Review**: changes to `SessionAgent/` and to the Win32 launcher or metadata code need a short security note in the implementation report: which of these rules apply, and how they are met.
 
@@ -733,6 +742,7 @@ Everything the kid's programs control is **untrusted input** for the SYSTEM serv
 - **Packaging** (ADR-009, supersedes copy deployment): unpackaged (`WindowsPackageType=None`), self-contained (`SelfContained`, `WindowsAppSDKSelfContained=true`), `win-x64`, no MSIX. Set `RuntimeIdentifier` and the self-contained properties **in the csproj for the Windows TFM only**; do not pass `-r` / `--self-contained` on the command line, which also applies to the Android target and breaks its restore. The publish output is packaged by `installer/windows/parentapp-setup.iss` (Inno Setup, **per user**, `PrivilegesRequired=lowest`, own `AppId`, default folder `%LocalAppData%\Programs\EagleEye Parent App`) into `03_Delivery/windows/EagleEye-ParentApp-Setup-<version>.exe`, built by `scripts/package-windows.ps1 -Target ParentApp`. Uninstall removes the program folder, the Start menu entry and `%LocalAppData%\EagleEye\`; repair/update keeps the app data.
 - **Same communication model** (FR-APP-091): the Windows app is an ordinary `ParentHub` client (TLS + pairing), whether it runs on the service PC or remotely. Never add a local shortcut such as direct SQLite access, named pipes or skipping pairing on `localhost`.
 - **Same-PC caveat**: if the parent app runs on the PC that hosts the service, it runs under the parent's admin account. Admin accounts are never monitored, so EagleEye does not enforce rules on the parent app itself.
+- *(US-005, proposed with the US-005 plan)* **Editable tables** (Rules page): `Grid` rows in a `BindableLayout` with fixed column widths (ISSUE-006 lesson); row view models are **merged by id**, never replaced on a snapshot (a replaced row loses the focus and the text being typed). WinUI's `CheckBox` has a default `MinWidth` of about 120: remove it for table cells with a handler mapping in `MauiProgram` (`#if WINDOWS`, `CheckBoxHandler.Mapper.AppendToMapping(…, (h, _) => h.PlatformView.MinWidth = 0)`). Times are typed in an `Entry` and parsed in Core (`TimeOfDayText`), not with `TimePicker` (no typing on Windows, 12/24 h by locale). Save on `Unfocused` and `Completed`, and flush explicitly before the page or the account selection changes (`Unfocused` does not fire when a view is removed). WinUI's `TextBox` (MAUI `Editor`) returns line breaks as `\r`: normalize in Core before comparing or sending. Icons that must work in light and dark mode use `AppThemeBinding` with two image variants.
 
 ### 16.2 Windows File Paths
 

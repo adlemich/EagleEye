@@ -5,6 +5,8 @@
 **Deciders**: Michael (project owner), ARC
 
 > **Note 2026-10-07 (ADR-010, accepted by Michael 2026-10-07)**: Pattern 3 is refined by ADR-010 "Event-Driven State Propagation": snapshots carry a revision and the correlation id of the write that caused them, write commands take a `requestId` and return `StateWriteAckDto`, the broadcast (which includes the sender) confirms the stored state. **Rule 3 changes**: the service no longer pushes state on connect; the client fetches every area it shows after each (re)connect. Rules 1, 2 and 4 stay. The example signatures below are targets that take the ADR-010 shape when their stories come.
+>
+> **Note 2026-10-10 (US-005, ADR-014; proposed, approved with the US-005 implementation plan)**: the tray side is refined by ADR-014. The service binds each tray connection to a **session** itself (owner process of the loopback TCP connection, verified by the installed tray client's path); the client-asserted `RegisterSession(userSid)` and the groups `Tray:{userSid}` below are not introduced. Kid messages go to one verified connection of the session as a request with a result (`ShowBreakTimeMessage` → `KidMessageResult`). `OnShowPairingCode` still goes to all tray connections.
 
 ---
 
