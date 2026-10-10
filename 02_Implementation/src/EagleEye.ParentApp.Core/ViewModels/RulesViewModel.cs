@@ -217,8 +217,7 @@ public sealed class RulesViewModel : ObservableObject, IBreakTimeRowHost
 
     private void Apply()
     {
-        _selection.Merge(_accounts);
-        SelectedAccount = _selection.Choose(_selectedAccount);
+        _selection.Update(_accounts, _selectedAccount, account => SelectedAccount = account);
         State = _accounts.LoadState switch
         {
             AccountsLoadState.NotAvailable => RulesState.NoData,

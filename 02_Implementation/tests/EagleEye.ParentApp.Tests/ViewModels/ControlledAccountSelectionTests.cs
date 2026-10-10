@@ -11,51 +11,89 @@ public sealed class ControlledAccountSelectionTests
 {
     private readonly Mock<IUserAccountsModel> _accounts = new();
     private readonly ControlledAccountSelection _selection = new();
+    private readonly List<AccountOption?> _selected = [];
 
     [Fact]
-    public void Merge_ControlledAccountsSortedByShownName()
+    public void Update_ControlledAccountsSortedByShownName_FirstSelected()
     {
         Ready(Account("2", "zoe", true), Account("1", "anna", true), Account("3", "tom", false));
 
-        TestSupport.InCulture("de-DE", () => { _selection.Merge(_accounts.Object); return 0; });
+        TestSupport.InCulture("de-DE", () => { Update(null); return 0; });
 
         Assert.Equal(["anna", "zoe"], _selection.Accounts.Select(a => a.DisplayName));
+        Assert.Equal("1", _selected.Single()!.Sid);
     }
 
     [Fact]
-    public void Merge_NotReady_Empty()
+    public void Update_NotReady_EmptyAndNothingSelected()
     {
         Ready(Account("1", "anna", true));
-        _selection.Merge(_accounts.Object);
+        Update(null);
         _accounts.SetupGet(a => a.LoadState).Returns(AccountsLoadState.Loading);
+        _selected.Clear();
 
-        _selection.Merge(_accounts.Object);
+        Update(_selection.Accounts[0]);
 
         Assert.Empty(_selection.Accounts);
+        Assert.Equal([null, null], _selected);
     }
 
     [Fact]
-    public void Choose_KeepsTheCurrentOrTakesTheFirst()
+    public void Update_SelectedStillListed_KeptWithoutClearing()
     {
         Ready(Account("1", "anna", true), Account("2", "zoe", true));
-        _selection.Merge(_accounts.Object);
+        Update(null);
+        _selected.Clear();
 
-        Assert.Equal("2", _selection.Choose(new AccountOption("2", "old name"))!.Sid);
-        Assert.Equal("1", _selection.Choose(new AccountOption("9", "gone"))!.Sid);
-        Assert.Equal("1", _selection.Choose(null)!.Sid);
+        Update(_selection.Accounts[1]);
+
+        Assert.Equal("2", _selected.Single()!.Sid);
     }
 
     [Fact]
-    public void Choose_NoAccounts_Null()
+    public void Update_SelectedRemoved_ClearedBeforeTheEntryIsRemoved()
     {
-        Assert.Null(_selection.Choose(null));
+        Ready(Account("1", "anna", true), Account("2", "zoe", true));
+        Update(null);
+        var zoe = _selection.Accounts[1];
+        var countWhenCleared = -1;
+        Ready(Account("1", "anna", true));
+
+        _selection.Update(_accounts.Object, zoe, account =>
+        {
+            if (account is null)
+            {
+                countWhenCleared = _selection.Accounts.Count;
+            }
+
+            _selected.Add(account);
+        });
+
+        Assert.Equal((2, "1"), (countWhenCleared, _selected[^1]!.Sid));
     }
 
     [Fact]
-    public void Merge_Null_Throws()
+    public void Update_RenamedSelectedAccount_SelectedAgainBySid()
     {
-        Assert.Throws<ArgumentNullException>(() => _selection.Merge(null!));
+        Ready(Account("1", "anna", true));
+        Update(null);
+        var old = _selection.Accounts[0];
+        Ready(Account("1", "anna2", true));
+        _selected.Clear();
+
+        Update(old);
+
+        Assert.Equal([null, new AccountOption("1", "anna2")], _selected);
     }
+
+    [Fact]
+    public void Update_Guards()
+    {
+        Assert.Throws<ArgumentNullException>(() => _selection.Update(null!, null, _ => { }));
+        Assert.Throws<ArgumentNullException>(() => _selection.Update(_accounts.Object, null, null!));
+    }
+
+    private void Update(AccountOption? current) => _selection.Update(_accounts.Object, current, _selected.Add);
 
     private void Ready(params UserAccountDto[] accounts)
     {

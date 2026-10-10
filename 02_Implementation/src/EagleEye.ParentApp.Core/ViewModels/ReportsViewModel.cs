@@ -109,8 +109,7 @@ public sealed class ReportsViewModel : ObservableObject
 
     private void Apply()
     {
-        _selection.Merge(_accounts);
-        SelectedAccount = _selection.Choose(_selectedAccount);
+        _selection.Update(_accounts, _selectedAccount, account => SelectedAccount = account);
         State = _accounts.LoadState switch
         {
             AccountsLoadState.NotAvailable => ReportsState.NoData,
