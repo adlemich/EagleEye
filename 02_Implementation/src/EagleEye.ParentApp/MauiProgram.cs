@@ -3,6 +3,7 @@ using EagleEye.ParentApp.Core.Accounts;
 using EagleEye.ParentApp.Core.Communication;
 using EagleEye.ParentApp.Core.Data;
 using EagleEye.ParentApp.Core.Reports;
+using EagleEye.ParentApp.Core.Rules;
 using EagleEye.ParentApp.Core.ViewModels;
 using EagleEye.ParentApp.Services;
 using EagleEye.ParentApp.Views;
@@ -18,6 +19,11 @@ public static class MauiProgram
     {
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>();
+#if WINDOWS
+        // US-005 (coding guidelines §16.1): WinUI gives a CheckBox a minimum width of about 120; the Rules table needs
+        // narrow checkbox columns (AC-4, 150 % scaling).
+        Microsoft.Maui.Handlers.CheckBoxHandler.Mapper.AppendToMapping("EagleEyeNoMinWidth", (handler, _) => handler.PlatformView.MinWidth = 0);
+#endif
 
         var services = builder.Services;
         var paths = new MauiAppDataPaths();
@@ -48,6 +54,9 @@ public static class MauiProgram
         // Usage areas (US-004, ADR-012).
         services.AddSingleton<IAccountUsageModel, AccountUsageModel>();
 
+        // State area "AccountRules" (US-005, ADR-010).
+        services.AddSingleton<IAccountRulesModel, AccountRulesModel>();
+
         // Platform services.
         services.AddSingleton<IThemeService, MauiThemeService>();
         services.AddSingleton<IDialogService, MauiDialogService>();
@@ -60,9 +69,11 @@ public static class MauiProgram
         services.AddSingleton<StatusBarViewModel>();
         services.AddSingleton<UserAccountsViewModel>();
         services.AddSingleton<ReportsViewModel>();
+        services.AddSingleton<RulesViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<SettingsView>();
         services.AddSingleton<ReportsView>();
+        services.AddSingleton<RulesView>();
         services.AddSingleton<StatusBarView>();
         services.AddSingleton<MainPage>();
 

@@ -51,6 +51,8 @@
   <ItemGroup>
     <!-- App icon: the EagleEye eye motif of the tray client. -->
     <MauiIcon Include="Resources\AppIcon\appicon.svg" Color="#1E7B3A" />
+    <!-- Trash can of the Rules page (US-005), one variant per theme (AppThemeBinding). -->
+    <MauiImage Include="Resources\Images\*.svg" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:core="clr-namespace:EagleEye.ParentApp.Core;assembly=EagleEye.ParentApp.Core"
+             xmlns:vm="clr-namespace:EagleEye.ParentApp.Core.ViewModels;assembly=EagleEye.ParentApp.Core"
+             x:Class="EagleEye.ParentApp.Views.RulesView"
+             x:DataType="vm:RulesViewModel">
+
+    <!-- Rules (US-005 AC-1 to AC-19). The table is built from Grid rows with fixed column widths
+         (40 | 64 | 88 | 88 | 7 × 48), so header and rows line up and scale with the display (ISSUE-006 lesson).
+         Only theme colours and the accent heading bar (AC-4). -->
+    <ScrollView Orientation="Both">
+        <VerticalStackLayout Spacing="8">
+
+            <Label Text="{x:Static core:AppTexts.MenuRules}" Style="{StaticResource PageHeader}" />
+
+            <HorizontalStackLayout Spacing="12" IsVisible="{Binding IsAccountSelectionVisible}">
+                <Label Text="{x:Static core:AppTexts.RulesAccountLabel}" FontAttributes="Bold" VerticalOptions="Center" />
+                <Picker ItemsSource="{Binding Accounts}"
+                        SelectedItem="{Binding SelectedAccount, Mode=TwoWay}"
+                        MinimumWidthRequest="280"
+                        VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <Label Text="{Binding StatusText}" IsVisible="{Binding HasStatus}" />
+
+            <VerticalStackLayout Spacing="8" IsVisible="{Binding IsRulesVisible}">
+
+                <Label Text="{x:Static core:AppTexts.RulesSectionBreakTimes}" Style="{StaticResource SectionHeader}" />
+
+                <Button Text="{x:Static core:AppTexts.RulesAddEntry}"
+                        Command="{Binding AddEntryCommand}"
+                        HorizontalOptions="Start" />
+
+                <Grid ColumnDefinitions="40,64,88,88,48,48,48,48,48,48,48" ColumnSpacing="4">
+                    <Label Grid.Column="1" Text="{x:Static core:AppTexts.RulesColumnOnOff}" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                    <Label Grid.Column="2" Text="{x:Static core:AppTexts.RulesColumnStart}" FontAttributes="Bold" />
+                    <Label Grid.Column="3" Text="{x:Static core:AppTexts.RulesColumnEnd}" FontAttributes="Bold" />
+                    <Label Grid.Column="4" Text="{x:Static core:AppTexts.RulesDayMonday}" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                    <Label Grid.Column="5" Text="{x:Static core:AppTexts.RulesDayTuesday}" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                    <Label Grid.Column="6" Text="{x:Static core:AppTexts.RulesDayWednesday}" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                    <Label Grid.Column="7" Text="{x:Static core:AppTexts.RulesDayThursday}" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                    <Label Grid.Column="8" Text="{x:Static core:AppTexts.RulesDayFriday}" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                    <Label Grid.Column="9" Text="{x:Static core:AppTexts.RulesDaySaturday}" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                    <Label Grid.Column="10" Text="{x:Static core:AppTexts.RulesDaySunday}" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                </Grid>
+
+                <Label Text="{x:Static core:AppTexts.RulesNoEntries}" IsVisible="{Binding ShowNoEntries}" />
+
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Rows}" Spacing="2">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:BreakTimeRowViewModel">
+                            <Grid ColumnDefinitions="40,64,88,88,48,48,48,48,48,48,48" ColumnSpacing="4">
+                                <ImageButton Grid.Column="0"
+                                             Source="{AppThemeBinding Light=trash_light.png, Dark=trash_dark.png}"
+                                             Command="{Binding DeleteCommand}"
+                                             WidthRequest="32" HeightRequest="32" Padding="4"
+                                             BackgroundColor="Transparent"
+                                             VerticalOptions="Center"
+                                             SemanticProperties.Description="{x:Static core:AppTexts.RulesDeleteEntry}"
+                                             ToolTipProperties.Text="{x:Static core:AppTexts.RulesDeleteEntry}" />
+                                <CheckBox Grid.Column="1" IsChecked="{Binding IsActive}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                <Entry Grid.Column="2" Text="{Binding StartText}" MaxLength="5" Keyboard="Numeric"
+                                       VerticalOptions="Center" Unfocused="OnStartUnfocused" Completed="OnStartCompleted" />
+                                <Entry Grid.Column="3" Text="{Binding EndText}" MaxLength="5" Keyboard="Numeric"
+                                       VerticalOptions="Center" Unfocused="OnEndUnfocused" Completed="OnEndCompleted" />
+                                <CheckBox Grid.Column="4" IsChecked="{Binding Monday}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                <CheckBox Grid.Column="5" IsChecked="{Binding Tuesday}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                <CheckBox Grid.Column="6" IsChecked="{Binding Wednesday}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                <CheckBox Grid.Column="7" IsChecked="{Binding Thursday}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                <CheckBox Grid.Column="8" IsChecked="{Binding Friday}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                <CheckBox Grid.Column="9" IsChecked="{Binding Saturday}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                <CheckBox Grid.Column="10" IsChecked="{Binding Sunday}" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+                <Label Text="{Binding ErrorText}" IsVisible="{Binding HasError}" Style="{StaticResource ErrorText}" />
+
+                <Label Text="{x:Static core:AppTexts.RulesDisplayTextLabel}" FontAttributes="Bold" Margin="0,12,0,0" />
+                <Editor Text="{Binding DisplayText}"
+                        MaxLength="{Binding DisplayTextMaxLength}"
+                        AutoSize="TextChanges"
+                        MinimumHeightRequest="100"
+                        WidthRequest="620"
+                        HorizontalOptions="Start"
+                        Unfocused="OnDisplayTextUnfocused" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentView>
