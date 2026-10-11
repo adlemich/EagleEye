@@ -5,7 +5,7 @@
 **Branch**: `feature/US-005-break-times`
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-005/implementation-plan.md` (approved 2026-10-10 with Q-1 to Q-9), ADR-013, ADR-014, amendments of ADR-003/005/006/011/012, coding guidelines §10.1, §12.2, §12.4, §16.1
 **Machine(s) used**: Windows Developer Machine only (see §9)
-**Story status**: Implemented
+**Story status**: Verified/Closed (Michael, 2026-10-11)
 
 ---
 

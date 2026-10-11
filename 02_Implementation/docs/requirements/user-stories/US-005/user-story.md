@@ -1,6 +1,6 @@
 # US-005: Break Times (Ruhezeiten)
 
-**Status**: Implemented (DEV, 2026-10-10; see `US-005/implementation-report.md`)
+**Status**: Verified/Closed (closed by Michael, 2026-10-11; see `02_Implementation/docs/testing/US-005/test-report.md`)
 **Created**: 2026-10-10
 **Approved**: by Michael, 2026-10-10, with his tweaks (status becomes `Analyzed` when the implementation plan is approved)
 **Component(s)**: EagleEye.Service, EagleEye.TrayClient, EagleEye.ParentApp, EagleEye.Shared
@@ -147,6 +147,7 @@ TC-040 to TC-042 (warnings, ending running apps) stay unchanged and come with th
 | 2026-10-10 | Story approved; OQ-1 to OQ-18 answered (proposed defaults accepted, tweaks: timing 10 s + 20 s graceful/force, blocked-start history); requirements v1.5 approved. Changed: AC-22 (detect ≤ 10 s, graceful close, force after 20 s, gone ≤ 30 s), AC-24, AC-28, AC-30 (message box on detection), AC-32, AC-33, OQ-2, OQ-13; added: AC-35, AC-36 (history of blocked starts), OQ-16 to OQ-18, FR-SVC-025, FR-SVC-043 and FR-SVC-047 made precise; FR-SVC-023 now follows ADR-006 | Michael (via the Orchestrator), written by PRO |
 | 2026-10-10 | Implementation plan approved with answers Q-1 to Q-9; ACs adjusted (start = first process, time-zone findings stored, topmost dialog); status `Analyzed`. Changed: Terms (start, blocked start), AC-21, AC-22, AC-25, AC-30, OQ-5, OQ-13, OQ-16, OQ-17, FR-SVC-023, FR-TRAY-022; added: AC-37 (time-zone findings), FR-SVC-026, note on accessibility tools (AC-23), Out of Scope (time-zone right) | Michael |
 | 2026-10-10 | Implemented as version 0.5.0 (installers `EagleEye-Setup-0.5.0.exe`, `EagleEye-ParentApp-Setup-0.5.0.exe`); status `Implemented`. Report: `US-005/implementation-report.md` | DEV |
+| 2026-10-11 | Test run 01 (0.5.0): 22 Pass, 0 Fail, 13 Skipped; no changes required; story closed, status `Verified/Closed`; see `02_Implementation/docs/testing/US-005/test-report.md` | Michael |
 
 ---
 

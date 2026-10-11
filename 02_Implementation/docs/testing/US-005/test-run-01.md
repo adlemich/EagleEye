@@ -60,10 +60,10 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 
 ## Setup — before Block A (service PC, Admin) · ≈ 30 min
 
-- [ ] **S-1 Installers**: `Get-FileHash 03_Delivery\windows\EagleEye-Setup-0.5.0.exe, 03_Delivery\windows\EagleEye-ParentApp-Setup-0.5.0.exe | Format-List Path, Hash` → hashes as in the header / test plan §2.
-- [ ] **S-2 Installed state** (*Installierte Apps*; `services.msc`): EagleEye ______ · EagleEye Parent App ______ (expected **0.4.0 or 0.4.1**, service running). Already 0.5.0 or no service → **stop**, tell TES.
-- [ ] **S-3 App A green**, *Gekoppelt*, **Papas PC**.
-- [ ] **S-4 Accounts**: `eagleeye-kid` exists. `ee-kid2` / `ee-kid3` missing → create (Terminal (Administrator)):
+- [x] **S-1 Installers**: `Get-FileHash 03_Delivery\windows\EagleEye-Setup-0.5.0.exe, 03_Delivery\windows\EagleEye-ParentApp-Setup-0.5.0.exe | Format-List Path, Hash` → hashes as in the header / test plan §2.
+- [x] **S-2 Installed state** (*Installierte Apps*; `services.msc`): EagleEye ______ · EagleEye Parent App ______ (expected **0.4.0 or 0.4.1**, service running). Already 0.5.0 or no service → **stop**, tell TES.
+- [x] **S-3 App A green**, *Gekoppelt*, **Papas PC**.
+- [x] **S-4 Accounts**: `eagleeye-kid` exists. `ee-kid2` / `ee-kid3` missing → create (Terminal (Administrator)):
   ```powershell
   $pw = Read-Host -AsSecureString "Password for the new kid accounts"
   $usersGroup = (Get-LocalGroup -SID "S-1-5-32-545").Name
@@ -75,13 +75,13 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
   }
   ```
   New accounts: sign in once (*Benutzer wechseln*), scaling 150 %, **sign out**. Sign out `eagleeye-kid` too.
-- [ ] **S-5 Admin scaling** ______ % (expected 150 %).
-- [ ] **S-6 Terminal (Administrator)** open. **S-7** second one with LOG-WATCH. **S-8** `hostname` → ____________
-- [ ] **S-9 Selection**: App A → *Einstellungen*: **eagleeye-kid** and **ee-kid3** ticked; **ee-kid2** and all others unticked.
-- [ ] **S-10 SmartScreen**: *Weitere Informationen* → *Trotzdem ausführen* (expected).
-- [ ] **S-11 K-TERM understood** (Start → **Terminal** → right-click → **Als Administrator ausführen** → your admin credentials, in the kid's session).
-- [ ] **S-12 App B on LEOSERV** (after TC-005-02): install `EagleEye-ParentApp-Setup-0.5.0.exe`; green and *Gekoppelt* (else pair as **LEOSERV**). Not available → write it here: ____________ (TC-005-23 Blocked).
-- [ ] **S-13 SQLite tool** for optional TC-005-34: yes / no ______
+- [x] **S-5 Admin scaling** ______ % (expected 150 %).
+- [x] **S-6 Terminal (Administrator)** open. **S-7** second one with LOG-WATCH. **S-8** `hostname` → ____________
+- [x] **S-9 Selection**: App A → *Einstellungen*: **eagleeye-kid** and **ee-kid3** ticked; **ee-kid2** and all others unticked.
+- [x] **S-10 SmartScreen**: *Weitere Informationen* → *Trotzdem ausführen* (expected).
+- [x] **S-11 K-TERM understood** (Start → **Terminal** → right-click → **Als Administrator ausführen** → your admin credentials, in the kid's session).
+- [x] **S-12 App B on LEOSERV** (after TC-005-02): install `EagleEye-ParentApp-Setup-0.5.0.exe`; green and *Gekoppelt* (else pair as **LEOSERV**). Not available → write it here: ____________ (TC-005-23 Blocked).
+- [x] **S-13 SQLite tool** for optional TC-005-34: yes / no ______
 
 ---
 
@@ -100,7 +100,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - App A green within 60 s without a code.
 - Log "Break times loaded: 0 entries (0 on) of … accounts, 0 changed display texts."; no Error.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -117,7 +117,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - **Parent App 0.5.0**, green without a code; opens on **Berichte**. Menu: **Einstellungen, Regeln, Berichte**.
 - Top to bottom: title **Regeln**; **Konto** with **eagleeye-kid** and **ee-kid3**, the first selected; accent bar **Ruhezeiten**; button **Eintrag hinzufügen**; **Keine Ruhezeiten festgelegt.**; **Anzeige Text:** with the **default text** ("Hi! Leider haben Deine Eltern eine PC-Pause … ein Buch zu lesen? 😊"), wrapped.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -135,7 +135,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Log within 5 s: "Break times of account eagleeye-kid (…) changed by Papas PC: entry N added (off, 20:00–23:59, Mo Tu We Th Fr Sa Su) …".
 - The second row appears **below** the first.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -153,7 +153,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - One log line per change within 5 s ("entry N changed: on, …", "… off, …", "… off, 21:30–23:59, …", "… off, 21:30–22:15, …", "… Mo Tu We Th Fr Sa", "… Mo Tu We Th Fr"). No Save button anywhere.
 - Fields show **21:30** and **22:15**. Row 1 is off and still editable.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -175,7 +175,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Step 4: MO to DO saved; **FR stays ticked**; **Mindestens ein Tag muss ausgewählt sein.**
 - Step 5: saved; the message disappears.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -192,7 +192,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Row 2 gone at once, **no** confirmation; log "entry N deleted" within 5 s; row 1 unchanged.
 - Optional: at 20 rows the button is disabled.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -214,7 +214,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Step 3: the **default text** is back; log "display text reset to the default".
 - Optional: the box stops at about 500 characters.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -233,7 +233,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Step 2: `eagleeye-kid` shows its own row and two-line text; log "… ee-kid3 …: entry N added …" and "… ee-kid3 …: display text changed".
 - Step 3: `ee-kid3`: its one entry and "Text für ee-kid3 🙂".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -254,7 +254,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Step 3: opens on **Berichte**; same entries and texts.
 - Step 4: **Keine Konten unter Elternkontrolle. Konten unter Einstellungen auswählen.** (≤ 60 s); after ticking, both accounts with unchanged entries and texts.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: "Wird geladen …" seen? ____
 
@@ -271,7 +271,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Both modes: texts, checkboxes, time fields and **trash icon** clearly visible; normal app colours plus the accent bar **Ruhezeiten**.
 - 150 %: nothing cut off; the nine checkbox columns fit.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -279,13 +279,13 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 
 ## Block B — Blocking at start and the kid's dialog (core) · ≈ 45 min
 
-- [ ] **P-1** App B (LEOSERV) → **Regeln** → **Konto** `eagleeye-kid` → create **E1** (now − 1 min to 23:59, all days), **An/Aus unticked**. (No LEOSERV: in App A.)
-- [ ] **P-2** *Benutzer wechseln* → `eagleeye-kid`.
-- [ ] **P-3** *Einstellungen → Personalisierung → Taskleiste → Verhalten der Taskleiste* → **Sekunden in der Uhr der Taskleiste anzeigen** ✓.
-- [ ] **P-4** **P-KID**: Start → **Terminal** (normal). Keep it open.
-- [ ] **P-5** **K-TERM** with LOG-WATCH.
-- [ ] **P-6** P-KID: `Get-Process notepad, mspaint, charmap -ErrorAction SilentlyContinue` → nothing.
-- [ ] **P-7** **Edge**: open any page (a video is fine), **maximise**. Leave it open.
+- [x] **P-1** App B (LEOSERV) → **Regeln** → **Konto** `eagleeye-kid` → create **E1** (now − 1 min to 23:59, all days), **An/Aus unticked**. (No LEOSERV: in App A.)
+- [x] **P-2** *Benutzer wechseln* → `eagleeye-kid`.
+- [x] **P-3** *Einstellungen → Personalisierung → Taskleiste → Verhalten der Taskleiste* → **Sekunden in der Uhr der Taskleiste anzeigen** ✓.
+- [x] **P-4** **P-KID**: Start → **Terminal** (normal). Keep it open.
+- [x] **P-5** **K-TERM** with LOG-WATCH.
+- [x] **P-6** P-KID: `Get-Process notepad, mspaint, charmap -ErrorAction SilentlyContinue` → nothing.
+- [x] **P-7** **Edge**: open any page (a video is fine), **maximise**. Leave it open.
 
 ### TC-005-11: Outside a break apps start as before (and an entry that is off never blocks)
 
@@ -298,7 +298,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Both open as quickly as before and stay open.
 - No "Blocked start" line from this run.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: ED0 ______
 
@@ -318,7 +318,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Log: "entry N changed: on, …"; "Blocked start: account eagleeye-kid, Editor (notepad.exe, …) … closing the app."; "Blocked start ended: … **closed gracefully** after 0.x s; **message shown**."
 - **Q-8**: "terminated by force after 20 s" for Notepad = **Fail**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Lap 1 ____ s · Lap 2 ____ s · "closed gracefully after ____ s"
 
@@ -341,7 +341,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Esc and Alt+F4: dialog stays. Edge usable behind it; dialog stays in front, does not close by itself.
 - Enter closes it.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Focus at once? yes / no / only after Notepad was gone
 
@@ -362,7 +362,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Step 4: a **new** dialog; OK closes it.
 - Log: step 2 "… **not shown (a message is already open)**"; step 4 "… message shown".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -382,7 +382,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - **Microsoft Edge** = EG0 + 3 (±1), never closed.
 - Log: only "Blocked start …" for charmap, **no** "App started: … Zeichentabelle" ("New app …" = Note only).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: EG0 ______ · after ______
 
@@ -406,7 +406,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - No `mspaint` left. Log: **one** "Blocked start: … Paint (mspaint.exe, …)" and "Blocked start ended: … **terminated by force after 20 s** (2x.x s until gone); …". **No** "could not be terminated", no Error.
 - **Edge** still open after the service restart.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Stopwatch ____ s · log "____ s until gone" · dialog shown? yes / no
 
@@ -423,7 +423,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 **Expected**:
 - Notepad opens normally and stays; no dialog; log "entry N changed: off, …", no "Blocked start" for it.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -446,7 +446,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Log: "Blocked start" only for **eagleeye-kid**.
 - Step 5: kid1's dialog still there.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -469,7 +469,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Step 3: `ee-kid3` gone from **Konto** (≤ 60 s). Step 4: charmap opens normally.
 - Step 5: `ee-kid3` back with its entry (on) and text. Step 6: blocked again.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -490,7 +490,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Step 4: Task-Manager, Einstellungen, Bildschirmtastatur closed (≤ 30 s) with the dialog.
 - Step 5: sign-out works with the dialog open.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -498,7 +498,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 
 ## Block D — Boundaries, tray, two parent apps, re-install (core) · ≈ 45 min
 
-- [ ] App B: **BREAK OFF**. Sign in as `eagleeye-kid`; open **P-KID**, **K-TERM** + LOG-WATCH, **Edge**.
+- [x] App B: **BREAK OFF**. Sign in as `eagleeye-kid`; open **P-KID**, **K-TERM** + LOG-WATCH, **Edge**.
 
 ### TC-005-21: Start minute included, end minute excluded; weekday; overlapping entries; running app keeps running
 
@@ -517,7 +517,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Step 6: opens while today is unticked; blocked when ticked again.
 - Step 7: blocked while only E2 is on; opens normally when both are off.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: T = ______
 
@@ -537,7 +537,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Step 2: Notepad closed (≤ 30 s), **no** dialog, also not later. Step 3: tray icon back. Step 4: dialog again.
 - Log: step 2 "**not shown (tray client not connected)**"; "Tray client connected: … (session N, **verified**)."; step 4 "message shown".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -558,7 +558,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Step 4: after 5 s both show the **same** start time.
 - Step 5: B: **Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen.**; the row disappears in B (≤ 5 s).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: Row already gone in B before Enter? yes / no
 
@@ -575,7 +575,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 **Expected**:
 - Dialog: **three** lines, the third "Test 3 👍". App A shows the same three lines.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -594,7 +594,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Step 3: Notepad blocked although no parent app runs.
 - Step 4: same entries and texts as in the screenshot; log "Break times loaded: … of 2 accounts, 2 changed display texts."
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -602,7 +602,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 
 ## Block E — Security (core security) · ≈ 25 min (+10 optional)
 
-- [ ] App B on LEOSERV started again → Regeln → `eagleeye-kid`. kid1 in front with P-KID and K-TERM.
+- [x] App B on LEOSERV started again → Regeln → `eagleeye-kid`. kid1 in front with P-KID and K-TERM.
 
 ### TC-005-26: Which restricted SYSTEM token the agent runs with (US-004 TC-004-23, rerun)
 
@@ -614,7 +614,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - "Session agent in session N: diagnostics: user NT-AUTORITÄT\SYSTEM (S-1-5-18), integrity System, privileges SeChangeNotifyPrivilege, write-restricted yes|no".
 - SYSTEM, integrity System, **only** `SeChangeNotifyPrivilege`; write-restricted **yes**, or the accepted fallback Warning plus `no`. Both Pass. **Write the variant in Notes.**
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**: write-restricted: yes / no (fallback)
 
@@ -637,7 +637,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Each command fails (*Zugriff verweigert* / `[SC] OpenService FEHLER 5`); service still *Running*.
 - Notepad blocked as before.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -658,7 +658,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Step 4: **Warning** "The time zone of the PC changed from W. Europe Standard Time (UTC+01:00) to UTC (UTC+00:00); break times now use the new local time. Session in use: eagleeye-kid." ≤ 5 s after step 2.
 - Step 5: second Warning; Notepad blocked again.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**: `tzutil /s` refused for the kid? yes / no
 
@@ -683,7 +683,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 **Expected**:
 - Log "Tray client connected: … (**unverified**)."; Notepad closed, **no** dialog; "not shown (tray client not connected)".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -707,7 +707,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - Step 2: `ee-kid3` gone from **Konto** ≤ 60 s; log "Purged the break times of deleted account S-1-5-21-…" and "Purged enforcement records of deleted accounts: …".
 - Step 3: **Keine Ruhezeiten festgelegt.** and the **default text**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -721,7 +721,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 
 **Expected**: dialog ≤ 10 s; Notepad gone ≤ 30 s; log "closed gracefully"; P-KID stays open.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -736,7 +736,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 
 **Expected**: dialog ≤ 10 s; Rechner gone ≤ **30 s** from Enter; outcome graceful or force (both OK, write which); **Uhr** stays open.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**: Lap 1 ____ s · Lap 2 ____ s · outcome ________
 
@@ -751,7 +751,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 
 **Expected**: Edge blocked (dialog ≤ 10 s, gone ≤ 30 s); **no** `msedge` process left.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -772,7 +772,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - One `BlockedStarts` row per blocked start (also before the re-install); data as in the log; Paint of TC-005-16: "terminated by force", ≈ 20 s, trigger "found at agent start"; **no** `ee-kid3` row.
 - `TimeChangeFindings`: two `TimeZone` rows of TC-005-28, `UserName` eagleeye-kid.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -788,7 +788,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 
 **Expected**: restart works; Notepad blocked; entries and text unchanged.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -796,25 +796,25 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 
 ## Cleanup (test plan §7)
 
-- [ ] **LOG-COPY** → `run-01-service-logs`; copies looked through.
-- [ ] All break entries of `eagleeye-kid` **off** (or deleted) — otherwise the kid stays blocked.
-- [ ] Time zone back: `tzutil /g` → `W. Europe Standard Time`.
-- [ ] Tray copy `C:\Users\eagleeye-kid\EETray` deleted (TC-005-29); real tray running.
-- [ ] `C:\EETest` removed (TC-005-34).
-- [ ] `eagleeye-kid` signed out; `ee-kid2` and `ee-kid3` removed:
+- [x] **LOG-COPY** → `run-01-service-logs`; copies looked through.
+- [x] All break entries of `eagleeye-kid` **off** (or deleted) — otherwise the kid stays blocked.
+- [x] Time zone back: `tzutil /g` → `W. Europe Standard Time`.
+- [x] Tray copy `C:\Users\eagleeye-kid\EETray` deleted (TC-005-29); real tray running.
+- [x] `C:\EETest` removed (TC-005-34).
+- [x] `eagleeye-kid` signed out; `ee-kid2` and `ee-kid3` removed:
   ```powershell
   foreach ($n in "ee-kid2","ee-kid3") {
     Get-CimInstance Win32_UserProfile | Where-Object LocalPath -like "*\$n" | Remove-CimInstance
     if (Get-LocalUser -Name $n -ErrorAction SilentlyContinue) { Remove-LocalUser -Name $n }
   }
   ```
-- [ ] LEOSERV: App B stays installed and paired.
+- [x] LEOSERV: App B stays installed and paired.
 
 ---
 
 ## General Feedback
 
-<!-- Anything that does not fit a test case: usability remarks, ideas, surprises. -->
+Seems to work fine.
 
 ---
 
