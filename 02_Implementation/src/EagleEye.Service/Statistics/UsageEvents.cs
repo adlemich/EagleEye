@@ -6,8 +6,13 @@ namespace EagleEye.Service.Statistics;
 /// <param name="ProgramPath">Full program path, the app's identity per account (case-insensitive).</param>
 /// <param name="ProcessName">The process name, e.g. <c>Code.exe</c>.</param>
 /// <param name="DisplayName">The resolved display name (AC-8).</param>
-/// <param name="ProcessIds">The processes of the app that have an app window.</param>
-public sealed record ObservedApp(string ProgramPath, string ProcessName, string DisplayName, IReadOnlyList<int> ProcessIds);
+/// <param name="Processes">The processes of the app that have an app window, with their creation times (US-005 Decision 3).</param>
+public sealed record ObservedApp(string ProgramPath, string ProcessName, string DisplayName, IReadOnlyList<ObservedProcess> Processes);
+
+/// <summary>A process of an observed app: PID and creation time (FILETIME ticks), the process identity.</summary>
+/// <param name="Pid">The process ID.</param>
+/// <param name="Created">The creation time (FILETIME ticks).</param>
+public sealed record ObservedProcess(int Pid, long Created);
 
 /// <summary>Input of the accounting loop (one queue, one reader).</summary>
 public abstract record UsageEvent;
@@ -16,7 +21,8 @@ public abstract record UsageEvent;
 /// <param name="SessionId">The session.</param>
 /// <param name="AccountSid">The session's user.</param>
 /// <param name="Apps">The apps open in the session.</param>
-public sealed record AppsObserved(int SessionId, string AccountSid, IReadOnlyList<ObservedApp> Apps) : UsageEvent;
+/// <param name="AgentRun">Identifies the agent run that sent the report (changes on every agent start, US-005 D-3).</param>
+public sealed record AppsObserved(int SessionId, string AccountSid, IReadOnlyList<ObservedApp> Apps, long AgentRun = 0) : UsageEvent;
 
 /// <summary>A session change notification of the Service Control Manager.</summary>
 /// <param name="SessionId">The session.</param>

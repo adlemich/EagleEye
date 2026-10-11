@@ -67,7 +67,7 @@ public sealed class SessionAgentSupervisorTests : IAsyncLifetime
         await WaitUntil(() => _supervisor.IsObserving(2));
 
         Assert.False(before);
-        _sink.Verify(s => s.Process(2, Kid, It.Is<AgentReport>(r => r.Apps.Single().Pid == 5)), Times.Once);
+        _sink.Verify(s => s.Process(2, Kid, It.IsAny<long>(), It.Is<AgentReport>(r => r.Apps.Single().Pid == 5)), Times.Once);
         _launcher.Verify(l => l.ReportWorking(), Times.Once);
     }
 
@@ -308,7 +308,115 @@ public sealed class SessionAgentSupervisorTests : IAsyncLifetime
         await WaitUntil(() => _supervisor.IsObserving(2));
 
         Assert.True(_supervisor.IsObserving(2));
-        _sink.Verify(s => s.Process(2, Kid, It.IsAny<AgentReport>()), Times.Once);
+        _sink.Verify(s => s.Process(2, Kid, It.IsAny<long>(), It.IsAny<AgentReport>()), Times.Once);
+    }
+
+    // ---------- Close commands (US-005 Decision 5) ----------
+
+    [Fact]
+    public async Task RequestClose_WritesCommandAndReturnsTheCorrelatedAnswer()
+    {
+        await StartReportingAsync();
+
+        var request = _supervisor.RequestCloseAsync(2, [new CloseTarget(4711, 1234)]);
+        await WaitUntil(() => _agents[0].Written.Count == 1);
+        await _agents[0].ReportAsync("""{"closed":{"id":99,"windows":5,"missing":0}}""");
+        await _agents[0].ReportAsync("""{"closed":{"id":1,"windows":2,"missing":0}}""");
+
+        Assert.Equal(new CloseAnswer(1, 2, 0), await request);
+        Assert.Equal("""{"cmd":"close","id":1,"targets":[{"pid":4711,"created":1234}]}""", _agents[0].Written.Single());
+    }
+
+    [Fact]
+    public async Task RequestClose_NoAnswer_NullAfterTimeout()
+    {
+        await StartReportingAsync();
+
+        var request = _supervisor.RequestCloseAsync(2, [new CloseTarget(4711, 1234)]);
+        await WaitUntil(() => _agents[0].Written.Count == 1);
+        _time.Advance(SessionAgentSupervisor.CloseAnswerTimeout);
+
+        Assert.Null(await request);
+    }
+
+    [Fact]
+    public async Task RequestClose_NoAgentOrNoTargets_NullAtOnce()
+    {
+        Assert.Null(await _supervisor.RequestCloseAsync(2, [new CloseTarget(1, 1)]));
+        await StartReportingAsync();
+        Assert.Null(await _supervisor.RequestCloseAsync(2, []));
+        Assert.Empty(_agents[0].Written);
+    }
+
+    [Fact]
+    public async Task RequestClose_WriteFails_Null()
+    {
+        await StartReportingAsync();
+        _agents[0].WriteFailure = new IOException("broken pipe");
+
+        Assert.Null(await _supervisor.RequestCloseAsync(2, [new CloseTarget(1, 1)]));
+    }
+
+    [Fact]
+    public async Task RequestClose_Cancelled_Throws()
+    {
+        await StartReportingAsync();
+        using var cancel = new CancellationTokenSource();
+        var request = _supervisor.RequestCloseAsync(2, [new CloseTarget(1, 1)], cancel.Token);
+        await WaitUntil(() => _agents[0].Written.Count == 1);
+
+        await cancel.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => request);
+    }
+
+    [Fact]
+    public async Task AnswerLine_CountsAsHeartbeat()
+    {
+        await StartReportingAsync();
+        _time.Advance(TimeSpan.FromSeconds(14));
+        await _agents[0].ReportAsync("""{"closed":{"id":5,"windows":0,"missing":1}}""");
+        await Task.Delay(50);
+        _time.Advance(TimeSpan.FromSeconds(2));
+
+        await ReconcileAsync();
+
+        Assert.True(_supervisor.IsObserving(2));
+        Assert.Single(_agents);
+    }
+
+    [Fact]
+    public async Task InvalidAnswerLine_FaultAndRestart()
+    {
+        await StartReportingAsync();
+        await _agents[0].ReportAsync("""{"closed":{"id":-1,"windows":0,"missing":0}}""");
+        await WaitUntil(() => !_supervisor.IsObserving(2));
+
+        await ReconcileAsync();
+
+        Assert.Contains(_logger.Messages(LogLevel.Warning), m => m.Contains("sent an invalid answer", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task AgentRun_ChangesOnRestart()
+    {
+        var runs = new List<long>();
+        _sink.Setup(s => s.Process(2, Kid, It.IsAny<long>(), It.IsAny<AgentReport>())).Callback<int, string, long, AgentReport>((_, _, run, _) => runs.Add(run));
+        await StartReportingAsync();
+        _agents[0].Exit(1);
+        await ReconcileAsync();
+        _time.Advance(TimeSpan.FromSeconds(1));
+        await ReconcileAsync();
+        await _agents[1].ReportAsync(Report);
+        await WaitUntil(() => runs.Count == 2);
+
+        Assert.NotEqual(runs[0], runs[1]);
+    }
+
+    [Fact]
+    public async Task RequestClose_Null_Throws()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _supervisor.RequestCloseAsync(2, null!));
     }
 
     [Fact]
@@ -387,6 +495,20 @@ public sealed class SessionAgentSupervisorTests : IAsyncLifetime
                 _reports.Writer.TryComplete();
                 _errors.Writer.TryComplete();
             }
+        }
+
+        public List<string> Written { get; } = [];
+
+        public Exception? WriteFailure { get; set; }
+
+        public Task WriteLineAsync(string line, CancellationToken ct)
+        {
+            lock (Written)
+            {
+                Written.Add(line);
+            }
+
+            return WriteFailure is null ? Task.CompletedTask : Task.FromException(WriteFailure);
         }
 
         public Task<string?> ReadReportLineAsync(CancellationToken ct) => ReadAsync(_reports, ct, countDone: true);

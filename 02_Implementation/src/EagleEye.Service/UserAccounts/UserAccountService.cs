@@ -17,7 +17,7 @@ public sealed class UserAccountService(
     IAccountSelectionRepository repository,
     IUserAccountsBroadcaster broadcaster,
     TimeProvider timeProvider,
-    Lazy<IAccountDataPurger> dataPurger,
+    Lazy<IEnumerable<IAccountDataPurger>> dataPurgers,
     ILogger<UserAccountService> logger) : IUserAccountService, IDisposable
 {
     private const string ReadFailedMessage = "Reading the local accounts failed; the inventory is kept unchanged.";
@@ -151,8 +151,13 @@ public sealed class UserAccountService(
     {
         var existing = inventory.AllSids.ToList();
 
-        // US-004 AC-9, FR-SVC-047: recorded usage of deleted accounts goes too. Only after a successful read.
-        await dataPurger.Value.PurgeMissingAccountsAsync(existing, ct).ConfigureAwait(false);
+        // US-004 AC-9, US-005 AC-20/AC-36, FR-SVC-047: recorded usage, rules, history and findings of deleted accounts
+        // go too. Only after a successful read.
+        foreach (var purger in dataPurgers.Value)
+        {
+            await purger.PurgeMissingAccountsAsync(existing, ct).ConfigureAwait(false);
+        }
+
         var forgotten = await repository.DeleteMissingAsync(existing, ct).ConfigureAwait(false);
         if (forgotten.Count == 0)
         {

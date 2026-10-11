@@ -1,5 +1,6 @@
 using EagleEye.Service.Communication;
 using EagleEye.Service.Pairing;
+using EagleEye.Service.Rules;
 using EagleEye.Service.Statistics;
 using EagleEye.Service.UserAccounts;
 using EagleEye.Shared.Models;
@@ -27,7 +28,7 @@ public sealed class ParentHubUserAccountsTests
     {
         var context = HubContextFactory.Create("connection-1");
         ParentConnectionState.SetPaired(context.Object, "device-1", DeviceName);
-        _hub = new ParentHub(Mock.Of<IPairingManager>(), Mock.Of<IParentConnectionRegistry>(), _userAccounts.Object, _usage.Object, _logger)
+        _hub = new ParentHub(Mock.Of<IPairingManager>(), Mock.Of<IParentConnectionRegistry>(), _userAccounts.Object, _usage.Object, Mock.Of<IBreakTimeService>(), _logger)
         {
             Context = context.Object,
         };

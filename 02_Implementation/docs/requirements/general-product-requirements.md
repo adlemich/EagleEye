@@ -1,9 +1,11 @@
 # EagleEye -- General Product Requirements
 
-*Status: Approved v1.4 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07; v1.4 approved by Michael 2026-10-07)*
+*Status: Approved v1.5 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07; v1.4 approved by Michael 2026-10-07; v1.5 approved by Michael 2026-10-10)*
 *Approved: v1.0 by Michael*
 *Maintainer: PRO Agent*
-*Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07*
+*Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07, 2026-10-10*
+
+> **v1.5 amendment (2026-10-10, directed by Michael, with US-005; approved by Michael 2026-10-10)**: pause windows become **break times** ("Ruhezeiten"), configured per account on a "Rules" page as a list of entries (on/off, start time, end time within one day, weekdays), plus one display text per account. When an app is started (its first process created) during a break time, the service detects it within 10 seconds, closes it gracefully and, after 20 seconds, by force (at most 30 seconds from start to gone), records the blocked start in a history, and the tray client shows the display text in a topmost dialog. Changes of the time zone are logged and stored as findings (FR-SVC-026, added with the US-005 plan answers on 2026-10-10). Ending apps that are already running when a break time begins (TC-042) and the warnings (TC-040, TC-041) stay for a later story. Changed: FR-SVC-023, FR-SVC-024 (new), FR-SVC-025 (new), FR-SVC-026 (new), FR-SVC-032, FR-SVC-043, FR-SVC-047, FR-TRAY-022 (new), FR-APP-050, FR-APP-052 (new), TC-010, TC-011, TC-014 (new), §4.3 step 14.
 
 > **v1.4 amendment (2026-10-07, directed by Michael, with US-004; approved by Michael 2026-10-07)**: the service records the **apps** (Task Manager's "Apps" group, not background processes) started in the sessions of accounts under parental control: a permanent app inventory per account, a start/end history, and the daily usage **in seconds**, updated at least every 5 seconds. The parent app shows the usage per account and day as HH:MM. Changed: FR-SVC-012, FR-SVC-040, FR-SVC-041, FR-SVC-043, FR-SVC-044 to FR-SVC-047 (new), FR-APP-060.
 
@@ -133,7 +135,10 @@ The service classifies every process running in a standard user's session into o
 | FR-SVC-020 | If a monitored user starts a process that is not ignored and not on their allow-list, the service shall terminate it. |
 | FR-SVC-021 | Termination shall first attempt a graceful shutdown (e.g. `WM_CLOSE`) and wait for a configurable timeout (default: 30 seconds) before force-killing the process. The timeout is a general setting configurable by the parent. |
 | FR-SVC-022 | When a time budget for an allowed application expires, the service shall terminate that application using the same graceful-then-force approach. |
-| FR-SVC-023 | During a pause window, the service shall prevent all non-ignored application launches for the affected user (regardless of remaining budget). |
+| FR-SVC-023 | During a pause window (break time, TC-010), the service shall prevent all non-ignored application launches for the affected user (regardless of remaining budget): an application (FR-SVC-046) whose first process the user creates while a break time is in effect is blocked. The **start** of an application is the creation of its first process; its window may appear later, and further processes of an application that is already open are not new starts. A blocked start is detected within 10 seconds after the start (counted from the first window if that appears later; detection may take longer right after sign-in, boot or a restart of the observation, and such starts are still caught afterwards by their process creation time) and then closed with the graceful-then-force approach of FR-SVC-021, with a timeout of 20 seconds: graceful close first; if the application has not closed after 20 seconds, it is terminated by force together with all its processes. At most 30 seconds pass from the start until the application is gone. The tray client shows the account's display text as soon as the block is detected (FR-TRAY-022). Ignored processes (FR-SVC-015) are never ended. Applications that are already running when a break time begins: TC-042. *(v1.5: made precise)* |
+| FR-SVC-024 | The service shall store per user account the break time entries (TC-010) and one display text (FR-APP-052), persist them (FR-SVC-030), serve them to parent apps on request, broadcast every stored change at once to all connected parent apps (FR-SVC-053), and apply changes to the next application start. *(v1.5)* |
+| FR-SVC-025 | The service shall store a history of blocked application starts (FR-SVC-023) in its local database: time, account, display name, process name and path of the application, the break time entry that matched (start, end, weekday), the outcome (closed gracefully, or terminated by force and after how many seconds) and whether the message was shown to the user. Blocked starts count no usage time (FR-SVC-012). The history is retained per FR-SVC-043 and purged per FR-SVC-047; it is not shown in the parent app yet. *(v1.5)* |
+| FR-SVC-026 | The service shall check the time zone of the PC regularly. Each change of the time zone, and each change of the clock if detected, shall take effect for break times within 5 seconds, be logged as a Warning (FR-SVC-100) and be stored as a finding in the service's local database: time, old and new time zone (or clock time), and the session or account that made the change if known. Findings are retained and purged like the history of blocked starts (FR-SVC-025, FR-SVC-043, FR-SVC-047) and are not shown in the parent app yet. Removing the right to change the time zone from standard users is a possible later hardening. *(v1.5, approved by Michael 2026-10-10 with the US-005 implementation plan answers)* |
 
 #### 3.1.4 Configuration Management
 
@@ -141,7 +146,7 @@ The service classifies every process running in a standard user's session into o
 |----|-------------|
 | FR-SVC-030 | The service shall persist its configuration locally on disk under the standard Windows application data folder (e.g. `%ProgramData%`). |
 | FR-SVC-031 | The service shall accept configuration updates from connected parent apps remotely over the network. |
-| FR-SVC-032 | Configuration includes: allowed applications list, per-app daily time budgets, and per-weekday pause windows -- all per user account. |
+| FR-SVC-032 | Configuration includes: allowed applications list, per-app daily time budgets, and break times (pause windows, TC-010) with their display text -- all per user account. *(v1.5: made precise)* |
 | FR-SVC-033 | Configuration data shall be stored in separate files per child user account. |
 
 #### 3.1.5 Statistics Collection
@@ -151,11 +156,11 @@ The service classifies every process running in a standard user's session into o
 | FR-SVC-040 | The service shall collect per-user, per-application daily usage statistics (seconds used, FR-SVC-012). *(v1.4; was: minutes)* |
 | FR-SVC-041 | The service shall serve collected statistics to parent apps on request, and push changes of the statistics to connected parent apps (FR-SVC-053). *(v1.4: made precise)* |
 | FR-SVC-042 | Statistics shall be stored on disk under the standard Windows application data folder (e.g. `%ProgramData%`), in separate files per child user account. |
-| FR-SVC-043 | Statistics shall be retained for 90 days at daily granularity (seconds of use per application per day). The start/end history (FR-SVC-045) is retained for 90 days as well. Data older than 90 days shall be automatically purged. The application inventory (FR-SVC-044) is not subject to this retention. *(v1.4: made precise)* |
+| FR-SVC-043 | Statistics shall be retained for 90 days at daily granularity (seconds of use per application per day). The start/end history (FR-SVC-045) and the history of blocked starts (FR-SVC-025) are retained for 90 days as well. Data older than 90 days shall be automatically purged. The application inventory (FR-SVC-044) is not subject to this retention. *(v1.4: made precise; v1.5: history of blocked starts added)* |
 | FR-SVC-044 | The service shall keep, per user account, an inventory of the applications the user has started: one record per application, with at least the process name, the display name (FR-SVC-013) and the path of the executable. Records are kept without time limit while the account exists. *(v1.4)* |
 | FR-SVC-045 | The service shall store the start time and end time of every application instance in a history, and write both to its log files (FR-SVC-100). *(v1.4)* |
 | FR-SVC-046 | Only applications that the user started (by hand or in the user's name, e.g. Autostart) and that have a window of their own in the user's session are recorded, i.e. what Windows Task Manager lists in the "Apps" group. Background processes, services and Windows processes are not recorded. An application consisting of several processes is recorded as one application. *(v1.4)* |
-| FR-SVC-047 | When a user account is deleted on the Windows PC, the service shall purge all recorded data of that account (inventory, history, statistics). *(v1.4)* |
+| FR-SVC-047 | When a user account is deleted on the Windows PC, the service shall purge all recorded data of that account (inventory, history, history of blocked starts, statistics) and its configuration (break time entries and display text, FR-SVC-024). *(v1.4; v1.5: history of blocked starts and configuration added)* |
 
 #### 3.1.6 Remote Communication
 
@@ -232,6 +237,7 @@ The tray client is a lightweight executable that runs in the kid's user session.
 | FR-TRAY-011 | Clicking the tray icon shall show a summary of remaining time budgets for the current user's allowed applications. |
 | FR-TRAY-020 | The tray client shall display a notification when a time budget is about to expire (warning before shutdown). |
 | FR-TRAY-021 | The tray client shall display a notification when an application is being shut down due to budget expiry. |
+| FR-TRAY-022 | When an application start is blocked by a break time (FR-SVC-023), the tray client in the user's session shall show the account's display text (FR-APP-052) in a topmost dialog that closes only with "OK" or Enter (not with Esc or Alt+F4). Other windows stay usable (the dialog is not system-modal); the keyboard focus is best effort; exclusive full-screen games may cover the dialog. *(v1.5; wording "system-modal" replaced with the US-005 plan answers, 2026-10-10)* |
 | FR-TRAY-030 | The tray client shall optionally display a topmost overlay window showing remaining time, visible even when applications are in focus. |
 | FR-TRAY-040 | The tray client shall connect to `EagleEye.Service` on `localhost`. |
 | FR-TRAY-041 | The tray client shall display a connection status indicator (red/green) showing whether it is connected to the service. |
@@ -291,8 +297,9 @@ The parent app is a single MAUI codebase deployed to Android, iOS, Windows and m
 
 | ID | Requirement |
 |----|-------------|
-| FR-APP-050 | The parent shall be able to define pause windows per weekday per user account (e.g. blocked from 20:00 to 09:00). |
+| FR-APP-050 | The parent shall be able to define break times (pause windows, TC-010) per user account on a "Rules" page: a table of entries, each with an on/off switch, a start time, an end time and the weekdays it applies to (e.g. 20:00 to 23:59 and 00:00 to 09:00, Monday to Friday). Entries are added, edited in place and deleted directly; every change is saved at once. *(v1.5; was: pause windows per weekday, e.g. blocked from 20:00 to 09:00)* |
 | FR-APP-051 | During a pause window, no applications are allowed for the affected user, regardless of remaining budget. |
+| FR-APP-052 | The parent shall be able to edit one display text per user account, shown to the kid when an application start is blocked by a break time (FR-TRAY-022). The text supports emojis. *(v1.5)* |
 
 #### 3.3.6 Statistics Viewing
 
@@ -364,7 +371,7 @@ This describes the end-to-end workflow from installation to daily use.
 | 11 | Parent | Views the list of discovered standard user accounts and selects which of them (the children's) are under parental control. *(v1.3)* |
 | 12 | Parent | Selects a child's account and configures the allow-list of applications. |
 | 13 | Parent | Sets daily time budgets (hours:minutes) per allowed application, per weekday. |
-| 14 | Parent | Defines pause windows per weekday (e.g. 20:00--09:00 blocked). |
+| 14 | Parent | Defines break times (pause windows) with their weekdays (e.g. 20:00--23:59 and 00:00--09:00 blocked) and the text shown to the kid. *(v1.5)* |
 | 15 | Parent | Configuration is sent to the service and persisted. |
 
 ### 4.4 Daily Use (Kid)
@@ -394,10 +401,11 @@ This describes the end-to-end workflow from installation to daily use.
 
 | ID | Requirement |
 |----|-------------|
-| TC-010 | Pause windows are defined per weekday (Monday through Sunday) per user account. |
-| TC-011 | A pause window specifies a start time and end time (e.g. 20:00--09:00). |
+| TC-010 | Pause windows (break times, "Ruhezeiten") are defined per user account as a list of entries. Each entry has an on/off switch, a start time, an end time and one or more weekdays (Monday through Sunday). An entry that is switched off is kept but not applied. *(v1.5; was: per weekday per user account)* |
+| TC-011 | Start and end time of an entry lie within one day (00:00 to 23:59), and the end time is later than the start time. The end time 23:59 means until midnight. A pause across midnight is entered as two entries (e.g. 20:00--23:59 and 00:00--09:00). *(v1.5; was: e.g. 20:00--09:00)* |
 | TC-012 | During an active pause window, no applications are allowed for the affected user, regardless of remaining time budget. |
 | TC-013 | The service shall enforce pause windows even if no parent app is connected. |
+| TC-014 | An entry is in effect from its start minute (inclusive) to its end minute (exclusive; 23:59 counts as 24:00), on its weekdays, in the local time and on the local weekday of the Windows PC running the service. *(v1.5)* |
 
 ### 5.2 Time Budgets
 
@@ -586,4 +594,4 @@ No open questions. The questions raised by the v1.1 amendment were answered by M
 
 ---
 
-*End of General Product Requirements — Approved v1.4*
+*End of General Product Requirements — Approved v1.5*

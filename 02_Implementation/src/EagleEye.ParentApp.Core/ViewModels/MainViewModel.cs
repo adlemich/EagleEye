@@ -5,7 +5,7 @@ using EagleEye.ParentApp.Core.Data;
 namespace EagleEye.ParentApp.Core.ViewModels;
 
 /// <summary>
-/// The main window (FR-APP-081, US-002 AC-8): navigation menu ("Settings", "Reports"), the
+/// The main window (FR-APP-081, US-002 AC-8): navigation menu ("Settings", "Rules", "Reports"), the
 /// selected page, and the start sequence (database, theme, connection, start page, host dialog
 /// if not paired).
 /// </summary>
@@ -18,6 +18,9 @@ public sealed class MainViewModel(
     /// <summary>Key of the settings page.</summary>
     public const string SettingsKey = "settings";
 
+    /// <summary>Key of the rules page (US-005 AC-1).</summary>
+    public const string RulesKey = "rules";
+
     /// <summary>Key of the reports page (US-004 AC-17).</summary>
     public const string ReportsKey = "reports";
 
@@ -25,7 +28,12 @@ public sealed class MainViewModel(
     private bool _started;
 
     /// <summary>The navigation menu entries.</summary>
-    public IReadOnlyList<NavigationItem> MenuItems { get; } = [new NavigationItem(SettingsKey, AppTexts.MenuSettings), new NavigationItem(ReportsKey, AppTexts.MenuReports)];
+    public IReadOnlyList<NavigationItem> MenuItems { get; } =
+    [
+        new NavigationItem(SettingsKey, AppTexts.MenuSettings),
+        new NavigationItem(RulesKey, AppTexts.MenuRules),
+        new NavigationItem(ReportsKey, AppTexts.MenuReports),
+    ];
 
     /// <summary>
     /// The selected menu entry: Settings until <see cref="StartAsync"/> has chosen the start page.

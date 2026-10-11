@@ -44,11 +44,35 @@ internal sealed class ParentHubClient : IParentHubClient
         // Registered before StartAsync, so no broadcast is lost (coding guidelines §7.2).
         _connection.On<UserAccountListDto>(nameof(IParentClientCallback.OnUserAccountsChanged), snapshot => UserAccountsChanged?.Invoke(snapshot));
         _connection.On<DayUsageDto>(nameof(IParentClientCallback.OnDayUsageChanged), snapshot => DayUsageChanged?.Invoke(snapshot));
+        _connection.On<AccountRulesDto>(nameof(IParentClientCallback.OnAccountRulesChanged), snapshot => AccountRulesChanged?.Invoke(snapshot));
     }
 
     public event Action<UserAccountListDto>? UserAccountsChanged;
 
     public event Action<DayUsageDto>? DayUsageChanged;
+
+    public event Action<AccountRulesDto>? AccountRulesChanged;
+
+    public Task<AccountRulesDto> GetAccountRulesAsync(string accountSid, CancellationToken ct)
+        => _connection.InvokeAsync<AccountRulesDto>(nameof(IParentHub.GetAccountRules), accountSid, ct);
+
+    public Task<StateWriteAckDto> AddBreakTimeEntryAsync(Guid requestId, string accountSid, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.AddBreakTimeEntry), requestId, accountSid, ct);
+
+    public Task<StateWriteAckDto> DeleteBreakTimeEntryAsync(Guid requestId, string accountSid, long entryId, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.DeleteBreakTimeEntry), requestId, accountSid, entryId, ct);
+
+    public Task<StateWriteAckDto> SetBreakTimeEntryActiveAsync(Guid requestId, string accountSid, long entryId, bool isActive, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.SetBreakTimeEntryActive), requestId, accountSid, entryId, isActive, ct);
+
+    public Task<StateWriteAckDto> SetBreakTimeEntryTimeAsync(Guid requestId, string accountSid, long entryId, BreakTimeBoundary boundary, int minute, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.SetBreakTimeEntryTime), requestId, accountSid, entryId, boundary, minute, ct);
+
+    public Task<StateWriteAckDto> SetBreakTimeEntryDayAsync(Guid requestId, string accountSid, long entryId, DayOfWeek day, bool isSelected, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.SetBreakTimeEntryDay), requestId, accountSid, entryId, day, isSelected, ct);
+
+    public Task<StateWriteAckDto> SetDisplayTextAsync(Guid requestId, string accountSid, string text, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.SetDisplayText), requestId, accountSid, text, ct);
 
     public Task<AccountUsageDto> GetAccountUsageAsync(string accountSid, CancellationToken ct)
         => _connection.InvokeAsync<AccountUsageDto>(nameof(IParentHub.GetAccountUsage), accountSid, ct);

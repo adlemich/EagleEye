@@ -5,8 +5,8 @@ namespace EagleEye.Service.Monitoring;
 /// <summary>Receives validated agent reports (implemented by <see cref="AgentReportProcessor"/>).</summary>
 public interface IAgentReportSink
 {
-    /// <summary>Processes the latest report of the agent of a session.</summary>
-    void Process(int sessionId, string accountSid, AgentReport report);
+    /// <summary>Processes the latest report of the agent of a session; <paramref name="agentRun"/> changes on every agent start.</summary>
+    void Process(int sessionId, string accountSid, long agentRun, AgentReport report);
 }
 
 /// <summary>Keeps one session agent per watched session (ADR-011 §2, §7 item 18).</summary>
@@ -20,6 +20,13 @@ public interface ISessionAgentSupervisor
 
     /// <summary>Stops all agents (service stopping).</summary>
     Task StopAllAsync();
+
+    /// <summary>
+    /// Asks the agent of the session to post <c>WM_CLOSE</c> to the app windows of the targets (ADR-013 §4) and waits for
+    /// its answer at most <see cref="SessionAgentSupervisor.CloseAnswerTimeout"/>. <c>null</c>: no working agent, the
+    /// command could not be written, or no answer in time.
+    /// </summary>
+    Task<CloseAnswer?> RequestCloseAsync(int sessionId, IReadOnlyList<CloseTarget> targets, CancellationToken ct = default);
 }
 
 /// <summary>
@@ -41,9 +48,14 @@ public sealed class SessionAgentSupervisor(
     /// <summary>Failures in a row (the first exit plus 3 failed restarts) after which the Error is logged.</summary>
     public const int FailuresForError = 4;
 
+    /// <summary>How long the service waits for the agent's answer to a close command (US-005 Decision 5).</summary>
+    public static readonly TimeSpan CloseAnswerTimeout = TimeSpan.FromSeconds(2);
+
     private readonly Dictionary<int, Slot> _slots = [];
     private readonly Lock _lock = new();
     private readonly CancellationTokenSource _stopping = new();
+    private long _lastRun;
+    private long _lastCommandId;
 
     /// <inheritdoc />
     public async Task ReconcileAsync(IReadOnlyCollection<SessionInfo> sessions, IReadOnlyDictionary<string, string> controlledAccounts)
@@ -90,6 +102,61 @@ public sealed class SessionAgentSupervisor(
         {
             await StopSlotAsync(slot).ConfigureAwait(false);
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<CloseAnswer?> RequestCloseAsync(int sessionId, IReadOnlyList<CloseTarget> targets, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(targets);
+        IAgentProcess? agent;
+        Slot? slot;
+        long id;
+        var answer = new TaskCompletionSource<CloseAnswer?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        lock (_lock)
+        {
+            if (!_slots.TryGetValue(sessionId, out slot) || slot.Agent is null || targets.Count == 0)
+            {
+                return null;
+            }
+
+            agent = slot.Agent;
+            id = ++_lastCommandId;
+            slot.Pending[id] = answer;
+        }
+
+        try
+        {
+            await agent.WriteLineAsync(AgentProtocol.SerializeCloseCommand(new CloseCommand(id, targets)), ct).ConfigureAwait(false);
+            return await answer.Task.WaitAsync(CloseAnswerTimeout, timeProvider, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Channel boundary (broken pipe, timeout): the force step of the close sequence still ends the app.
+            logger.LogDebug(ex, "The close command {CommandId} to the session agent in session {SessionId} was not answered.", id, sessionId);
+            return null;
+        }
+        finally
+        {
+            lock (_lock)
+            {
+                slot.Pending.Remove(id);
+            }
+        }
+    }
+
+    private void CompleteAnswer(Slot slot, IAgentProcess agent, CloseAnswer answer)
+    {
+        TaskCompletionSource<CloseAnswer?>? pending = null;
+        lock (_lock)
+        {
+            if (ReferenceEquals(slot.Agent, agent))
+            {
+                slot.LastReport = timeProvider.GetTimestamp();
+                slot.Pending.TryGetValue(answer.Id, out pending);
+            }
+        }
+
+        pending?.TrySetResult(answer);
     }
 
     private async Task CheckHealthAsync(Slot slot)
@@ -144,6 +211,7 @@ public sealed class SessionAgentSupervisor(
             slot.LastReport = slot.StartedAt;
             slot.Reported = false;
             slot.Fault = null;
+            slot.Run = ++_lastRun;
         }
 
         logger.LogInformation("Session agent started in session {SessionId} (process {ProcessId}).", session.SessionId, agent.ProcessId);
@@ -153,7 +221,7 @@ public sealed class SessionAgentSupervisor(
                 "Usage recording started for account {UserName} ({AccountSid}) in session {SessionId}.", userName, slot.Sid, session.SessionId);
         }
 
-        _ = ReadReportsAsync(slot, agent);
+        _ = ReadReportsAsync(slot, agent, slot.Run);
         _ = ReadErrorsAsync(slot, agent);
     }
 
@@ -193,12 +261,24 @@ public sealed class SessionAgentSupervisor(
         }
     }
 
-    private async Task ReadReportsAsync(Slot slot, IAgentProcess agent)
+    private async Task ReadReportsAsync(Slot slot, IAgentProcess agent, long run)
     {
         try
         {
             while (await agent.ReadReportLineAsync(_stopping.Token).ConfigureAwait(false) is { } line)
             {
+                if (AgentProtocol.IsCloseAnswer(line))
+                {
+                    if (!AgentProtocol.TryParseCloseAnswer(line, out var answer))
+                    {
+                        MarkFault(slot, agent, "sent an invalid answer");
+                        return;
+                    }
+
+                    CompleteAnswer(slot, agent, answer);
+                    continue;
+                }
+
                 if (!AgentProtocol.TryParse(line, out var report))
                 {
                     MarkFault(slot, agent, "sent an invalid report");
@@ -207,7 +287,7 @@ public sealed class SessionAgentSupervisor(
 
                 if (MarkReported(slot, agent))
                 {
-                    sink.Process(slot.SessionId, slot.Sid, report);
+                    sink.Process(slot.SessionId, slot.Sid, run, report);
                 }
             }
         }
@@ -367,6 +447,10 @@ public sealed class SessionAgentSupervisor(
         public int Failures { get; set; }
 
         public long RestartAt { get; set; }
+
+        public long Run { get; set; }
+
+        public Dictionary<long, TaskCompletionSource<CloseAnswer?>> Pending { get; } = [];
 
         public bool ErrorLogged { get; set; }
     }

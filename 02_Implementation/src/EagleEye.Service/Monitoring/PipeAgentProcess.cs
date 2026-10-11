@@ -17,6 +17,7 @@ internal sealed partial class PipeAgentProcess : IAgentProcess
     private readonly FileStream _stderr;
     private readonly BoundedLineReader _reports;
     private readonly BoundedLineReader _errors;
+    private readonly SemaphoreSlim _writeGate = new(1, 1);
 
     public PipeAgentProcess(int processId, SafeProcessHandle process, SafeFileHandle stdin, SafeFileHandle stdout, SafeFileHandle stderr)
     {
@@ -38,8 +39,29 @@ internal sealed partial class PipeAgentProcess : IAgentProcess
 
     public Task<string?> ReadErrorLineAsync(CancellationToken ct) => _errors.ReadLineAsync(ct);
 
+    public async Task WriteLineAsync(string line, CancellationToken ct)
+    {
+        var bytes = SessionAgent.AgentDiagnostics.StreamEncoding.GetBytes(line + "\n");
+        await _writeGate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            await _stdin.WriteAsync(bytes, ct).ConfigureAwait(false);
+            await _stdin.FlushAsync(ct).ConfigureAwait(false);
+        }
+        catch (ObjectDisposedException)
+        {
+            throw new IOException("The session agent's input is closed.");
+        }
+        finally
+        {
+            _writeGate.Release();
+        }
+    }
+
     public async Task StopAsync()
     {
+        await _writeGate.WaitAsync().ConfigureAwait(false);
+        _writeGate.Release();
         await _stdin.DisposeAsync().ConfigureAwait(false);
         try
         {
@@ -56,6 +78,7 @@ internal sealed partial class PipeAgentProcess : IAgentProcess
         await _stdin.DisposeAsync().ConfigureAwait(false);
         await _stdout.DisposeAsync().ConfigureAwait(false);
         await _stderr.DisposeAsync().ConfigureAwait(false);
+        _writeGate.Dispose();
         if (Exited.IsCompleted)
         {
             _process.Dispose();

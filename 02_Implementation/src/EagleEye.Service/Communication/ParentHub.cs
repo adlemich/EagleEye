@@ -1,7 +1,9 @@
 using System.Security.Principal;
 using EagleEye.Service.Pairing;
+using EagleEye.Service.Rules;
 using EagleEye.Service.Statistics;
 using EagleEye.Service.UserAccounts;
+using EagleEye.Shared.Constants;
 using EagleEye.Shared.Contracts;
 using EagleEye.Shared.Models;
 using Microsoft.AspNetCore.SignalR;
@@ -20,6 +22,7 @@ public sealed class ParentHub(
     IParentConnectionRegistry registry,
     IUserAccountService userAccounts,
     IUsageService usage,
+    IBreakTimeService rules,
     ILogger<ParentHub> logger) : Hub<IParentClientCallback>, IParentHub
 {
     /// <summary>Group of all paired parent connections.</summary>
@@ -34,6 +37,64 @@ public sealed class ParentHub(
     internal const string UnknownAccountMessage = "Unknown account.";
     internal const string SaveFailedMessage = "The change could not be saved.";
     internal const string UsageUnavailableMessage = "The usage is not available.";
+    internal const string RulesUnavailableMessage = "The rules are not available.";
+    internal const string EntryNotFoundMessage = "The entry no longer exists.";
+    internal const string EndNotAfterStartMessage = "The end time must be later than the start time.";
+    internal const string NoDaySelectedMessage = "Select at least one day.";
+    internal const string TooManyEntriesMessage = "Too many entries.";
+
+    /// <inheritdoc />
+    public async Task<AccountRulesDto> GetAccountRules(string accountSid)
+    {
+        if (!IsValidSid(accountSid))
+        {
+            throw new HubException(InvalidRequestMessage);
+        }
+
+        try
+        {
+            return await rules.GetAsync(accountSid);
+        }
+        catch (UnknownAccountException)
+        {
+            throw new HubException(UnknownAccountMessage);
+        }
+        catch (Exception ex) when (ex is not HubException)
+        {
+            logger.LogError(ex, "Reading the rules of {AccountSid} failed.", accountSid);
+            throw new HubException(RulesUnavailableMessage);
+        }
+    }
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> AddBreakTimeEntry(Guid requestId, string accountSid) =>
+        WriteRulesAsync(requestId, accountSid, true, device => rules.AddEntryAsync(requestId, accountSid, device));
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> DeleteBreakTimeEntry(Guid requestId, string accountSid, long entryId) =>
+        WriteRulesAsync(requestId, accountSid, true, device => rules.DeleteEntryAsync(requestId, accountSid, entryId, device));
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetBreakTimeEntryActive(Guid requestId, string accountSid, long entryId, bool isActive) =>
+        WriteRulesAsync(requestId, accountSid, true, device => rules.SetActiveAsync(requestId, accountSid, entryId, isActive, device));
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetBreakTimeEntryTime(Guid requestId, string accountSid, long entryId, BreakTimeBoundary boundary, int minute) =>
+        WriteRulesAsync(
+            requestId, accountSid, Enum.IsDefined(boundary) && BreakTimeRules.IsValidMinute(minute),
+            device => rules.SetTimeAsync(requestId, accountSid, entryId, boundary, minute, device));
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetBreakTimeEntryDay(Guid requestId, string accountSid, long entryId, DayOfWeek day, bool isSelected) =>
+        WriteRulesAsync(
+            requestId, accountSid, Enum.IsDefined(day),
+            device => rules.SetDayAsync(requestId, accountSid, entryId, day, isSelected, device));
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetDisplayText(Guid requestId, string accountSid, string text) =>
+        WriteRulesAsync(
+            requestId, accountSid, text is not null && BreakTimeRules.IsValidDisplayText(BreakTimeRules.NormalizeLineBreaks(text)),
+            device => rules.SetDisplayTextAsync(requestId, accountSid, text!, device)); // Checked for null in the condition.
 
     /// <inheritdoc />
     public async Task<AccountUsageDto> GetAccountUsage(string accountSid)
@@ -201,6 +262,48 @@ public sealed class ParentHub(
 
         logger.LogInformation(exception, "Parent app disconnected: {ConnectionId}.", Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
+    }
+
+    /// <summary>
+    /// Common part of the rules writes (US-005, ADR-010): input check, the device name from the connection,
+    /// and the mapping of the service's exceptions to safe texts (coding guidelines §7.4).
+    /// </summary>
+    private async Task<StateWriteAckDto> WriteRulesAsync(
+        Guid requestId, string accountSid, bool argumentsValid, Func<string, Task<StateWriteAckDto>> write)
+    {
+        if (requestId == Guid.Empty || !IsValidSid(accountSid) || !argumentsValid)
+        {
+            throw new HubException(InvalidRequestMessage);
+        }
+
+        try
+        {
+            // The default-deny filter only lets paired connections in, and they always carry a device name.
+            return await write(ParentConnectionState.GetDeviceName(Context)!);
+        }
+        catch (Exception ex) when (ex is not HubException)
+        {
+            throw new HubException(RulesWriteFailure(ex, accountSid));
+        }
+    }
+
+    /// <summary>The safe client text for a failed rules write; unexpected failures are logged.</summary>
+    private string RulesWriteFailure(Exception ex, string accountSid)
+    {
+        switch (ex)
+        {
+            case UnknownAccountException:
+                return UnknownAccountMessage;
+            case EntryNotFoundException:
+                return EntryNotFoundMessage;
+            case TooManyEntriesException:
+                return TooManyEntriesMessage;
+            case RuleValidationException validation:
+                return validation.Violation == RuleViolation.NoDaySelected ? NoDaySelectedMessage : EndNotAfterStartMessage;
+            default:
+                logger.LogError(ex, "Changing the rules of {AccountSid} failed.", accountSid);
+                return SaveFailedMessage;
+        }
     }
 
     /// <summary>Whether the text is a syntactically valid SID.</summary>

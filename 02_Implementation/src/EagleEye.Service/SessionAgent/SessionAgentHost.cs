@@ -1,11 +1,15 @@
 using System.Runtime.InteropServices;
+using System.Threading.Channels;
+using EagleEye.Service.Monitoring;
 
 namespace EagleEye.Service.SessionAgent;
 
 /// <summary>
 /// Agent mode of the service executable (<c>EagleEye.Service.exe --session-agent</c>, ADR-011): scans the
 /// windows of its session about once per second and writes report lines to stdout (on change, at least every
-/// 5 s). End of file on stdin means "stop". No host, no database, no log file, no network, no window.
+/// 5 s). Stdin carries the service's close commands (US-005, ADR-011 amendment): each is handled between two scans
+/// by <see cref="WindowCloser"/> and answered on stdout. End of file on stdin means "stop". No host, no database,
+/// no log file, no network, no window.
 /// First action: <c>SetDefaultDllDirectories</c> (ADR-011 §7 item 7). Thin, verified manually.
 /// </summary>
 public static partial class SessionAgentHost
@@ -15,6 +19,8 @@ public static partial class SessionAgentHost
 
     /// <summary>Time between two window scans.</summary>
     public static readonly TimeSpan ScanInterval = TimeSpan.FromSeconds(1);
+
+    private const int CommandQueueLength = 16;
 
     private const uint LoadLibrarySearchApplicationDir = 0x200;
     private const uint LoadLibrarySearchSystem32 = 0x800;
@@ -33,7 +39,7 @@ public static partial class SessionAgentHost
         try
         {
             await stderr.WriteLineAsync(AgentDiagnostics.Describe()).ConfigureAwait(false);
-            await ScanUntilStoppedAsync().ConfigureAwait(false);
+            await ScanUntilStoppedAsync(TextWriter.Synchronized(stderr)).ConfigureAwait(false);
             return 0;
         }
         catch (Exception ex)
@@ -44,14 +50,15 @@ public static partial class SessionAgentHost
         }
     }
 
-    private static async Task ScanUntilStoppedAsync()
+    private static async Task ScanUntilStoppedAsync(TextWriter stderr)
     {
         using var stop = new CancellationTokenSource();
-        var stdin = new Thread(() => WaitForEndOfInput(stop)) { IsBackground = true, Name = "stdin" };
-        stdin.Start();
+        var commands = Channel.CreateBounded<CloseCommand>(new BoundedChannelOptions(CommandQueueLength) { SingleWriter = true });
+        _ = Task.Run(() => ReadCommandsAsync(commands.Writer, stderr, stop));
 
         using var stdout = new StreamWriter(Console.OpenStandardOutput(), AgentDiagnostics.StreamEncoding) { AutoFlush = true, NewLine = "\n" };
         var enumerator = new WindowEnumerator();
+        var closer = new WindowCloser(enumerator);
         var publisher = new AgentReportPublisher(TimeProvider.System);
         using var timer = new PeriodicTimer(ScanInterval);
         do
@@ -62,7 +69,39 @@ public static partial class SessionAgentHost
                 await stdout.WriteLineAsync(line).ConfigureAwait(false);
             }
         }
-        while (await NextTickAsync(timer, stop.Token).ConfigureAwait(false));
+        while (await WaitForTickHandlingCommandsAsync(timer, commands.Reader, closer, stdout, stop.Token).ConfigureAwait(false));
+    }
+
+    /// <summary>Waits for the next scan; close commands that arrive meanwhile are handled at once (between scans).</summary>
+    private static async Task<bool> WaitForTickHandlingCommandsAsync(
+        PeriodicTimer timer, ChannelReader<CloseCommand> commands, WindowCloser closer, StreamWriter stdout, CancellationToken stop)
+    {
+        var tick = NextTickAsync(timer, stop);
+        while (true)
+        {
+            var command = WaitForCommandAsync(commands, stop);
+            if (await Task.WhenAny(tick, command).ConfigureAwait(false) == tick)
+            {
+                return await tick.ConfigureAwait(false);
+            }
+
+            while (commands.TryRead(out var next))
+            {
+                await stdout.WriteLineAsync(AgentProtocol.SerializeCloseAnswer(closer.Close(next))).ConfigureAwait(false);
+            }
+        }
+    }
+
+    private static async Task<bool> WaitForCommandAsync(ChannelReader<CloseCommand> commands, CancellationToken stop)
+    {
+        try
+        {
+            return await commands.WaitToReadAsync(stop).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
     }
 
     private static async Task<bool> NextTickAsync(PeriodicTimer timer, CancellationToken stop)
@@ -77,23 +116,39 @@ public static partial class SessionAgentHost
         }
     }
 
-    private static void WaitForEndOfInput(CancellationTokenSource stop)
+    /// <summary>
+    /// Reads command lines from stdin (bounded, strict, coding guidelines §12.4). Invalid lines are reported on stderr
+    /// and ignored; an over-long or broken line, end of file or a broken pipe stop the agent.
+    /// </summary>
+    private static async Task ReadCommandsAsync(ChannelWriter<CloseCommand> commands, TextWriter stderr, CancellationTokenSource stop)
     {
         try
         {
-            using var stdin = Console.OpenStandardInput();
-            var buffer = new byte[256];
-            while (stdin.Read(buffer, 0, buffer.Length) > 0)
+            await using var stdin = Console.OpenStandardInput();
+            var reader = new BoundedLineReader(stdin, AgentCommandReader.MaxLineLength);
+            while (await reader.ReadLineAsync(stop.Token).ConfigureAwait(false) is { } line)
             {
-                // The service sends no messages in US-004; anything read is ignored.
+                if (AgentCommandReader.TryParse(line, out var command))
+                {
+                    await commands.WriteAsync(command, stop.Token).ConfigureAwait(false);
+                }
+                else
+                {
+                    await stderr.WriteLineAsync("invalid command ignored").ConfigureAwait(false);
+                }
             }
+        }
+        catch (AgentProtocolException ex)
+        {
+            await stderr.WriteLineAsync($"command channel closed: {ex.Message}").ConfigureAwait(false);
         }
         catch (IOException)
         {
             // A broken pipe means the service is gone: stop as on end of file.
         }
 
-        stop.Cancel();
+        commands.TryComplete();
+        await stop.CancelAsync().ConfigureAwait(false);
     }
 
     [LibraryImport("kernel32.dll")]

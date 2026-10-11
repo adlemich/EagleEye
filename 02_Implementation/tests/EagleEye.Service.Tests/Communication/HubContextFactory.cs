@@ -14,13 +14,17 @@ internal static class HubContextFactory
         string connectionId,
         IPAddress? remoteAddress = null,
         string? authorization = null,
-        bool withHttpContext = true)
+        bool withHttpContext = true,
+        IPAddress? localAddress = null)
     {
         var features = new FeatureCollection();
         if (withHttpContext)
         {
             var httpContext = new DefaultHttpContext();
             httpContext.Connection.RemoteIpAddress = remoteAddress;
+            httpContext.Connection.RemotePort = 50123;
+            httpContext.Connection.LocalIpAddress = localAddress;
+            httpContext.Connection.LocalPort = 5080;
             if (authorization is not null)
             {
                 httpContext.Request.Headers.Authorization = authorization;

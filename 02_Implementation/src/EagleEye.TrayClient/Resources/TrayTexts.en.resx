@@ -16,4 +16,5 @@
   <data name="PairingCodeFormat" xml:space="preserve"><value>Pairing code: {0}</value></data>
   <data name="PairingInstruction" xml:space="preserve"><value>Enter this code in the EagleEye parent app.</value></data>
   <data name="PairingValidityFormat" xml:space="preserve"><value>The code is valid for {0} minutes.</value></data>
+  <data name="BreakMessageTitle" xml:space="preserve"><value>EagleEye</value></data>
 </root>

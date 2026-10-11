@@ -3,7 +3,9 @@ using EagleEye.Service.Certificates;
 using EagleEye.Service.Communication;
 using EagleEye.Service.Data;
 using EagleEye.Service.Diagnostics;
+using EagleEye.Service.Enforcement;
 using EagleEye.Service.Pairing;
+using EagleEye.Service.Rules;
 using EagleEye.Service.SessionAgent;
 using EagleEye.Service.Statistics;
 using EagleEye.Service.UserAccounts;
@@ -97,11 +99,28 @@ var host = Host.CreateDefaultBuilder(args)
             services.AddSingleton<IPairingCodeNotifier, PairingCodeNotifier>();
             services.AddSingleton<IPairingManager, PairingManager>();
 
+            // Session-bound tray connections and the kid's message (US-005, ADR-014).
+            services.AddSingleton<TrayConnectionRegistry>();
+            services.AddSingleton<ITrayClientIdentifier>(sp => new Win32TrayClientIdentifier(
+                sp.GetRequiredService<EagleEye.Service.Monitoring.IProcessInspector>(),
+                Path.Combine(Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory))!, "TrayClient", "EagleEye.TrayClient.exe"))); // The service folder has a parent.
+            services.AddSingleton<IKidMessenger, KidMessenger>();
+
             // State area "UserAccounts" (US-003, ADR-010).
             services.AddSingleton<ILocalAccountSource, NetApiLocalAccountSource>();
             services.AddSingleton<IUserAccountsBroadcaster, UserAccountsBroadcaster>();
             services.AddSingleton<IUserAccountService, UserAccountService>();
             services.AddHostedService<AccountInventoryMonitor>();
+
+            // State area "AccountRules" (US-005, ADR-010): break times and display texts.
+            services.AddSingleton<IBreakTimeRepository, BreakTimeRepository>();
+            services.AddSingleton<IAccountRulesBroadcaster, AccountRulesBroadcaster>();
+            services.AddSingleton<BreakTimeService>();
+            services.AddSingleton<IBreakTimeService>(sp => sp.GetRequiredService<BreakTimeService>());
+            services.AddSingleton<IAccountDataPurger>(sp => sp.GetRequiredService<BreakTimeService>());
+
+            // Break-time enforcement at app start (US-005, ADR-013, ADR-014).
+            services.AddBreakTimeEnforcement();
 
             // App observation and usage accounting (US-004, ADR-011, ADR-012).
             services.AddUsageRecording();
@@ -139,6 +158,8 @@ try
     await host.Services.GetRequiredService<ServiceDatabase>().InitializeAsync();
     await host.Services.GetRequiredService<IUserAccountService>().InitializeAsync();
     await host.Services.GetRequiredService<IUsageService>().InitializeAsync();
+    await host.Services.GetRequiredService<IBreakTimeService>().InitializeAsync();
+    await host.Services.GetRequiredService<EnforcementHistory>().InitializeAsync();
 }
 catch (Exception ex) when (ex is SqliteException or InvalidDataException)
 {

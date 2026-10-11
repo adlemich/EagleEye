@@ -1,4 +1,5 @@
 using System.Threading.Channels;
+using EagleEye.Service.Enforcement;
 using EagleEye.Service.Monitoring;
 using EagleEye.Service.UserAccounts;
 
@@ -17,6 +18,7 @@ public sealed class UsageAccountingLoop(
     UsageTracker tracker,
     IUsageService usage,
     IUserAccountService userAccounts,
+    IBreakTimeEnforcement enforcement,
     TimeProvider timeProvider,
     ILogger<UsageAccountingLoop> logger) : BackgroundService
 {
@@ -42,6 +44,8 @@ public sealed class UsageAccountingLoop(
             logger.LogError(ex, "Ending the open app instances at service stop failed.");
         }
 
+        // US-005 D-14: running close sequences terminate their apps at once and record it.
+        await enforcement.StopAsync().ConfigureAwait(false);
         await supervisor.StopAllAsync().ConfigureAwait(false);
         queue.Complete();
     }
@@ -105,9 +109,12 @@ public sealed class UsageAccountingLoop(
         {
             case UsageTick:
                 await TickAsync().ConfigureAwait(false);
+                await enforcement.OnTickAsync(_controlled, SessionsInUse(), ct).ConfigureAwait(false);
                 break;
-            case AppsObserved observed when _controlled.ContainsKey(observed.AccountSid):
-                tracker.ObserveApps(observed.SessionId, observed.AccountSid, observed.Apps);
+            case AppsObserved observed when _controlled.TryGetValue(observed.AccountSid, out var userName):
+                // US-005 (ADR-013 §1): blocked starts are removed before the tracker, so they never count as usage.
+                var screened = enforcement.Screen(observed, userName, path => tracker.IsOpen(observed.AccountSid, path));
+                tracker.ObserveApps(screened.SessionId, screened.AccountSid, screened.Apps);
                 break;
             case SessionChanged changed:
                 tracker.Advance();
@@ -115,27 +122,38 @@ public sealed class UsageAccountingLoop(
                 if (changed.Kind == SessionChangeKind.Logoff)
                 {
                     tracker.RemoveSession(changed.SessionId);
+                    enforcement.SessionEnded(changed.SessionId);
                 }
 
                 break;
             case PowerSuspended:
                 tracker.Suspend();
+                enforcement.PowerChanged();
                 break;
             case PowerResumed:
                 tracker.Resume();
+                enforcement.PowerChanged();
                 break;
         }
 
         tracker.SetActivity(sid => _sessions.AccountInUse(sid, supervisor.IsObserving));
         await usage.ApplyAsync(tracker.TakeOutput(isTick), _controlled, isTick, ct).ConfigureAwait(false);
+        enforcement.PublishOpenApps(tracker.OpenPaths());
         if (isTick && Today() is var today && today != _today)
         {
             // First tick of a new local day (ADR-012 §5, §6): purge, then the new (empty) today for every account.
             _today = today;
             await usage.PurgeOldDataAsync(ct).ConfigureAwait(false);
+            await enforcement.PurgeOldDataAsync(ct).ConfigureAwait(false);
             await usage.PublishTodayAsync([.. _controlled.Keys], ct).ConfigureAwait(false);
         }
     }
+
+    /// <summary>The controlled accounts' sessions that are in use now (for time-change findings, AC-37).</summary>
+    private List<SessionInUse> SessionsInUse() =>
+        [.. _sessions.Sessions
+            .Where(s => s.IsInUse && s.UserSid is not null && _controlled.ContainsKey(s.UserSid))
+            .Select(s => new SessionInUse(s.SessionId, s.UserSid!, _controlled[s.UserSid!]))]; // Checked for null above.
 
     private async Task TickAsync()
     {
@@ -172,6 +190,7 @@ public sealed class UsageAccountingLoop(
             if (!snapshot.Any(s => s.SessionId == known.SessionId && StringComparer.OrdinalIgnoreCase.Equals(s.UserSid, known.UserSid)))
             {
                 tracker.RemoveSession(known.SessionId);
+                enforcement.SessionEnded(known.SessionId);
             }
         }
 

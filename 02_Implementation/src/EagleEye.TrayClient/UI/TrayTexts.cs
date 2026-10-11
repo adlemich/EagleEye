@@ -42,6 +42,9 @@ internal static class TrayTexts
     /// <summary>Composite format with one placeholder for the validity in minutes.</summary>
     public static string PairingValidityFormat => Get(nameof(PairingValidityFormat));
 
+    /// <summary>Title of the break-time message (FR-TRAY-022, AC-30); "EagleEye" in every language.</summary>
+    public static string BreakMessageTitle => Get(nameof(BreakMessageTitle));
+
     /// <summary>Returns the text for the current UI culture.</summary>
     /// <exception cref="InvalidOperationException">The resource key does not exist.</exception>
     internal static string Get(string name)

@@ -1,4 +1,4 @@
-# EagleEye.Service
+| Database | `%ProgramData%agleEyeagleEye.Service.db` (pairings, selections, usage; US-005: `BreakTimeEntries`, `AccountDisplayTexts`, `BlockedStarts` and `TimeChangeFindings`, the last two kept 90 days) |# EagleEye.Service
 
 Windows service running as `SYSTEM`. The core enforcement engine of EagleEye.
 
@@ -17,22 +17,34 @@ Windows service running as `SYSTEM`. The core enforcement engine of EagleEye.
 ```
 EagleEye.Service/
 ├── SessionAgent/     Agent mode (`--session-agent`, ADR-011): window scan with the "Apps" rule, JSON-line
-│                     reports on stdout; no window, no hooks, no file access, SetDefaultDllDirectories
+│                     reports on stdout; no window, no hooks, no file access, SetDefaultDllDirectories.
+│                     US-005: close command on stdin (AgentCommandReader, strict, ≤ 4 KB, ≤ 64 targets);
+│                     WindowCloser posts WM_CLOSE (PostMessageW, the only message call) to the app windows
+│                     of targets whose creation time it verified; answer line on stdout
 ├── Monitoring/       Sessions (WTS, SCM session/power events), hardened SessionAgentLauncher, supervisor,
 │                     process inspection, ProgramPathPolicy, VersionResourceReader, PackageManifestReader,
 │                     name resolution (impersonating the session user), agent report processor (US-004)
-├── Enforcement/      Enforcement engine — graceful shutdown + force-kill logic
+├── Enforcement/      Break-time enforcement at app start (US-005, ADR-013): BreakTimeGate (start = first
+│                     process, before usage accounting), BlockedStartRunner (message + WM_CLOSE, 20 s,
+│                     ≤ 3 force rounds on the recomputed kill set), KillSetBuilder, EnforcementIgnoreList,
+│                     Win32ProcessTable, Win32ProcessTerminator, BlockedStartLog (limited), history and
+│                     TimeChangeMonitor (time-zone/clock findings), BreakTimeEnforcement (facade for the loop)
+├── Rules/            BreakTimeService (state owner of "AccountRules:{sid}", in-memory snapshot), schedule
+│                     evaluation (start inclusive, end exclusive, 23:59 = midnight), change-log texts
 ├── Configuration/    Per-user configuration management — rules, budgets, schedules
 ├── Statistics/       Usage accounting (ADR-012): event queue, UsageTracker (monotonic credit, midnight
 │                     split), UsageService (state owner of the usage areas), 5 s accounting loop
-├── Communication/    SignalR hub (server side) — serves parent apps + tray client
+├── Communication/    SignalR hubs (parent apps, tray client). US-005: TrayHub binds each tray connection to its
+│                     session (Win32TrayClientIdentifier: TCP owner PID + installed path, ADR-014);
+│                     KidMessenger sends ShowBreakTimeMessage as a client result (3 s)
 ├── Certificates/     Self-signed TLS certificate generation and management
 ├── UserAccounts/     Account inventory and selection (US-003): NetApiLocalAccountSource (Win32),
 │                     AccountInventoryFilter (standard only; no built-ins by RID, no defaultuser0),
 │                     UserAccountService (state owner of the area "UserAccounts", ADR-010),
 │                     UserAccountsBroadcaster, AccountInventoryMonitor (checks every 15 s)
 ├── Data/             ServiceDatabase (migrations: 1 PairedDevices, 2 AccountSelections,
-│                     3 AppRecords/AppInstances/DailyUsage), repositories
+│                     3 AppRecords/AppInstances/DailyUsage, 4 BreakTimeEntries/AccountDisplayTexts/
+│                     BlockedStarts/TimeChangeFindings), repositories
 └── Diagnostics/      Event Log pairing code, admin-only ACL of the logs\ folder
 ```
 
@@ -42,6 +54,7 @@ EagleEye.Service/
 |---|---|---|
 | `UserAccounts` | `UserAccounts/UserAccountService` | `GetUserAccounts` / `SetParentalControl` / `OnUserAccountsChanged` |
 | `UsageDay:{sid}:{day}` | `Statistics/UsageService` | `GetAccountUsage` (today + days with usage, 90 days) / none / `OnDayUsageChanged` (at most once per account every 5 s) |
+| `AccountRules:{sid}` | `Rules/BreakTimeService` | `GetAccountRules` / `AddBreakTimeEntry`, `DeleteBreakTimeEntry`, `SetBreakTimeEntryActive`, `SetBreakTimeEntryTime`, `SetBreakTimeEntryDay`, `SetDisplayText` (field-level, validated against the stored entry) / `OnAccountRulesChanged` |
 
 Every accepted write and every change of the Windows accounts produces one revision and one broadcast to the group `Parents` (including the sender). Revisions are in memory and start at 1 on every service start.
 
@@ -70,3 +83,5 @@ Every accepted write and every change of the Windows accounts produces one revis
 | `EAGLEEYE_DATA_DIR` | Data folder of the console-mode service (US-002) |
 | `EAGLEEYE_DEV_WATCH_SID` | Starts the agent as an ordinary child process in the own session and treats this account as a standard account, so DEV can tick it and smoke-test without SYSTEM rights |
 | `EAGLEEYE_DEV_PORT_OFFSET` | Shifts both ports (e.g. 10000 → 15080/15443), so a console service can run next to an installed one; the Debug parent app reads the same variable |
+
+US-005: in Debug builds a tray client named `EagleEye.TrayClient.exe` counts as verified from any folder (ADR-014 §1), and the Debug tray client also reads `EAGLEEYE_DEV_PORT_OFFSET`. The Debug parent app reads `EAGLEEYE_DEV_APP_DATA_DIR` (own data folder for smoke checks).

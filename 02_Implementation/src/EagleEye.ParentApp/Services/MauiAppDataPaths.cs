@@ -8,6 +8,14 @@ namespace EagleEye.ParentApp.Services;
 /// </summary>
 public sealed class MauiAppDataPaths : IAppDataPaths
 {
+#if DEBUG
+    /// <summary>
+    /// <b>Debug builds only</b> (US-005 D-5): another data folder, so a DEV smoke check never reads or changes the data
+    /// (pairing, token) of a parent app installed on the same PC. Release builds do not contain the switch.
+    /// </summary>
+    public const string DevDataDirectoryVariable = "EAGLEEYE_DEV_APP_DATA_DIR";
+#endif
+
     private const string ProductFolder = "EagleEye";
     private const string DatabaseFileName = "EagleEye.ParentApp.db";
 
@@ -15,6 +23,12 @@ public sealed class MauiAppDataPaths : IAppDataPaths
     public MauiAppDataPaths()
     {
         DataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ProductFolder);
+#if DEBUG
+        if (Environment.GetEnvironmentVariable(DevDataDirectoryVariable) is { Length: > 0 } devDirectory)
+        {
+            DataDirectory = Path.GetFullPath(devDirectory);
+        }
+#endif
         DatabasePath = Path.Combine(DataDirectory, DatabaseFileName);
         Directory.CreateDirectory(DataDirectory);
     }

@@ -179,7 +179,7 @@ public sealed class UsageRepositoryTests : IAsyncLifetime
             await using var database = new ServiceDatabase(ServiceDatabase.BuildConnectionString(file));
             await database.InitializeAsync();
 
-            Assert.Equal(3, await database.GetSchemaVersionAsync());
+            Assert.Equal(4, await database.GetSchemaVersionAsync());
             Assert.NotNull(await new PairedDeviceRepository(database).FindByTokenHashAsync(new byte[32]));
             Assert.True((await new AccountSelectionRepository(database).LoadAllAsync())["S-1-5-21-1-2-3-1003"]);
         }

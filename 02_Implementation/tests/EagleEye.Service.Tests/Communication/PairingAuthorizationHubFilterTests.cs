@@ -1,5 +1,6 @@
 using EagleEye.Service.Communication;
 using EagleEye.Service.Pairing;
+using EagleEye.Service.Rules;
 using EagleEye.Service.Statistics;
 using EagleEye.Service.UserAccounts;
 using Microsoft.AspNetCore.SignalR;
@@ -96,7 +97,7 @@ public sealed class PairingAuthorizationHubFilterTests
 
         var hub = new ParentHub(
             Mock.Of<IPairingManager>(), Mock.Of<IParentConnectionRegistry>(), Mock.Of<IUserAccountService>(),
-            Mock.Of<IUsageService>(), Mock.Of<ILogger<ParentHub>>());
+            Mock.Of<IUsageService>(), Mock.Of<IBreakTimeService>(), Mock.Of<ILogger<ParentHub>>());
         var method = typeof(ParentHub).GetMethod(methodName)
             ?? throw new InvalidOperationException($"Method {methodName} not found.");
         return new HubInvocationContext(caller.Object, Mock.Of<IServiceProvider>(), hub, method, []);
