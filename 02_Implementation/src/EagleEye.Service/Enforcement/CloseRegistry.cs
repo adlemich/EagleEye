@@ -13,7 +13,7 @@ public sealed record CloseEntry(ICloseSequenceHandle Handle, bool RemovesFromRep
 public sealed class CloseRegistry
 {
     private readonly Lock _lock = new();
-    private readonly Dictionary<(int SessionId, string Path), CloseEntry> _entries = new(new KeyComparer());
+    private readonly Dictionary<(int SessionId, string PathUpper), CloseEntry> _entries = [];
 
     /// <summary>The running sequence of the app in the session, or <c>null</c> (also when it has completed).</summary>
     public CloseEntry? Find(int sessionId, string programPath)
@@ -21,7 +21,8 @@ public sealed class CloseRegistry
         ArgumentNullException.ThrowIfNull(programPath);
         lock (_lock)
         {
-            if (!_entries.TryGetValue((sessionId, programPath), out var entry))
+            var key = (sessionId, programPath.ToUpperInvariant());
+            if (!_entries.TryGetValue(key, out var entry))
             {
                 return null;
             }
@@ -31,7 +32,7 @@ public sealed class CloseRegistry
                 return entry;
             }
 
-            _entries.Remove((sessionId, programPath));
+            _entries.Remove(key);
             return null;
         }
     }
@@ -46,7 +47,7 @@ public sealed class CloseRegistry
         ArgumentNullException.ThrowIfNull(entry);
         lock (_lock)
         {
-            _entries[(sessionId, programPath)] = entry;
+            _entries[(sessionId, programPath.ToUpperInvariant())] = entry;
         }
     }
 
@@ -55,19 +56,13 @@ public sealed class CloseRegistry
     {
         lock (_lock)
         {
-            foreach (var key in _entries.Keys.Where(k => k.SessionId == sessionId).ToList())
+            foreach (var key in _entries.Keys.ToList())
             {
-                _entries.Remove(key);
+                if (key.SessionId == sessionId)
+                {
+                    _entries.Remove(key);
+                }
             }
         }
-    }
-
-    private sealed class KeyComparer : IEqualityComparer<(int SessionId, string Path)>
-    {
-        public bool Equals((int SessionId, string Path) x, (int SessionId, string Path) y) =>
-            x.SessionId == y.SessionId && StringComparer.OrdinalIgnoreCase.Equals(x.Path, y.Path);
-
-        public int GetHashCode((int SessionId, string Path) obj) =>
-            HashCode.Combine(obj.SessionId, StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Path));
     }
 }

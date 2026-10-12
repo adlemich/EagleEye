@@ -61,11 +61,13 @@ public sealed class EnforcementLogTests
 
         _log.Ended(request with { AfterGrace = false, Entry = Entry, Reason = CloseReasons.BreakTime }, "closed gracefully after 0.3 s", "shown", true);
 
+        _log.Detected(request with { AfterGrace = false });
         var messages = _logger.Messages(LogLevel.Information);
         Assert.Equal(@"Closing app: account kid1, Editor (notepad.exe, C:\Windows\System32\notepad.exe), budget used up, after grace period.", messages[0]);
+        Assert.Equal(@"Closing app: account kid1, Editor (notepad.exe, C:\Windows\System32\notepad.exe), budget used up.", messages[^1]);
         Assert.Equal(
             @"App closed: account kid1, Editor (notepad.exe, C:\Windows\System32\notepad.exe), break time 20:00–23:59 (Mo Tu We Th Fr Sa Su): closed gracefully after 0.3 s; message shown.",
-            messages[^1]);
+            messages[^2]);
     }
 
     [Fact]

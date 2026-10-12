@@ -158,12 +158,40 @@ public sealed class TimeLimitEngineTests
     [Fact]
     public void NoEndWithinTheHorizon_Nothing()
     {
+        SetRule(Kid, 2, Paint, 120);
         Run(Paint);
 
         Evaluate();
 
         Assert.Empty(_messages);
         Assert.Empty(_closes);
+    }
+
+    [Fact]
+    public void AppWithoutARuleRecord_DefaultRule_ClosedAtOnce()
+    {
+        const string calc = @"C:\Apps\calc.exe";
+        Run(calc);
+
+        Evaluate();
+
+        Assert.Equal((CloseReasons.NotAllowedToday, new AppRuleAtClose(0, BreakTimeDays.None, 0)), (_closes.Single().Request.Reason, _closes.Single().Request.Rule));
+    }
+
+    [Fact]
+    public void ClosedAppGoneFromTheReport_ReportedAgainWithTheSameProcesses_ClosedAgain()
+    {
+        Use(Notepad, 180);
+        Run(Notepad);
+        Evaluate();
+        _closes[0].Handle.SetupGet(h => h.IsCompleted).Returns(true);
+        _sessions.Update(2, Kid, []);
+        Evaluate();
+
+        Run(Notepad);
+        Evaluate();
+
+        Assert.Equal(2, _closes.Count);
     }
 
     // ---------- Exemptions: AC-26, AC-27 ----------
@@ -281,6 +309,19 @@ public sealed class TimeLimitEngineTests
         var close = _closes.Single().Request;
         Assert.Equal((true, BlockedStartTexts.GraceEndedTrigger, CloseReasons.NotAllowedToday), (close.AfterGrace, close.Trigger, close.Reason));
         Assert.Single(_messages);
+    }
+
+    [Fact]
+    public void OldRulesWithoutAnEndInTheHorizon_ChangeToZero_Grace()
+    {
+        SetRule(Kid, 1, Notepad, 120);
+        Run(Notepad);
+        Evaluate();
+
+        SetRule(Kid, 1, Notepad, 0);
+        Evaluate();
+
+        Assert.Equal(KidMessageReason.AppGracePeriod, _messages.Single().Message.Reason);
     }
 
     [Fact]

@@ -15,7 +15,7 @@ public sealed class TodayUsageLedger(
     TimeProvider timeProvider,
     ILogger<TodayUsageLedger> logger)
 {
-    private readonly Dictionary<(string Sid, string Path, DateOnly Day), long> _seconds = new(new KeyComparer());
+    private readonly Dictionary<(string Sid, string Path, DateOnly Day), long> _seconds = [];
     private readonly HashSet<string> _loaded = new(StringComparer.OrdinalIgnoreCase);
     private bool _loadFailureLogged;
 
@@ -26,7 +26,7 @@ public sealed class TodayUsageLedger(
         var today = Today();
         foreach (var credit in credits.Where(c => c.Day >= today && _loaded.Contains(c.AccountSid)))
         {
-            var key = (credit.AccountSid, credit.ProgramPath, credit.Day);
+            var key = Key(credit.AccountSid, credit.ProgramPath, credit.Day);
             _seconds[key] = _seconds.GetValueOrDefault(key) + credit.Seconds;
         }
 
@@ -41,20 +41,29 @@ public sealed class TodayUsageLedger(
     {
         ArgumentNullException.ThrowIfNull(controlledSids);
         var controlled = new HashSet<string>(controlledSids, StringComparer.OrdinalIgnoreCase);
-        foreach (var sid in _loaded.Where(s => !controlled.Contains(s)).ToList())
+        foreach (var sid in _loaded.ToList())
         {
-            _loaded.Remove(sid);
-            foreach (var key in _seconds.Keys.Where(k => StringComparer.OrdinalIgnoreCase.Equals(k.Sid, sid)).ToList())
+            if (!controlled.Contains(sid))
             {
-                _seconds.Remove(key);
+                _loaded.Remove(sid);
+                var upper = sid.ToUpperInvariant();
+                foreach (var key in _seconds.Keys.ToList())
+                {
+                    if (key.Sid == upper)
+                    {
+                        _seconds.Remove(key);
+                    }
+                }
             }
         }
 
         var today = Today();
-        foreach (var sid in controlled.Where(s => !_loaded.Contains(s)))
+        foreach (var sid in controlled)
         {
-            _loaded.Add(sid);
-            await LoadAsync(sid, today, ct).ConfigureAwait(false);
+            if (_loaded.Add(sid))
+            {
+                await LoadAsync(sid, today, ct).ConfigureAwait(false);
+            }
         }
     }
 
@@ -63,7 +72,7 @@ public sealed class TodayUsageLedger(
     {
         ArgumentNullException.ThrowIfNull(accountSid);
         ArgumentNullException.ThrowIfNull(programPath);
-        return _seconds.GetValueOrDefault((accountSid, programPath, day));
+        return _seconds.GetValueOrDefault(Key(accountSid, programPath, day));
     }
 
     private async Task LoadAsync(string sid, DateOnly today, CancellationToken ct)
@@ -90,7 +99,7 @@ public sealed class TodayUsageLedger(
         {
             if (apps.TryGetValue(row.AppId, out var app))
             {
-                var key = (sid, app.ProgramPath, row.Day);
+                var key = Key(sid, app.ProgramPath, row.Day);
                 _seconds[key] = _seconds.GetValueOrDefault(key) + row.Seconds;
             }
         }
@@ -98,20 +107,17 @@ public sealed class TodayUsageLedger(
 
     private void Prune(DateOnly today)
     {
-        foreach (var key in _seconds.Keys.Where(k => k.Day < today).ToList())
+        foreach (var key in _seconds.Keys.ToList())
         {
-            _seconds.Remove(key);
+            if (key.Day < today)
+            {
+                _seconds.Remove(key);
+            }
         }
     }
 
+    private static (string Sid, string Path, DateOnly Day) Key(string sid, string path, DateOnly day) =>
+        (sid.ToUpperInvariant(), path.ToUpperInvariant(), day);
+
     private DateOnly Today() => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), timeProvider.LocalTimeZone).DateTime);
-
-    private sealed class KeyComparer : IEqualityComparer<(string Sid, string Path, DateOnly Day)>
-    {
-        public bool Equals((string Sid, string Path, DateOnly Day) x, (string Sid, string Path, DateOnly Day) y) =>
-            x.Day == y.Day && StringComparer.OrdinalIgnoreCase.Equals(x.Sid, y.Sid) && StringComparer.OrdinalIgnoreCase.Equals(x.Path, y.Path);
-
-        public int GetHashCode((string Sid, string Path, DateOnly Day) obj) =>
-            HashCode.Combine(StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Sid), StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Path), obj.Day);
-    }
 }

@@ -81,8 +81,13 @@ public sealed class AppRulesSnapshot
         ArgumentNullException.ThrowIfNull(stored);
         ArgumentNullException.ThrowIfNull(isIgnored);
         var snapshot = Empty;
-        foreach (var app in stored.Apps.Where(a => !isIgnored(a.ProgramPath)))
+        foreach (var app in stored.Apps)
         {
+            if (isIgnored(app.ProgramPath))
+            {
+                continue;
+            }
+
             snapshot = snapshot.With(
                 app.AccountSid,
                 snapshot.For(app.AccountSid).WithApp(new AppRuleEntry(app.AppId, app.ProgramPath, app.DisplayName, app.BudgetMinutes, app.Days)));

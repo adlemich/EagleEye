@@ -35,9 +35,12 @@ internal sealed class MessageOutbox
         }
 
         var chosen = _candidates.MaxBy(c => c.Priority);
-        foreach (var other in _candidates.Where(c => !ReferenceEquals(c.Message, chosen.Message)))
+        foreach (var other in _candidates)
         {
-            other.Log(KidMessageStates.ReplacedInTick);
+            if (!ReferenceEquals(other.Message, chosen.Message))
+            {
+                other.Log(KidMessageStates.ReplacedInTick);
+            }
         }
 
         _ = LogWhenAnsweredAsync(messenger.ShowAsync(sessionId, chosen.Message, CancellationToken.None), chosen.Log);

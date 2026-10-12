@@ -1,3 +1,4 @@
+using AppKey = (int SessionId, string PathUpper);
 using EagleEye.Service.Communication;
 using EagleEye.Service.Data;
 using EagleEye.Service.Rules;
@@ -55,22 +56,10 @@ public sealed class TimeLimitEngine(
             }
         }
 
-        foreach (var key in _graces.Keys.Where(k => !tick.Seen.ContainsKey(k)).ToList())
-        {
-            _graces.Remove(key);
-        }
-
-        foreach (var key in _closed.Keys.Where(k => !tick.Reported.Contains(k)).ToList())
-        {
-            _closed.Remove(key);
-        }
-
+        Forget(_graces, tick.Seen.ContainsKey);
+        Forget(_closed, tick.Reported.Contains);
         _lastEnds = tick.Seen;
-        foreach (var sid in _rules.Keys.Where(s => !controlledAccounts.ContainsKey(s)).ToList())
-        {
-            _rules.Remove(sid);
-        }
-
+        _rules.Clear();
         foreach (var sid in controlledAccounts.Keys)
         {
             _rules[sid] = (breaks.Current.For(sid), appRules.Current.For(sid));
@@ -271,7 +260,6 @@ public sealed class TimeLimitEngine(
         {
             AppEndKind.Break => BlockedStartTexts.BreakBeganTrigger,
             AppEndKind.Budget => BlockedStartTexts.BudgetRanOutTrigger,
-            AppEndKind.Midnight => BlockedStartTexts.MidnightTrigger,
             _ => _lastEnds.GetValueOrDefault(key) == AppEndKind.Midnight ? BlockedStartTexts.MidnightTrigger : BlockedStartTexts.RulesChangedTrigger,
         };
         var reason = end.Kind switch
@@ -301,7 +289,17 @@ public sealed class TimeLimitEngine(
         : left <= GracePolicy.Threshold(settings.EarlyMinutes) ? WarningLevel.Early
         : null;
 
-    private readonly record struct AppKey(int SessionId, string PathUpper);
+    /// <summary>Removes the entries whose key is not kept.</summary>
+    private static void Forget<TValue>(Dictionary<AppKey, TValue> entries, Func<AppKey, bool> keep)
+    {
+        foreach (var key in entries.Keys.ToList())
+        {
+            if (!keep(key))
+            {
+                entries.Remove(key);
+            }
+        }
+    }
 
     private sealed record Tick(
         DateTimeOffset NowUtc, TimeZoneInfo Zone, DateTime Local, WarningSettings Settings, Dictionary<AppKey, AppEndKind?> Seen, HashSet<AppKey> Reported);

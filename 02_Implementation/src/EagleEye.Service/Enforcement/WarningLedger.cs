@@ -39,9 +39,12 @@ public sealed class WarningLedger
     /// <summary>Forgets the keys of days before <paramref name="today"/>.</summary>
     public void Prune(DateOnly today)
     {
-        foreach (var key in _shown.Keys.Where(k => k.Day < today).ToList())
+        foreach (var key in _shown.Keys.ToList())
         {
-            _shown.Remove(key);
+            if (key.Day < today)
+            {
+                _shown.Remove(key);
+            }
         }
     }
 }
