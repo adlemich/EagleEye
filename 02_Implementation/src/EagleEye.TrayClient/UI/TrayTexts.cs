@@ -47,9 +47,13 @@ internal static class TrayTexts
 
     /// <summary>Returns the text for the current UI culture.</summary>
     /// <exception cref="InvalidOperationException">The resource key does not exist.</exception>
-    internal static string Get(string name)
+    internal static string Get(string name) => Get(name, CultureInfo.CurrentUICulture);
+
+    /// <summary>Returns the text for <paramref name="culture"/> (the info lines of the kid dialog, US-006 AC-34).</summary>
+    /// <exception cref="InvalidOperationException">The resource key does not exist.</exception>
+    internal static string Get(string name, CultureInfo culture)
     {
-        return ResourceManager.GetString(name, CultureInfo.CurrentUICulture)
+        return ResourceManager.GetString(name, culture)
             ?? throw new InvalidOperationException($"Missing tray text resource '{name}'.");
     }
 }

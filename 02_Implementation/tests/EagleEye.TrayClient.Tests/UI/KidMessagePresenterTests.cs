@@ -6,49 +6,76 @@ namespace EagleEye.TrayClient.Tests.UI;
 
 public sealed class KidMessagePresenterTests
 {
-    private readonly List<(string Text, Action Closed)> _shown = [];
+    private static readonly KidMessageDto Message = new(KidMessageReason.AppEarlyWarning, "Hallo \U0001F60A\nZeile 2", "Editor", 2, null, null);
+
+    private readonly List<KidMessageContent> _shown = [];
+    private readonly List<KidMessageContent> _replaced = [];
     private readonly KidMessagePresenter _presenter;
 
     public KidMessagePresenterTests()
     {
-        _presenter = new KidMessagePresenter((text, closed) => _shown.Add((text, closed)));
+        _presenter = new KidMessagePresenter(_shown.Add, _replaced.Add, m => new KidMessageContent(m.ParentText!, "info"));
     }
 
     [Fact]
     public void Present_First_ShownWithPlatformLineBreaksAndEmojis()
     {
-        var result = _presenter.Present("Hallo \U0001F60A\nZeile 2");
+        var result = _presenter.Present(Message);
 
         Assert.Equal(KidMessageResult.Shown, result);
-        Assert.Equal("Hallo \U0001F60A" + Environment.NewLine + "Zeile 2", _shown.Single().Text);
+        Assert.Equal(new KidMessageContent("Hallo \U0001F60A" + Environment.NewLine + "Zeile 2", "info"), _shown.Single());
     }
 
     [Fact]
-    public void Present_WhileOpen_AlreadyOpenAndNothingShown()
+    public void Present_WhileOpen_TextReplaced()
     {
-        _presenter.Present("a");
+        _presenter.Present(Message);
 
-        Assert.Equal(KidMessageResult.AlreadyOpen, _presenter.Present("b"));
+        Assert.Equal(KidMessageResult.Replaced, _presenter.Present(Message with { ParentText = "b" }));
         Assert.Single(_shown);
+        Assert.Equal("b", _replaced.Single().Text);
     }
 
     [Fact]
     public void Present_AfterOk_ShownAgain()
     {
-        _presenter.Present("a");
-        _shown[0].Closed();
+        _presenter.Present(Message);
+        _presenter.DialogClosed();
 
-        Assert.Equal(KidMessageResult.Shown, _presenter.Present("b"));
+        Assert.Equal(KidMessageResult.Shown, _presenter.Present(Message));
         Assert.Equal(2, _shown.Count);
     }
 
     [Fact]
-    public void Present_ConcurrentRequests_OnlyOneShown()
+    public void DialogReopened_NextMessageReplaces()
     {
-        var results = new KidMessageResult[20];
-        Parallel.For(0, results.Length, i => results[i] = _presenter.Present("x"));
+        _presenter.Present(Message);
+        _presenter.DialogClosed();
+        _presenter.DialogReopened();
 
-        Assert.Equal(1, results.Count(r => r == KidMessageResult.Shown));
+        Assert.Equal(KidMessageResult.Replaced, _presenter.Present(Message));
+    }
+
+    [Fact]
+    public void Present_ConcurrentRequests_OneShownTheOthersReplace()
+    {
+        var presenter = new KidMessagePresenter(_ => { }, _ => { }, m => new KidMessageContent("x", "i"));
+        var results = new KidMessageResult[20];
+        Parallel.For(0, results.Length, i => results[i] = presenter.Present(Message));
+
+        Assert.Equal((1, 19), (results.Count(r => r == KidMessageResult.Shown), results.Count(r => r == KidMessageResult.Replaced)));
+    }
+
+    [Fact]
+    public void DefaultConstructor_RendersWithTheCurrentCultures()
+    {
+        KidMessageContent? shown = null;
+        var presenter = new KidMessagePresenter(c => shown = c, _ => { });
+
+        presenter.Present(Message with { ParentText = null });
+
+        Assert.False(string.IsNullOrEmpty(shown!.Text));
+        Assert.Contains("Editor", shown.Info, StringComparison.Ordinal);
     }
 
     [Theory]

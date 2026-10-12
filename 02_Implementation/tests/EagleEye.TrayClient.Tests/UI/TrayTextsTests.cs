@@ -81,6 +81,15 @@ public sealed class TrayTextsTests
     public void Get_UnknownKey_ThrowsInvalidOperationException()
     {
         Assert.Throws<InvalidOperationException>(() => TrayTexts.Get("DoesNotExist"));
+        Assert.Throws<InvalidOperationException>(() => TrayTexts.Get("DoesNotExist", CultureInfo.GetCultureInfo("en")));
+    }
+
+    [Theory]
+    [InlineData("de-DE", "24:00")]
+    [InlineData("en-US", "midnight")]
+    public void Get_WithCulture_IndependentOfTheCurrentUiCulture(string culture, string expected)
+    {
+        Assert.Equal(expected, TrayTexts.Get("InfoMidnight", CultureInfo.GetCultureInfo(culture)));
     }
 
     private static string InCulture(string culture, Func<string> text)

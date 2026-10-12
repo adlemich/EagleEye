@@ -6,8 +6,8 @@ namespace EagleEye.TrayClient.UI;
 /// <summary>
 /// Owns the tray icon: shows the connection state (green/red, AC-6 to AC-9) and offers the
 /// "About" entry that queries the server version live (AC-11, AC-12). Shows pairing codes
-/// sent by the service in a topmost window (US-002 AC-14), and the break-time message of a blocked start
-/// (US-005 AC-30 to AC-32, one at a time).
+/// sent by the service in a topmost window (US-002 AC-14), and the kid messages of the service (US-005 AC-30, US-006
+/// AC-34: one dialog at a time, a newer message replaces the text).
 /// </summary>
 internal sealed class TrayApplicationContext : ApplicationContext
 {
@@ -21,7 +21,8 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly Icon _disconnectedIcon;
     private bool _aboutOpen;
     private PairingCodeDialog? _pairingDialog;
-    private KidMessageDialog? _breakDialog;
+    private KidMessageDialog? _kidDialog;
+    private KidMessagePresenter? _presenter;
 
     /// <summary>Creates the tray icon and starts following the connection state.</summary>
     public TrayApplicationContext(IServiceConnection connection)
@@ -47,9 +48,11 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _connection.ConnectionChanged += OnConnectionChanged;
         _connection.PairingCodeReceived += OnPairingCodeReceived;
 
-        // US-005 (ADR-014 §2): the decision is synchronous, the dialog is created on the UI thread.
-        var presenter = new KidMessagePresenter((text, closed) => _uiContext.Post(_ => ShowBreakMessage(text, closed), null));
-        _connection.BreakTimeMessageHandler = presenter.Present;
+        // US-005/US-006 (ADR-014 §2): the decision is synchronous, the dialog is created or updated on the UI thread.
+        _presenter = new KidMessagePresenter(
+            content => _uiContext.Post(_ => ShowKidMessage(content), null),
+            content => _uiContext.Post(_ => ReplaceKidMessage(content), null));
+        _connection.KidMessageHandler = _presenter.Present;
         Application.ApplicationExit += OnApplicationExit;
     }
 
@@ -60,8 +63,8 @@ internal sealed class TrayApplicationContext : ApplicationContext
         {
             _connection.ConnectionChanged -= OnConnectionChanged;
             _connection.PairingCodeReceived -= OnPairingCodeReceived;
-            _connection.BreakTimeMessageHandler = null;
-            _breakDialog?.Dispose();
+            _connection.KidMessageHandler = null;
+            _kidDialog?.Dispose();
             _pairingDialog?.Dispose();
             Application.ApplicationExit -= OnApplicationExit;
             _notifyIcon.Visible = false;
@@ -104,18 +107,31 @@ internal sealed class TrayApplicationContext : ApplicationContext
         dialog.Activate();
     }
 
-    private void ShowBreakMessage(string text, Action closed)
+    private void ShowKidMessage(KidMessageContent content)
     {
-        var dialog = new KidMessageDialog(text);
+        var dialog = new KidMessageDialog(content);
         dialog.FormClosed += (_, _) =>
         {
-            _breakDialog = null;
+            _kidDialog = null;
             dialog.Dispose();
-            closed();
+            _presenter?.DialogClosed();
         };
-        _breakDialog = dialog;
+        _kidDialog = dialog;
         dialog.Show();
         ForegroundHelper.BringToFront(dialog);
+    }
+
+    private void ReplaceKidMessage(KidMessageContent content)
+    {
+        if (_kidDialog is { } dialog)
+        {
+            dialog.UpdateText(content);
+            return;
+        }
+
+        // The kid closed the dialog at the same moment: show the newer message in a new dialog.
+        _presenter?.DialogReopened();
+        ShowKidMessage(content);
     }
 
     private void ApplyConnectionState(bool connected)
