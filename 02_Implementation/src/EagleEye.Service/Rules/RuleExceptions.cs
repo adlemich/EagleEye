@@ -20,6 +20,16 @@ public sealed class TooManyEntriesException : InvalidOperationException
     }
 }
 
+/// <summary>The app record does not exist (anymore), e.g. the account was purged (US-006).</summary>
+public sealed class AppNotFoundException : InvalidOperationException
+{
+    /// <summary>Creates the exception.</summary>
+    public AppNotFoundException()
+        : base("The app no longer exists.")
+    {
+    }
+}
+
 /// <summary>Which rule a rejected change would break.</summary>
 public enum RuleViolation
 {
@@ -28,6 +38,9 @@ public enum RuleViolation
 
     /// <summary>No weekday would stay ticked (AC-11).</summary>
     NoDaySelected,
+
+    /// <summary>The final warning would not be less minutes before the end than the early warning (US-006 AC-15).</summary>
+    FinalNotLessThanEarly,
 }
 
 /// <summary>A change was rejected because the stored entry would become invalid (AC-10, AC-11).</summary>

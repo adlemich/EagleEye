@@ -45,3 +45,14 @@ public interface IUsageBroadcaster
     /// <summary>Broadcasts the day snapshot to the group <c>Parents</c>.</summary>
     Task BroadcastAsync(DayUsageDto snapshot);
 }
+
+/// <summary>Creates app records for blocked starts (US-006 Decision 3, ADR-015 §6): the owner of <c>AppRecords</c> is the usage service.</summary>
+public interface IAppInventory
+{
+    /// <summary>
+    /// Looks up or creates the app record of the account and program path, without an instance, usage or day row; logs
+    /// "New app" when it is created and tells the app-rules owner (the new row appears in the Rules table, AC-3, AC-4).
+    /// </summary>
+    Task EnsureAppRecordAsync(
+        string accountSid, string userName, string programPath, string processName, string displayName, CancellationToken ct = default);
+}

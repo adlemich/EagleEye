@@ -74,7 +74,7 @@ public sealed class ParentHubTests
     public async Task OnConnectedAsync_NoHttpContext_AuthenticatesWithNullToken()
     {
         var context = HubContextFactory.Create(ConnectionId, withHttpContext: false);
-        var hub = new ParentHub(_pairing.Object, _registry.Object, _userAccounts.Object, Mock.Of<IUsageService>(), Mock.Of<IBreakTimeService>(), _logger.Object) { Context = context.Object, Groups = _groups.Object };
+        var hub = new ParentHub(_pairing.Object, _registry.Object, _userAccounts.Object, Mock.Of<IUsageService>(), Mock.Of<IBreakTimeService>(), Mock.Of<IAppRuleService>(), Mock.Of<IWarningSettingsService>(), _logger.Object) { Context = context.Object, Groups = _groups.Object };
 
         await hub.OnConnectedAsync();
 
@@ -255,7 +255,7 @@ public sealed class ParentHubTests
     private (ParentHub Hub, Mock<HubCallerContext> Context) CreateHub(string? authorization = null)
     {
         var context = HubContextFactory.Create(ConnectionId, authorization: authorization);
-        var hub = new ParentHub(_pairing.Object, _registry.Object, _userAccounts.Object, Mock.Of<IUsageService>(), Mock.Of<IBreakTimeService>(), _logger.Object)
+        var hub = new ParentHub(_pairing.Object, _registry.Object, _userAccounts.Object, Mock.Of<IUsageService>(), Mock.Of<IBreakTimeService>(), Mock.Of<IAppRuleService>(), Mock.Of<IWarningSettingsService>(), _logger.Object)
         {
             Context = context.Object,
             Groups = _groups.Object,

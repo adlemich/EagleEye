@@ -119,6 +119,16 @@ var host = Host.CreateDefaultBuilder(args)
             services.AddSingleton<IBreakTimeService>(sp => sp.GetRequiredService<BreakTimeService>());
             services.AddSingleton<IAccountDataPurger>(sp => sp.GetRequiredService<BreakTimeService>());
 
+            // State areas "AppRules:{sid}" and "WarningSettings" (US-006, ADR-015, ADR-016).
+            services.AddSingleton<IAppRuleRepository, AppRuleRepository>();
+            services.AddSingleton<IWarningSettingsRepository, WarningSettingsRepository>();
+            services.AddSingleton<AppRuleService>();
+            services.AddSingleton<IAppRuleService>(sp => sp.GetRequiredService<AppRuleService>());
+            services.AddSingleton<IAppRecordObserver>(sp => sp.GetRequiredService<AppRuleService>());
+            services.AddSingleton<IAccountDataPurger>(sp => sp.GetRequiredService<AppRuleService>());
+            services.AddSingleton<WarningSettingsService>();
+            services.AddSingleton<IWarningSettingsService>(sp => sp.GetRequiredService<WarningSettingsService>());
+
             // Break-time enforcement at app start (US-005, ADR-013, ADR-014).
             services.AddAppEnforcement();
 
@@ -158,6 +168,8 @@ try
     await host.Services.GetRequiredService<ServiceDatabase>().InitializeAsync();
     await host.Services.GetRequiredService<IUserAccountService>().InitializeAsync();
     await host.Services.GetRequiredService<IUsageService>().InitializeAsync();
+    await host.Services.GetRequiredService<IAppRuleService>().InitializeAsync();
+    await host.Services.GetRequiredService<IWarningSettingsService>().InitializeAsync();
     await host.Services.GetRequiredService<IBreakTimeService>().InitializeAsync();
     await host.Services.GetRequiredService<EnforcementHistory>().InitializeAsync();
 }

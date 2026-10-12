@@ -26,10 +26,31 @@ public sealed class AccountRulesBroadcasterTests
     }
 
     [Fact]
+    public async Task BroadcastAsync_AppRulesAndWarningSettings_SentToParentsGroup()
+    {
+        var parents = new Mock<IParentClientCallback>();
+        var clients = new Mock<IHubClients<IParentClientCallback>>();
+        clients.Setup(c => c.Group(ParentHub.ParentsGroup)).Returns(parents.Object);
+        var hub = new Mock<IHubContext<ParentHub, IParentClientCallback>>();
+        hub.SetupGet(h => h.Clients).Returns(clients.Object);
+        var apps = new AppRulesDto(2, null, "S-1-5-21-1-2-3-1003", [], null);
+        var warnings = new WarningSettingsDto(3, null, 5, null, 1, null);
+        var broadcaster = new AccountRulesBroadcaster(hub.Object);
+
+        await broadcaster.BroadcastAsync(apps);
+        await broadcaster.BroadcastAsync(warnings);
+
+        parents.Verify(p => p.OnAppRulesChanged(apps), Times.Once);
+        parents.Verify(p => p.OnWarningSettingsChanged(warnings), Times.Once);
+    }
+
+    [Fact]
     public async Task BroadcastAsync_Null_ThrowsArgumentNullException()
     {
         var broadcaster = new AccountRulesBroadcaster(Mock.Of<IHubContext<ParentHub, IParentClientCallback>>());
 
-        await Assert.ThrowsAsync<ArgumentNullException>(() => broadcaster.BroadcastAsync(null!));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => broadcaster.BroadcastAsync((AccountRulesDto)null!));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => broadcaster.BroadcastAsync((AppRulesDto)null!));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => broadcaster.BroadcastAsync((WarningSettingsDto)null!));
     }
 }

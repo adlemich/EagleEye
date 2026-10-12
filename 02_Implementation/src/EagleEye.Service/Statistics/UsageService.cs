@@ -1,5 +1,6 @@
 using System.Globalization;
 using EagleEye.Service.Data;
+using EagleEye.Service.Rules;
 using EagleEye.Service.UserAccounts;
 using EagleEye.Shared.Models;
 
@@ -16,8 +17,9 @@ public sealed class UsageService(
     IUsageRepository repository,
     IUsageBroadcaster broadcaster,
     IUserAccountService userAccounts,
+    IAppRecordObserver appRecords,
     TimeProvider timeProvider,
-    ILogger<UsageService> logger) : IUsageService, IAccountDataPurger, IDisposable
+    ILogger<UsageService> logger) : IUsageService, IAppInventory, IAccountDataPurger, IDisposable
 {
     /// <summary>Days kept: today and the 89 days before (AC-11, AC-19).</summary>
     public const int RetentionDays = 90;
@@ -30,6 +32,7 @@ public sealed class UsageService(
     private readonly Dictionary<long, DateTimeOffset> _pendingSeen = [];
     private readonly HashSet<(string Sid, DateOnly Day)> _dirtyDays = [];
     private readonly Dictionary<string, long> _revisions = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<AppRecordSeen> _seenRecords = [];
 
     /// <inheritdoc />
     public async Task InitializeAsync(CancellationToken ct = default)
@@ -50,11 +53,11 @@ public sealed class UsageService(
     }
 
     /// <inheritdoc />
-    public Task ApplyAsync(TrackerOutput output, IReadOnlyDictionary<string, string> userNames, bool isTick, CancellationToken ct = default)
+    public async Task ApplyAsync(TrackerOutput output, IReadOnlyDictionary<string, string> userNames, bool isTick, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(output);
         ArgumentNullException.ThrowIfNull(userNames);
-        return LockedAsync(async () =>
+        var seen = await LockedAsync(async () =>
         {
             foreach (var instance in output.Instances)
             {
@@ -84,7 +87,24 @@ public sealed class UsageService(
                 await PersistAndBroadcastAsync(ct).ConfigureAwait(false);
                 _history.Flush();
             }
-        }, ct);
+
+            return TakeSeenRecords();
+        }, ct).ConfigureAwait(false);
+        await NotifyAsync(seen, ct).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task EnsureAppRecordAsync(
+        string accountSid, string userName, string programPath, string processName, string displayName, CancellationToken ct = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountSid);
+        ArgumentNullException.ThrowIfNull(userName);
+        var seen = await LockedAsync(async () =>
+        {
+            await RecordAppAsync(accountSid, programPath, processName, displayName, userName, timeProvider.GetUtcNow(), ct).ConfigureAwait(false);
+            return TakeSeenRecords();
+        }, ct).ConfigureAwait(false);
+        await NotifyAsync(seen, ct).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -151,22 +171,55 @@ public sealed class UsageService(
 
     private async Task StartAsync(InstanceEvent started, string userName, CancellationToken ct)
     {
-        var record = await repository.GetOrCreateAppAsync(
-            started.AccountSid, started.ProgramPath, started.ProcessName, started.DisplayName, started.StartedUtc, ct).ConfigureAwait(false);
-        if (record.Created)
-        {
-            _history.NewApp(userName, started.DisplayName, started.ProcessName, started.ProgramPath);
-        }
-
-        _appIds[AppKey(started.AccountSid, started.ProgramPath)] = record.AppId;
-        var instanceId = await repository.StartInstanceAsync(record.AppId, started.StartedUtc, ct).ConfigureAwait(false);
+        var appId = await RecordAppAsync(
+            started.AccountSid, started.ProgramPath, started.ProcessName, started.DisplayName, userName, started.StartedUtc, ct).ConfigureAwait(false);
+        var instanceId = await repository.StartInstanceAsync(appId, started.StartedUtc, ct).ConfigureAwait(false);
         _instanceIds[started.InstanceKey] = instanceId;
         _history.Started(started.AccountSid, userName, started.DisplayName, started.ProcessName, started.ProgramPath, instanceId);
 
         // A new app appears in the report at once with 00:00 (ADR-012 §5).
         var day = LocalDay(started.StartedUtc);
-        AddPending(record.AppId, day, 0);
+        AddPending(appId, day, 0);
         _dirtyDays.Add((started.AccountSid, day));
+    }
+
+    /// <summary>Looks up or creates the app record (no instance, no day row), logs "New app" and remembers it for the observer.</summary>
+    private async Task<long> RecordAppAsync(
+        string sid, string path, string processName, string displayName, string userName, DateTimeOffset nowUtc, CancellationToken ct)
+    {
+        var record = await repository.GetOrCreateAppAsync(sid, path, processName, displayName, nowUtc, ct).ConfigureAwait(false);
+        if (record.Created)
+        {
+            _history.NewApp(userName, displayName, processName, path);
+        }
+
+        _appIds[AppKey(sid, path)] = record.AppId;
+        _seenRecords.Add(new AppRecordSeen(sid, record.AppId, path, displayName));
+        return record.AppId;
+    }
+
+    private List<AppRecordSeen> TakeSeenRecords()
+    {
+        var seen = _seenRecords.ToList();
+        _seenRecords.Clear();
+        return seen;
+    }
+
+    /// <summary>Tells the app-rules owner about new or renamed records, outside the lock (no lock cycle, US-006 Decision 3).</summary>
+    private async Task NotifyAsync(List<AppRecordSeen> seen, CancellationToken ct)
+    {
+        foreach (var record in seen)
+        {
+            try
+            {
+                await appRecords.OnAppRecordAsync(record.AccountSid, record.AppId, record.ProgramPath, record.DisplayName, ct).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // Observer boundary: usage recording never depends on the rules area; the parent app recovers on its next fetch.
+                logger.LogWarning(ex, "The app rules could not be updated for app record {AppId}.", record.AppId);
+            }
+        }
     }
 
     private async Task EndAsync(InstanceEnded ended, string userName, CancellationToken ct)
@@ -303,4 +356,6 @@ public sealed class UsageService(
     }
 
     private static string AppKey(string sid, string path) => $"{sid.ToUpperInvariant()}|{path.ToUpperInvariant()}";
+
+    private sealed record AppRecordSeen(string AccountSid, long AppId, string ProgramPath, string DisplayName);
 }

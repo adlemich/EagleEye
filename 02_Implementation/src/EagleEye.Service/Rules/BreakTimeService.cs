@@ -3,6 +3,7 @@ using EagleEye.Service.Statistics;
 using EagleEye.Service.UserAccounts;
 using EagleEye.Shared.Constants;
 using EagleEye.Shared.Models;
+using EagleEye.Shared.Resources;
 
 namespace EagleEye.Service.Rules;
 
@@ -122,7 +123,8 @@ public sealed class BreakTimeService(
             throw new ArgumentException("The display text is not valid.", nameof(text));
         }
 
-        var custom = string.IsNullOrWhiteSpace(normalized) || normalized == BreakTimeRules.DefaultDisplayText ? null : normalized;
+        // ADR-016 §4: empty, white space only, or the default of any language (de, en) is stored as "default".
+        var custom = DefaultTexts.MeansDefault(DefaultTextKind.BreakDisplayText, normalized) ? null : normalized;
         return WriteAsync(requestId, accountSid, deviceName, async (sid, rules) =>
         {
             await repository.SetDisplayTextAsync(sid, custom, timeProvider.GetUtcNow(), ct).ConfigureAwait(false);
