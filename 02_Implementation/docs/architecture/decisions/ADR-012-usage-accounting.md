@@ -1,12 +1,12 @@
 # ADR-012: Usage Accounting — Active Time, Clocks, Day Boundary, Persistence and Usage State Areas
 
-**Status**: Accepted (approved by Michael with the US-004 implementation plan, 2026-10-07); amendment approved with the US-005 implementation plan, 2026-10-10
+**Status**: Accepted (approved by Michael with the US-004 implementation plan, 2026-10-07); amendments approved with the US-005 (2026-10-10) and US-006 (2026-10-12) implementation plans
 **Date**: 2026-10-07
 **Deciders**: ARC, Michael
 
 > **Amendment 2026-10-10 (US-005, ADR-013; approved by Michael with the US-005 implementation plan, 2026-10-10)**: processes of a **blocked start** (break time, ADR-013) are removed from the agent's report before it reaches the `UsageTracker`. They create no app record, no instance, no daily-usage row and no "App started" log entry, also not while they are being closed (up to 30 s). They are recorded only in the history of blocked starts (`BlockedStarts`). The accounting tick additionally calls `TimeZoneInfo.ClearCachedData()`, so a time-zone change is seen within 5 s by the day split (§4) and by the break-time evaluation (ADR-013 §2); the same tick records time-zone and clock changes as findings (ADR-013 §9, US-005 AC-37).
 >
-> **Amendment 2026-10-12 (US-006, ADR-015) — proposed, approved together with the US-006 implementation plan**: (1) A **blocked start creates the app record** (`AppRecords`) if needed, still without an instance, a daily-usage row or an "App started" entry (US-006 OQ-1), so the parent can set its rule. (2) The tick takes the tracker output once and passes the **same credits** to `UsageService` and to the `TodayUsageLedger`, the in-memory "used today" of the time-limit engine. Reports and budgets therefore always agree (US-006 OQ-3). (3) Tick order: advance and reconcile → take the output → persist → ledger → enforcement (time-limit engine). (4) **Running apps that are being closed** because of a budget or a break keep counting usage until they are gone.
+> **Amendment 2026-10-12 (US-006, ADR-015) — approved by Michael together with the US-006 implementation plan (2026-10-12)**: (1) A **blocked start creates the app record** (`AppRecords`) if needed, still without an instance, a daily-usage row or an "App started" entry (US-006 OQ-1), so the parent can set its rule. (2) The tick takes the tracker output once and passes the **same credits** to `UsageService` and to the `TodayUsageLedger`, the in-memory "used today" of the time-limit engine. Reports and budgets therefore always agree (US-006 OQ-3). (3) Tick order: advance and reconcile → take the output → persist → ledger → enforcement (time-limit engine). (4) **Running apps that are being closed** because of a budget or a break keep counting usage until they are gone.
 
 ---
 

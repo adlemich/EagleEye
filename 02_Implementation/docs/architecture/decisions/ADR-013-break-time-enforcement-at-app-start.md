@@ -1,10 +1,10 @@
 # ADR-013: Break-Time Enforcement at App Start — Blocked Starts, Close Sequence and Kill Set
 
-**Status**: Accepted (approved by Michael with the US-005 implementation plan, 2026-10-10; §3 and §9 reflect his answers Q-1 and Q-2)
+**Status**: Accepted (approved by Michael with the US-005 implementation plan, 2026-10-10; §3 and §9 reflect his answers Q-1 and Q-2); US-006 amendment approved with the US-006 implementation plan, 2026-10-12
 **Date**: 2026-10-10
 **Deciders**: ARC, Michael
 
-> **Amendment 2026-10-12 (US-006, ADR-015) — proposed, approved together with the US-006 implementation plan**
+> **Amendment 2026-10-12 (US-006, ADR-015) — approved by Michael together with the US-006 implementation plan (2026-10-12)**
 >
 > 1. **Gate order** (§1, §3): for an app that becomes open, the break at the start's creation time is checked first (unchanged). Then the **app rule** at the local time of detection: today not allowed (day unticked or budget 0:00) or used ≥ budget → blocked with the budget text. An app without a rule row has the default rule (0:00, no day) and is blocked. Every controlled account is screened (no shortcut for accounts without break entries).
 > 2. **A blocked start creates the app record** (via `UsageService`), without usage.

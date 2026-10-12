@@ -1,6 +1,6 @@
 # ADR-015: Time Limits for Running Apps — End of Allowed Time, Warnings, Grace Periods and Enforced Closes
 
-**Status**: Proposed (to be approved by Michael with the US-006 implementation plan)
+**Status**: Accepted (approved by Michael with the US-006 implementation plan, 2026-10-12; §5 reflects his answer to Q-2, §4 his answer to Q-5)
 **Date**: 2026-10-12
 **Deciders**: ARC, Michael
 
@@ -64,12 +64,7 @@ After a change of the account's app rules, break times or display texts, the eng
 
 Graces caused by a **break** change are grouped per session: one message for all apps (AC-33).
 
-The **grace threshold** is a single policy value, `GracePolicy.Mode`:
-
-- `NothingLeft`: threshold is 0. A grace period starts only when no time is left (US-006 AC-32 as written by PRO).
-- `MinimumFinal`: threshold is the final-warning minutes. After any change that moves the end earlier, the kid always gets at least the final-warning minutes (the alternative of US-006 plan Q-2).
-
-The ship value is decided by Michael (plan Q-2). Changing it is a one-line change plus tests.
+The **grace threshold** is the final-warning minutes: a **minimum grace** (Michael, US-006 plan Q-2, 2026-10-12; story AC-32 to AC-34). After any parent change that moves a running app's end earlier, so that less than the final-warning minutes are left, the kid gets the full final-warning minutes. This covers today unticked, a budget at or below the used time, a budget leaving e.g. 20 s, a break now in effect, and a break made to begin sooner than the final minutes. The info line always names the full final minutes. A change that leaves at least the final minutes gets no grace, only the warnings of §4. A change of the **warning levels** never starts a grace period. The rejected alternative (grace only when no time is left) would give *less* time for a smaller cut than for a cut to zero.
 
 **Service start**: grace periods are not restored. After a restart, the gate judges every running app again (found at agent start, ADR-013 §3). An app whose time is used up is closed at once with its text and without a new grace period. In practice this only happens to an app that was in a grace period, or to an app when a break began while the service was down (plan D-6).
 
@@ -131,7 +126,7 @@ The accounting tick already owns the open apps, the activity state and the credi
 - One consistent definition of used time for Reports and budgets.
 - Deny by default holds for every app, including apps recorded before the update, without a data copy.
 - Break begins now close running apps, which closes the US-005 gap of AC-25 (R-14 reduced).
-- The grace policy is one switch (§5), so Michael's choice in plan Q-2 is cheap to change.
+- The minimum grace (§5) is monotonic: a parent change never leaves a running app less than the final-warning minutes.
 
 ### Negative / Trade-offs
 

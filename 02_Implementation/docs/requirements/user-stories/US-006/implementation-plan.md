@@ -1,18 +1,23 @@
 # Implementation Plan: US-006 — App Time Budgets and Time-elapsed Warnings
 
-**Status**: Draft (for approval by Michael)
+**Status**: Approved by Michael (2026-10-12), with his answers to Q-1 to Q-5 (all as proposed), incl. ADR-015, ADR-016 and the amendments of ADR-006, ADR-012, ADR-013, ADR-014, arc42 and the coding guidelines
 **Date**: 2026-10-12
 **Author**: ARC
-**User story**: `02_Implementation/docs/requirements/user-stories/US-006/user-story.md` (approved 2026-10-12, 39 ACs in groups A to J, OQ-1 to OQ-19 resolved)
-**Requirements**: `02_Implementation/docs/requirements/general-product-requirements.md` v1.6
+**User story**: `02_Implementation/docs/requirements/user-stories/US-006/user-story.md` (status `Analyzed`, 39 ACs in groups A to J; AC-10, AC-24, AC-32 to AC-34 aligned with Q-1, Q-2 and Q-5 by PRO, commit 157366d)
+**Requirements**: `02_Implementation/docs/requirements/general-product-requirements.md` v1.6 (TC-033 and FR-APP-052 adjusted with the answers)
 **Branch**: `feature/US-006-app-time-budgets`
-**New ADRs** (Proposed, approved with this plan):
+**New ADRs** (Accepted, approved by Michael with this plan, 2026-10-12):
 - ADR-015 — Time limits for running apps (`02_Implementation/docs/architecture/decisions/ADR-015-time-limits-for-running-apps.md`)
 - ADR-016 — Default kid texts follow the language of the displaying app (`02_Implementation/docs/architecture/decisions/ADR-016-language-following-default-texts.md`)
 
-**Amended** (approved with this plan): ADR-006, ADR-012, ADR-013 and ADR-014 (amendment blocks at the top of each), arc42 (header, §5.2, §6.3, §8.4, §8.6, §8.7, §8.13, §9, §11), and coding guidelines §10.1.
+**Amended** (approved by Michael with this plan, 2026-10-12): ADR-006, ADR-012, ADR-013 and ADR-014 (amendment blocks at the top of each), arc42 (header, §5.2, §6.3, §8.4, §8.6, §8.7, §8.13, §9, §11), and coding guidelines §10.1.
 
-**Open for Michael**: Q-1 to Q-7 at the end. Q-1 to Q-3 are PRO's three interpretations, and Q-4 is TC-005-26. The design keeps each of them easy to change (one flag, one resource line, or one log template).
+**Revision 2026-10-12 (Michael's answers, see the Q table)**:
+- **Q-1**: an unchanged default text follows the language of the app that displays it (ADR-016). The US-005 break display text gets an English default (wording by PRO in AC-10 and FR-APP-052). Updated: Localization table, Step 1, unit tests, Manual Verification Notes.
+- **Q-2**: there is a **minimum grace period**. After any parent change that moves a running app's end earlier, so that less than the final-warning minutes are left (including a break made to begin sooner than that), the app gets the full final-warning minutes. `GracePolicy` has one rule (no mode switch). Updated: TI-7, Decisions 6 and 7, Step 6, unit tests, Manual Verification Notes.
+- **Q-3**: the time-change Warnings are log-only, with one finding per change, as designed.
+- **Q-4**: TES reruns TC-005-26 in the US-006 run.
+- **Q-5**: raising a budget does not re-arm warnings already shown that day (AC-24 as amended).
 
 ---
 
@@ -28,7 +33,7 @@
 | **TI-4** | **Deny by default for apps already recorded** (OQ-2). Every existing `AppRecords` row must be blocked after the update. | A missed path would leave apps unlimited. | **No row = default rule (0:00, no day).** Migration 5 creates the table and copies no data. Every record, old or new, is blocked until the parent sets a rule (ADR-015 §8). A unit test runs migration 5 on a real version-4 file with app records and checks that all of them evaluate as blocked. |
 | **TI-5** | **End of allowed time** is the earliest of the budget end, the next break start and midnight when the next day is not allowed. Budget time runs only while the session is in use, but break and midnight are wall-clock times. | A wrong end would show the wrong warnings (AC-31) or close at the wrong time. | Pure `AppEndCalculator` with a 60-minute horizon. Budget time left is measured in seconds of use. Break and midnight are measured in wall time. Ties go to the break. A budget end after midnight does not count when the next day allows the app (it gets a new budget at midnight). ADR-015 §3, Decision 4. |
 | **TI-6** | **Warning de-duplication.** Budget warnings are once per app and day, break warnings once per session and break, and a "matching warning at once" applies at start or after a change (OQ-5, OQ-9, OQ-13). | Repeated or missing warnings. | `WarningLedger` with keys `(account, app, day, level)` and `(session, break start, level)`. A shown lower level also marks the higher one. Break warnings only when a running app has the break as its end. Decision 6. |
-| **TI-7** | **Grace period detection** (AC-32, AC-33). The engine has to know that a *parent change* moved an end earlier, not normal use. | Graces at the wrong moment, or none. | The engine keeps per running app the end it computed last, plus the revisions of `AppRules:{sid}` and `AccountRules:{sid}`. On a revision change it compares the old and new end. `GracePolicy` (one flag, Q-2) decides the threshold. Decision 7. |
+| **TI-7** | **Grace period detection** (AC-32, AC-33). The engine has to know that a *parent change* moved an end earlier, not normal use. | Graces at the wrong moment, or none. | The engine keeps per running app the end it computed last, plus the revisions of `AppRules:{sid}` and `AccountRules:{sid}`. On a revision change it compares the old and new end. `GracePolicy` (minimum grace of the final-warning minutes, Q-2) decides. Decision 7. |
 | **TI-8** | **Running apps must keep counting usage while being closed** (AC-25: up to ~30 s more than the budget). US-005 sequences remove the app from the report. | Wrong Reports, or a re-opened usage instance. | Close requests get a kind. Only `blocked start` removes processes from the report. `running app` leaves them, and the tracker ends the instance normally when the app is gone (Decision 8). |
 | **TI-9** | **Kill set of a running app.** `KillSetBuilder` excludes the processes of the account's *other open apps*. The app being closed is itself open, so its own path would be excluded. | Force step would kill nothing. | `AppCloser` passes the open paths **minus the target path**. Unit test with an open target. |
 | **TI-10** | **One dialog per session, newer replaces** (AC-34). US-005's presenter answers `AlreadyOpen` and drops the new text. | A final warning could hide behind an early warning. | `KidMessagePresenter` replaces the text of the open dialog and returns `Replaced`. The dialog is brought to the front again (foreground best effort, ADR-014 §3). The contract gets `ShowKidMessage(KidMessageDto)` with a reason. The tray builds the info line in the kid's language (Decision 9). |
@@ -74,7 +79,7 @@ The Android target is built by `build.ps1` on Windows and must compile with zero
 
 ## Architecture Changes
 
-Applied on the feature branch with this plan, to be approved by Michael:
+Applied on the feature branch and approved by Michael with this plan (2026-10-12):
 
 | Document | Change |
 |---|---|
@@ -374,17 +379,21 @@ Exempt: accounts not controlled, admin accounts (no agent), ignore list, EagleEy
 
 For each app, with `left` = the effective end's time left: `final` if `0 < left ≤ final×60`, else `early` if `left ≤ early×60`. A level is shown if it was not shown for its key. Showing `final` also marks `early`. Break warnings are collected per session: one message if at least one app of the session has that break as its end. App warnings are one message per app. Within one tick, the engine sends at most one message per session: the most urgent (grace > final > early; break > app at equal level). The others of the same tick are marked shown and logged as "not shown (replaced in the same tick)". A newer message would replace them in the dialog anyway (AC-34).
 
-Minutes in the info line: `ceil(left / 60)`, at least 1.
+Minutes in the info line: `ceil(left / 60)`, at least 1. For a grace period, the info line always names the full final minutes (Decision 7).
+
+After a parent change, the engine first applies Decision 7: if less than the final minutes are left, a grace period starts instead of a final warning. Only a change that leaves at least the final minutes reaches the warning logic here (early warning at once if within the early level and not yet shown today). Warnings shown earlier that day are never re-armed (Q-5).
 
 ### Decision 7: grace periods (AC-32, AC-33, OQ-11, Q-2)
 
-`GracePolicy` (pure, one constant `Mode`, ADR-015 §5):
-- `Threshold(finalMinutes)` = 0 for `NothingLeft`, `finalMinutes × 60` for `MinimumFinal`.
-- A grace starts for a running app when, after a rules revision change of its account, `newEnd.left < Threshold` **and** `newEnd.left < previousEnd.left` (the change moved the end earlier). Apps first seen by the engine (new start, service restart) never get a grace period. They get the matching warning of Decision 6, or are closed when nothing is left.
-- Grace end = now (monotonic) + final minutes. Message: `AppGracePeriod` for app ends; `BreakGracePeriod` for break ends, **once per session** for all apps of that change. Both use the final warning text. The final warning of that end is marked shown.
-- **With `NothingLeft`** (PRO's text of AC-32 bullet 2): a change that leaves 0 < left < final shows the final warning at once (the "matching warning" of Decision 6) and closes when *left* reaches 0. **With `MinimumFinal`**: such a change gives a grace of the final minutes instead.
-- AC-33's "a change that makes a break begin within a warning level (not now) shows the matching warning at once" is covered by Decision 6 with `NothingLeft`. With `MinimumFinal` it gets a grace when the break begins sooner than the final minutes.
-- Changing the warning levels never starts a grace (AC-33: they apply to graces that start after the change).
+`GracePolicy` (pure, ADR-015 §5, Michael's answer to Q-2: **minimum grace**, story AC-32 and AC-33):
+- `Threshold(finalMinutes)` = `finalMinutes × 60`.
+- A grace starts for a running app when, after a rules revision change of its account, `newEnd.left < Threshold` **and** `newEnd.left < previousEnd.left` (the change moved the end earlier). This covers: today unticked, budget at or below the used time, budget leaving less than the final minutes (e.g. 20 s), a break now in effect, and a break made to begin sooner than the final minutes. Apps first seen by the engine (new start, service restart) never get a grace period. They get the matching warning of Decision 6, or are closed when nothing is left.
+- Grace end = now (monotonic) + the **full** final minutes, counted from the evaluation that sees the change. Message: `AppGracePeriod` for app ends; `BreakGracePeriod` for break ends, **once per session** for all apps of that change. Both use the final warning text. `Minutes` in the info line = the full final minutes (AC-34), never the smaller time that was left. The final warning of that end is marked shown.
+- During a break grace, new starts are blocked by the gate from the moment the break is in effect (AC-21, AC-33). Only apps that were running at the change get the grace.
+- A change that leaves **at least** the final minutes but no more than the early level shows the early warning at once, if it has not been shown today (Decision 6, AC-32 bullet 2, AC-33 last paragraph). No grace.
+- A change of the **warning levels** never starts a grace (AC-33). New levels apply to warnings not yet shown and to graces that start later. The `WarningSettings` revision is therefore **not** part of the grace trigger.
+- Not running at the change, a new start, or a service restart → never a grace (AC-32 bullet 3, D-6).
+- Raising a budget during or after warnings: a grace ends when the natural time left reaches the grace time left (Decision 5), and warnings already shown that day are **not** re-armed (Q-5, AC-24).
 
 ### Decision 8: enforced closes and the close sequence (AC-19, AC-25, AC-29, AC-35, AC-37)
 
@@ -484,7 +493,7 @@ UsageAccountingLoop --> TimeLimitEngine
 | `TodayUsageLedger` | Enforcement | Decision 5. | **unit** |
 | `AppEndCalculator` | Enforcement | Decision 4. | **unit** |
 | `WarningLedger` | Enforcement | Decision 6. | **unit** |
-| `GracePolicy` | Enforcement | Decision 7 (the `Mode` constant). | **unit** |
+| `GracePolicy` | Enforcement | Decision 7 (minimum grace, Q-2). | **unit** |
 | `TimeLimitEngine` | Enforcement | Decisions 5 to 8. | **unit** |
 | `KidMessageFactory` | Enforcement | Builds `KidMessageDto` from reason, snapshots (parent text or null), app name, minutes, entry. | **unit** |
 | `CloseRegistry` | Enforcement | Running sequences per (session, path). Replaces the gate's private dictionary. | **unit** |
@@ -673,7 +682,7 @@ No database change. The rules and settings are in-memory replicas.
 | `BudgetText` | Du hast deine Zeit aufgebraucht! Leider ist jetzt Schluss. | You have used up your time! Sorry, that's it for now. | AC-10 |
 | `EarlyWarningText` | Achtung, du hast nur noch 5 Minuten! Speichere deinen Fortschritt. | Attention, you only have 5 minutes left! Save your progress. | AC-14 |
 | `FinalWarningText` | Achtung!!! Nur noch 1 Minute – jetzt aber schnell speichern! | Attention!!! Only 1 minute left – save quickly now! | AC-14 |
-| `BreakDisplayText` | (US-005 text of `BreakTimeRules.DefaultDisplayText`, unchanged) | **the same German text** until Q-1 is decided | US-005 AC-15, Q-1 |
+| `BreakDisplayText` | (US-005 text of `BreakTimeRules.DefaultDisplayText`, unchanged) | Hi! Unfortunately, your parents have set a PC break for this time. You can't use this program right now. Sorry. How about using the time to read a book? 😊 | US-005 AC-15, US-006 AC-10, FR-APP-052, Q-1 |
 
 Rule (ADR-016): the parent app shows these in the parent's Windows display language, the tray client in the kid's. A parent text is shown exactly as entered.
 
@@ -778,7 +787,7 @@ All steps run on the **Windows Developer Machine**, on branch `feature/US-006-ap
 
 ### Step 1: API-first — EagleEye.Shared
 1. Models and enums, `Constants/AppRuleRules`, `Constants/WarningRules`.
-2. `Resources/DefaultTexts.resx` (neutral German) and `DefaultTexts.en.resx`; `DefaultTexts` accessor (`ResourceManager`, culture parameter; `IsAnyDefault` compares normalized text with the de and en values). `BreakDisplayText` en = German text (Q-1).
+2. `Resources/DefaultTexts.resx` (neutral German) and `DefaultTexts.en.resx`; `DefaultTexts` accessor (`ResourceManager`, culture parameter; `IsAnyDefault` compares normalized text with the de and en values). `BreakDisplayText` en = "Hi! Unfortunately, your parents have set a PC break for this time. You can't use this program right now. Sorry. How about using the time to read a book? 😊" (Q-1, AC-10, FR-APP-052).
 3. `IParentHub` (7 methods), `IParentClientCallback` (2), `ITrayClientCallback.ShowKidMessage` (replacing `ShowBreakTimeMessage`; remove `BreakTimeMessageDto`).
 4. Keep the build green: hub members throwing `HubException("The rules are not available.")`; `KidMessenger` maps to the new call; tray handler renamed. Completed in Steps 4, 7, 8.
 
@@ -802,7 +811,7 @@ All steps run on the **Windows Developer Machine**, on branch `feature/US-006-ap
 3. `CloseRequest` fields; `CloseSequenceRunner` (app record at t₀ for blocked starts, shared message state); `AppCloser` (TI-9); history writes.
 
 ### Step 6: Service — time-limit engine
-1. `BreakTimeSchedule.NextBegin`, `AppEndCalculator`, `WarningLedger`, `GracePolicy` (`Mode` as Michael answers Q-2 with the approval of this plan), `KidMessageFactory`.
+1. `BreakTimeSchedule.NextBegin`, `AppEndCalculator`, `WarningLedger`, `GracePolicy` (minimum grace, Q-2), `KidMessageFactory`.
 2. `TimeLimitEngine` (Decisions 5 to 8), wired in `AppEnforcement.OnTickAsync`.
 3. `EnforcementLog` templates.
 4. `TimeChangeMonitor` (Decision 10).
@@ -879,8 +888,8 @@ All steps run on the **Windows Developer Machine**, on branch `feature/US-006-ap
 | AC-29 close all at break begin, one message | engine batch (6) | two apps → one message, two records same state | yes |
 | AC-30 start shortly before break | engine (6) | start 19:58 → early (2 min), final at 19:59 | yes |
 | AC-31 one end, one set of warnings | calculator, ledger (6) | budget after break → only break warnings; budget first → only app warnings; tie → break | yes |
-| AC-32 grace after app rule change | engine, `GracePolicy` (6) | 0:00 while running → grace, final message, close after final minutes; not running → no grace; raise → grace ends; both policy modes | yes |
-| AC-33 grace after break change; level changes | engine (6) | break now → one message per session, close after grace; starts blocked during grace; level change applies to unshown warnings only | yes |
+| AC-32 grace after app rule change | engine, `GracePolicy` (6) | 0:00 while running → grace, final message, close after final minutes; change leaving 20 s (final 1) → grace of the full 1 min, info line "1 minute"; change leaving ≥ final but ≤ early → early warning at once, no grace; not running → no grace; raise → grace ends, no warnings re-armed (Q-5) | yes |
+| AC-33 grace after break change; level changes | engine (6) | break now → one message per session, close after grace; break moved to begin in 30 s (final 1) → grace of 1 min for running apps, starts blocked from the break start; break moved to begin within the early level but ≥ final → early warning at once; level change never starts a grace and applies to unshown warnings only | yes |
 | AC-34 kid dialog, one per session, info line | tray presenter, `KidMessageText` (7) | Replaced; texts per reason de/en; singular/plural; default vs parent text | yes |
 | AC-35 tray missing | messenger (7) | not connected → still closed, logged | end tray |
 | AC-36 without parent app, restart, reboot | init order, ledger load (4, 5) | ledger loaded from DB; restart does not refill a budget | reboot |
@@ -896,7 +905,7 @@ All steps run on the **Windows Developer Machine**, on branch `feature/US-006-ap
 
 | Class | Test project | Key scenarios |
 |---|---|---|
-| DTOs, `AppRuleRules`, `WarningRules`, `DefaultTexts` | Shared.Tests | JSON round trip incl. null texts and enums; `IsAllowedOn` for every day and 0:00; `Combine` hours/minutes; pair validity; `DefaultTexts.Get` de and en for every kind; `IsAnyDefault` (de, en, with `\r\n`, with trailing spaces → no, emoji variant → no); the en break text equals the de text (until Q-1) |
+| DTOs, `AppRuleRules`, `WarningRules`, `DefaultTexts` | Shared.Tests | JSON round trip incl. null texts and enums; `IsAllowedOn` for every day and 0:00; `Combine` hours/minutes; pair validity; `DefaultTexts.Get` de and en for every kind; `IsAnyDefault` (de, en, with `\r\n`, with trailing spaces → no, emoji variant → no); the en break text is exactly the English text of AC-10 (incl. "😊") and the de break text is unchanged from US-005; a parent text equal to the English break default → stored as default |
 | `ServiceDatabase`, repositories | Service.Tests | schema version 5; migration 5 on a v4 file keeps pairings, selections, usage, break times, history (old rows → kind `blocked start`, reason `break time`); all app records evaluate as default; checks (budget 0..1439, days 0..127, early > final, Id = 1, kind/reason values); cascade on app record delete |
 | `AppRuleService`, `AppRulesSnapshot`, `AppRuleChangeLog` | Service.Tests | init loads; unknown account / app → exceptions; app of another account → not found; hours/minutes combined with stored part; day ticks; rule equal to default → row deleted; text rules (empty, de default, en default → default); one revision + broadcast + log per write incl. no-op; storage failure → snapshot unchanged; `OnAppRecord` new and renamed → broadcast; ignore-list paths excluded; purge |
 | `WarningSettingsService`, change log | Service.Tests | defaults without row; minutes validated against the stored other level; texts; revision/broadcast/log |
@@ -906,8 +915,8 @@ All steps run on the **Windows Developer Machine**, on branch `feature/US-006-ap
 | `AppStartGate` (changed) | Service.Tests | all US-005 cases unchanged; order break → rule; not ticked, 0:00, used = budget, used > budget → blocked with reason; remaining → passes; default rule for unknown path; ignore list; reasons in the request; budget-blocked processes removed from the report |
 | `BreakTimeSchedule.NextBegin` | Service.Tests | later today; tomorrow 00:00; inactive / unticked day ignored; outside horizon → none; in effect now handled by caller; DST spring (start in the skipped hour → none) and autumn |
 | `AppEndCalculator` | Service.Tests | each candidate alone; minimum; ties (break first); budget end after midnight with next day allowed → no end; next day not allowed → midnight; not allowed today → 0; break in effect → 0; horizon |
-| `WarningLedger` | Service.Tests | keys per app/day and per session/break; final marks early; new day → again |
-| `GracePolicy` | Service.Tests | both modes: thresholds; end moved later → no grace; unchanged revision → no grace; app first seen → no grace |
+| `WarningLedger` | Service.Tests | keys per app/day and per session/break; final marks early; new day → again; budget raised after a shown level → not shown again that day (Q-5) |
+| `GracePolicy` | Service.Tests | threshold = final minutes; left 0, left 20 s, left = final − 1 s → grace; left = final → no grace; end moved later → no grace; unchanged revision → no grace; app first seen → no grace; grace length always the full final minutes |
 | `TimeLimitEngine` | Service.Tests | AC-22, AC-24, AC-25, AC-28 to AC-33 as scenarios with a fake clock and fakes for messenger and runner; one message per session per tick (priority); break batch with shared state; app in close sequence skipped; locked session → no budget countdown but break warnings; uncontrolled/admin never; account leaves control → state cleared; after a restart an app with nothing left is closed at once and an app with little left gets the matching warning (D-6); level change applies to unshown warnings |
 | `KidMessageFactory` | Service.Tests | each reason: parent text or null; minutes rounding (ceil, ≥ 1); break minutes |
 | `CloseRegistry`, `SessionAppsView` | Service.Tests | add/complete/lookup; per session; removal at logoff |
@@ -936,8 +945,8 @@ All steps run on the **Windows Developer Machine**, on branch `feature/US-006-ap
 | Service log | `%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log` (admin), templates in the Logging section. Search for `Warning: account`, `Grace period`, `Blocked start`, `Closing app`, `App closed`. |
 | Timing | Warnings and closes are evaluated every 5 s. Expect a warning within about 1 to 6 s after the level is reached, a close request within about 1 to 6 s after the end. Gone within 30 s. Notepad **with typed text** ignores the close → "terminated by force after 20 s". |
 | Kid dialog | One dialog per session. A newer message **replaces** the text (log `shown (replaced the open message)`). Below the parent's text: the info line in the kid's Windows language. Exclusive full-screen games may cover it (known limit, TI-16). Use a windowed or borderless game. |
-| Languages (Q-1) | To see the English defaults, `kid1` needs English as Windows display language (sign out and in after the change), or use a second kid account with English. The parent app follows the parent's language independently. Mixed setups show different wording for the same unchanged default by design. The break display text stays German in both languages until Q-1 is decided. |
-| Grace (AC-32, AC-33) | With Notepad running and time left, set its budget to 0:00 → final warning with "your parents changed the rules …" at once, closed after the final-warning minutes. With Q-2 = `MinimumFinal`, also a change that leaves e.g. 20 s gives the full final-warning minutes. |
+| Languages (Q-1) | To see the English defaults, `kid1` needs English as Windows display language (sign out and in after the change), or use a second kid account with English. The parent app follows the parent's language independently. Mixed setups show different wording for the same unchanged default by design. This now also applies to the break display text: an unchanged break text appears in English for an English kid (Q-1). |
+| Grace (AC-32, AC-33) | With Notepad running and time left, set its budget to 0:00 → final warning with "your parents changed the rules …" at once, closed after the final-warning minutes. A change that leaves e.g. 20 s also gives the full final-warning minutes (Q-2), and the info line names the full minutes. A break entry changed to begin in 30 s (with final 1) gives running apps 1 minute, while new starts are blocked from the break start. Changing the warning levels never starts a grace. Raising a budget brings back no warnings already shown that day (Q-5). |
 | Break begin (AC-28, AC-29) | Entry starting a few minutes ahead, two apps running: early and final break warnings (one dialog), then one break-text message and both apps closed. Apps started before the break are **closed** now (replaces US-005 AC-25 and its test case). |
 | Midnight (OQ-4) | Optional and slow: an app running across midnight with the next day unticked is closed at 00:00 with the budget text. A test with a break entry is quicker for the same code path. |
 | Reports (AC-25) | After a budget close, Reports may show up to about 30 s more than the budget. |
@@ -966,17 +975,19 @@ All steps run on the **Windows Developer Machine**, on branch `feature/US-006-ap
 
 ---
 
-## Open Questions for Michael
+## Open Questions for Michael (answered 2026-10-12)
+
+All resolved. Michael accepted Q-1 to Q-5 as proposed. Q-6 and Q-7 restate decisions already taken in the story (OQ-2, OQ-12) and needed no new answer.
 
 | ID | Question | Recommendation | Answer |
 |---|---|---|---|
-| **Q-1** | **(PRO, OQ-8)** "Supply an English version if the app is installed in English." PRO read this as: **an unchanged default follows the language of the app that shows it** (parent app: parent's Windows language; kid dialog: kid's Windows language). Related: the US-005 **break display text** default is German-only (US-005 OQ-14). Should it get an English default too? | **Accept PRO's reading** (ADR-016): it is the only reading in which both the parent and the kid see their own language. **Give the break display text an English default too** (PRO writes the English wording). The mechanism is the same, and the change is one resource line (`DefaultTexts.en.resx`, `BreakDisplayText`). Until you decide, the English resource holds the German text, so US-005 behaviour is unchanged. | |
-| **Q-2** | **(PRO, OQ-11 edge case)** A parent change leaves a running app **more than 0 but less than** the final-warning minutes (e.g. 20 s). PRO wrote: final warning at once, close when those 20 s run out. Alternative: **after any change that moves the end earlier, the kid always gets at least the final-warning minutes** (grace period). | **Alternative (`MinimumFinal`)**. With PRO's reading, lowering the budget a little more (to 0) gives the kid *more* time (a full grace minute) than leaving 20 s. The alternative is monotonic and matches the intent of your OQ-11 answer ("allow a grace period … then close"). It also applies to break changes that make a break begin sooner than the final minutes. It is one constant (`GracePolicy.Mode`), so either choice is cheap. | |
-| **Q-3** | **(PRO, OQ-18)** The new time-zone and clock Warnings (AC-39) are **only logged** and not added as extra rows to the findings table of US-005. | **Accept.** Each detected change is the same event that US-005 already stores as one finding (`TimeChangeFindings`). The plan writes one Warning (with the old and new local date added) and keeps one finding, with no new table and no new kind. If a later story wants the dates in the findings, two nullable columns are enough. | |
-| **Q-4** | **Agent token (TC-005-26, open since US-004 Q-9).** Graceful closes of **running** apps now depend on the agent's `WM_CLOSE` more than before. | No design change. **TES includes TC-005-26 in the US-006 run**, plus a check that a budget close of Notepad (no text) ends "closed gracefully". | |
-| Q-5 | **Warnings after a parent raises a budget.** AC-24: each level at most once per app and day. If the final warning was shown and the parent then adds 30 minutes, the kid gets **no** warning before the new end. | Keep AC-24 literally for now (simplest, as written). If you prefer, the engine re-arms the warnings of an app when a parent change moves its end later than the early level again. That is a small change in `WarningLedger`, and PRO would add a note to AC-24. | |
-| Q-6 | **Deny by default right after the upgrade** (OQ-2, accepted). Every app the kids used before is blocked until you configure it, including e.g. a browser needed for school. | No change (your decision). TES starts the run with configuring the rules. Install when the kids do not need the PC. | |
-| Q-7 | **Apps that install each update into a new folder** (e.g. some launchers and chat apps) get a new app record, and so a new, blocked row, after each update (OQ-12). | Accept for now (merging records is a later story). The row's tooltip shows the program path, so two rows with the same name can be told apart. | |
+| **Q-1** | **(PRO, OQ-8)** "Supply an English version if the app is installed in English." PRO read this as: **an unchanged default follows the language of the app that shows it** (parent app: parent's Windows language; kid dialog: kid's Windows language). Related: the US-005 **break display text** default is German-only (US-005 OQ-14). Should it get an English default too? | **Accept PRO's reading** (ADR-016): it is the only reading in which both the parent and the kid see their own language. **Give the break display text an English default too** (PRO writes the English wording). The mechanism is the same, and the change is one resource line (`DefaultTexts.en.resx`, `BreakDisplayText`). Until you decide, the English resource holds the German text, so US-005 behaviour is unchanged. | **Resolved** (Michael, 2026-10-12): accepted as proposed. Defaults follow the displaying app's language; the break display text gets the English default written by PRO in AC-10 and FR-APP-052. |
+| **Q-2** | **(PRO, OQ-11 edge case)** A parent change leaves a running app **more than 0 but less than** the final-warning minutes (e.g. 20 s). PRO wrote: final warning at once, close when those 20 s run out. Alternative: **after any change that moves the end earlier, the kid always gets at least the final-warning minutes** (grace period). | **Alternative (`MinimumFinal`)**. With PRO's reading, lowering the budget a little more (to 0) gives the kid *more* time (a full grace minute) than leaving 20 s. The alternative is monotonic and matches the intent of your OQ-11 answer ("allow a grace period … then close"). It also applies to break changes that make a break begin sooner than the final minutes. It is one constant (`GracePolicy.Mode`), so either choice is cheap. | **Resolved** (Michael, 2026-10-12): minimum grace accepted. Story AC-32 to AC-34 and TC-033 updated by PRO. `GracePolicy` implements only this rule. |
+| **Q-3** | **(PRO, OQ-18)** The new time-zone and clock Warnings (AC-39) are **only logged** and not added as extra rows to the findings table of US-005. | **Accept.** Each detected change is the same event that US-005 already stores as one finding (`TimeChangeFindings`). The plan writes one Warning (with the old and new local date added) and keeps one finding, with no new table and no new kind. If a later story wants the dates in the findings, two nullable columns are enough. | **Resolved** (Michael, 2026-10-12): log only, as written. |
+| **Q-4** | **Agent token (TC-005-26, open since US-004 Q-9).** Graceful closes of **running** apps now depend on the agent's `WM_CLOSE` more than before. | No design change. **TES includes TC-005-26 in the US-006 run**, plus a check that a budget close of Notepad (no text) ends "closed gracefully". | **Resolved** (Michael, 2026-10-12): TES reruns TC-005-26 in the US-006 run. |
+| Q-5 | **Warnings after a parent raises a budget.** AC-24: each level at most once per app and day. If the final warning was shown and the parent then adds 30 minutes, the kid gets **no** warning before the new end. | Keep AC-24 literally for now (simplest, as written). If you prefer, the engine re-arms the warnings of an app when a parent change moves its end later than the early level again. That is a small change in `WarningLedger`, and PRO would add a note to AC-24. | **Resolved** (Michael, 2026-10-12): keep it literal. A raised budget does not re-arm warnings already shown that day (AC-24 amended by PRO). |
+| Q-6 | **Deny by default right after the upgrade** (OQ-2, accepted). Every app the kids used before is blocked until you configure it, including e.g. a browser needed for school. | No change (your decision). TES starts the run with configuring the rules. Install when the kids do not need the PC. | Accepted earlier (story OQ-2); no new answer needed. |
+| Q-7 | **Apps that install each update into a new folder** (e.g. some launchers and chat apps) get a new app record, and so a new, blocked row, after each update (OQ-12). | Accept for now (merging records is a later story). The row's tooltip shows the program path, so two rows with the same name can be told apart. | Accepted earlier (story OQ-12); no new answer needed. |
 
 ---
 
