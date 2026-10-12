@@ -57,6 +57,12 @@ public sealed class DefaultTextsTests
     }
 
     [Fact]
+    public void Get_MissingResource_Throws()
+    {
+        Assert.Throws<InvalidOperationException>(() => DefaultTexts.Get("DoesNotExist", German));
+    }
+
+    [Fact]
     public void Get_NullCulture_Throws()
     {
         Assert.Throws<ArgumentNullException>(() => DefaultTexts.Get(DefaultTextKind.BudgetText, null!));

@@ -30,9 +30,13 @@ public static class DefaultTexts
             throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown default text kind.");
         }
 
-        return ResourceManager.GetString(kind.ToString(), culture)
-            ?? throw new InvalidOperationException($"Missing default text resource '{kind}'.");
+        return Get(kind.ToString(), culture);
     }
+
+    /// <summary>The resource text of <paramref name="name"/> in <paramref name="culture"/>.</summary>
+    /// <exception cref="InvalidOperationException">The resource key does not exist.</exception>
+    internal static string Get(string name, CultureInfo culture) =>
+        ResourceManager.GetString(name, culture) ?? throw new InvalidOperationException($"Missing default text resource '{name}'.");
 
     /// <summary>
     /// Whether <paramref name="text"/> (line breaks normalized to "\n") equals the default of <paramref name="kind"/>
