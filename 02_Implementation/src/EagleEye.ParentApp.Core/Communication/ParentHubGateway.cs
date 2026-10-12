@@ -15,6 +15,8 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
     private Action<UserAccountListDto>? _accountsSubscription;
     private Action<DayUsageDto>? _usageSubscription;
     private Action<AccountRulesDto>? _rulesSubscription;
+    private Action<AppRulesDto>? _appRulesSubscription;
+    private Action<WarningSettingsDto>? _warningsSubscription;
     private IParentHubClient? _connected;
 
     /// <inheritdoc />
@@ -31,6 +33,12 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
 
     /// <inheritdoc />
     public event Action<AccountRulesDto>? AccountRulesChanged;
+
+    /// <inheritdoc />
+    public event Action<AppRulesDto>? AppRulesChanged;
+
+    /// <inheritdoc />
+    public event Action<WarningSettingsDto>? WarningSettingsChanged;
 
     /// <inheritdoc />
     public bool IsConnected
@@ -57,6 +65,8 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
                     _subscribed.UserAccountsChanged -= _accountsSubscription;
                     _subscribed.DayUsageChanged -= _usageSubscription;
                     _subscribed.AccountRulesChanged -= _rulesSubscription;
+                    _subscribed.AppRulesChanged -= _appRulesSubscription;
+                    _subscribed.WarningSettingsChanged -= _warningsSubscription;
                 }
 
                 _accountsSubscription = snapshot => Forward(client, () => UserAccountsChanged?.Invoke(snapshot));
@@ -65,6 +75,10 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
                 client.DayUsageChanged += _usageSubscription;
                 _rulesSubscription = snapshot => Forward(client, () => AccountRulesChanged?.Invoke(snapshot));
                 client.AccountRulesChanged += _rulesSubscription;
+                _appRulesSubscription = snapshot => Forward(client, () => AppRulesChanged?.Invoke(snapshot));
+                client.AppRulesChanged += _appRulesSubscription;
+                _warningsSubscription = snapshot => Forward(client, () => WarningSettingsChanged?.Invoke(snapshot));
+                client.WarningSettingsChanged += _warningsSubscription;
                 _subscribed = client;
             }
 

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EagleEye.ParentApp.Core.Abstractions;
@@ -26,10 +27,11 @@ public enum RulesState
 }
 
 /// <summary>
-/// The Rules page (US-005 AC-1 to AC-20): account selection as on Reports, the break-time table (rows merged by entry
-/// id, creation order), "Add new entry" (disabled at 20 entries), the display text (saved when the parent leaves the
-/// box, and before the page or the account changes, <see cref="FlushPendingEdits"/>) and one message line for refused
-/// edits and failed writes. Follows both models on the UI thread; never polls.
+/// The Rules page (US-005 AC-1 to AC-20, US-006 AC-1): account selection as on Reports, the break-time table (rows merged
+/// by entry id, creation order), "Add new entry" (disabled at 20 entries), the display text (saved when the parent leaves
+/// the box, and before the page or the account changes, <see cref="FlushPendingEdits"/>; an unchanged default follows
+/// the parent app's language, ADR-016), one message line for refused edits and failed writes, and the section
+/// "Application rules" (<see cref="AppRules"/>) for the same account. Follows the models on the UI thread; never polls.
 /// </summary>
 public sealed class RulesViewModel : ObservableObject, IBreakTimeRowHost
 {
@@ -44,16 +46,20 @@ public sealed class RulesViewModel : ObservableObject, IBreakTimeRowHost
     private string _errorText = string.Empty;
 
     /// <summary>Creates the view model and follows the models.</summary>
-    public RulesViewModel(IUserAccountsModel accounts, IAccountRulesModel rules, IUiDispatcher dispatcher)
+    public RulesViewModel(IUserAccountsModel accounts, IAccountRulesModel rules, AppRulesSectionViewModel appRules, IUiDispatcher dispatcher)
     {
         _accounts = accounts ?? throw new ArgumentNullException(nameof(accounts));
         _rules = rules ?? throw new ArgumentNullException(nameof(rules));
+        AppRules = appRules ?? throw new ArgumentNullException(nameof(appRules));
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         AddEntryCommand = new RelayCommand(() => LastWrite = SendAsync(model => model.AddEntryAsync()), () => CanAddEntry);
         Apply();
         accounts.Changed += () => dispatcher.Post(Apply);
         rules.Changed += () => dispatcher.Post(Apply);
     }
+
+    /// <summary>The section "Application rules" of the selected account (US-006).</summary>
+    public AppRulesSectionViewModel AppRules { get; }
 
     /// <summary>The controlled accounts (AC-2).</summary>
     public ObservableCollection<AccountOption> Accounts => _selection.Accounts;
@@ -82,6 +88,7 @@ public sealed class RulesViewModel : ObservableObject, IBreakTimeRowHost
             _selectedAccount = value;
             OnPropertyChanged();
             _rules.SelectAccount(value?.Sid);
+            AppRules.SelectAccount(value?.Sid);
         }
     }
 
@@ -157,7 +164,9 @@ public sealed class RulesViewModel : ObservableObject, IBreakTimeRowHost
     /// <summary>The last write started by the page (awaited by tests).</summary>
     internal Task LastWrite { get; private set; } = Task.CompletedTask;
 
-    private string ConfirmedText => _rules.Snapshot?.DisplayText ?? string.Empty;
+    private string ConfirmedText => _rules.Snapshot is { } snapshot
+        ? KidTextEditing.ShownText(snapshot.IsDefaultDisplayText ? null : snapshot.DisplayText, DefaultTextKind.BreakDisplayText, CultureInfo.CurrentUICulture)
+        : string.Empty;
 
     /// <summary>Saves the display text when the parent leaves the box (AC-15); empty restores the default (OQ-8).</summary>
     public void CommitDisplayText()
@@ -168,11 +177,20 @@ public sealed class RulesViewModel : ObservableObject, IBreakTimeRowHost
         }
 
         _displayTextDirty = false;
-        var text = BreakTimeRules.NormalizeLineBreaks(_displayText);
-        if (text != ConfirmedText)
+        var confirmed = ConfirmedText;
+        var send = KidTextEditing.Commit(_displayText, confirmed, _rules.Snapshot?.IsDefaultDisplayText == true, DefaultTextKind.BreakDisplayText);
+        if (send is null)
         {
-            LastWrite = SendAsync(model => model.SetDisplayTextAsync(text));
+            // Unchanged, or the default typed again while it is the default (ADR-016): show the confirmed text.
+            if (BreakTimeRules.NormalizeLineBreaks(_displayText) != confirmed)
+            {
+                SetProperty(ref _displayText, confirmed, nameof(DisplayText));
+            }
+
+            return;
         }
+
+        LastWrite = SendAsync(model => model.SetDisplayTextAsync(send));
     }
 
     /// <summary>Commits typed times and the display text; called before the page or the account changes (AC-15).</summary>
@@ -185,6 +203,7 @@ public sealed class RulesViewModel : ObservableObject, IBreakTimeRowHost
         }
 
         CommitDisplayText();
+        AppRules.FlushPendingEdits();
     }
 
     /// <inheritdoc />

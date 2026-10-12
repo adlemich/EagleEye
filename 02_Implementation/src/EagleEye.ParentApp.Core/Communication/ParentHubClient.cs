@@ -45,7 +45,34 @@ internal sealed class ParentHubClient : IParentHubClient
         _connection.On<UserAccountListDto>(nameof(IParentClientCallback.OnUserAccountsChanged), snapshot => UserAccountsChanged?.Invoke(snapshot));
         _connection.On<DayUsageDto>(nameof(IParentClientCallback.OnDayUsageChanged), snapshot => DayUsageChanged?.Invoke(snapshot));
         _connection.On<AccountRulesDto>(nameof(IParentClientCallback.OnAccountRulesChanged), snapshot => AccountRulesChanged?.Invoke(snapshot));
+        _connection.On<AppRulesDto>(nameof(IParentClientCallback.OnAppRulesChanged), snapshot => AppRulesChanged?.Invoke(snapshot));
+        _connection.On<WarningSettingsDto>(nameof(IParentClientCallback.OnWarningSettingsChanged), snapshot => WarningSettingsChanged?.Invoke(snapshot));
     }
+
+    public event Action<AppRulesDto>? AppRulesChanged;
+
+    public event Action<WarningSettingsDto>? WarningSettingsChanged;
+
+    public Task<AppRulesDto> GetAppRulesAsync(string accountSid, CancellationToken ct)
+        => _connection.InvokeAsync<AppRulesDto>(nameof(IParentHub.GetAppRules), accountSid, ct);
+
+    public Task<StateWriteAckDto> SetAppBudgetAsync(Guid requestId, string accountSid, long appId, AppBudgetPart part, int value, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.SetAppBudget), requestId, accountSid, appId, part, value, ct);
+
+    public Task<StateWriteAckDto> SetAppDayAsync(Guid requestId, string accountSid, long appId, DayOfWeek day, bool isAllowed, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.SetAppDay), requestId, accountSid, appId, day, isAllowed, ct);
+
+    public Task<StateWriteAckDto> SetBudgetTextAsync(Guid requestId, string accountSid, string text, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.SetBudgetText), requestId, accountSid, text, ct);
+
+    public Task<WarningSettingsDto> GetWarningSettingsAsync(CancellationToken ct)
+        => _connection.InvokeAsync<WarningSettingsDto>(nameof(IParentHub.GetWarningSettings), ct);
+
+    public Task<StateWriteAckDto> SetWarningMinutesAsync(Guid requestId, WarningLevel level, int minutes, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.SetWarningMinutes), requestId, level, minutes, ct);
+
+    public Task<StateWriteAckDto> SetWarningTextAsync(Guid requestId, WarningLevel level, string text, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.SetWarningText), requestId, level, text, ct);
 
     public event Action<UserAccountListDto>? UserAccountsChanged;
 

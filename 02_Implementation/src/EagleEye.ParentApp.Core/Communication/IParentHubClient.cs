@@ -70,4 +70,31 @@ public interface IParentHubClient : IAsyncDisposable
 
     /// <summary>Calls <c>IParentHub.SetDisplayText</c>.</summary>
     Task<StateWriteAckDto> SetDisplayTextAsync(Guid requestId, string accountSid, string text, CancellationToken ct);
+
+    /// <summary>The service broadcast <c>IParentClientCallback.OnAppRulesChanged</c> (US-006).</summary>
+    event Action<AppRulesDto>? AppRulesChanged;
+
+    /// <summary>The service broadcast <c>IParentClientCallback.OnWarningSettingsChanged</c> (US-006).</summary>
+    event Action<WarningSettingsDto>? WarningSettingsChanged;
+
+    /// <summary>Calls <c>IParentHub.GetAppRules</c>.</summary>
+    Task<AppRulesDto> GetAppRulesAsync(string accountSid, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.SetAppBudget</c>.</summary>
+    Task<StateWriteAckDto> SetAppBudgetAsync(Guid requestId, string accountSid, long appId, AppBudgetPart part, int value, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.SetAppDay</c>.</summary>
+    Task<StateWriteAckDto> SetAppDayAsync(Guid requestId, string accountSid, long appId, DayOfWeek day, bool isAllowed, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.SetBudgetText</c>.</summary>
+    Task<StateWriteAckDto> SetBudgetTextAsync(Guid requestId, string accountSid, string text, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.GetWarningSettings</c>.</summary>
+    Task<WarningSettingsDto> GetWarningSettingsAsync(CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.SetWarningMinutes</c>.</summary>
+    Task<StateWriteAckDto> SetWarningMinutesAsync(Guid requestId, WarningLevel level, int minutes, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.SetWarningText</c>.</summary>
+    Task<StateWriteAckDto> SetWarningTextAsync(Guid requestId, WarningLevel level, string text, CancellationToken ct);
 }

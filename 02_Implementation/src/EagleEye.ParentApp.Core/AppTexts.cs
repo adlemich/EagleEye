@@ -95,6 +95,25 @@ public static class AppTexts
     public static string RulesInvalidTime => Get(nameof(RulesInvalidTime));
     public static string RulesEndBeforeStart => Get(nameof(RulesEndBeforeStart));
     public static string RulesNoDaySelected => Get(nameof(RulesNoDaySelected));
+    public static string RulesSectionAppRules => Get(nameof(RulesSectionAppRules));
+    public static string RulesAppRulesExplanation => Get(nameof(RulesAppRulesExplanation));
+    public static string RulesColumnApp => Get(nameof(RulesColumnApp));
+    public static string RulesColumnDailyBudget => Get(nameof(RulesColumnDailyBudget));
+    public static string RulesColumnHours => Get(nameof(RulesColumnHours));
+    public static string RulesColumnMinutes => Get(nameof(RulesColumnMinutes));
+    public static string RulesNoApps => Get(nameof(RulesNoApps));
+    public static string RulesBudgetTextLabel => Get(nameof(RulesBudgetTextLabel));
+    public static string RulesInvalidHours => Get(nameof(RulesInvalidHours));
+    public static string RulesInvalidBudgetMinutes => Get(nameof(RulesInvalidBudgetMinutes));
+    public static string SectionTimeWarnings => Get(nameof(SectionTimeWarnings));
+    public static string WarningsExplanation => Get(nameof(WarningsExplanation));
+    public static string WarningsColumnPoint => Get(nameof(WarningsColumnPoint));
+    public static string WarningsColumnMinutes => Get(nameof(WarningsColumnMinutes));
+    public static string WarningsColumnText => Get(nameof(WarningsColumnText));
+    public static string WarningsEarly => Get(nameof(WarningsEarly));
+    public static string WarningsFinal => Get(nameof(WarningsFinal));
+    public static string WarningsInvalidMinutes => Get(nameof(WarningsInvalidMinutes));
+    public static string WarningsFinalNotLess => Get(nameof(WarningsFinalNotLess));
 #pragma warning restore CS1591
 
     /// <summary>Formats a composite text with the current culture.</summary>
