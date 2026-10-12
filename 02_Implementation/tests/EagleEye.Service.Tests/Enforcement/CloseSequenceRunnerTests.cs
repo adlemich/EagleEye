@@ -4,6 +4,7 @@ using EagleEye.Service.Enforcement;
 using EagleEye.Service.Statistics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Time.Testing;
+using EagleEye.Shared.Models;
 using Moq;
 using Xunit;
 using static EagleEye.Service.Tests.Enforcement.EnforcementTestData;
@@ -16,6 +17,7 @@ public sealed class CloseSequenceRunnerTests : IDisposable
     private readonly Mock<IBlockedStartRepository> _repository = new();
     private readonly Mock<IKidMessenger> _messenger = new();
     private readonly FakeCloser _closer = new();
+    private readonly Mock<IAppInventory> _inventory = new();
     private readonly TestLogger<EnforcementLog> _logger = new();
     private readonly List<(long Id, string Outcome, double? Seconds, string Message)> _completed = [];
     private readonly CloseSequenceRunner _runner;
@@ -33,8 +35,8 @@ public sealed class CloseSequenceRunnerTests : IDisposable
                 }
             })
             .Returns(Task.CompletedTask);
-        _messenger.Setup(m => m.ShowAsync(2, "Pause \U0001F60A", It.IsAny<CancellationToken>())).ReturnsAsync(KidMessageStates.Shown);
-        _runner = new CloseSequenceRunner(_repository.Object, _messenger.Object, _closer, new EnforcementLog(_logger, new InstanceLogLimiter(_time)), _time);
+        _messenger.Setup(m => m.ShowAsync(2, BreakMessage, It.IsAny<CancellationToken>())).ReturnsAsync(KidMessageStates.Shown);
+        _runner = new CloseSequenceRunner(_repository.Object, _messenger.Object, _closer, _inventory.Object, new EnforcementLog(_logger, new InstanceLogLimiter(_time)), _time);
     }
 
     public void Dispose() => _runner.Dispose();
@@ -145,7 +147,7 @@ public sealed class CloseSequenceRunnerTests : IDisposable
         Assert.Equal((BlockedStartTexts.TerminatedByForce, 1), (_completed.Single().Outcome, second.Terminations));
         Assert.Contains(_closer.ExtraRootsSeen, extra => extra.Contains((7000, 500)) && extra.Contains((8000, 1)));
         _repository.Verify(r => r.InsertAsync(It.IsAny<BlockedStartRecord>(), It.IsAny<CancellationToken>()), Times.Once);
-        _messenger.Verify(m => m.ShowAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        _messenger.Verify(m => m.ShowAsync(It.IsAny<int>(), It.IsAny<KidMessageDto>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -179,7 +181,7 @@ public sealed class CloseSequenceRunnerTests : IDisposable
     [InlineData(KidMessageStates.AlreadyOpen)]
     public async Task MessageState_Recorded(string state)
     {
-        _messenger.Setup(m => m.ShowAsync(2, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(state);
+        _messenger.Setup(m => m.ShowAsync(2, It.IsAny<KidMessageDto>(), It.IsAny<CancellationToken>())).ReturnsAsync(state);
 
         var handle = _runner.Start(Start());
         await RunUntil(() => handle.IsCompleted);
@@ -262,7 +264,7 @@ public sealed class CloseSequenceRunnerTests : IDisposable
     public async Task StopAsync_SequenceHangs_ReturnsAfterTheStopTimeout()
     {
         var never = new TaskCompletionSource<string>();
-        _messenger.Setup(m => m.ShowAsync(2, It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(never.Task);
+        _messenger.Setup(m => m.ShowAsync(2, It.IsAny<KidMessageDto>(), It.IsAny<CancellationToken>())).Returns(never.Task);
         var handle = _runner.Start(Start());
 
         await _runner.StopAsync();

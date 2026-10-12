@@ -3,10 +3,10 @@ using EagleEye.Service.Statistics;
 
 namespace EagleEye.Service.Enforcement;
 
-/// <summary>Dependency injection of the break-time enforcement (US-005, ADR-013). Verified manually.</summary>
+/// <summary>Dependency injection of the enforcement (US-005, US-006, ADR-013, ADR-015). Verified manually.</summary>
 public static class EnforcementRegistration
 {
-    /// <summary>Registers gate, runner, process access, history, time-change monitor and the facade for the loop.</summary>
+    /// <summary>Registers gate, ledger, time-limit engine, runner, process access, history, time-change monitor and the facade for the loop.</summary>
     public static IServiceCollection AddAppEnforcement(this IServiceCollection services)
     {
         services.AddSingleton<IBlockedStartRepository, BlockedStartRepository>();
@@ -19,7 +19,11 @@ public static class EnforcementRegistration
         services.AddSingleton(sp => new EnforcementLog(
             sp.GetRequiredService<ILogger<EnforcementLog>>(), new InstanceLogLimiter(sp.GetRequiredService<TimeProvider>())));
         services.AddSingleton<ICloseSequenceRunner, CloseSequenceRunner>();
+        services.AddSingleton<CloseRegistry>();
+        services.AddSingleton<SessionAppsView>();
+        services.AddSingleton<TodayUsageLedger>();
         services.AddSingleton<AppStartGate>();
+        services.AddSingleton<TimeLimitEngine>();
         services.AddSingleton<TimeChangeMonitor>();
         services.AddSingleton<EnforcementHistory>();
         services.AddSingleton<IAccountDataPurger>(sp => sp.GetRequiredService<EnforcementHistory>());

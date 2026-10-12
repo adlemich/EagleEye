@@ -11,6 +11,8 @@ namespace EagleEye.Service.Tests.Communication;
 
 public sealed class KidMessengerTests
 {
+    private static readonly KidMessageDto Message = new(KidMessageReason.AppEarlyWarning, null, "Editor", 2, null, null);
+
     private readonly TrayConnectionRegistry _registry = new();
     private readonly Mock<ISingleClientProxy> _client = new();
     private readonly Mock<IHubContext<TrayHub>> _hub = new();
@@ -28,15 +30,16 @@ public sealed class KidMessengerTests
 
     [Theory]
     [InlineData(KidMessageResult.Shown, KidMessageStates.Shown)]
+    [InlineData(KidMessageResult.Replaced, KidMessageStates.Replaced)]
     [InlineData(KidMessageResult.AlreadyOpen, KidMessageStates.AlreadyOpen)]
     public async Task ShowAsync_Answer_MappedToState(KidMessageResult result, string expected)
     {
         Register();
         _client.Setup(c => c.InvokeCoreAsync<KidMessageResult>(nameof(ITrayClientCallback.ShowKidMessage),
-                It.Is<object?[]>(a => ((KidMessageDto)a[0]!).ParentText == "Pause \U0001F60A"), It.IsAny<CancellationToken>()))
+                It.Is<object?[]>(a => ReferenceEquals(a[0], Message)), It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
 
-        Assert.Equal(expected, await _messenger.ShowAsync(2, "Pause \U0001F60A"));
+        Assert.Equal(expected, await _messenger.ShowAsync(2, Message));
     }
 
     [Fact]
@@ -44,7 +47,7 @@ public sealed class KidMessengerTests
     {
         _registry.Register("tray-3", new TrayClientIdentity(3, null, 1));
 
-        Assert.Equal(KidMessageStates.NotConnected, await _messenger.ShowAsync(2, "x"));
+        Assert.Equal(KidMessageStates.NotConnected, await _messenger.ShowAsync(2, Message));
     }
 
     [Fact]
@@ -58,7 +61,7 @@ public sealed class KidMessengerTests
                 return KidMessageResult.Shown;
             });
 
-        var show = _messenger.ShowAsync(2, "x");
+        var show = _messenger.ShowAsync(2, Message);
         _time.Advance(KidMessenger.AnswerTimeout);
 
         Assert.Equal(KidMessageStates.NoAnswer, await show);
@@ -71,12 +74,12 @@ public sealed class KidMessengerTests
         var failure = new HubException("Client didn't provide a result.");
         _client.Setup(c => c.InvokeCoreAsync<KidMessageResult>(It.IsAny<string>(), It.IsAny<object?[]>(), It.IsAny<CancellationToken>())).ThrowsAsync(failure);
 
-        Assert.Equal(KidMessageStates.NoAnswer, await _messenger.ShowAsync(2, "x"));
+        Assert.Equal(KidMessageStates.NoAnswer, await _messenger.ShowAsync(2, Message));
         Assert.True(_logger.Has(LogLevel.Warning, failure));
     }
 
     [Fact]
-    public async Task ShowAsync_NullText_Throws()
+    public async Task ShowAsync_NullMessage_Throws()
     {
         await Assert.ThrowsAsync<ArgumentNullException>(() => _messenger.ShowAsync(2, null!));
     }

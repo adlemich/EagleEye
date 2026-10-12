@@ -19,8 +19,8 @@ public interface IAppCloser
 
 /// <summary>
 /// Glue between a close sequence and the agent, the process table and the terminator: the kill set excludes the
-/// enforcement ignore list, EagleEye's own programs (by installation path) and the account's open apps
-/// (<see cref="OpenAppsView"/>).
+/// enforcement ignore list, EagleEye's own programs (by installation path) and the account's other open apps
+/// (<see cref="OpenAppsView"/>, without the closed app's own path, US-006 TI-9).
 /// </summary>
 public sealed class AppCloser(
     ISessionAgentSupervisor supervisor,
@@ -42,7 +42,10 @@ public sealed class AppCloser(
     {
         ArgumentNullException.ThrowIfNull(start);
         ArgumentNullException.ThrowIfNull(extraRoots);
-        var request = new KillSetRequest(start.SessionId, start.AccountSid, start.ProgramPath, extraRoots, openApps.Of(start.AccountSid));
+        // TI-9: the app being closed may itself be open (running-app close); only the *other* open apps are excluded.
+        var otherOpen = openApps.Of(start.AccountSid).Where(p => !StringComparer.OrdinalIgnoreCase.Equals(p, start.ProgramPath))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var request = new KillSetRequest(start.SessionId, start.AccountSid, start.ProgramPath, extraRoots, otherOpen);
         var members = KillSetBuilder.Build(processTable.Snapshot(start.SessionId), request, IsExempt);
         var handles = new List<IProcessHandle>();
         foreach (var member in members)

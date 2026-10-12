@@ -48,8 +48,37 @@ public sealed class TimeChangeMonitorTests
             (TimeChangeMonitor.TimeZoneKind, "Test Berlin (UTC+01:00)", "Test Pacific (UTC-08:00, no DST)", (int?)2, (string?)Kid.AccountSid, (string?)"kid1", new DateTime(2026, 10, 12, 10, 30, 5)),
             (finding.Kind, finding.OldValue, finding.NewValue, finding.SessionId, finding.AccountSid, finding.UserName, finding.DetectedLocal));
         Assert.Equal(
-            "The time zone of the PC changed from Test Berlin (UTC+01:00) to Test Pacific (UTC-08:00, no DST); break times now use the new local time. Session in use: kid1.",
+            "The time zone of the PC changed from Test Berlin (UTC+01:00) to Test Pacific (UTC-08:00, no DST); the local date stays 10/12/2026; break times now use the new local time. Session in use: kid1.",
             _logger.Messages(LogLevel.Warning).Single());
+    }
+
+    [Fact]
+    public async Task ZoneChanged_LocalDateChanges_WarningNamesBothDatesAndTheBudgets()
+    {
+        var tokyo = TimeZoneInfo.CreateCustomTimeZone("Test Tokyo", TimeSpan.FromHours(9), "Test Tokyo", "Test Tokyo");
+        await _monitor.OnTickAsync([Kid]);
+        _time.Zone = tokyo;
+        _time.Advance(TimeSpan.FromSeconds(5));
+
+        await _monitor.OnTickAsync([Kid]);
+
+        Assert.Equal(
+            "The time zone of the PC changed from Test Berlin (UTC+01:00) to Test Tokyo (UTC+09:00, no DST); the local date changed from 10/12/2026 to 10/13/2026; daily budgets now use the new day; break times now use the new local time. Session in use: kid1.",
+            _logger.Messages(LogLevel.Warning).Single());
+        Assert.Single(_findings);
+    }
+
+    [Fact]
+    public async Task ClockJumpAcrossMidnight_WarningNamesBothDates()
+    {
+        await _monitor.OnTickAsync([]);
+        _time.Advance(TimeSpan.FromSeconds(5));
+        _time.WallNow += TimeSpan.FromHours(4);
+
+        await _monitor.OnTickAsync([]);
+
+        Assert.Contains("; the local date changed from 10/12/2026 to 10/13/2026; daily budgets now use the new day; break times now use the new local time.", _logger.Messages(LogLevel.Warning).Single(), StringComparison.Ordinal);
+        Assert.Single(_findings);
     }
 
     [Theory]

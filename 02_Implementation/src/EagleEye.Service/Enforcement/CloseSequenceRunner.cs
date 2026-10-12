@@ -7,8 +7,9 @@ using EagleEye.Service.Statistics;
 namespace EagleEye.Service.Enforcement;
 
 /// <summary>
-/// Runs one <see cref="Sequence"/> per blocked start (ADR-013 §4, US-005 Decision 4), at most
-/// <see cref="MaxParallel"/> at a time (further ones queue): record and log at t₀; in parallel the kid's message and
+/// Runs one <see cref="Sequence"/> per close request (ADR-013 §4, US-005 Decision 4, US-006 Decision 8), at most
+/// <see cref="MaxParallel"/> at a time (further ones queue): record and log at t₀ (a blocked start also creates the app
+/// record); in parallel the kid's message (or the shared message state of a batch) and
 /// the agent's graceful close; wait up to <see cref="GracefulTimeout"/> for every process of the kill set to exit;
 /// otherwise up to <see cref="ForceRounds"/> rounds of "recompute the kill set, terminate, wait ≤ 1 s"; then the
 /// result in the history and the log. Seconds count from t₀ (detection).
@@ -17,6 +18,7 @@ public sealed class CloseSequenceRunner(
     IBlockedStartRepository repository,
     IKidMessenger messenger,
     IAppCloser closer,
+    IAppInventory inventory,
     EnforcementLog log,
     TimeProvider timeProvider) : ICloseSequenceRunner, IDisposable
 {
@@ -41,6 +43,7 @@ public sealed class CloseSequenceRunner(
     private readonly IBlockedStartRepository _repository = repository;
     private readonly IKidMessenger _messenger = messenger;
     private readonly IAppCloser _closer = closer;
+    private readonly IAppInventory _inventory = inventory;
     private readonly EnforcementLog _log = log;
     private readonly TimeProvider _timeProvider = timeProvider;
     private readonly SemaphoreSlim _parallel = new(MaxParallel, MaxParallel);
@@ -51,6 +54,11 @@ public sealed class CloseSequenceRunner(
     public ICloseSequenceHandle Start(CloseRequest start)
     {
         ArgumentNullException.ThrowIfNull(start);
+        if (start.Message is null && start.SharedMessageState is null)
+        {
+            throw new ArgumentException("A close request needs a message or a shared message state.", nameof(start));
+        }
+
         var sequence = new Sequence(this, start);
         _running[sequence] = sequence.RunAsync().ContinueWith(
             _ => _running.TryRemove(sequence, out Task? _), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
@@ -151,12 +159,15 @@ public sealed class CloseSequenceRunner(
             var t0 = runner._timeProvider.GetTimestamp();
             var recordId = await InsertAsync().ConfigureAwait(false);
             var logged = runner._log.Detected(start);
+            var appRecord = start.Kind == CloseKinds.BlockedStart ? EnsureAppRecordAsync() : Task.CompletedTask;
             AddHandles(runner._closer.OpenKillSet(start, Extra()));
-            var message = runner._messenger.ShowAsync(start.SessionId, start.DisplayText, CancellationToken.None);
+            var message = start.SharedMessageState
+                ?? runner._messenger.ShowAsync(start.SessionId, start.Message!, CancellationToken.None); // Checked in Start.
             var close = IgnoreFailuresAsync(runner._closer.RequestGracefulCloseAsync(start.SessionId, start.Targets, stopping));
             var (outcome, seconds, logText) = await EndAsync(t0, stopping).ConfigureAwait(false);
             var messageState = await message.ConfigureAwait(false);
             await close.ConfigureAwait(false);
+            await appRecord.ConfigureAwait(false);
             await CompleteAsync(recordId, outcome, seconds, messageState).ConfigureAwait(false);
             runner._log.Ended(start, logText, messageState, logged);
         }
@@ -235,10 +246,18 @@ public sealed class CloseSequenceRunner(
 
         private async Task<long?> InsertAsync()
         {
+            var weekday = start.Kind == CloseKinds.RunningApp
+                ? BreakTimeSchedule.ToLocal(start.DetectedUtc, runner._timeProvider.LocalTimeZone).DayOfWeek
+                : start.StartedLocal.DayOfWeek;
             var record = new BlockedStartRecord(
                 start.AccountSid, start.UserName, start.StartedUtc, start.StartedLocal, start.DetectedUtc, start.DisplayName,
-                start.ProcessName, start.ProgramPath, start.Targets[0].Pid, start.Trigger, start.Entry,
-                BreakTimeChangeLog.Weekday(start.StartedLocal.DayOfWeek));
+                start.ProcessName, start.ProgramPath, start.Targets[0].Pid, start.Trigger, start.Entry, BreakTimeChangeLog.Weekday(weekday))
+            {
+                Kind = start.Kind,
+                Reason = start.Reason,
+                AfterGrace = start.AfterGrace,
+                Rule = start.Rule,
+            };
             try
             {
                 return await runner._repository.InsertAsync(record, CancellationToken.None).ConfigureAwait(false);
@@ -248,6 +267,21 @@ public sealed class CloseSequenceRunner(
                 // History boundary: the app must be closed even if the record cannot be stored.
                 runner._log.HistoryFailed(start, ex);
                 return null;
+            }
+        }
+
+        /// <summary>A blocked start creates the app record (US-006 Decision 3); a failure never stops the close.</summary>
+        private async Task EnsureAppRecordAsync()
+        {
+            try
+            {
+                await runner._inventory.EnsureAppRecordAsync(
+                    start.AccountSid, start.UserName, start.ProgramPath, start.ProcessName, start.DisplayName, CancellationToken.None).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                // Inventory boundary: the app must be closed even if the record cannot be created.
+                runner._log.AppRecordFailed(start, ex);
             }
         }
 

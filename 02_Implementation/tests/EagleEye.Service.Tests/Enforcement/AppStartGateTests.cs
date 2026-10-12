@@ -1,7 +1,9 @@
+using EagleEye.Service.Data;
 using EagleEye.Service.Enforcement;
 using EagleEye.Service.Rules;
 using EagleEye.Service.Statistics;
 using EagleEye.Service.Tests.Statistics;
+using EagleEye.Shared.Constants;
 using EagleEye.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Time.Testing;
@@ -31,7 +33,12 @@ public sealed class AppStartGateTests
     private readonly TestLogger<AppStartGate> _logger = new();
     private readonly HashSet<string> _open = new(StringComparer.OrdinalIgnoreCase);
     private readonly AppStartGate _gate;
+    private readonly Mock<IAppRuleService> _appRules = new();
+    private readonly Mock<IUsageRepository> _usage = new();
+    private readonly TodayUsageLedger _ledger;
+    private readonly CloseRegistry _registry = new();
     private RulesSnapshot _snapshot = RulesSnapshot.Empty;
+    private AppRulesSnapshot _apps = AppRulesSnapshot.Empty;
 
     public AppStartGateTests()
     {
@@ -45,7 +52,16 @@ public sealed class AppStartGateTests
             _handles.Add(handle);
             return handle.Object;
         });
-        _gate = new AppStartGate(_rules.Object, _table.Object, _runner.Object, new EnforcementIgnoreList(@"C:\Windows"), _time, _logger);
+        _appRules.SetupGet(r => r.Current).Returns(() => _apps);
+        _usage.Setup(u => u.GetUsageAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _ledger = new TodayUsageLedger(_usage.Object, _appRules.Object, _time, new TestLogger<TodayUsageLedger>());
+
+        // US-005 cases: Notepad and Paint are allowed all day by their app rules, so only break times decide.
+        SetAppRule(Kid, 1, Notepad, AppRuleRules.MaxBudgetMinutes, BreakTimeDays.All);
+        SetAppRule(Kid, 2, Paint, AppRuleRules.MaxBudgetMinutes, BreakTimeDays.All);
+        SetAppRule(Kid2, 3, Notepad, AppRuleRules.MaxBudgetMinutes, BreakTimeDays.All);
+        _gate = new AppStartGate(
+            _rules.Object, _appRules.Object, _ledger, _table.Object, _runner.Object, _registry, new EnforcementIgnoreList(@"C:\Windows"), _time, _logger);
         SetRules(Kid, Evening);
     }
 
@@ -72,7 +88,8 @@ public sealed class AppStartGateTests
             (2, Kid, "kid1", Notepad, "notepad.exe", "Editor", BlockedStartTexts.AppStartTrigger, Evening, Utc(20, 5), new DateTime(2026, 10, 12, 20, 5, 0), Utc(20, 10)),
             (start.SessionId, start.AccountSid, start.UserName, start.ProgramPath, start.ProcessName, start.DisplayName, start.Trigger, start.Entry, start.StartedUtc, start.StartedLocal, start.DetectedUtc));
         Assert.Equal([new ObservedProcess(10, Ft(20, 5))], start.Targets);
-        Assert.Equal(BreakTimeRulesDefaults.Text, start.DisplayText);
+        Assert.Equal(new KidMessageDto(KidMessageReason.BreakTime, null, null, null, 1200, 1439), start.Message);
+        Assert.Equal((CloseKinds.BlockedStart, CloseReasons.BreakTime, true), (start.Kind, start.Reason, start.RemovesFromReport));
     }
 
     [Fact]
@@ -295,6 +312,95 @@ public sealed class AppStartGateTests
         Assert.Equal(2, _logger.Messages(LogLevel.Information).Count(m => m.Contains("began", StringComparison.Ordinal)));
     }
 
+    // ---------- US-006: app rules (Decision 2) ----------
+
+    [Fact]
+    public void Screen_DefaultRule_BlockedNotAllowedTodayWithTheBudgetText()
+    {
+        SetRules(Kid, Evening with { IsActive = false });
+        const string calc = @"C:\Apps\calc.exe";
+
+        var result = Screen(Report(App(calc, (10, Ft(20, 5))), App(Paint, (11, Ft(20, 6)))));
+
+        Assert.Equal([Paint], result.Apps.Select(a => a.ProgramPath));
+        var start = Assert.Single(_started);
+        Assert.Equal(
+            (CloseKinds.BlockedStart, CloseReasons.NotAllowedToday, (BreakTimeEntryDto?)null, new AppRuleAtClose(0, BreakTimeDays.None, 0)),
+            (start.Kind, start.Reason, start.Entry, start.Rule));
+        Assert.Equal(new KidMessageDto(KidMessageReason.AppNotAllowedToday, null, "App", null, null, null), start.Message);
+    }
+
+    [Fact]
+    public void Screen_DayNotTicked_BlockedWithTheParentsBudgetText()
+    {
+        SetRules(Kid, Evening with { IsActive = false });
+        SetAppRule(Kid, 2, Paint, 30, BreakTimeDays.Saturday);
+        _apps = _apps.With(Kid, _apps.For(Kid).WithBudgetText("Schluss!"));
+
+        Screen(Report(App(Paint, (11, Ft(20, 6)))));
+
+        Assert.Equal((CloseReasons.NotAllowedToday, "Schluss!"), (_started.Single().Reason, _started.Single().Message!.ParentText));
+    }
+
+    [Fact]
+    public void Screen_ZeroBudgetAllDays_BlockedNotAllowedToday()
+    {
+        SetRules(Kid, Evening with { IsActive = false });
+        SetAppRule(Kid, 1, Notepad, 0, BreakTimeDays.All);
+
+        Screen(Report(App(Notepad, (10, Ft(20, 5)))));
+
+        Assert.Equal(CloseReasons.NotAllowedToday, _started.Single().Reason);
+    }
+
+    [Theory]
+    [InlineData(180)]
+    [InlineData(200)]
+    public async Task Screen_UsedAtOrAboveBudget_BlockedBudgetUsedUp(long used)
+    {
+        SetRules(Kid, Evening with { IsActive = false });
+        SetAppRule(Kid, 1, Notepad, 3, BreakTimeDays.All);
+        await SetUsedAsync(Notepad, used);
+
+        Screen(Report(App(Notepad, (10, Ft(20, 5)))));
+
+        var start = _started.Single();
+        Assert.Equal((CloseReasons.BudgetUsedUp, new AppRuleAtClose(3, BreakTimeDays.All, used)), (start.Reason, start.Rule));
+        Assert.Equal(KidMessageReason.AppBudgetUsedUp, start.Message!.Reason);
+    }
+
+    [Fact]
+    public async Task Screen_BudgetLeft_Passes()
+    {
+        SetRules(Kid, Evening with { IsActive = false });
+        SetAppRule(Kid, 1, Notepad, 3, BreakTimeDays.Monday);
+        await SetUsedAsync(Notepad, 179);
+        var report = Report(App(Notepad, (10, Ft(20, 5))));
+
+        Assert.Same(report, Screen(report));
+        Assert.Empty(_started);
+    }
+
+    [Fact]
+    public void Screen_BreakWinsOverAnAllowedApp()
+    {
+        Screen(Report(App(Notepad, (10, Ft(20, 5)))));
+
+        Assert.Equal((CloseReasons.BreakTime, KidMessageReason.BreakTime), (_started.Single().Reason, _started.Single().Message!.Reason));
+    }
+
+    [Fact]
+    public void Screen_RunningAppBeingClosed_StaysInTheReportAndNewProcessesJoin()
+    {
+        var handle = new Mock<ICloseSequenceHandle>();
+        _registry.Add(2, Notepad, new CloseEntry(handle.Object, false, [(10, Ft(19, 0))]));
+        var report = Report(App(Notepad, (10, Ft(19, 0)), (12, Ft(20, 6))));
+
+        Assert.Same(report, Screen(report));
+        handle.Verify(h => h.AddProcesses(It.Is<IReadOnlyList<ObservedProcess>>(p => p.Single() == new ObservedProcess(12, Ft(20, 6)))), Times.Once);
+        Assert.Empty(_started);
+    }
+
     [Fact]
     public void Guards_Throw()
     {
@@ -326,8 +432,12 @@ public sealed class AppStartGateTests
 
     private static long Ft(int localHour, int minute, int second = 0) => Utc(localHour, minute, second).ToFileTime();
 
-    private static class BreakTimeRulesDefaults
+    private void SetAppRule(string sid, long appId, string path, int budget, BreakTimeDays days) =>
+        _apps = _apps.With(sid, _apps.For(sid).WithApp(new AppRuleEntry(appId, path, path == Notepad ? "Editor" : "App", budget, days)));
+
+    private async Task SetUsedAsync(string path, long seconds)
     {
-        public const string Text = EagleEye.Shared.Constants.BreakTimeRules.DefaultDisplayText;
+        await _ledger.EnsureLoadedAsync([Kid], CancellationToken.None);
+        _ledger.Apply([new UsageCredit(Kid, path, DateOnly.FromDateTime(_time.GetLocalNow().DateTime), seconds)]);
     }
 }

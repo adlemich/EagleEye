@@ -13,10 +13,15 @@ internal static class EnforcementTestData
 
     public static readonly BreakTimeEntryDto Entry = new(3, true, 1200, 1439, BreakTimeDays.All);
 
+    public static readonly KidMessageDto BreakMessage = new(KidMessageReason.BreakTime, "Pause \U0001F60A", null, null, 1200, 1439);
+
     public static CloseRequest Start(params ObservedProcess[] targets) => new(
         2, Kid, "kid1", Notepad, "notepad.exe", "Editor", targets.Length == 0 ? [new ObservedProcess(5120, 100)] : targets,
-        BlockedStartTexts.AppStartTrigger, Entry, "Pause \U0001F60A", new DateTimeOffset(2026, 10, 12, 18, 10, 0, TimeSpan.Zero),
-        new DateTime(2026, 10, 12, 20, 10, 0), new DateTimeOffset(2026, 10, 12, 18, 10, 1, TimeSpan.Zero));
+        BlockedStartTexts.AppStartTrigger, Entry, new DateTimeOffset(2026, 10, 12, 18, 10, 0, TimeSpan.Zero),
+        new DateTime(2026, 10, 12, 20, 10, 0), new DateTimeOffset(2026, 10, 12, 18, 10, 1, TimeSpan.Zero))
+    {
+        Message = BreakMessage,
+    };
 }
 
 /// <summary>A process of the fake process world.</summary>

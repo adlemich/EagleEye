@@ -10,7 +10,8 @@ namespace EagleEye.Service.Enforcement;
 public sealed record SessionInUse(int SessionId, string AccountSid, string UserName);
 
 /// <summary>
-/// Finds time-zone and clock changes (ADR-013 §9, story AC-37, FR-SVC-026). Called at every 5 s tick after
+/// Finds time-zone and clock changes (ADR-013 §9, US-005 AC-37, US-006 AC-39, FR-SVC-026). The Warning names the old and
+/// new local date and says when daily budgets now use the new day (one finding per change, plan Q-3). Called at every 5 s tick after
 /// <c>TimeZoneInfo.ClearCachedData()</c>. A zone change is a change of <c>Id</c>, <c>BaseUtcOffset</c> or
 /// <c>SupportsDaylightSavingTime</c> (regular DST transitions change none of them). A clock jump is a difference of
 /// more than <see cref="ClockJumpThreshold"/> between elapsed wall-clock and monotonic time; intervals longer than
@@ -34,7 +35,10 @@ public sealed class TimeChangeMonitor(ITimeChangeFindingRepository repository, T
 
     private const string LocalFormat = "yyyy-MM-dd HH:mm:ss";
 
+    private const string DateFormat = "MM/dd/yyyy";
+
     private (string Id, TimeSpan Offset, bool Dst)? _zone;
+    private TimeZoneInfo? _zoneInfo;
     private DateTimeOffset _lastWall;
     private long _lastTimestamp;
     private bool _clockBaseline;
@@ -51,17 +55,20 @@ public sealed class TimeChangeMonitor(ITimeChangeFindingRepository repository, T
         var current = (zone.Id, zone.BaseUtcOffset, zone.SupportsDaylightSavingTime);
         if (_zone is { } previous && previous != current)
         {
-            await ReportAsync(TimeZoneKind, Describe(previous), Describe(current), who, wallNow, zone, ct).ConfigureAwait(false);
+            var oldDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(wallNow, _zoneInfo!).DateTime); // Set together with _zone.
+            await ReportAsync(TimeZoneKind, Describe(previous), Describe(current), oldDate, who, wallNow, zone, ct).ConfigureAwait(false);
         }
 
         _zone = current;
+        _zoneInfo = zone;
         if (_clockBaseline)
         {
             var monotonic = timeProvider.GetElapsedTime(_lastTimestamp, timestamp);
             var expected = _lastWall + monotonic;
             if (monotonic <= MaxJudgedInterval && (wallNow - expected).Duration() > ClockJumpThreshold)
             {
-                await ReportAsync(ClockKind, Local(expected, zone), Local(wallNow, zone), who, wallNow, zone, ct).ConfigureAwait(false);
+                var oldDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(expected, zone).DateTime);
+                await ReportAsync(ClockKind, Local(expected, zone), Local(wallNow, zone), oldDate, who, wallNow, zone, ct).ConfigureAwait(false);
             }
         }
 
@@ -74,18 +81,19 @@ public sealed class TimeChangeMonitor(ITimeChangeFindingRepository repository, T
     public void Rebaseline() => _clockBaseline = false;
 
     private async Task ReportAsync(
-        string kind, string oldValue, string newValue, SessionInUse? who, DateTimeOffset wallNow, TimeZoneInfo zone, CancellationToken ct)
+        string kind, string oldValue, string newValue, DateOnly oldDate, SessionInUse? who, DateTimeOffset wallNow, TimeZoneInfo zone, CancellationToken ct)
     {
         var what = kind == TimeZoneKind ? "time zone" : "clock";
+        var dates = DatesText(oldDate, DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(wallNow, zone).DateTime));
         if (who is null)
         {
-            logger.LogWarning("The {What} of the PC changed from {Old} to {New}; break times now use the new local time.", what, oldValue, newValue);
+            logger.LogWarning("The {What} of the PC changed from {Old} to {New}; {Dates}; break times now use the new local time.", what, oldValue, newValue, dates);
         }
         else
         {
             logger.LogWarning(
-                "The {What} of the PC changed from {Old} to {New}; break times now use the new local time. Session in use: {UserName}.",
-                what, oldValue, newValue, who.UserName);
+                "The {What} of the PC changed from {Old} to {New}; {Dates}; break times now use the new local time. Session in use: {UserName}.",
+                what, oldValue, newValue, dates, who.UserName);
         }
 
         var finding = new TimeChangeFinding(
@@ -100,6 +108,14 @@ public sealed class TimeChangeMonitor(ITimeChangeFindingRepository repository, T
             logger.LogWarning(ex, "Storing a {Kind} finding failed.", kind);
         }
     }
+
+    /// <summary>US-006 AC-39: the old and new local date and the effect on the daily budgets.</summary>
+    private static string DatesText(DateOnly oldDate, DateOnly newDate) =>
+        oldDate == newDate
+            ? $"the local date stays {Date(newDate)}"
+            : $"the local date changed from {Date(oldDate)} to {Date(newDate)}; daily budgets now use the new day";
+
+    private static string Date(DateOnly date) => date.ToString(DateFormat, CultureInfo.InvariantCulture);
 
     private static string Describe((string Id, TimeSpan Offset, bool Dst) zone)
     {
