@@ -7,15 +7,15 @@ using static EagleEye.Service.Tests.Enforcement.EnforcementTestData;
 
 namespace EagleEye.Service.Tests.Enforcement;
 
-public sealed class BlockedStartLogTests
+public sealed class EnforcementLogTests
 {
     private readonly FakeTimeProvider _time = new();
-    private readonly TestLogger<BlockedStartLog> _logger = new();
-    private readonly BlockedStartLog _log;
+    private readonly TestLogger<EnforcementLog> _logger = new();
+    private readonly EnforcementLog _log;
 
-    public BlockedStartLogTests()
+    public EnforcementLogTests()
     {
-        _log = new BlockedStartLog(_logger, new InstanceLogLimiter(_time));
+        _log = new EnforcementLog(_logger, new InstanceLogLimiter(_time));
     }
 
     [Fact]

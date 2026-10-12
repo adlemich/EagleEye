@@ -18,13 +18,13 @@ namespace EagleEye.Service.Enforcement;
 /// Blocked apps are removed from the report until their sequence has ended, so they create no usage (AC-24). Accounts
 /// without an active entry pass unchanged (AC-29). Also logs when break times begin and end. Used by the loop only.
 /// </summary>
-public sealed class BreakTimeGate(
+public sealed class AppStartGate(
     IBreakTimeService rules,
     IProcessTable processTable,
-    IBlockedStartRunner runner,
+    ICloseSequenceRunner runner,
     EnforcementIgnoreList ignoreList,
     TimeProvider timeProvider,
-    ILogger<BreakTimeGate> logger)
+    ILogger<AppStartGate> logger)
 {
     private readonly Dictionary<int, SessionState> _sessions = [];
     private readonly Dictionary<string, BreakTimeEntryDto> _inEffect = new(StringComparer.OrdinalIgnoreCase);
@@ -111,7 +111,7 @@ public sealed class BreakTimeGate(
     /// <summary>The session ended: forget its state (running sequences go on).</summary>
     public void RemoveSession(int sessionId) => _sessions.Remove(sessionId);
 
-    private BlockedStart? Decide(AppsObserved observed, ObservedApp app, AccountRules accountRules, string userName, bool firstOfRun)
+    private CloseRequest? Decide(AppsObserved observed, ObservedApp app, AccountRules accountRules, string userName, bool firstOfRun)
     {
         if (app.Processes.Count == 0)
         {
@@ -132,7 +132,7 @@ public sealed class BreakTimeGate(
         }
 
         var startedUtc = DateTimeOffset.FromFileTime(created).ToUniversalTime();
-        return new BlockedStart(
+        return new CloseRequest(
             observed.SessionId, observed.AccountSid, userName, app.ProgramPath, app.ProcessName, app.DisplayName, app.Processes,
             firstOfRun ? BlockedStartTexts.AgentStartTrigger : BlockedStartTexts.AppStartTrigger, entry, accountRules.DisplayText,
             startedUtc, BreakTimeSchedule.ToLocal(startedUtc, zone), timeProvider.GetUtcNow());
@@ -181,5 +181,5 @@ public sealed class BreakTimeGate(
         public Dictionary<string, BlockedApp> Blocked { get; } = new(StringComparer.OrdinalIgnoreCase);
     }
 
-    private sealed record BlockedApp(IBlockedStartHandle Handle, HashSet<(int Pid, long Created)> Known);
+    private sealed record BlockedApp(ICloseSequenceHandle Handle, HashSet<(int Pid, long Created)> Known);
 }

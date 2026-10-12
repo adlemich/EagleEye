@@ -13,12 +13,12 @@ namespace EagleEye.Service.Enforcement;
 /// otherwise up to <see cref="ForceRounds"/> rounds of "recompute the kill set, terminate, wait ≤ 1 s"; then the
 /// result in the history and the log. Seconds count from t₀ (detection).
 /// </summary>
-public sealed class BlockedStartRunner(
+public sealed class CloseSequenceRunner(
     IBlockedStartRepository repository,
     IKidMessenger messenger,
-    IBlockedAppCloser closer,
-    BlockedStartLog log,
-    TimeProvider timeProvider) : IBlockedStartRunner, IDisposable
+    IAppCloser closer,
+    EnforcementLog log,
+    TimeProvider timeProvider) : ICloseSequenceRunner, IDisposable
 {
     /// <summary>Time for the graceful close (FR-SVC-023 v1.5).</summary>
     public static readonly TimeSpan GracefulTimeout = TimeSpan.FromSeconds(20);
@@ -40,15 +40,15 @@ public sealed class BlockedStartRunner(
 
     private readonly IBlockedStartRepository _repository = repository;
     private readonly IKidMessenger _messenger = messenger;
-    private readonly IBlockedAppCloser _closer = closer;
-    private readonly BlockedStartLog _log = log;
+    private readonly IAppCloser _closer = closer;
+    private readonly EnforcementLog _log = log;
     private readonly TimeProvider _timeProvider = timeProvider;
     private readonly SemaphoreSlim _parallel = new(MaxParallel, MaxParallel);
     private readonly CancellationTokenSource _stopping = new();
     private readonly ConcurrentDictionary<Sequence, Task> _running = new();
 
     /// <inheritdoc />
-    public IBlockedStartHandle Start(BlockedStart start)
+    public ICloseSequenceHandle Start(CloseRequest start)
     {
         ArgumentNullException.ThrowIfNull(start);
         var sequence = new Sequence(this, start);
@@ -91,7 +91,7 @@ public sealed class BlockedStartRunner(
     }
 
     /// <summary>The close sequence of one blocked start.</summary>
-    private sealed class Sequence(BlockedStartRunner runner, BlockedStart start) : IBlockedStartHandle
+    private sealed class Sequence(CloseSequenceRunner runner, CloseRequest start) : ICloseSequenceHandle
     {
         private readonly Lock _lock = new();
         private readonly Dictionary<int, IProcessHandle> _handles = [];

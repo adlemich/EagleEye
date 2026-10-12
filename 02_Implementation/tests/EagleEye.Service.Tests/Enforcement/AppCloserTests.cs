@@ -8,7 +8,7 @@ using static EagleEye.Service.Tests.Enforcement.EnforcementTestData;
 
 namespace EagleEye.Service.Tests.Enforcement;
 
-public sealed class BlockedAppCloserTests
+public sealed class AppCloserTests
 {
     private const string Game = @"C:\Games\Game.exe";
 
@@ -16,14 +16,14 @@ public sealed class BlockedAppCloserTests
     private readonly Mock<IProcessTable> _table = new();
     private readonly Mock<IProcessTerminator> _terminator = new();
     private readonly OpenAppsView _openApps = new();
-    private readonly BlockedAppCloser _closer;
+    private readonly AppCloser _closer;
 
-    public BlockedAppCloserTests()
+    public AppCloserTests()
     {
         var policy = new ProgramPathPolicy(
             new ProgramPathRoots(@"C:\Windows", @"C:\Program Files", @"C:\Program Files (x86)", @"C:\Program Files\EagleEye"),
             _ => DriveKind.Fixed);
-        _closer = new BlockedAppCloser(_supervisor.Object, _table.Object, _terminator.Object, new EnforcementIgnoreList(@"C:\Windows"), policy, _openApps);
+        _closer = new AppCloser(_supervisor.Object, _table.Object, _terminator.Object, new EnforcementIgnoreList(@"C:\Windows"), policy, _openApps);
         _terminator.Setup(t => t.Open(It.IsAny<int>(), It.IsAny<long>())).Returns<int, long>((pid, _) => pid == 99 ? null : Mock.Of<IProcessHandle>(h => h.Pid == pid));
     }
 

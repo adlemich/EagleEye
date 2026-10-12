@@ -3,7 +3,7 @@ using EagleEye.Shared.Models;
 
 namespace EagleEye.Service.Enforcement;
 
-/// <summary>A blocked start detected by the <see cref="BreakTimeGate"/> (ADR-013 §3).</summary>
+/// <summary>A blocked start detected by the <see cref="AppStartGate"/> (ADR-013 §3).</summary>
 /// <param name="SessionId">The session of the start.</param>
 /// <param name="AccountSid">The account.</param>
 /// <param name="UserName">The account's user name.</param>
@@ -17,7 +17,7 @@ namespace EagleEye.Service.Enforcement;
 /// <param name="StartedUtc">Creation time of the app's first process.</param>
 /// <param name="StartedLocal">The same, local time of the service PC.</param>
 /// <param name="DetectedUtc">When the gate detected the blocked start.</param>
-public sealed record BlockedStart(
+public sealed record CloseRequest(
     int SessionId,
     string AccountSid,
     string UserName,

@@ -5,13 +5,13 @@ using EagleEye.Service.Statistics;
 namespace EagleEye.Service.Enforcement;
 
 /// <summary>The means of a close sequence: the agent's graceful close and the service's process handles (ADR-013 §4, §5).</summary>
-public interface IBlockedAppCloser
+public interface IAppCloser
 {
     /// <summary>Asks the session agent to post <c>WM_CLOSE</c> to the targets' app windows; <c>null</c> if not answered.</summary>
     Task<CloseAnswer?> RequestGracefulCloseAsync(int sessionId, IReadOnlyList<ObservedProcess> targets, CancellationToken ct);
 
     /// <summary>Computes the kill set from a fresh process snapshot and opens a handle to every member still running.</summary>
-    IReadOnlyList<IProcessHandle> OpenKillSet(BlockedStart start, IReadOnlySet<(int Pid, long Created)> extraRoots);
+    IReadOnlyList<IProcessHandle> OpenKillSet(CloseRequest start, IReadOnlySet<(int Pid, long Created)> extraRoots);
 
     /// <summary>Opens one process (creation time verified), or <c>null</c>.</summary>
     IProcessHandle? Open(ObservedProcess process);
@@ -22,13 +22,13 @@ public interface IBlockedAppCloser
 /// enforcement ignore list, EagleEye's own programs (by installation path) and the account's open apps
 /// (<see cref="OpenAppsView"/>).
 /// </summary>
-public sealed class BlockedAppCloser(
+public sealed class AppCloser(
     ISessionAgentSupervisor supervisor,
     IProcessTable processTable,
     IProcessTerminator terminator,
     EnforcementIgnoreList ignoreList,
     ProgramPathPolicy pathPolicy,
-    OpenAppsView openApps) : IBlockedAppCloser
+    OpenAppsView openApps) : IAppCloser
 {
     /// <inheritdoc />
     public Task<CloseAnswer?> RequestGracefulCloseAsync(int sessionId, IReadOnlyList<ObservedProcess> targets, CancellationToken ct)
@@ -38,7 +38,7 @@ public sealed class BlockedAppCloser(
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<IProcessHandle> OpenKillSet(BlockedStart start, IReadOnlySet<(int Pid, long Created)> extraRoots)
+    public IReadOnlyList<IProcessHandle> OpenKillSet(CloseRequest start, IReadOnlySet<(int Pid, long Created)> extraRoots)
     {
         ArgumentNullException.ThrowIfNull(start);
         ArgumentNullException.ThrowIfNull(extraRoots);

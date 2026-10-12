@@ -120,7 +120,7 @@ var host = Host.CreateDefaultBuilder(args)
             services.AddSingleton<IAccountDataPurger>(sp => sp.GetRequiredService<BreakTimeService>());
 
             // Break-time enforcement at app start (US-005, ADR-013, ADR-014).
-            services.AddBreakTimeEnforcement();
+            services.AddAppEnforcement();
 
             // App observation and usage accounting (US-004, ADR-011, ADR-012).
             services.AddUsageRecording();

@@ -21,7 +21,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly Icon _disconnectedIcon;
     private bool _aboutOpen;
     private PairingCodeDialog? _pairingDialog;
-    private BreakTimeMessageDialog? _breakDialog;
+    private KidMessageDialog? _breakDialog;
 
     /// <summary>Creates the tray icon and starts following the connection state.</summary>
     public TrayApplicationContext(IServiceConnection connection)
@@ -48,7 +48,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _connection.PairingCodeReceived += OnPairingCodeReceived;
 
         // US-005 (ADR-014 §2): the decision is synchronous, the dialog is created on the UI thread.
-        var presenter = new BreakTimeMessagePresenter((text, closed) => _uiContext.Post(_ => ShowBreakMessage(text, closed), null));
+        var presenter = new KidMessagePresenter((text, closed) => _uiContext.Post(_ => ShowBreakMessage(text, closed), null));
         _connection.BreakTimeMessageHandler = presenter.Present;
         Application.ApplicationExit += OnApplicationExit;
     }
@@ -106,7 +106,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
 
     private void ShowBreakMessage(string text, Action closed)
     {
-        var dialog = new BreakTimeMessageDialog(text);
+        var dialog = new KidMessageDialog(text);
         dialog.FormClosed += (_, _) =>
         {
             _breakDialog = null;

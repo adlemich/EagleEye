@@ -3,9 +3,9 @@ using EagleEye.Service.Statistics;
 namespace EagleEye.Service.Enforcement;
 
 /// <summary>What the accounting loop needs of the break-time enforcement (US-005 Step 5.4).</summary>
-public interface IBreakTimeEnforcement
+public interface IAppEnforcement
 {
-    /// <summary>The report without blocked apps (<see cref="BreakTimeGate.Screen"/>).</summary>
+    /// <summary>The report without blocked apps (<see cref="AppStartGate.Screen"/>).</summary>
     AppsObserved Screen(AppsObserved observed, string userName, Func<string, bool> isOpen);
 
     /// <summary>Publishes the open program paths per account for the kill sets.</summary>
@@ -28,13 +28,13 @@ public interface IBreakTimeEnforcement
 }
 
 /// <summary>Facade over gate, time-change monitor, runner, history and log, so the loop has one collaborator.</summary>
-public sealed class BreakTimeEnforcement(
-    BreakTimeGate gate,
+public sealed class AppEnforcement(
+    AppStartGate gate,
     TimeChangeMonitor monitor,
-    IBlockedStartRunner runner,
+    ICloseSequenceRunner runner,
     EnforcementHistory history,
-    BlockedStartLog log,
-    OpenAppsView openApps) : IBreakTimeEnforcement
+    EnforcementLog log,
+    OpenAppsView openApps) : IAppEnforcement
 {
     /// <inheritdoc />
     public AppsObserved Screen(AppsObserved observed, string userName, Func<string, bool> isOpen) => gate.Screen(observed, userName, isOpen);

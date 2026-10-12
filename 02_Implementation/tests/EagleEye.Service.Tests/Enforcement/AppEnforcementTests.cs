@@ -8,27 +8,27 @@ using Xunit;
 
 namespace EagleEye.Service.Tests.Enforcement;
 
-public sealed class BreakTimeEnforcementTests
+public sealed class AppEnforcementTests
 {
     private readonly FakeTimeProvider _time = new();
     private readonly Mock<IBreakTimeService> _rules = new();
-    private readonly Mock<IBlockedStartRunner> _runner = new();
+    private readonly Mock<ICloseSequenceRunner> _runner = new();
     private readonly Mock<IBlockedStartRepository> _blocked = new();
     private readonly Mock<ITimeChangeFindingRepository> _findings = new();
-    private readonly TestLogger<BreakTimeGate> _gateLogger = new();
+    private readonly TestLogger<AppStartGate> _gateLogger = new();
     private readonly OpenAppsView _openApps = new();
-    private readonly BreakTimeEnforcement _enforcement;
+    private readonly AppEnforcement _enforcement;
 
-    public BreakTimeEnforcementTests()
+    public AppEnforcementTests()
     {
         _rules.SetupGet(r => r.Current).Returns(RulesSnapshot.Empty);
-        var gate = new BreakTimeGate(_rules.Object, Mock.Of<IProcessTable>(), _runner.Object, new EnforcementIgnoreList(@"C:\Windows"), _time, _gateLogger);
-        _enforcement = new BreakTimeEnforcement(
+        var gate = new AppStartGate(_rules.Object, Mock.Of<IProcessTable>(), _runner.Object, new EnforcementIgnoreList(@"C:\Windows"), _time, _gateLogger);
+        _enforcement = new AppEnforcement(
             gate,
             new TimeChangeMonitor(_findings.Object, _time, new TestLogger<TimeChangeMonitor>()),
             _runner.Object,
             new EnforcementHistory(_blocked.Object, _findings.Object, _time, new TestLogger<EnforcementHistory>()),
-            new BlockedStartLog(new TestLogger<BlockedStartLog>(), new InstanceLogLimiter(_time)),
+            new EnforcementLog(new TestLogger<EnforcementLog>(), new InstanceLogLimiter(_time)),
             _openApps);
     }
 

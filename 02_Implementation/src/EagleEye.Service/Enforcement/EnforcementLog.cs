@@ -9,12 +9,12 @@ namespace EagleEye.Service.Enforcement;
 /// blocked starts per account and app and hour are logged, then one summary line per hour (<see cref="Flush"/>);
 /// the history keeps every record. Thread-safe: close sequences run in parallel.
 /// </summary>
-public sealed class BlockedStartLog(ILogger<BlockedStartLog> logger, InstanceLogLimiter limiter)
+public sealed class EnforcementLog(ILogger<EnforcementLog> logger, InstanceLogLimiter limiter)
 {
     private readonly Lock _lock = new();
 
     /// <summary>Logs the detection unless the limit is reached; returns whether it was logged.</summary>
-    public bool Detected(BlockedStart start)
+    public bool Detected(CloseRequest start)
     {
         ArgumentNullException.ThrowIfNull(start);
         bool allowed;
@@ -35,7 +35,7 @@ public sealed class BlockedStartLog(ILogger<BlockedStartLog> logger, InstanceLog
     }
 
     /// <summary>Logs the result of a blocked start whose detection was logged.</summary>
-    public void Ended(BlockedStart start, string outcome, string messageState, bool detectionLogged)
+    public void Ended(CloseRequest start, string outcome, string messageState, bool detectionLogged)
     {
         ArgumentNullException.ThrowIfNull(start);
         if (!detectionLogged)
@@ -50,7 +50,7 @@ public sealed class BlockedStartLog(ILogger<BlockedStartLog> logger, InstanceLog
     }
 
     /// <summary>Error: processes of a blocked app were still running after all force rounds.</summary>
-    public void NotEnded(BlockedStart start, int remaining)
+    public void NotEnded(CloseRequest start, int remaining)
     {
         ArgumentNullException.ThrowIfNull(start);
         logger.LogError(
@@ -59,7 +59,7 @@ public sealed class BlockedStartLog(ILogger<BlockedStartLog> logger, InstanceLog
     }
 
     /// <summary>Warning: a process could not be terminated.</summary>
-    public void TerminateFailed(BlockedStart start, int pid, int win32Error)
+    public void TerminateFailed(CloseRequest start, int pid, int win32Error)
     {
         ArgumentNullException.ThrowIfNull(start);
         logger.LogWarning(
@@ -68,7 +68,7 @@ public sealed class BlockedStartLog(ILogger<BlockedStartLog> logger, InstanceLog
     }
 
     /// <summary>Warning: the history record could not be stored; the sequence goes on.</summary>
-    public void HistoryFailed(BlockedStart start, Exception exception)
+    public void HistoryFailed(CloseRequest start, Exception exception)
     {
         ArgumentNullException.ThrowIfNull(start);
         logger.LogWarning(exception, "Storing the history record of a blocked start of {DisplayName} ({ProgramPath}) failed.", start.DisplayName, start.ProgramPath);

@@ -21,7 +21,7 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
     private readonly Mock<ISessionAgentSupervisor> _supervisor = new();
     private readonly Mock<IUsageService> _usage = new();
     private readonly Mock<IUserAccountService> _accounts = new();
-    private readonly Mock<IBreakTimeEnforcement> _enforcement = new();
+    private readonly Mock<IAppEnforcement> _enforcement = new();
     private readonly TestLogger<UsageAccountingLoop> _logger = new();
     private readonly ConcurrentQueue<(TrackerOutput Output, bool IsTick)> _applied = new();
     private List<SessionInfo> _currentSessions = [new(2, Kid, SessionConnectState.Active, false)];
@@ -191,7 +191,7 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
         _queue.Enqueue(new PowerSuspended());
         _queue.Enqueue(new PowerResumed());
 
-        await WaitFor(() => _enforcement.Invocations.Count(i => i.Method.Name == nameof(IBreakTimeEnforcement.PowerChanged)) == 2);
+        await WaitFor(() => _enforcement.Invocations.Count(i => i.Method.Name == nameof(IAppEnforcement.PowerChanged)) == 2);
     }
 
     [Fact]

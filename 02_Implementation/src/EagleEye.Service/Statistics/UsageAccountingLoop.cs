@@ -18,7 +18,7 @@ public sealed class UsageAccountingLoop(
     UsageTracker tracker,
     IUsageService usage,
     IUserAccountService userAccounts,
-    IBreakTimeEnforcement enforcement,
+    IAppEnforcement enforcement,
     TimeProvider timeProvider,
     ILogger<UsageAccountingLoop> logger) : BackgroundService
 {

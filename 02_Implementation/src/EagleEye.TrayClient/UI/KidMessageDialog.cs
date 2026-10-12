@@ -8,7 +8,7 @@ namespace EagleEye.TrayClient.UI;
 /// logical pixels, a scroll bar only for very long texts); DPI-scaled like <see cref="PairingCodeDialog"/>.
 /// Verified manually.
 /// </summary>
-internal sealed class BreakTimeMessageDialog : Form
+internal sealed class KidMessageDialog : Form
 {
     private const float LogicalDpi = 96f;
     private const int OuterPadding = 16;
@@ -23,7 +23,7 @@ internal sealed class BreakTimeMessageDialog : Form
     private bool _acknowledged;
 
     /// <summary>Creates the dialog for the text (line breaks already in the platform's form).</summary>
-    public BreakTimeMessageDialog(string displayText)
+    public KidMessageDialog(string displayText)
     {
         ArgumentNullException.ThrowIfNull(displayText);
         SuspendLayout();

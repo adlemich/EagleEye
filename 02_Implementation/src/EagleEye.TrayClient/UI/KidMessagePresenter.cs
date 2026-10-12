@@ -3,7 +3,7 @@ using EagleEye.Shared.Models;
 namespace EagleEye.TrayClient.UI;
 
 /// <summary>Decides whether a break-time message is shown (ADR-014 §2, AC-32).</summary>
-internal interface IBreakTimeMessagePresenter
+internal interface IKidMessagePresenter
 {
     /// <summary>Shows the text unless a message is already open; returns at once, without waiting for "OK".</summary>
     KidMessageResult Present(string displayText);
@@ -14,7 +14,7 @@ internal interface IBreakTimeMessagePresenter
 /// dialog itself is created on the UI thread by <c>show</c>, which calls its second argument when the dialog closes.
 /// The display text is shown exactly as stored; only its line breaks ("\n") become <see cref="Environment.NewLine"/>.
 /// </summary>
-internal sealed class BreakTimeMessagePresenter(Action<string, Action> show) : IBreakTimeMessagePresenter
+internal sealed class KidMessagePresenter(Action<string, Action> show) : IKidMessagePresenter
 {
     private int _open;
 

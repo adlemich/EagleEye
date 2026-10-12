@@ -4,14 +4,14 @@ using Xunit;
 
 namespace EagleEye.TrayClient.Tests.UI;
 
-public sealed class BreakTimeMessagePresenterTests
+public sealed class KidMessagePresenterTests
 {
     private readonly List<(string Text, Action Closed)> _shown = [];
-    private readonly BreakTimeMessagePresenter _presenter;
+    private readonly KidMessagePresenter _presenter;
 
-    public BreakTimeMessagePresenterTests()
+    public KidMessagePresenterTests()
     {
-        _presenter = new BreakTimeMessagePresenter((text, closed) => _shown.Add((text, closed)));
+        _presenter = new KidMessagePresenter((text, closed) => _shown.Add((text, closed)));
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public sealed class BreakTimeMessagePresenterTests
     [InlineData("\U0001F468‍\U0001F469‍\U0001F467 ❤️", "\U0001F468‍\U0001F469‍\U0001F467 ❤️")]
     public void ToDisplay_OnlyLineBreaksChange(string input, string expected)
     {
-        Assert.Equal(string.Format(System.Globalization.CultureInfo.InvariantCulture, expected, Environment.NewLine), BreakTimeMessagePresenter.ToDisplay(input));
+        Assert.Equal(string.Format(System.Globalization.CultureInfo.InvariantCulture, expected, Environment.NewLine), KidMessagePresenter.ToDisplay(input));
     }
 
     [Fact]

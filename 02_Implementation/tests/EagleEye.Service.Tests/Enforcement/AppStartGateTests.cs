@@ -10,7 +10,7 @@ using Xunit;
 
 namespace EagleEye.Service.Tests.Enforcement;
 
-public sealed class BreakTimeGateTests
+public sealed class AppStartGateTests
 {
     private const string Kid = "S-1-5-21-1-2-3-1003";
     private const string Kid2 = "S-1-5-21-1-2-3-1004";
@@ -25,27 +25,27 @@ public sealed class BreakTimeGateTests
     private readonly FakeTimeProvider _time = new(Utc(20, 10));
     private readonly Mock<IBreakTimeService> _rules = new();
     private readonly Mock<IProcessTable> _table = new();
-    private readonly Mock<IBlockedStartRunner> _runner = new();
-    private readonly List<BlockedStart> _started = [];
-    private readonly List<Mock<IBlockedStartHandle>> _handles = [];
-    private readonly TestLogger<BreakTimeGate> _logger = new();
+    private readonly Mock<ICloseSequenceRunner> _runner = new();
+    private readonly List<CloseRequest> _started = [];
+    private readonly List<Mock<ICloseSequenceHandle>> _handles = [];
+    private readonly TestLogger<AppStartGate> _logger = new();
     private readonly HashSet<string> _open = new(StringComparer.OrdinalIgnoreCase);
-    private readonly BreakTimeGate _gate;
+    private readonly AppStartGate _gate;
     private RulesSnapshot _snapshot = RulesSnapshot.Empty;
 
-    public BreakTimeGateTests()
+    public AppStartGateTests()
     {
         _time.SetLocalTimeZone(TestZones.Berlin);
         _rules.SetupGet(r => r.Current).Returns(() => _snapshot);
         _table.Setup(t => t.Snapshot(It.IsAny<int>())).Returns([]);
-        _runner.Setup(r => r.Start(It.IsAny<BlockedStart>())).Returns<BlockedStart>(start =>
+        _runner.Setup(r => r.Start(It.IsAny<CloseRequest>())).Returns<CloseRequest>(start =>
         {
             _started.Add(start);
-            var handle = new Mock<IBlockedStartHandle>();
+            var handle = new Mock<ICloseSequenceHandle>();
             _handles.Add(handle);
             return handle.Object;
         });
-        _gate = new BreakTimeGate(_rules.Object, _table.Object, _runner.Object, new EnforcementIgnoreList(@"C:\Windows"), _time, _logger);
+        _gate = new AppStartGate(_rules.Object, _table.Object, _runner.Object, new EnforcementIgnoreList(@"C:\Windows"), _time, _logger);
         SetRules(Kid, Evening);
     }
 

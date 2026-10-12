@@ -10,18 +10,18 @@ using static EagleEye.Service.Tests.Enforcement.EnforcementTestData;
 
 namespace EagleEye.Service.Tests.Enforcement;
 
-public sealed class BlockedStartRunnerTests : IDisposable
+public sealed class CloseSequenceRunnerTests : IDisposable
 {
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 10, 12, 18, 10, 1, TimeSpan.Zero));
     private readonly Mock<IBlockedStartRepository> _repository = new();
     private readonly Mock<IKidMessenger> _messenger = new();
     private readonly FakeCloser _closer = new();
-    private readonly TestLogger<BlockedStartLog> _logger = new();
+    private readonly TestLogger<EnforcementLog> _logger = new();
     private readonly List<(long Id, string Outcome, double? Seconds, string Message)> _completed = [];
-    private readonly BlockedStartRunner _runner;
+    private readonly CloseSequenceRunner _runner;
     private long _nextId;
 
-    public BlockedStartRunnerTests()
+    public CloseSequenceRunnerTests()
     {
         _repository.Setup(r => r.InsertAsync(It.IsAny<BlockedStartRecord>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => Interlocked.Increment(ref _nextId));
         _repository.Setup(r => r.CompleteAsync(It.IsAny<long>(), It.IsAny<string>(), It.IsAny<double?>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
@@ -34,7 +34,7 @@ public sealed class BlockedStartRunnerTests : IDisposable
             })
             .Returns(Task.CompletedTask);
         _messenger.Setup(m => m.ShowAsync(2, "Pause \U0001F60A", It.IsAny<CancellationToken>())).ReturnsAsync(KidMessageStates.Shown);
-        _runner = new BlockedStartRunner(_repository.Object, _messenger.Object, _closer, new BlockedStartLog(_logger, new InstanceLogLimiter(_time)), _time);
+        _runner = new CloseSequenceRunner(_repository.Object, _messenger.Object, _closer, new EnforcementLog(_logger, new InstanceLogLimiter(_time)), _time);
     }
 
     public void Dispose() => _runner.Dispose();
@@ -276,16 +276,16 @@ public sealed class BlockedStartRunnerTests : IDisposable
     public async Task ParallelLimit_FurtherSequencesQueueAndAreDroppedAtStop()
     {
         _closer.KillSet.Add(new FakeProcess(5120, 100) { TerminateError = 5 });
-        var handles = Enumerable.Range(0, BlockedStartRunner.MaxParallel + 1).Select(_ => _runner.Start(Start())).ToList();
-        await RunUntil(() => Inserts() == BlockedStartRunner.MaxParallel, advance: false);
+        var handles = Enumerable.Range(0, CloseSequenceRunner.MaxParallel + 1).Select(_ => _runner.Start(Start())).ToList();
+        await RunUntil(() => Inserts() == CloseSequenceRunner.MaxParallel, advance: false);
         await Task.Delay(50);
         var insertsWhileFull = Inserts();
 
         await _runner.StopAsync();
 
-        Assert.Equal(BlockedStartRunner.MaxParallel, insertsWhileFull);
+        Assert.Equal(CloseSequenceRunner.MaxParallel, insertsWhileFull);
         Assert.All(handles, h => Assert.True(h.IsCompleted));
-        Assert.Equal(BlockedStartRunner.MaxParallel, Inserts());
+        Assert.Equal(CloseSequenceRunner.MaxParallel, Inserts());
     }
 
     [Fact]
