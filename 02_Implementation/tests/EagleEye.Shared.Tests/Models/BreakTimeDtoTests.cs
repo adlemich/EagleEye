@@ -46,19 +46,10 @@ public sealed class BreakTimeDtoTests
         Assert.NotEqual(dto with { DisplayText = "y" }, dto);
     }
 
-    [Fact]
-    public void BreakTimeMessageDto_JsonRoundTrip()
-    {
-        var dto = new BreakTimeMessageDto("Hallo \U0001F60A\nZeile 2");
-
-        var copy = JsonSerializer.Deserialize<BreakTimeMessageDto>(JsonSerializer.Serialize(dto, WebOptions), WebOptions);
-
-        Assert.Equal(dto, copy);
-    }
-
     [Theory]
     [InlineData(KidMessageResult.Shown)]
     [InlineData(KidMessageResult.AlreadyOpen)]
+    [InlineData(KidMessageResult.Replaced)]
     public void KidMessageResult_JsonRoundTrip(KidMessageResult result)
     {
         var copy = JsonSerializer.Deserialize<KidMessageResult>(JsonSerializer.Serialize(result, WebOptions), WebOptions);

@@ -32,7 +32,10 @@ public sealed class KidMessenger(
         try
         {
             var result = await trayHub.Clients.Client(connectionId)
-                .InvokeAsync<KidMessageResult>(nameof(ITrayClientCallback.ShowBreakTimeMessage), new BreakTimeMessageDto(displayText), linked.Token)
+                .InvokeAsync<KidMessageResult>(
+                    nameof(ITrayClientCallback.ShowKidMessage),
+                    new KidMessageDto(KidMessageReason.BreakTime, displayText, null, null, null, null),
+                    linked.Token)
                 .ConfigureAwait(false);
             return result == KidMessageResult.Shown ? KidMessageStates.Shown : KidMessageStates.AlreadyOpen;
         }

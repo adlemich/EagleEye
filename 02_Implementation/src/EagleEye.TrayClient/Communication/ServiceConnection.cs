@@ -33,7 +33,7 @@ public sealed class ServiceConnection : IServiceConnection
         _hubConnection.Reconnected += _ => RaiseConnectionChanged(true);
         _hubConnection.Closed += OnClosed;
         _hubConnection.On<string>(nameof(ITrayClientCallback.OnShowPairingCode), code => PairingCodeReceived?.Invoke(code));
-        _hubConnection.On<BreakTimeMessageDto, KidMessageResult>(nameof(ITrayClientCallback.ShowBreakTimeMessage), OnBreakTimeMessage);
+        _hubConnection.On<KidMessageDto, KidMessageResult>(nameof(ITrayClientCallback.ShowKidMessage), OnBreakTimeMessage);
     }
 
     /// <inheritdoc />
@@ -95,10 +95,10 @@ public sealed class ServiceConnection : IServiceConnection
         _lifetime.Dispose();
     }
 
-    private KidMessageResult OnBreakTimeMessage(BreakTimeMessageDto message)
+    private KidMessageResult OnBreakTimeMessage(KidMessageDto message)
     {
         var handler = BreakTimeMessageHandler ?? throw new InvalidOperationException("No break-time message handler is registered.");
-        return handler(message.DisplayText);
+        return handler(message.ParentText ?? string.Empty);
     }
 
     private Task OnClosed(Exception? exception)

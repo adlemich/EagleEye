@@ -115,4 +115,58 @@ public interface IParentHub
     /// <param name="accountSid">The account.</param>
     /// <param name="text">The new text.</param>
     Task<StateWriteAckDto> SetDisplayText(Guid requestId, string accountSid, string text);
+
+    /// <summary>
+    /// Returns the app records of one account with their app rules and the budget text (state area "AppRules:{sid}",
+    /// US-006). File Explorer and every program of the enforcement ignore list are not included (AC-3).
+    /// Called after every (re)connect and when the parent selects another account on the Rules page.
+    /// </summary>
+    /// <param name="accountSid">SID of a standard account of the inventory (US-003), controlled or not.</param>
+    Task<AppRulesDto> GetAppRules(string accountSid);
+
+    /// <summary>
+    /// Sets the hours (0 … 23) or the minutes (0 … 59) of an app's daily budget. The service combines the value with
+    /// the stored other part (AC-8, AC-17). Throws <c>HubException</c> ("The app no longer exists.") if the record is gone.
+    /// </summary>
+    /// <param name="requestId">Client-generated correlation id, echoed in <see cref="AppRulesDto.LastChangeRequestId"/>.</param>
+    /// <param name="accountSid">The account.</param>
+    /// <param name="appId">The app record.</param>
+    /// <param name="part">Which part of the budget is changed.</param>
+    /// <param name="value">The new hours or minutes.</param>
+    Task<StateWriteAckDto> SetAppBudget(Guid requestId, string accountSid, long appId, AppBudgetPart part, int value);
+
+    /// <summary>Ticks or unticks one weekday of an app rule. Every combination is valid, also none (AC-7).</summary>
+    /// <param name="requestId">Client-generated correlation id.</param>
+    /// <param name="accountSid">The account.</param>
+    /// <param name="appId">The app record.</param>
+    /// <param name="day">The weekday.</param>
+    /// <param name="isAllowed">Whether the day is ticked.</param>
+    Task<StateWriteAckDto> SetAppDay(Guid requestId, string accountSid, long appId, DayOfWeek day, bool isAllowed);
+
+    /// <summary>
+    /// Sets the budget text (FR-APP-053). Line breaks → "\n". Empty, white space only, or equal to a default text of any
+    /// language → the default is restored (AC-10, ADR-016). At most <see cref="BreakTimeRules.MaxDisplayTextLength"/> code units.
+    /// </summary>
+    /// <param name="requestId">Client-generated correlation id.</param>
+    /// <param name="accountSid">The account.</param>
+    /// <param name="text">The new text.</param>
+    Task<StateWriteAckDto> SetBudgetText(Guid requestId, string accountSid, string text);
+
+    /// <summary>Returns the two warning levels (state area "WarningSettings", FR-APP-054). Called after every (re)connect.</summary>
+    Task<WarningSettingsDto> GetWarningSettings();
+
+    /// <summary>
+    /// Sets the minutes of one level (1 … 59). Validated against the stored other level: early must stay greater than
+    /// final (AC-15). Throws <c>HubException</c> ("The final warning must be less minutes before the end than the early warning.").
+    /// </summary>
+    /// <param name="requestId">Client-generated correlation id, echoed in <see cref="WarningSettingsDto.LastChangeRequestId"/>.</param>
+    /// <param name="level">The level.</param>
+    /// <param name="minutes">The new minutes before the end.</param>
+    Task<StateWriteAckDto> SetWarningMinutes(Guid requestId, WarningLevel level, int minutes);
+
+    /// <summary>Sets the text of one level; same text rules as <see cref="SetBudgetText"/> (AC-15).</summary>
+    /// <param name="requestId">Client-generated correlation id.</param>
+    /// <param name="level">The level.</param>
+    /// <param name="text">The new text.</param>
+    Task<StateWriteAckDto> SetWarningText(Guid requestId, WarningLevel level, string text);
 }

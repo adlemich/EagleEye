@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- German (neutral). Default kid texts, ADR-016. Keys = DefaultTextKind names. -->
+  <data name="BreakDisplayText" xml:space="preserve"><value>Hi! Leider haben Deine Eltern eine PC-Pause für diese Uhrzeit eingestellt. Du kannst dieses Programm jetzt nicht verwenden. Tut mir leid. Wie wäre es wenn Du die Zeit nutzt, um ein Buch zu lesen? 😊</value></data>
+  <data name="BudgetText" xml:space="preserve"><value>Du hast deine Zeit aufgebraucht! Leider ist jetzt Schluss.</value></data>
+  <data name="EarlyWarningText" xml:space="preserve"><value>Achtung, du hast nur noch 5 Minuten! Speichere deinen Fortschritt.</value></data>
+  <data name="FinalWarningText" xml:space="preserve"><value>Achtung!!! Nur noch 1 Minute – jetzt aber schnell speichern!</value></data>
+</root>

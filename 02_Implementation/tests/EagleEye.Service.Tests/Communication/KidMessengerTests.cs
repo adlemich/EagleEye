@@ -32,8 +32,8 @@ public sealed class KidMessengerTests
     public async Task ShowAsync_Answer_MappedToState(KidMessageResult result, string expected)
     {
         Register();
-        _client.Setup(c => c.InvokeCoreAsync<KidMessageResult>(nameof(ITrayClientCallback.ShowBreakTimeMessage),
-                It.Is<object?[]>(a => ((BreakTimeMessageDto)a[0]!).DisplayText == "Pause \U0001F60A"), It.IsAny<CancellationToken>()))
+        _client.Setup(c => c.InvokeCoreAsync<KidMessageResult>(nameof(ITrayClientCallback.ShowKidMessage),
+                It.Is<object?[]>(a => ((KidMessageDto)a[0]!).ParentText == "Pause \U0001F60A"), It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
 
         Assert.Equal(expected, await _messenger.ShowAsync(2, "Pause \U0001F60A"));

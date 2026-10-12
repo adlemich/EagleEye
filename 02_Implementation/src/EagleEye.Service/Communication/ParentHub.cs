@@ -97,6 +97,32 @@ public sealed class ParentHub(
             device => rules.SetDisplayTextAsync(requestId, accountSid, text!, device)); // Checked for null in the condition.
 
     /// <inheritdoc />
+    public Task<AppRulesDto> GetAppRules(string accountSid) => throw new HubException(RulesUnavailableMessage);
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetAppBudget(Guid requestId, string accountSid, long appId, AppBudgetPart part, int value) =>
+        throw new HubException(RulesUnavailableMessage);
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetAppDay(Guid requestId, string accountSid, long appId, DayOfWeek day, bool isAllowed) =>
+        throw new HubException(RulesUnavailableMessage);
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetBudgetText(Guid requestId, string accountSid, string text) =>
+        throw new HubException(RulesUnavailableMessage);
+
+    /// <inheritdoc />
+    public Task<WarningSettingsDto> GetWarningSettings() => throw new HubException(RulesUnavailableMessage);
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetWarningMinutes(Guid requestId, WarningLevel level, int minutes) =>
+        throw new HubException(RulesUnavailableMessage);
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetWarningText(Guid requestId, WarningLevel level, string text) =>
+        throw new HubException(RulesUnavailableMessage);
+
+    /// <inheritdoc />
     public async Task<AccountUsageDto> GetAccountUsage(string accountSid)
     {
         if (!IsValidSid(accountSid))
