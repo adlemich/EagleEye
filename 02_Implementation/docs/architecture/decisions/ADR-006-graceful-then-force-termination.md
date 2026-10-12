@@ -11,6 +11,13 @@
 > 3. **Timeout.** For break-time blocked starts the timeout is **20 s, fixed** (FR-SVC-023 v1.5). The configurable global timeout (`enforcement.graceful_shutdown_timeout_seconds`) is not introduced in US-005.
 > 4. **Processes without app windows** in the kill set are not asked to close; they are terminated at the force step if still running.
 > 5. **Events.** US-005 pushes no enforcement event to parent apps (US-005 OQ-18); the kid's message goes through the tray client (ADR-014). The outcome is logged and stored in the history of blocked starts (ADR-013 §7).
+>
+> **Amendment 2026-10-12 (US-006, ADR-015) — proposed, approved together with the US-006 implementation plan**
+>
+> 1. **Warnings** ("Pre-Termination Warnings" below): there are exactly **two global levels**, early (default 5 min) and final (default 1 min). Each is 1..59 min, early > final, set once for all accounts, with a parent text. The same levels apply to budget ends and to break begins (TC-041 dropped). The per-category configuration keys in the table below are **not** used. Warnings are shown in the kid dialog (ADR-014), not as notification popups.
+> 2. **Running apps** whose budget runs out, or that run when a break begins (or at midnight when the next day is not allowed), are closed with the close sequence of ADR-013 §4/§5: the agent's `WM_CLOSE`, then after **20 s** (fixed) the service terminates the kill set. Their usage counts until they are gone.
+> 3. **Grace period**: when a parent change leaves a running app no time, it gets the final-warning minutes before the close sequence starts (ADR-015 §5).
+> 4. Warnings stay advisory: they never delay the close beyond the end or the grace period.
 
 ---
 
