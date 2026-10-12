@@ -1,6 +1,6 @@
 # US-006: App Time Budgets and Time-elapsed Warnings
 
-**Status**: New (approved; becomes `Analyzed` when the implementation plan is approved)
+**Status**: Analyzed (implementation plan approved by Michael, 2026-10-12)
 **Created**: 2026-10-12
 **Approved**: by Michael, 2026-10-12, with his answers to OQ-1 to OQ-19 (changes in OQ-6, OQ-8, OQ-11, OQ-18)
 **Component(s)**: EagleEye.Service, EagleEye.TrayClient, EagleEye.ParentApp, EagleEye.Shared
@@ -57,7 +57,8 @@ References: FR-SVC-011, FR-SVC-012, FR-SVC-020 to FR-SVC-025, FR-SVC-032, FR-SVC
 - **FR-TRAY-020, FR-TRAY-021** (made precise): warnings and the budget text are shown in the kid dialog (FR-TRAY-022).
 - **FR-SVC-024, FR-SVC-032, FR-SVC-047** (made precise): the configuration per account includes the app rules and the budget text. The general configuration of the service includes the two warning levels. Purging an account removes its app rules and budget text.
 - **FR-SVC-025** (made precise): the history of blocked starts also records starts blocked by the budget, and it records apps that the service closed because the budget ran out or a break time began. Each record carries the reason (OQ-16).
-- **TC-033** (new): when a parent change during the day leaves a running app no time (budget at or below the used time, today unticked, or a break now in effect), the app gets a **grace period** equal to the final-warning minutes: the final warning is shown at once, and the app is closed when the grace period ends.
+- **TC-033** (new): a parent change during the day never leaves a running app less than the final-warning minutes. When a change leaves a running app less time than that (budget lowered, today unticked, or a break now in effect or beginning sooner), the app gets a **grace period** of the full final-warning minutes: the final warning is shown at once, and the app is closed when the grace period ends. *(Plan Q-2, 2026-10-12)*
+- **FR-APP-052** (made precise, plan Q-1): the default break display text exists in German and English. An unchanged default follows the language of the app that shows it.
 - **TC-025** (new): days and budgets follow the local date and time of the service PC. The service detects time-zone and clock changes that affect budgets or the day boundary and logs each as a Warning. No protection against such changes yet (later story).
 - **FR-SVC-021** (note): the "configurable timeout, default 30 s" is not built in this story. The timeout stays fixed at 20 s, as in US-005.
 
@@ -65,7 +66,7 @@ References: FR-SVC-011, FR-SVC-012, FR-SVC-020 to FR-SVC-025, FR-SVC-032, FR-SVC
 
 ## Acceptance Criteria
 
-> **Language of UI texts** (NFR-L-010 to NFR-L-012): all UI texts quoted in these criteria and in the mockups are **English examples**. The intended German wording is given in brackets and follows Michael's mockups. The parent app and the tray client show every text of their own, including error messages, in the Windows display language of the user: German (default) or English. The parent's texts (budget text, warning texts, break display text) are **not translated** once the parent has changed them. They are shown exactly as the parent entered them. The **default** budget and warning texts of this story exist in German and English (AC-10, AC-14, OQ-8). Differences in wording are notes, not Fails (US-002 Decision Q-11).
+> **Language of UI texts** (NFR-L-010 to NFR-L-012): all UI texts quoted in these criteria and in the mockups are **English examples**. The intended German wording is given in brackets and follows Michael's mockups. The parent app and the tray client show every text of their own, including error messages, in the Windows display language of the user: German (default) or English. The parent's texts (budget text, warning texts, break display text) are **not translated** once the parent has changed them. They are shown exactly as the parent entered them. The **default** budget and warning texts of this story, and from now on the default break display text of US-005, exist in German and English (AC-10, AC-14, OQ-8, plan Q-1). Differences in wording are notes, not Fails (US-002 Decision Q-11).
 
 > **Test setup**: a service PC with the parent's admin account, the standard accounts `kid1` and `kid2` (both under parental control) and `kid3` (not under parental control); EagleEye service and tray client installed; two Windows parent apps A and B paired with the service. `kid1` has already used Notepad ("Editor"), Paint and Calculator ("Rechner") so that they appear on Reports. Short budgets (e.g. 0:03) and small warning levels (e.g. early 2, final 1) keep the tests short. Times are measured with a stopwatch; used time is active time (session unlocked), as in US-004 AC-24.
 
@@ -106,6 +107,7 @@ References: FR-SVC-011, FR-SVC-012, FR-SVC-020 to FR-SVC-025, FR-SVC-032, FR-SVC
 - [ ] **AC-9**: A budget of 0 hours 0 minutes is valid. It blocks the app on every day, whatever days are ticked (AC-19).
 - [ ] **AC-10**: The budget text is edited in a multi-line edit box with line wrap. It supports emojis like the break display text (US-005 AC-16). It is saved when the parent leaves the box, and before the page or the account selection changes.
   - For an account whose text the parent has never changed, the box shows the default text in the language of the app (OQ-8): German "Du hast deine Zeit aufgebraucht! Leider ist jetzt Schluss." (from the mockup), English "You have used up your time! Sorry, that's it for now." The kid dialog shows an unchanged default in the kid's Windows display language. Once the parent changes the text, it is shown exactly as entered, in every language.
+  - The **break display text** of US-005 (AC-15 there) follows the same rule from this story on (plan Q-1): an unchanged default is shown in the language of the app that displays it. German (unchanged, from the US-005 mock): "Hi! Leider haben Deine Eltern eine PC-Pause für diese Uhrzeit eingestellt. Du kannst dieses Programm jetzt nicht verwenden. Tut mir leid. Wie wäre es wenn Du die Zeit nutzt, um ein Buch zu lesen? 😊". English (new): "Hi! Unfortunately, your parents have set a PC break for this time. You can't use this program right now. Sorry. How about using the time to read a book? 😊". A display text the parent has changed stays exactly as entered.
   - The text has at most 500 characters.
   - If the parent leaves the box empty (or with only spaces), the default text is restored and saved (OQ-19).
 - [ ] **AC-11**: Every valid change (budget, weekday, budget text) is sent to the service at once. Within 5 seconds the service has stored it. It writes a log entry (level Information) that names the account's user name and the change, e.g. "app rule changed: Minecraft, 0:45, Mo Tu We Th Fr" or "budget text changed". The budget text itself does not have to be logged. The app shows the state the service confirmed.
@@ -158,7 +160,7 @@ References: FR-SVC-011, FR-SVC-012, FR-SVC-020 to FR-SVC-025, FR-SVC-032, FR-SVC
 ### F. Running apps: warnings and the end of the budget
 
 - [ ] **AC-23**: While an app is running, its remaining budget counts down with its used time. The countdown pauses while the session is locked, switched away, or asleep (US-004 AC-12). Several windows and processes of the same app count once (US-004 AC-6). Each app record has its own budget (OQ-12). The day, and with it the budget, resets at local midnight (TC-024, US-004 AC-14). Unused time does not carry over (TC-023).
-- [ ] **AC-24**: When an app's remaining budget reaches the **early** warning level, the kid dialog shows the early warning text, at the latest 10 seconds after that moment. When it reaches the **final** level, it shows the final warning text. Each level is shown at most once per app and day (OQ-5, OQ-9); the only exception is the final warning that starts a grace period after a parent change (AC-32). Example with Notepad 0:03, early 2 / final 1: the early warning appears after 1 minute of use (2 left), the final warning after 2 minutes (1 left).
+- [ ] **AC-24**: When an app's remaining budget reaches the **early** warning level, the kid dialog shows the early warning text, at the latest 10 seconds after that moment. When it reaches the **final** level, it shows the final warning text. Each level is shown at most once per app and day (OQ-5, OQ-9); the only exception is the final warning that starts a grace period after a parent change (AC-32). This also holds when the parent raises the budget later that day: a level already shown is not shown again before the new end (plan Q-5). Example with Notepad 0:03, early 2 / final 1: the early warning appears after 1 minute of use (2 left), the final warning after 2 minutes (1 left).
 - [ ] **AC-25**: When an app's budget is exhausted while it is running, the service closes it:
   - the graceful close request comes at the latest 10 seconds after the budget reached 0;
   - if the app has not closed 20 seconds after the request, the service ends it by force with all its processes (ADR-006);
@@ -182,18 +184,29 @@ References: FR-SVC-011, FR-SVC-012, FR-SVC-020 to FR-SVC-025, FR-SVC-032, FR-SVC
 
 ### H. Changes during the day
 
-- [ ] **AC-32**: A change of an app rule takes effect for that app within 5 seconds after the parent app shows the confirmed change, also while the app is running (OQ-11):
-  - if the app is running and is no longer allowed today, or the new budget is at or below today's used time, the app gets a **grace period** of the final-warning minutes (AC-14, default 1 minute). The kid dialog shows the **final warning** at once (at the latest 10 seconds after the change takes effect). When the grace period ends, the app is closed as in AC-25 (graceful close request at the latest 10 seconds after the end of the grace period, force after 20 seconds, gone at the latest 30 seconds after it), and the kid dialog shows the budget text. The used time during the grace period counts as usage. Example with final 1: Notepad is running with 2 minutes left; the parent sets 0:00; within 5 seconds the final warning appears, and about 1 minute later Notepad is closed with the budget text;
-  - if the new remaining budget is greater than 0 but at or below a warning level, the matching warning is shown at once, and the app is closed when the budget is used up (AC-24, AC-25);
-  - if the app is not running, the change applies to its next start (AC-19, AC-20); no grace period;
-  - a higher budget, or ticking today, lets the kid start the app again.
-- [ ] **AC-33**: A change of the break time entries that puts a break into effect **now** gives every running app of the account (except the exemptions of AC-27) a **grace period** of the final-warning minutes: the kid dialog shows the final warning at once (once, not per app), and when the grace period ends the apps are closed as in AC-29, with the break display text. During the grace period, new app starts are already blocked (AC-21), since the break is in effect. A change that makes a break begin within a warning level (not now) shows the matching warning at once (AC-28). A change of the warning levels applies to warnings that have not yet been shown and to grace periods that start after the change.
+- [ ] **AC-32**: A change of an app rule takes effect for that app within 5 seconds after the parent app shows the confirmed change, also while the app is running (OQ-11). **A parent change never leaves a running app less than the final-warning minutes** (plan Q-2):
+  - **Grace period.** A change can move the end of a running app earlier: the app is no longer allowed today, or the new budget leaves no time, or it leaves less time than the final-warning minutes (AC-14, default 1 minute). Then the app gets a **grace period** of the full final-warning minutes, counted from the moment the change takes effect.
+    - The kid dialog shows the **final warning** at once, at the latest 10 seconds after the change takes effect.
+    - When the grace period ends, the app is closed as in AC-25: graceful close request at the latest 10 seconds after the end of the grace period, force after 20 seconds, gone at the latest 30 seconds after it. The kid dialog shows the budget text.
+    - The used time during the grace period counts as usage.
+    - Examples with final 1:
+      - Notepad is running with 2 minutes left, and the parent sets 0:00. Within 5 seconds the final warning appears, and about 1 minute later Notepad is closed with the budget text.
+      - Notepad is running with 3 minutes left, and the parent lowers the budget so that 20 seconds are left. The kid still gets 1 minute, not 20 seconds.
+  - If the new remaining budget is at least the final-warning minutes but at or below the early level, the early warning is shown at once (if not yet shown today, AC-24). The app is closed when the budget is used up (AC-24, AC-25).
+  - If the app is not running, the change applies to its next start (AC-19, AC-20), with no grace period. A start, or a service restart, never gets a grace period.
+  - A higher budget, or ticking today, lets the kid start the app again. A higher budget does not bring back warnings already shown that day (AC-24, plan Q-5).
+- [ ] **AC-33**: A change of the break time entries can put a break into effect **now**, or make one begin in less than the final-warning minutes. Then every running app of the account (except the exemptions of AC-27) gets a **grace period** of the full final-warning minutes, counted from the moment the change takes effect (plan Q-2).
+  - The kid dialog shows the final warning at once, once and not per app.
+  - When the grace period ends, the apps are closed as in AC-29, with the break display text.
+  - New app starts are blocked from the moment the break is in effect (AC-21), also during the grace period. Only the apps already running get the grace period.
+
+  A change that makes a break begin later than the final-warning minutes, but within the early level, shows the early warning at once (AC-28). A change of the warning levels never starts a grace period. It applies to warnings that have not yet been shown and to grace periods that start after the change.
 
 ### I. Kid dialog, tray client, records
 
 - [ ] **AC-34**: Warnings, the budget text and the break display text all use the kid dialog of US-005 (topmost; closes only with "OK" or Enter; other windows stay usable; exclusive full-screen games may cover it).
   - Only **one** kid dialog is open per session. A newer message replaces the text of a dialog that is still open, and messages are never stacked (OQ-9).
-  - Below the parent's text, the dialog shows a line of EagleEye's own text, in the kid's Windows language, that names the reason (OQ-9). English examples: "Notepad: 2 minutes left.", "Break time begins at 20:00.", "Notepad: time budget used up." For a grace period after a parent change (AC-32, AC-33): "Notepad: your parents changed the rules. Notepad closes in 1 minute." and "Your parents set a break time. All apps close in 1 minute."
+  - Below the parent's text, the dialog shows a line of EagleEye's own text, in the kid's Windows language, that names the reason (OQ-9). English examples: "Notepad: 2 minutes left.", "Break time begins at 20:00.", "Notepad: time budget used up." For a grace period after a parent change (AC-32, AC-33), the line always names the full final-warning minutes, also when less time was left before the change: "Notepad: your parents changed the rules. Notepad closes in 1 minute." and "Your parents set a break time. All apps close in 1 minute."
 - [ ] **AC-35**: When the tray client is not running or not connected, the service still blocks and closes apps as in AC-19, AC-25 and AC-29. No warning or message is shown later, and the log entry says that the message was not shown (as US-005 AC-33, NFR-R-012).
 - [ ] **AC-36**: Budgets, warnings and break-start closes are enforced without a parent app, after a service restart and after a reboot (NFR-R-011). Used time is kept across service restarts (NFR-R-013), so a restart does not refill a budget.
 - [ ] **AC-37**: The service writes a log entry (level Information) for each:
@@ -219,6 +232,7 @@ References: FR-SVC-011, FR-SVC-012, FR-SVC-020 to FR-SVC-025, FR-SVC-032, FR-SVC
 |---|---|---|
 | 2026-10-12 | Story created; product requirements v1.6 amendment proposed; OQ-1 to OQ-19 open | Michael's scope and mockups (`US-006/input/`), written by PRO |
 | 2026-10-12 | Story approved; OQ-1 to OQ-19 answered (proposals accepted except OQ-6, OQ-8, OQ-11, OQ-18); requirements v1.6 approved and applied. Changed: AC-10 and AC-14 (German and English default texts), AC-15 (range 1..59, early > final, no switching off), AC-24 (exception for the grace period), AC-32 and AC-33 (grace period of the final-warning minutes instead of closing at once), AC-34 (info lines for the grace period), AC-37 (grace periods logged); added: AC-39 (time-zone and clock changes logged as Warning), TC-025, TC-033 | Michael (via the Orchestrator), written by PRO |
+| 2026-10-12 | Implementation plan approved (`US-006/implementation-plan.md`) with answers Q-1 to Q-5 (ARC's proposals accepted); status `Analyzed`. Changed: AC-10 (English default of the break display text, Q-1), AC-24 (a raised budget does not bring back warnings already shown, Q-5), AC-32 and AC-33 (a parent change always leaves at least the final-warning minutes, Q-2), AC-34 (the grace info line names the full final-warning minutes); TC-033 and FR-APP-052 in requirements v1.6 adjusted; Related: TC-005-26 rerun in the US-006 test run (Q-4). Q-3 (time-change Warnings log-only, one finding per change) needs no AC change | Michael (via the Orchestrator), written by PRO |
 
 ---
 
@@ -377,7 +391,7 @@ All 19 questions are **resolved**. Michael accepted the proposals except in OQ-6
 - Input: `02_Implementation/docs/requirements/user-stories/US-006/input/raw_scope.md`, `02_Implementation/docs/requirements/user-stories/US-006/input/new_rules.png`, `02_Implementation/docs/requirements/user-stories/US-006/input/new_settings.png`
 - General product requirements: v1.6 amendment, approved by Michael together with this story on 2026-10-12 and applied (new: FR-APP-053 budget text, FR-APP-054 warning levels, TC-025, TC-033)
 - Architecture: ADR-005 (ignore list), ADR-006 (graceful-then-force termination), ADR-010 (event-driven state propagation), ADR-011 (session agent)
-- Open points from US-005: plan Q-2 and Q-3 (see Out of Scope); agent-token check TC-005-26 (ARC, not part of this story's scope)
+- Open points from US-005: plan Q-2 and Q-3 (see Out of Scope). Agent-token check TC-005-26: TES reruns it in the US-006 test run (plan Q-4), because graceful closes of running apps depend on it
 - Implementation Plan: `US-006/implementation-plan.md` (added by ARC)
 - Issues: `US-006/issues/` (added by TES)
 - Manual tests: `docs/testing/US-006/` (added by TES)
