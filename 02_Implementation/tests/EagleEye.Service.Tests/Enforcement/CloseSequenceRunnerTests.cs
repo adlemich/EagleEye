@@ -298,6 +298,76 @@ public sealed class CloseSequenceRunnerTests : IDisposable
         Assert.Throws<ArgumentNullException>(() => handle.AddProcesses(null!));
     }
 
+    [Fact]
+    public async Task BlockedStart_CreatesTheAppRecord()
+    {
+        _closer.KillSet.Add(new FakeProcess(5120, 100) { ClosesGracefully = true });
+
+        var handle = _runner.Start(Start());
+        await RunUntil(() => handle.IsCompleted);
+
+        _inventory.Verify(i => i.EnsureAppRecordAsync(Kid, "kid1", Notepad, "notepad.exe", "Editor", CancellationToken.None), Times.Once);
+    }
+
+    [Fact]
+    public async Task BlockedStart_AppRecordFails_WarningAndStillClosed()
+    {
+        var failure = new InvalidOperationException("db");
+        _inventory.Setup(i => i.EnsureAppRecordAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(failure);
+        _closer.KillSet.Add(new FakeProcess(5120, 100) { ClosesGracefully = true });
+
+        var handle = _runner.Start(Start());
+        await RunUntil(() => handle.IsCompleted);
+
+        Assert.True(_logger.Has(LogLevel.Warning, failure));
+        Assert.Equal(BlockedStartTexts.ClosedGracefully, _completed.Single().Outcome);
+    }
+
+    [Fact]
+    public async Task RunningApp_NoAppRecord_HistoryKindReasonRuleAndWeekdayOfTheClose()
+    {
+        _closer.KillSet.Add(new FakeProcess(5120, 100) { ClosesGracefully = true });
+        var request = Start() with
+        {
+            Kind = CloseKinds.RunningApp,
+            Reason = CloseReasons.BudgetUsedUp,
+            AfterGrace = true,
+            Entry = null,
+            Trigger = BlockedStartTexts.GraceEndedTrigger,
+            Rule = new AppRuleAtClose(3, BreakTimeDays.All, 185),
+            DetectedUtc = new DateTimeOffset(2026, 10, 13, 0, 30, 0, TimeSpan.Zero),
+        };
+
+        var handle = _runner.Start(request);
+        await RunUntil(() => handle.IsCompleted);
+
+        _inventory.VerifyNoOtherCalls();
+        _repository.Verify(r => r.InsertAsync(It.Is<BlockedStartRecord>(b =>
+            b.Kind == CloseKinds.RunningApp && b.Reason == CloseReasons.BudgetUsedUp && b.AfterGrace && b.Entry == null
+            && b.Rule == new AppRuleAtClose(3, BreakTimeDays.All, 185) && b.Weekday == "Tu" && b.Trigger == BlockedStartTexts.GraceEndedTrigger), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.StartsWith("App closed: account kid1", _logger.Messages(LogLevel.Information).Last(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task SharedMessageState_UsedForTheRecord_NoOwnMessage()
+    {
+        _closer.KillSet.Add(new FakeProcess(5120, 100) { ClosesGracefully = true });
+        var request = Start() with { Message = null, SharedMessageState = Task.FromResult(KidMessageStates.Replaced) };
+
+        var handle = _runner.Start(request);
+        await RunUntil(() => handle.IsCompleted);
+
+        _messenger.VerifyNoOtherCalls();
+        Assert.Equal(KidMessageStates.Replaced, _completed.Single().Message);
+    }
+
+    [Fact]
+    public void Start_NeitherMessageNorSharedState_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => _runner.Start(Start() with { Message = null }));
+    }
+
     private int Inserts() => _repository.Invocations.Count(i => i.Method.Name == nameof(IBlockedStartRepository.InsertAsync));
 
     private async Task RunUntil(Func<bool> condition, bool advance = true, TimeSpan? step = null)

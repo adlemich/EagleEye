@@ -131,8 +131,9 @@ public sealed class TimeLimitEngine(
         if (_graces.TryGetValue(key, out var grace))
         {
             var graceLeft = grace.Seconds - timeProvider.GetElapsedTime(grace.Started).TotalSeconds;
-            if (natural >= graceLeft)
+            if (natural > 0 && natural >= graceLeft)
             {
+                // The natural time left (e.g. after a raised budget) is at least the grace: the grace ends.
                 _graces.Remove(key);
             }
             else if (graceLeft > 0)

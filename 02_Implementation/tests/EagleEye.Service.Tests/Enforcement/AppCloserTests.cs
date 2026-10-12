@@ -57,6 +57,22 @@ public sealed class AppCloserTests
     }
 
     [Fact]
+    public void OpenKillSet_RunningAppIsItselfOpen_ItsOwnPathIsStillARoot()
+    {
+        _table.Setup(t => t.Snapshot(2)).Returns(
+        [
+            new ProcessRow(5120, 1, 100, 2, Kid, Notepad),
+            new ProcessRow(6000, 5120, 200, 2, Kid, @"C:\Games\Helper.exe"),
+            new ProcessRow(7000, 1, 100, 2, Kid, Game),
+        ]);
+        _openApps.Publish(new Dictionary<string, IReadOnlySet<string>> { [Kid] = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { Notepad.ToUpperInvariant(), Game } });
+
+        var handles = _closer.OpenKillSet(Start(), new HashSet<(int, long)>());
+
+        Assert.Equal([5120, 6000], handles.Select(h => h.Pid));
+    }
+
+    [Fact]
     public void Open_UsesPidAndCreationTime()
     {
         Assert.NotNull(_closer.Open(new ObservedProcess(7, 5)));
