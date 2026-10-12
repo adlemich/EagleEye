@@ -1,9 +1,11 @@
 # EagleEye -- General Product Requirements
 
-*Status: Approved v1.5 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07; v1.4 approved by Michael 2026-10-07; v1.5 approved by Michael 2026-10-10)*
+*Status: Approved v1.6 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07; v1.4 approved by Michael 2026-10-07; v1.5 approved by Michael 2026-10-10; v1.6 approved by Michael 2026-10-12)*
 *Approved: v1.0 by Michael*
 *Maintainer: PRO Agent*
-*Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07, 2026-10-10*
+*Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07, 2026-10-10, 2026-10-12*
+
+> **v1.6 amendment (2026-10-12, directed by Michael, with US-006; approved by Michael 2026-10-12)**: per-app **daily time budgets** replace the allow-list. For every app in an account's inventory, the parent sets one daily budget (0:00 to 23:59) and the weekdays on which the app may be used. Apps found for the first time are blocked (0:00, no day ticked). A start of an app that is not allowed today or whose budget is used up is blocked like a break-time block, with a budget text per account. Two fixed **warning levels** (early, default 5 min; final, default 1 min; 1..59 min, early > final), each with a text, are set once for all accounts. They apply both before a budget runs out and before a break time begins. When a budget runs out or a break begins, running apps are closed gracefully and, after 20 s, by force. When a parent change leaves a running app no time, the app gets a grace period of the final-warning minutes. Time-zone and clock changes that affect budgets or the day boundary are detected and logged as Warnings. Changed: §3.1.2, FR-SVC-011, FR-SVC-020, FR-SVC-021 (note), FR-SVC-022, FR-SVC-024, FR-SVC-025, FR-SVC-032, FR-SVC-017, FR-SVC-047, FR-TRAY-020, FR-TRAY-021, §3.3.3 (FR-APP-030, FR-APP-031, FR-APP-033), FR-APP-040, FR-APP-041, FR-APP-053 (new), FR-APP-054 (new), §4.3 steps 12 and 13, §4.4 steps 19 to 23, TC-020, TC-025 (new), TC-030, TC-031, TC-032, TC-033 (new), TC-040, TC-041, TC-042, MU-011, TC-024.
 
 > **v1.5 amendment (2026-10-10, directed by Michael, with US-005; approved by Michael 2026-10-10)**: pause windows become **break times** ("Ruhezeiten"), configured per account on a "Rules" page as a list of entries (on/off, start time, end time within one day, weekdays), plus one display text per account. When an app is started (its first process created) during a break time, the service detects it within 10 seconds, closes it gracefully and, after 20 seconds, by force (at most 30 seconds from start to gone), records the blocked start in a history, and the tray client shows the display text in a topmost dialog. Changes of the time zone are logged and stored as findings (FR-SVC-026, added with the US-005 plan answers on 2026-10-10). Ending apps that are already running when a break time begins (TC-042) and the warnings (TC-040, TC-041) stay for a later story. Changed: FR-SVC-023, FR-SVC-024 (new), FR-SVC-025 (new), FR-SVC-026 (new), FR-SVC-032, FR-SVC-043, FR-SVC-047, FR-TRAY-022 (new), FR-APP-050, FR-APP-052 (new), TC-010, TC-011, TC-014 (new), §4.3 step 14.
 
@@ -107,7 +109,7 @@ The service runs as a background Windows service under the SYSTEM account. It is
 | ID | Requirement |
 |----|-------------|
 | FR-SVC-010 | The service shall continuously monitor running processes for the standard (non-admin) local user accounts that the parent has placed under parental control (FR-SVC-072). Other accounts are not monitored. *(v1.3; was: all standard accounts)* |
-| FR-SVC-011 | The service shall detect when a monitored user starts a new process and check it against the allow-list configured for that user. |
+| FR-SVC-011 | The service shall detect when a monitored user starts a new application (FR-SVC-046) and check it against the user's break times (TC-010) and the application's app rule and remaining budget (FR-APP-040). *(v1.6; was: allow-list)* |
 | FR-SVC-012 | The service shall track cumulative active usage time **in seconds** per application per user per day, and keep it up to date at least every 5 seconds. An application counts as active while it is open (FR-SVC-046) and the user's Windows session is the session in use at the PC (signed in, unlocked, awake, not switched away). Days change at local midnight. *(v1.4; was: minutes, per allowed application)* |
 | FR-SVC-013 | For each detected process, the service shall attempt to resolve a human-readable display name. Resolution sources include (in priority order): (1) the executable's file version info / product name metadata, (2) the application's entry in Windows installed-programs registry, (3) an optional online lookup. |
 | FR-SVC-014 | The service shall maintain a local dictionary mapping process executable names to their resolved display names. Once resolved, a display name is cached so repeated lookups are avoided. |
@@ -119,25 +121,25 @@ The service classifies every process running in a standard user's session into o
 | Category | Description | Enforcement |
 |----------|-------------|-------------|
 | **Ignored** | Standard Windows processes and OS-level background processes that are essential for a functioning user session (e.g. `explorer.exe`, `dwm.exe`, `taskhostw.exe`, shell components). | Never terminated, never tracked. |
-| **Allowed (controlled)** | Applications explicitly placed on the user's allow-list by the parent (e.g. Minecraft, a web browser). | Permitted to run; subject to time budget tracking and enforcement. |
-| **Blocked** | Any process that is neither ignored nor on the allow-list. | Terminated on detection. |
+| **Allowed (controlled)** | Applications whose app rule (FR-APP-040) allows them today: today's weekday is ticked and the daily budget is above 0:00 (e.g. Minecraft, a web browser). *(v1.6: the app rule replaces the allow-list)* | Permitted to run; subject to time budget tracking and enforcement. |
+| **Blocked** | Any application that is not ignored and not allowed today, including every application found for the first time (default rule 0:00, no weekday ticked), and any application whose budget for today is used up. *(v1.6)* | Blocked at start (FR-SVC-020). |
 
 | ID | Requirement |
 |----|-------------|
 | FR-SVC-015 | The service shall maintain a default ignore list of standard Windows processes that are required for normal user session operation. Ignored processes are never terminated and never tracked. |
 | FR-SVC-016 | The ignore list shall be shipped with the installer and kept up to date by the development team. It is not configurable by the parent. |
-| FR-SVC-017 | Only processes that are not on the ignore list are subject to allow-list evaluation and enforcement. |
+| FR-SVC-017 | Only processes that are not on the ignore list are subject to evaluation (break times, app rules) and enforcement. *(v1.6: allow-list replaced by app rules)* |
 
 #### 3.1.3 App Enforcement
 
 | ID | Requirement |
 |----|-------------|
-| FR-SVC-020 | If a monitored user starts a process that is not ignored and not on their allow-list, the service shall terminate it. |
-| FR-SVC-021 | Termination shall first attempt a graceful shutdown (e.g. `WM_CLOSE`) and wait for a configurable timeout (default: 30 seconds) before force-killing the process. The timeout is a general setting configurable by the parent. |
-| FR-SVC-022 | When a time budget for an allowed application expires, the service shall terminate that application using the same graceful-then-force approach. |
+| FR-SVC-020 | If a monitored user starts an application (FR-SVC-046) that is not allowed today (weekday not ticked or budget 0:00) or whose budget for today is used up, the service shall block the start in the same way as a break-time block (FR-SVC-023): detection within 10 seconds, graceful close, forced termination of all its processes after 20 seconds, gone at most 30 seconds after the start. The tray client shows the account's budget text (FR-APP-053). A blocked start counts no usage time. Break times take precedence: during a break time the break display text is shown. *(v1.6; was: process not on the allow-list is terminated)* |
+| FR-SVC-021 | Termination shall first attempt a graceful shutdown (e.g. `WM_CLOSE`) and wait for a configurable timeout (default: 30 seconds) before force-killing the process. The timeout is a general setting configurable by the parent. *(v1.6 note: not yet built; all enforcement up to v1.6 uses a fixed timeout of 20 seconds)* |
+| FR-SVC-022 | When the budget of a running application is used up (TC-032), or when a break time begins (TC-042), the service shall close that application gracefully and terminate it with all its processes by force if it has not closed after 20 seconds: close request at most 10 seconds after the end, gone at most 30 seconds after it. The tray client shows the budget text, or for a break time the break display text once. *(v1.6: made precise)* |
 | FR-SVC-023 | During a pause window (break time, TC-010), the service shall prevent all non-ignored application launches for the affected user (regardless of remaining budget): an application (FR-SVC-046) whose first process the user creates while a break time is in effect is blocked. The **start** of an application is the creation of its first process; its window may appear later, and further processes of an application that is already open are not new starts. A blocked start is detected within 10 seconds after the start (counted from the first window if that appears later; detection may take longer right after sign-in, boot or a restart of the observation, and such starts are still caught afterwards by their process creation time) and then closed with the graceful-then-force approach of FR-SVC-021, with a timeout of 20 seconds: graceful close first; if the application has not closed after 20 seconds, it is terminated by force together with all its processes. At most 30 seconds pass from the start until the application is gone. The tray client shows the account's display text as soon as the block is detected (FR-TRAY-022). Ignored processes (FR-SVC-015) are never ended. Applications that are already running when a break time begins: TC-042. *(v1.5: made precise)* |
-| FR-SVC-024 | The service shall store per user account the break time entries (TC-010) and one display text (FR-APP-052), persist them (FR-SVC-030), serve them to parent apps on request, broadcast every stored change at once to all connected parent apps (FR-SVC-053), and apply changes to the next application start. *(v1.5)* |
-| FR-SVC-025 | The service shall store a history of blocked application starts (FR-SVC-023) in its local database: time, account, display name, process name and path of the application, the break time entry that matched (start, end, weekday), the outcome (closed gracefully, or terminated by force and after how many seconds) and whether the message was shown to the user. Blocked starts count no usage time (FR-SVC-012). The history is retained per FR-SVC-043 and purged per FR-SVC-047; it is not shown in the parent app yet. *(v1.5)* |
+| FR-SVC-024 | The service shall store per user account the break time entries (TC-010) and one display text (FR-APP-052), persist them (FR-SVC-030), serve them to parent apps on request, broadcast every stored change at once to all connected parent apps (FR-SVC-053), and apply changes to the next application start. The same applies to the app rules and the budget text per user account (FR-APP-040, FR-APP-053) and to the two warning levels (FR-APP-054), which are one setting for all accounts; changes also apply to running applications within 5 seconds (TC-033). *(v1.5; v1.6: app rules, budget text, warning levels)* |
+| FR-SVC-025 | The service shall store a history of blocked application starts (FR-SVC-023) in its local database: time, account, display name, process name and path of the application, the break time entry that matched (start, end, weekday), the outcome (closed gracefully, or terminated by force and after how many seconds) and whether the message was shown to the user. Blocked starts count no usage time (FR-SVC-012). The history is retained per FR-SVC-043 and purged per FR-SVC-047; it is not shown in the parent app yet. From v1.6, each record carries a reason (break time, not allowed today, budget used up), and the history also records running applications closed because their budget ran out or a break time began (FR-SVC-022). *(v1.5; v1.6: reasons and enforced closes)* |
 | FR-SVC-026 | The service shall check the time zone of the PC regularly. Each change of the time zone, and each change of the clock if detected, shall take effect for break times within 5 seconds, be logged as a Warning (FR-SVC-100) and be stored as a finding in the service's local database: time, old and new time zone (or clock time), and the session or account that made the change if known. Findings are retained and purged like the history of blocked starts (FR-SVC-025, FR-SVC-043, FR-SVC-047) and are not shown in the parent app yet. Removing the right to change the time zone from standard users is a possible later hardening. *(v1.5, approved by Michael 2026-10-10 with the US-005 implementation plan answers)* |
 
 #### 3.1.4 Configuration Management
@@ -146,7 +148,7 @@ The service classifies every process running in a standard user's session into o
 |----|-------------|
 | FR-SVC-030 | The service shall persist its configuration locally on disk under the standard Windows application data folder (e.g. `%ProgramData%`). |
 | FR-SVC-031 | The service shall accept configuration updates from connected parent apps remotely over the network. |
-| FR-SVC-032 | Configuration includes: allowed applications list, per-app daily time budgets, and break times (pause windows, TC-010) with their display text -- all per user account. *(v1.5: made precise)* |
+| FR-SVC-032 | Configuration includes, per user account: the app rules (daily budget and weekdays per application, FR-APP-040) with the budget text (FR-APP-053), and break times (pause windows, TC-010) with their display text. The two warning levels with their texts (FR-APP-054) are one general setting for all accounts. *(v1.5: made precise; v1.6: app rules replace the allowed applications list; warning levels)* |
 | FR-SVC-033 | Configuration data shall be stored in separate files per child user account. |
 
 #### 3.1.5 Statistics Collection
@@ -160,7 +162,7 @@ The service classifies every process running in a standard user's session into o
 | FR-SVC-044 | The service shall keep, per user account, an inventory of the applications the user has started: one record per application, with at least the process name, the display name (FR-SVC-013) and the path of the executable. Records are kept without time limit while the account exists. *(v1.4)* |
 | FR-SVC-045 | The service shall store the start time and end time of every application instance in a history, and write both to its log files (FR-SVC-100). *(v1.4)* |
 | FR-SVC-046 | Only applications that the user started (by hand or in the user's name, e.g. Autostart) and that have a window of their own in the user's session are recorded, i.e. what Windows Task Manager lists in the "Apps" group. Background processes, services and Windows processes are not recorded. An application consisting of several processes is recorded as one application. *(v1.4)* |
-| FR-SVC-047 | When a user account is deleted on the Windows PC, the service shall purge all recorded data of that account (inventory, history, history of blocked starts, statistics) and its configuration (break time entries and display text, FR-SVC-024). *(v1.4; v1.5: history of blocked starts and configuration added)* |
+| FR-SVC-047 | When a user account is deleted on the Windows PC, the service shall purge all recorded data of that account (inventory, history, history of blocked starts, statistics) and its configuration (break time entries and display text, FR-SVC-024; app rules and budget text, FR-APP-040, FR-APP-053). *(v1.4; v1.5: history of blocked starts and configuration added; v1.6: app rules and budget text)* |
 
 #### 3.1.6 Remote Communication
 
@@ -235,8 +237,8 @@ The tray client is a lightweight executable that runs in the kid's user session.
 |----|-------------|
 | FR-TRAY-010 | The tray client shall display a system tray icon in the kid's session. |
 | FR-TRAY-011 | Clicking the tray icon shall show a summary of remaining time budgets for the current user's allowed applications. |
-| FR-TRAY-020 | The tray client shall display a notification when a time budget is about to expire (warning before shutdown). |
-| FR-TRAY-021 | The tray client shall display a notification when an application is being shut down due to budget expiry. |
+| FR-TRAY-020 | The tray client shall show the early and the final warning (TC-030, TC-040) when a time budget is about to run out or a break time is about to begin, in the topmost dialog of FR-TRAY-022: the parent's warning text plus one line of EagleEye text naming the app or the break time and the minutes left. Only one dialog is open per session; a newer message replaces the text of an open one. *(v1.6: made precise)* |
+| FR-TRAY-021 | The tray client shall show the account's budget text (FR-APP-053) in the dialog of FR-TRAY-022 when an application start is blocked or a running application is closed because of its budget. *(v1.6: made precise)* |
 | FR-TRAY-022 | When an application start is blocked by a break time (FR-SVC-023), the tray client in the user's session shall show the account's display text (FR-APP-052) in a topmost dialog that closes only with "OK" or Enter (not with Esc or Alt+F4). Other windows stay usable (the dialog is not system-modal); the keyboard focus is best effort; exclusive full-screen games may cover the dialog. *(v1.5; wording "system-modal" replaced with the US-005 plan answers, 2026-10-10)* |
 | FR-TRAY-030 | The tray client shall optionally display a topmost overlay window showing remaining time, visible even when applications are in focus. |
 | FR-TRAY-040 | The tray client shall connect to `EagleEye.Service` on `localhost`. |
@@ -279,19 +281,21 @@ The parent app is a single MAUI codebase deployed to Android, iOS, Windows and m
 
 #### 3.3.3 Application Allow-List
 
+*v1.6: there is no separate allow-list. An application is allowed or blocked through its app rule (FR-APP-040). The list of installed applications (FR-SVC-080) and its re-scan (FR-APP-033) are not used for this.*
+
 | ID | Requirement |
 |----|-------------|
-| FR-APP-030 | The parent app shall display the list of installed applications as discovered by the service (FR-SVC-080), using their human-readable display names (FR-SVC-013). |
-| FR-APP-031 | The parent shall be able to allow or block specific applications per user account. |
+| FR-APP-030 | The parent app shall display, per user account, the applications of the account's application inventory (FR-SVC-044), i.e. every application the user has ever started, including applications whose starts were only blocked, using their human-readable display names (FR-SVC-013). File Explorer is not listed (never limited). *(v1.6; was: installed applications, FR-SVC-080)* |
+| FR-APP-031 | The parent shall be able to allow or block specific applications per user account, through the weekday ticks and the daily budget of the app rule (FR-APP-040). *(v1.6: made precise)* |
 | FR-APP-032 | Where a display name could not be resolved, the parent app shall show the executable name as fallback so no application is invisible to the parent. |
-| FR-APP-033 | The parent app shall provide a way to trigger a re-scan of installed applications on the Windows PC (FR-SVC-081). |
+| FR-APP-033 | The parent app shall provide a way to trigger a re-scan of installed applications on the Windows PC (FR-SVC-081). *(v1.6: not needed for the app rules; kept for a possible later use)* |
 
 #### 3.3.4 Time Budget Configuration
 
 | ID | Requirement |
 |----|-------------|
-| FR-APP-040 | The parent shall be able to set a daily time budget (in hours:minutes) per allowed application per user account. |
-| FR-APP-041 | Budget configuration shall be per-weekday (Monday through Sunday), allowing different budgets for school days vs. weekends. |
+| FR-APP-040 | The parent shall be able to set, per application and per user account, an **app rule**: one daily time budget in hours (0..23) and minutes (0..59), i.e. 0:00 to 23:59, edited on the "Rules" page in the section "Application rules" and saved at once. An application found for the first time gets the rule 0:00 with no weekday ticked, so it is blocked until the parent allows it. *(v1.6; was: per allowed application)* |
+| FR-APP-041 | The app rule has one tick per weekday (Monday through Sunday). A ticked day allows the application on that day, up to the daily budget; an unticked day blocks it. All days may be unticked. There are no different budgets per weekday. *(v1.6; was: different budgets per weekday)* |
 
 #### 3.3.5 Pause Window Configuration
 
@@ -300,6 +304,8 @@ The parent app is a single MAUI codebase deployed to Android, iOS, Windows and m
 | FR-APP-050 | The parent shall be able to define break times (pause windows, TC-010) per user account on a "Rules" page: a table of entries, each with an on/off switch, a start time, an end time and the weekdays it applies to (e.g. 20:00 to 23:59 and 00:00 to 09:00, Monday to Friday). Entries are added, edited in place and deleted directly; every change is saved at once. *(v1.5; was: pause windows per weekday, e.g. blocked from 20:00 to 09:00)* |
 | FR-APP-051 | During a pause window, no applications are allowed for the affected user, regardless of remaining budget. |
 | FR-APP-052 | The parent shall be able to edit one display text per user account, shown to the kid when an application start is blocked by a break time (FR-TRAY-022). The text supports emojis. *(v1.5)* |
+| FR-APP-053 | The parent shall be able to edit one **budget text** per user account on the "Rules" page, shown to the kid when an application is blocked or closed because of its budget (FR-TRAY-021). It supports emojis and has at most 500 characters; an empty text restores the default. The default text exists in German and English and follows the language of the app showing it. *(v1.6)* |
+| FR-APP-054 | The parent shall be able to set, on the "Settings" page in the section "Time-elapsed warnings", the minutes before the end (whole minutes 1..59, early greater than final) and the text of the two fixed warning levels "early" (default 5) and "final" (default 1), once for all accounts (TC-030, TC-040). Levels cannot be added, renamed or switched off. The default texts exist in German and English and follow the language of the app showing them. *(v1.6)* |
 
 #### 3.3.6 Statistics Viewing
 
@@ -369,8 +375,8 @@ This describes the end-to-end workflow from installation to daily use.
 | Step | Actor | Action |
 |------|-------|--------|
 | 11 | Parent | Views the list of discovered standard user accounts and selects which of them (the children's) are under parental control. *(v1.3)* |
-| 12 | Parent | Selects a child's account and configures the allow-list of applications. |
-| 13 | Parent | Sets daily time budgets (hours:minutes) per allowed application, per weekday. |
+| 12 | Parent | Selects a child's account and, for each application the child has started, sets the weekdays on which it may be used. New applications are blocked until the parent allows them. *(v1.6)* |
+| 13 | Parent | Sets one daily time budget (hours:minutes) per application, the budget text per account, and the two warning levels for all accounts. *(v1.6)* |
 | 14 | Parent | Defines break times (pause windows) with their weekdays (e.g. 20:00--23:59 and 00:00--09:00 blocked) and the text shown to the kid. *(v1.5)* |
 | 15 | Parent | Configuration is sent to the service and persisted. |
 
@@ -381,11 +387,11 @@ This describes the end-to-end workflow from installation to daily use.
 | 16 | Kid | Logs into Windows with their standard user account. |
 | 17 | System | `EagleEye.TrayClient` auto-starts in the kid's session and connects to the service on localhost. |
 | 18 | Kid | Tries to start an application. |
-| 19 | System | If the application is not on the allow-list, the service terminates it (graceful then force-kill). |
+| 19 | System | If the application is not allowed today or its budget is used up, the service closes it (graceful then force-kill) and the tray client shows the budget text. *(v1.6)* |
 | 20 | System | If the application is allowed, it launches normally. The service tracks usage time. |
-| 21 | System | When remaining budget is low, the tray client displays a warning notification. |
-| 22 | System | When the budget expires, the service terminates the application. The tray client notifies the kid. |
-| 23 | System | During a pause window, all application launches are blocked for the kid. |
+| 21 | System | When the remaining budget, or the time until a break time, reaches the early and then the final warning level, the tray client shows the warning. *(v1.6)* |
+| 22 | System | When the budget expires, the service closes the application. The tray client shows the budget text. *(v1.6)* |
+| 23 | System | During a pause window, all application launches are blocked for the kid, and applications still running when it begins are closed. *(v1.6)* |
 
 ### 4.5 Budget Reset
 
@@ -411,27 +417,29 @@ This describes the end-to-end workflow from installation to daily use.
 
 | ID | Requirement |
 |----|-------------|
-| TC-020 | Time budgets are configured per application, per user account, per weekday. |
+| TC-020 | Time budgets are configured per application and per user account, as one daily budget plus the weekdays on which the application may be used (FR-APP-040, FR-APP-041). Used time is the application's active time of the day as counted for the usage statistics (FR-SVC-012). *(v1.6; was: per weekday)* |
 | TC-021 | The minimum granularity for budget configuration is one minute. |
 | TC-022 | Budget countdown only occurs during non-pause (active) time. Time spent during a pause window does not consume budget. |
 | TC-023 | Unused daily budget does not carry over to the next day. |
-| TC-024 | All daily budgets reset at midnight. |
+| TC-024 | All daily budgets reset at midnight. If an application running at midnight is not allowed on the new day, midnight counts as the end of its budget (warnings before, closed at midnight). *(v1.6: midnight made precise)* |
+| TC-025 | Days and budgets follow the local date and time of the Windows PC running the service. The service shall detect changes of the time zone, and clock changes it can detect, that affect budgets or the day boundary, and log each as a Warning (FR-SVC-100). It does not prevent them; protection is a later hardening (see FR-SVC-026). *(v1.6)* |
 
 ### 5.3 Budget Expiry Warning and Shutdown
 
 | ID | Requirement |
 |----|-------------|
-| TC-030 | Before a budget expires, the system shall warn the kid via the tray client using two warning levels: an **early warning** (default: 5 minutes before shutdown) and a **last warning** (default: 1 minute before shutdown). |
-| TC-031 | Both budget warning thresholds are configurable by the parent via the parent app. |
-| TC-032 | When a budget reaches zero, the service terminates the application using the graceful-then-force approach (FR-SVC-021). |
+| TC-030 | Before a budget expires, the system shall warn the kid via the tray client using two warning levels: an **early warning** (default: 5 minutes before shutdown) and a **final warning** (default: 1 minute before shutdown). Each level is shown once per application and day; if less time is left at the start, the matching warning is shown at once. *(v1.6: "last" becomes "final"; made precise)* |
+| TC-031 | Both warning levels (minutes, 1..59, early greater than final, and text) are configurable by the parent via the parent app, once for all accounts (FR-APP-054). They cannot be switched off. *(v1.6: made precise)* |
+| TC-032 | When a budget reaches zero, the service closes the application gracefully and terminates it by force after 20 seconds (FR-SVC-022). *(v1.6: made precise)* |
+| TC-033 | When a parent change during the day leaves a running application no time (budget at or below the used time, today unticked, or a break time now in effect), the application gets a **grace period** equal to the final-warning minutes: the final warning is shown at once, and the application is closed when the grace period ends. *(v1.6)* |
 
 ### 5.4 Pause Window Warning and Shutdown
 
 | ID | Requirement |
 |----|-------------|
-| TC-040 | Before a pause window begins, the system shall warn the kid via the tray client using two warning levels: an **early warning** (default: 5 minutes before pause) and a **last warning** (default: 1 minute before pause). |
-| TC-041 | Both pause window warning thresholds are configurable by the parent via the parent app, independently from the budget expiry warning thresholds (TC-031). |
-| TC-042 | When a pause window begins, all running non-ignored applications for the affected user are terminated using the graceful-then-force approach (FR-SVC-021). |
+| TC-040 | Before a pause window begins, the system shall warn the kid via the tray client using two warning levels: an **early warning** (default: 5 minutes before pause) and a **final warning** (default: 1 minute before pause), when at least one application of the user is running. *(v1.6: "last" becomes "final")* |
+| TC-041 | The pause window warnings use the same two warning levels and texts as the budget warnings (TC-031). For a running application, only the warnings of the earlier end (budget or pause window) are shown. *(v1.6; was: independent thresholds)* |
+| TC-042 | When a pause window begins, all running non-ignored applications for the affected user are closed gracefully and terminated by force after 20 seconds (FR-SVC-022); the break display text is shown once. *(v1.6: made precise)* |
 
 ---
 
@@ -440,7 +448,7 @@ This describes the end-to-end workflow from installation to daily use.
 | ID | Requirement |
 |----|-------------|
 | MU-010 | The service shall support multiple standard (non-admin) user accounts on the same Windows PC simultaneously. |
-| MU-011 | Each user account has its own independent configuration: allow-list, time budgets, pause windows. |
+| MU-011 | Each user account has its own independent configuration: app rules (time budgets and weekdays), budget text, pause windows. The two warning levels are shared by all accounts (FR-APP-054). *(v1.6)* |
 | MU-012 | Each user account has its own independent usage statistics. |
 | MU-013 | The service auto-discovers standard user accounts (FR-SVC-070). No manual account registration is needed; the parent only selects which discovered accounts are under parental control (FR-SVC-072). *(v1.3)* |
 | MU-014 | Admin accounts are excluded from monitoring and enforcement. |
@@ -594,4 +602,4 @@ No open questions. The questions raised by the v1.1 amendment were answered by M
 
 ---
 
-*End of General Product Requirements — Approved v1.5*
+*End of General Product Requirements — Approved v1.6*
