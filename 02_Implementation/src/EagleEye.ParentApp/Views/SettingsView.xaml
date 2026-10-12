@@ -99,6 +99,34 @@
                 </VerticalStackLayout>
                 <Label Text="{Binding ErrorText}" IsVisible="{Binding HasError}" Style="{StaticResource ErrorText}" />
             </VerticalStackLayout>
+
+            <!-- Time-elapsed warnings (US-006 AC-13 to AC-16): two fixed rows. Columns 160 | 96 | * (min 320). -->
+            <VerticalStackLayout x:Name="WarningsSection" x:DataType="vm:WarningSettingsViewModel" Spacing="6">
+                <Label Text="{x:Static core:AppTexts.SectionTimeWarnings}" Style="{StaticResource SectionHeader}" />
+                <Label Text="{x:Static core:AppTexts.WarningsExplanation}" LineBreakMode="WordWrap" MaximumWidthRequest="900" HorizontalOptions="Start" />
+                <Label Text="{Binding StatusText}" IsVisible="{Binding HasStatus}" />
+                <Grid ColumnDefinitions="160,96,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="6"
+                      IsVisible="{Binding IsReady}" MaximumWidthRequest="900" HorizontalOptions="Start">
+                    <Label Grid.Row="0" Grid.Column="0" Text="{x:Static core:AppTexts.WarningsColumnPoint}" FontAttributes="Bold" />
+                    <Label Grid.Row="0" Grid.Column="1" Text="{x:Static core:AppTexts.WarningsColumnMinutes}" FontAttributes="Bold" />
+                    <Label Grid.Row="0" Grid.Column="2" Text="{x:Static core:AppTexts.WarningsColumnText}" FontAttributes="Bold" MinimumWidthRequest="320" />
+
+                    <Label Grid.Row="1" Grid.Column="0" Text="{Binding Early.Label}" VerticalOptions="Start" Margin="0,8,0,0" />
+                    <Entry Grid.Row="1" Grid.Column="1" Text="{Binding Early.MinutesText}" MaxLength="2" Keyboard="Numeric" WidthRequest="56"
+                           HorizontalOptions="Start" HorizontalTextAlignment="End" VerticalOptions="Start"
+                           Unfocused="OnEarlyMinutesUnfocused" Completed="OnEarlyMinutesCompleted" />
+                    <Editor Grid.Row="1" Grid.Column="2" Text="{Binding Early.Text}" MaxLength="{Binding Early.TextMaxLength}"
+                            AutoSize="TextChanges" MinimumHeightRequest="60" MinimumWidthRequest="320" Unfocused="OnEarlyTextUnfocused" />
+
+                    <Label Grid.Row="2" Grid.Column="0" Text="{Binding Final.Label}" VerticalOptions="Start" Margin="0,8,0,0" />
+                    <Entry Grid.Row="2" Grid.Column="1" Text="{Binding Final.MinutesText}" MaxLength="2" Keyboard="Numeric" WidthRequest="56"
+                           HorizontalOptions="Start" HorizontalTextAlignment="End" VerticalOptions="Start"
+                           Unfocused="OnFinalMinutesUnfocused" Completed="OnFinalMinutesCompleted" />
+                    <Editor Grid.Row="2" Grid.Column="2" Text="{Binding Final.Text}" MaxLength="{Binding Final.TextMaxLength}"
+                            AutoSize="TextChanges" MinimumHeightRequest="60" MinimumWidthRequest="320" Unfocused="OnFinalTextUnfocused" />
+                </Grid>
+                <Label Text="{Binding ErrorText}" IsVisible="{Binding HasError}" Style="{StaticResource ErrorText}" />
+            </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>
 </ContentView>

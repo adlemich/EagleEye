@@ -41,6 +41,11 @@ public partial class MainPage : ContentPage
             // US-005 AC-15: typed values are saved before the Rules page is left (Unfocused does not fire then).
             _rules.FlushPendingEdits();
         }
+        else if (ReferenceEquals(ContentRegion.Content, _settings))
+        {
+            // US-006 AC-16: typed warning minutes and texts are saved before the Settings page is left.
+            _settings.FlushPendingEdits();
+        }
 
         ContentRegion.Content = _viewModel.SelectedItem.Key switch
         {
