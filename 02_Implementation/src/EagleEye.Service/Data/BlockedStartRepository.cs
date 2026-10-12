@@ -11,12 +11,17 @@ public sealed class BlockedStartRepository(ServiceDatabase database) : IBlockedS
         {
             using var command = connection.CreateCommand();
             command.CommandText = """
-                INSERT INTO BlockedStarts (AccountSid, UserName, StartedUtc, StartedLocal, DetectedUtc, DisplayName, ProcessName,
-                    ProgramPath, ProcessId, Trigger, EntryId, EntryStartMinute, EntryEndMinute, EntryDays, Weekday)
-                VALUES (@sid, @user, @started, @startedLocal, @detected, @display, @process,
-                    @path, @pid, @trigger, @entry, @entryStart, @entryEnd, @entryDays, @weekday)
+                INSERT INTO BlockedStarts (Kind, Reason, AfterGrace, AccountSid, UserName, StartedUtc, StartedLocal, DetectedUtc,
+                    DisplayName, ProcessName, ProgramPath, ProcessId, Trigger, EntryId, EntryStartMinute, EntryEndMinute, EntryDays,
+                    BudgetMinutes, BudgetDays, UsedSeconds, Weekday)
+                VALUES (@kind, @reason, @afterGrace, @sid, @user, @started, @startedLocal, @detected,
+                    @display, @process, @path, @pid, @trigger, @entry, @entryStart, @entryEnd, @entryDays,
+                    @budget, @budgetDays, @used, @weekday)
                 RETURNING BlockedStartId;
                 """;
+            command.Parameters.AddWithValue("@kind", record.Kind);
+            command.Parameters.AddWithValue("@reason", record.Reason);
+            command.Parameters.AddWithValue("@afterGrace", record.AfterGrace ? 1 : 0);
             command.Parameters.AddWithValue("@sid", record.AccountSid);
             command.Parameters.AddWithValue("@user", record.UserName);
             command.Parameters.AddWithValue("@started", SqlValues.Utc(record.StartedUtc));
@@ -27,10 +32,13 @@ public sealed class BlockedStartRepository(ServiceDatabase database) : IBlockedS
             command.Parameters.AddWithValue("@path", record.ProgramPath);
             command.Parameters.AddWithValue("@pid", record.ProcessId);
             command.Parameters.AddWithValue("@trigger", record.Trigger);
-            command.Parameters.AddWithValue("@entry", record.Entry.EntryId);
-            command.Parameters.AddWithValue("@entryStart", record.Entry.StartMinute);
-            command.Parameters.AddWithValue("@entryEnd", record.Entry.EndMinute);
-            command.Parameters.AddWithValue("@entryDays", (int)record.Entry.Days);
+            command.Parameters.AddWithValue("@entry", (object?)record.Entry?.EntryId ?? DBNull.Value);
+            command.Parameters.AddWithValue("@entryStart", (object?)record.Entry?.StartMinute ?? DBNull.Value);
+            command.Parameters.AddWithValue("@entryEnd", (object?)record.Entry?.EndMinute ?? DBNull.Value);
+            command.Parameters.AddWithValue("@entryDays", record.Entry is null ? DBNull.Value : (object)(int)record.Entry.Days);
+            command.Parameters.AddWithValue("@budget", (object?)record.Rule?.BudgetMinutes ?? DBNull.Value);
+            command.Parameters.AddWithValue("@budgetDays", record.Rule is null ? DBNull.Value : (object)(int)record.Rule.Days);
+            command.Parameters.AddWithValue("@used", (object?)record.Rule?.UsedSeconds ?? DBNull.Value);
             command.Parameters.AddWithValue("@weekday", record.Weekday);
             return (long)(await command.ExecuteScalarAsync(token).ConfigureAwait(false))!; // RETURNING always yields the id.
         }, ct);

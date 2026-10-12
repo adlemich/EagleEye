@@ -161,7 +161,7 @@ public sealed class BreakTimeRepositoryTests : IAsyncLifetime
             await using var database = new ServiceDatabase(ServiceDatabase.BuildConnectionString(file));
             await database.InitializeAsync();
 
-            Assert.Equal(4, await database.GetSchemaVersionAsync());
+            Assert.Equal(5, await database.GetSchemaVersionAsync());
             Assert.NotNull(await new PairedDeviceRepository(database).FindByTokenHashAsync(new byte[32]));
             Assert.True((await new AccountSelectionRepository(database).LoadAllAsync())[Kid]);
             var usage = await new UsageRepository(database).GetUsageAsync(Kid, new DateOnly(2026, 10, 9), new DateOnly(2026, 10, 9));
