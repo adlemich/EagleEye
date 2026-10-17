@@ -232,6 +232,25 @@ Clean-up: all processes started by DEV were stopped; Michael's service, tray cli
 
 **Deviations from the 0.6.0 report**:
 - D-17: 150 % scaling not checked by DEV (this PC now runs at 200 %); to be checked on `LEOSERV`.
-- D-18: **no 0.6.1 installers yet.** The NuGet audit advisory GHSA-334f-vvp4-7g6p (`Microsoft.AspNetCore.SignalR.Common` 10.0.12, published after 2026-10-12) makes the restore fail with warnings as errors. A patched package needs internet access, or the advisory needs a suppression; Michael decides. Build and tests were run locally with `NuGetAudit=false` in the shell environment only: 0 warnings, 2 623 tests passed. New SHA-256 hashes follow when the installers are built.
+- D-18: **dependency update.** The NuGet audit advisory GHSA-334f-vvp4-7g6p (`Microsoft.AspNetCore.SignalR.Common` 10.0.12, published after the 0.6.0 build) made the restore fail with warnings as errors. Michael chose to update (internet granted for this update only, no suppression). Package versions before → after:
 
-**Reinstall** (once built): the parent app (`EagleEye-ParentApp-Setup-0.6.1.exe`) on every parent PC. The service and tray client code is unchanged; following the 0.4.1 precedent, the service installer gets the same version, but reinstalling it is optional.
+  | Package | Projects | Before | After |
+  |---|---|---|---|
+  | `Microsoft.AspNetCore.SignalR.Client` (→ `SignalR.Common`) | ParentApp.Core, TrayClient | 10.0.12 | **10.0.13** (lowest patched) |
+  | `Microsoft.Data.Sqlite`, `Microsoft.Extensions.Logging.Abstractions` | Shared | 10.0.12 | 10.0.13 |
+  | `Microsoft.Extensions.Hosting.WindowsServices` | Service | 10.0.12 | 10.0.13 |
+  | `System.Security.Cryptography.ProtectedData` | Service, ParentApp | 10.0.12 | 10.0.13 |
+  | ASP.NET Core runtime in the self-contained service (server-side SignalR) | Service | 10.0.12 | 10.0.13 (SDK 10.0.402) |
+
+  Unchanged: `CommunityToolkit.Mvvm` 8.4.2, MAUI, test packages. Recorded in `docs/dev-process/dependency-log.md`; no ADR (same servicing band, no new dependency). With audit **on**: `build.ps1` 0 warnings, 0 errors; `test.ps1` 2 623 passed (Shared 282, Service 1 365, TrayClient 90, ParentApp 886); no vulnerable packages reported. Smoke check: the Debug parent app (`ISSUE-008-smoke-0.6.1-signalr-10.0.13.png`: values visible) and the Debug tray client (verified) connect to the Debug console service.
+
+**Installers 0.6.1** (2026-10-17):
+
+| Installer | Built | SHA-256 |
+|---|---|---|
+| `03_Delivery/windows/EagleEye-Setup-0.6.1.exe` | 2026-10-17 11:19 | `1CC51CDE67A3638BF5F41E273866903B989C791417E97BC92AE8EDD584F8F968` |
+| `03_Delivery/windows/EagleEye-ParentApp-Setup-0.6.1.exe` | 2026-10-17 11:20 | `E1187246617676CFC1302EE1D3ABF5DEA2C89926A1C40B9956A2372EBC8F0E04` |
+
+The publish output contains `en\EagleEye.Shared.resources.dll` (0.6.1) for Service, TrayClient and ParentApp; the Release DLLs contain no `EAGLEEYE_DEV` string.
+
+**Reinstall**: both installers. `EagleEye-Setup-0.6.1.exe` (admin) on the service PC: the tray client and the service now ship SignalR 10.0.13 (security fix). Then `EagleEye-ParentApp-Setup-0.6.1.exe` on every parent PC (display fix + SignalR 10.0.13). No database migration; settings, pairings and rules are kept.
