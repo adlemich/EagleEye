@@ -254,3 +254,27 @@ Clean-up: all processes started by DEV were stopped; Michael's service, tray cli
 The publish output contains `en\EagleEye.Shared.resources.dll` (0.6.1) for Service, TrayClient and ParentApp; the Release DLLs contain no `EAGLEEYE_DEV` string.
 
 **Reinstall**: both installers. `EagleEye-Setup-0.6.1.exe` (admin) on the service PC: the tray client and the service now ship SignalR 10.0.13 (security fix). Then `EagleEye-ParentApp-Setup-0.6.1.exe` on every parent PC (display fix + SignalR 10.0.13). No database migration; settings, pairings and rules are kept.
+
+## 11. Addendum 2026-10-17: patch 0.6.2 (ISSUE-009)
+
+**Defect**: the parent app stayed "Gekoppelt" with "Die Identität des EagleEye-PCs localhost hat sich geändert", and "Kopplung aufheben" was disabled because it needs a connection. There was no way to pair again (`docs/testing/US-006/issues/ISSUE-009.md`).
+
+**Cause**: the pairing in Michael's `%LocalAppData%\EagleEye` on `ZOCK-O-MAT-V3` dates from the US-004 DEV smoke check on 2026-10-08. The Debug parent app was paired with the Debug console service (data `artifacts/smoke-us004`), and that service's certificate thumbprint matches the pinned value. Separate parent-app dev data only exists since US-005 D-5. Certificate pinning works as designed. The defect is the missing way out, because US-002 made unpairing online-only (AC-30, Q-3). This is not a 0.6.1 regression.
+
+**Fix** (Michael's option A): a local "Kopplung auf diesem Gerät löschen" button. It is offered only when the app is paired, not connected, and the last attempt failed with *identity changed* or *unreachable*. After a confirmation dialog, the app stops the connect loop, deletes the stored pairing (host, device ID, thumbprint, DPAPI token), returns to "Nicht gekoppelt" and logs the action. The online "Kopplung aufheben" is unchanged. Version 0.6.2. Texts, trigger, screenshots: `ISSUE-009.md`.
+
+**Deviations**:
+- D-19: **change of approved US-002 behaviour at Michael's request (2026-10-17).** US-002 allowed unpairing only online (AC-30, Q-3). The parent app can now also forget a pairing locally, in the states above. The device entry can remain on the service. No parent app can remove it there, because no such function exists yet. *ARC/PRO may want to reflect this in the US-002 user story and the architecture docs; DEV did not edit them.*
+- D-20: the parent app had no logger. `ConnectionCoordinator` now takes an optional `ILogger<ConnectionCoordinator>`, which defaults to `NullLogger`. The parent app has no file log sink, so the entry is not persisted in Release.
+- D-21: after a connection drop at runtime, the button appears only once a connect attempt has failed with one of the two messages (at the latest after an app restart).
+
+With audit **on**: `build.ps1` 0 warnings, 0 errors; `test.ps1` 2 652 passed (Shared 282, Service 1 365, TrayClient 90, ParentApp 915). Changed classes have 100 % line and branch coverage.
+
+**Installers 0.6.2** (2026-10-17):
+
+| Installer | Built | SHA-256 |
+|---|---|---|
+| `03_Delivery/windows/EagleEye-Setup-0.6.2.exe` | 2026-10-17 15:57 | `9D1942E7FC43B453796E1162A729EFD508F04511AD76A67A8E53A320BD11D776` |
+| `03_Delivery/windows/EagleEye-ParentApp-Setup-0.6.2.exe` | 2026-10-17 15:59 | `F1E8179F7FDA36A17BB16116BBC5EC1BF7D9B02DB5C6CA385E1995BE7344E0FC` |
+
+**Reinstall**: install `EagleEye-ParentApp-Setup-0.6.2.exe` on every parent PC. The service and tray client are unchanged since 0.6.1, so `EagleEye-Setup-0.6.2.exe` is optional (version sync only). No database migration.
