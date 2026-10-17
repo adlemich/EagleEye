@@ -1,9 +1,11 @@
 # EagleEye -- General Product Requirements
 
-*Status: Approved v1.6 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07; v1.4 approved by Michael 2026-10-07; v1.5 approved by Michael 2026-10-10; v1.6 approved by Michael 2026-10-12)*
+*Status: Approved v1.7 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07; v1.4 approved by Michael 2026-10-07; v1.5 approved by Michael 2026-10-10; v1.6 approved by Michael 2026-10-12; v1.7 approved by Michael 2026-10-17)*
 *Approved: v1.0 by Michael*
 *Maintainer: PRO Agent*
-*Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07, 2026-10-10, 2026-10-12*
+*Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07, 2026-10-10, 2026-10-12, 2026-10-17*
+
+> **v1.7 amendment (2026-10-17, directed by Michael, with US-007; approved by Michael 2026-10-17)**: the **iPhone parent app** comes next, before the macOS and Android apps. It is iPhone only (no iPad), locked to portrait, for iOS 26 and newer, built on the MacBook and sideloaded from Xcode, signed with Michael's free Apple ID first (re-deploy every 7 days; a paid Apple Developer account is a later decision). Phone portrait layouts: screens 375 to 440 points wide, touch targets of at least 44 × 44 points, safe areas, Dynamic Type. On iOS a hostname works only when the iPhone can resolve it. Every parent app may forget its pairing on its own device only (ISSUE-009). The iPhone app asks for the Local Network permission, keeps the token in the Keychain on this device only, and reconnects and refreshes when it returns to the foreground; it does no background work and receives no push notifications. Changed: §1.2 (note), FR-APP-010 (note), FR-APP-016 (new), FR-APP-080, §3.3.10 (new: FR-APP-100 to FR-APP-102), CN-011 (note), §9.2, §11 (Q-5 new).
 
 > **v1.6 amendment (2026-10-12, directed by Michael, with US-006; approved by Michael 2026-10-12)**: per-app **daily time budgets** replace the allow-list. For every app in an account's inventory, the parent sets one daily budget (0:00 to 23:59) and the weekdays on which the app may be used. Apps found for the first time are blocked (0:00, no day ticked). A start of an app that is not allowed today or whose budget is used up is blocked like a break-time block, with a budget text per account. Two fixed **warning levels** (early, default 5 min; final, default 1 min; 1..59 min, early > final), each with a text, are set once for all accounts. They apply both before a budget runs out and before a break time begins. When a budget runs out or a break begins, running apps are closed gracefully and, after 20 s, by force. A parent change never leaves a running app less than the final-warning minutes (grace period). The default break display text gets an English version. Time-zone and clock changes that affect budgets or the day boundary are detected and logged as Warnings. Changed: §3.1.2, FR-SVC-011, FR-SVC-020, FR-SVC-021 (note), FR-SVC-022, FR-SVC-024, FR-SVC-025, FR-SVC-032, FR-SVC-017, FR-SVC-047, FR-TRAY-020, FR-TRAY-021, §3.3.3 (FR-APP-030, FR-APP-031, FR-APP-033), FR-APP-040, FR-APP-041, FR-APP-052, FR-APP-053 (new), FR-APP-054 (new), §4.3 steps 12 and 13, §4.4 steps 19 to 23, TC-020, TC-025 (new), TC-030, TC-031, TC-032, TC-033 (new), TC-040, TC-041, TC-042, MU-011, TC-024.
 
@@ -63,6 +65,8 @@ EagleEye is a parental control solution that enables parents to monitor and cont
 | G-5 | Provide timely notifications to the child before an application is about to be shut down. |
 | G-6 | Support remote configuration and statistics viewing from Android and iOS (primary), Windows and macOS parent apps via the local LAN. |
 | G-7 | Support multiple child accounts on a single Windows PC, each with independent rules. |
+
+*v1.7 note (Michael, 2026-10-17): after the Windows parent app, the **iPhone** app is built next (US-007, US-008), before the macOS and Android apps. This changes the order in `01_Intend_and_Constraints/technology_selection.md` ("iOS and Android … after the MacOS application").*
 
 ### 1.3 Success Criteria
 
@@ -264,12 +268,13 @@ The parent app is a single MAUI codebase deployed to Android, iOS, Windows and m
 
 | ID | Requirement |
 |----|-------------|
-| FR-APP-010 | The parent app shall allow the user to enter the Windows machine's hostname or IP address to connect to the service. |
+| FR-APP-010 | The parent app shall allow the user to enter the Windows machine's hostname or IP address to connect to the service. *(v1.7 note: on iOS a hostname works only when the iPhone can resolve it, e.g. `<name>.local` through Bonjour/mDNS or a name the home router's DNS knows; Windows name resolution (NetBIOS, LLMNR) is not available there. An IPv4 address always works.)* |
 | FR-APP-011 | The parent app shall connect to the service over TLS (accepting the service's self-signed certificate). |
 | FR-APP-012 | The parent app shall indicate connection status clearly (connected / disconnected / connecting). |
 | FR-APP-013 | On first connection to an unpaired service, the parent app shall prompt the user to enter the 6-digit pairing code (FR-SVC-090) and a device name to identify this client. |
 | FR-APP-014 | The parent app shall store the pairing credential locally so that subsequent connections are authenticated automatically. |
 | FR-APP-015 | The parent app shall allow the user to view all paired devices and de-register any of them (FR-SVC-097). |
+| FR-APP-016 | When a paired parent app cannot connect because the service is unreachable or its identity (certificate) has changed, the parent shall be able to **forget the pairing on this device only**, after a confirmation. The app deletes its stored host, certificate pin and credential and returns to the unpaired state; pairing again needs a new code. The device entry may remain on the service. The parent is never stuck in a paired state without a way out. Applies to all parent apps. *(v1.7; built in the Windows app with US-006 ISSUE-009, D-19; iPhone with US-007)* |
 
 #### 3.3.2 User Account Management
 
@@ -324,7 +329,7 @@ The parent app is a single MAUI codebase deployed to Android, iOS, Windows and m
 
 | ID | Requirement |
 |----|-------------|
-| FR-APP-080 | On iOS and Android, the app shall operate in portrait orientation only and follow platform-typical look and feel. |
+| FR-APP-080 | On iOS and Android, the app shall operate in portrait orientation only (locked; it does not rotate) and follow platform-typical look and feel. Every page has a phone portrait layout of its own, usable on screens from 375 to 440 points wide; touch targets are at least 44 × 44 points; content stays inside the safe area (notch, Dynamic Island, home indicator); texts follow the system text size (on iOS: all standard sizes without cut-off, accessibility sizes best effort). *(v1.7: made precise)* |
 | FR-APP-081 | On macOS and Windows, the app shall present a desktop-style UI. |
 | FR-APP-082 | The app shall be functionally identical across all platforms. |
 | FR-APP-083 | The parent shall be able to switch the app between a light and a dark appearance in the app settings. The choice is stored per app installation and kept across restarts and updates. Until the parent has chosen, the app follows the operating system's light/dark setting. *(v1.2)* |
@@ -336,6 +341,14 @@ The parent app is a single MAUI codebase deployed to Android, iOS, Windows and m
 | FR-APP-090 | The Windows parent app shall provide the same functionality as the other parent apps (FR-APP-082). |
 | FR-APP-091 | The Windows parent app shall work both on the same PC as `EagleEye.Service` and remotely from another PC on the LAN. In both cases it uses the same communication model as the mobile apps: TLS-encrypted connection, pairing (FR-SVC-090 to FR-SVC-098) and the parent API. There is no special local or privileged access path. |
 | FR-APP-092 | The Windows parent app shall be delivered as its own Windows installer, separate from and independent of the `EagleEye.Service` installer. The installer shall be self-contained: no other software (e.g. a runtime) has to be installed before or alongside it. It shall provide a guided wizard for install, repair (re-install over an existing installation) and uninstall, and uninstalling shall remove the application cleanly. *(v1.2; replaces the v1.1 copy deployment.)* |
+
+#### 3.3.10 iOS Parent App (added in v1.7)
+
+| ID | Requirement |
+|----|-------------|
+| FR-APP-100 | The iPhone app shall ask for the iOS **Local Network** permission with its own explanation, in the app's language. When the permission is denied, the app shall show a message that names the cause and where to allow it in the iOS settings, instead of a generic connection error, and connect without a restart once it is allowed. *(v1.7)* |
+| FR-APP-101 | The iPhone app shall keep the pairing credential in the iOS **Keychain**, readable only by this app on this iPhone; it shall not be usable on another iPhone after a backup is restored there (NFR-S-014). *(v1.7)* |
+| FR-APP-102 | When the iPhone app returns to the foreground, it shall reconnect and refresh all shown data without action by the parent. It does not keep a connection, run in the background or receive push notifications. *(v1.7)* |
 
 ### 3.4 Code Reuse
 
@@ -460,7 +473,7 @@ This describes the end-to-end workflow from installation to daily use.
 | ID | Requirement |
 |----|-------------|
 | CN-010 | Communication between parent apps and the service occurs over the local LAN. |
-| CN-011 | The parent app connects by entering the Windows machine's hostname (preferred) or IP address. |
+| CN-011 | The parent app connects by entering the Windows machine's hostname (preferred) or IP address. *(v1.7 note: on iOS, see FR-APP-010.)* |
 | CN-012 | All network connections are encrypted via TLS using the service's self-signed certificate. |
 | CN-013 | Certificate handling is fully transparent -- no manual user action required for TLS to work. |
 | CN-014 | Multiple parent app instances may connect to the service simultaneously. All receive synchronized updates. |
@@ -535,9 +548,11 @@ This describes the end-to-end workflow from installation to daily use.
 | Attribute | Requirement |
 |-----------|-------------|
 | **OS** | iOS 26 and newer |
+| **Devices** | iPhone only. iPad is not supported (the app is not offered as an iPad app). *(v1.7)* |
 | **Framework** | .NET MAUI |
-| **Orientation** | Portrait only |
-| **Distribution** | Manual sideloading (Xcode / ios-deploy). No App Store for v1. |
+| **Orientation** | Portrait only, locked; the app does not rotate (FR-APP-080). *(v1.7: locked)* |
+| **Build host** | MacBook (ADR-007) *(v1.7)* |
+| **Distribution** | Manual sideloading (Xcode / ios-deploy) from the MacBook. No App Store and no TestFlight for v1. Signed with Michael's free Apple ID first: the app must be re-deployed every 7 days (pairing and settings are kept). A paid Apple Developer account (one-year signing) is a later decision. *(v1.7: made precise)* |
 
 ### 9.3 Android (ParentApp)
 
@@ -602,4 +617,12 @@ No open questions. The questions raised by the v1.1 amendment were answered by M
 
 ---
 
-*End of General Product Requirements — Approved v1.6*
+Answered by Michael on 2026-10-17 with US-007 (v1.7):
+
+| ID | Question | Answer (Michael, 2026-10-17) |
+|----|----------|------------------------------|
+| Q-5 | Which parent app comes after the Windows app? | The iPhone app (US-007: platform, pairing, Settings, Reports; US-008: Rules), before macOS and Android. iPhone only, portrait, free Apple ID first. → §1.2 note, §3.3.10, §9.2 |
+
+---
+
+*End of General Product Requirements — Approved v1.7*
