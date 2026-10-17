@@ -14,9 +14,11 @@ Lightweight Windows tray application that runs in the **kid's user session**. In
 
 ```
 EagleEye.TrayClient/
-├── UI/            Tray icon, context menu, pairing-code window, About dialog. US-005: BreakTimeMessagePresenter
-│                  (one message at a time, answers Shown/AlreadyOpen at once), BreakTimeMessageDialog (topmost,
-│                  OK/Enter only, Esc/Alt+F4 ignored, sign-out never blocked), ForegroundHelper (best-effort focus)
+├── UI/            Tray icon, context menu, pairing-code window, About dialog. US-005/US-006: KidMessagePresenter
+│                  (one dialog at a time: Shown, or Replaced = the open dialog gets the newer text), KidMessageText
+│                  (the parent's text or the default in the kid's language, ADR-016, and the info line by reason),
+│                  KidMessageDialog (topmost, text + separator + info line, UpdateText re-asserts topmost and
+│                  focus, OK/Enter only, Esc/Alt+F4 ignored, sign-out never blocked), ForegroundHelper
 └── Communication/ SignalR client — connects to EagleEye.Service on localhost
 ```
 

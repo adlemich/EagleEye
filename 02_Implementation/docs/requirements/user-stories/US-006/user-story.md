@@ -1,6 +1,6 @@
 # US-006: App Time Budgets and Time-elapsed Warnings
 
-**Status**: Analyzed (implementation plan approved by Michael, 2026-10-12)
+**Status**: Implemented (DEV, 2026-10-12; see `US-006/implementation-report.md`)
 **Created**: 2026-10-12
 **Approved**: by Michael, 2026-10-12, with his answers to OQ-1 to OQ-19 (changes in OQ-6, OQ-8, OQ-11, OQ-18)
 **Component(s)**: EagleEye.Service, EagleEye.TrayClient, EagleEye.ParentApp, EagleEye.Shared
@@ -233,6 +233,7 @@ References: FR-SVC-011, FR-SVC-012, FR-SVC-020 to FR-SVC-025, FR-SVC-032, FR-SVC
 | 2026-10-12 | Story created; product requirements v1.6 amendment proposed; OQ-1 to OQ-19 open | Michael's scope and mockups (`US-006/input/`), written by PRO |
 | 2026-10-12 | Story approved; OQ-1 to OQ-19 answered (proposals accepted except OQ-6, OQ-8, OQ-11, OQ-18); requirements v1.6 approved and applied. Changed: AC-10 and AC-14 (German and English default texts), AC-15 (range 1..59, early > final, no switching off), AC-24 (exception for the grace period), AC-32 and AC-33 (grace period of the final-warning minutes instead of closing at once), AC-34 (info lines for the grace period), AC-37 (grace periods logged); added: AC-39 (time-zone and clock changes logged as Warning), TC-025, TC-033 | Michael (via the Orchestrator), written by PRO |
 | 2026-10-12 | Implementation plan approved (`US-006/implementation-plan.md`) with answers Q-1 to Q-5 (ARC's proposals accepted); status `Analyzed`. Changed: AC-10 (English default of the break display text, Q-1), AC-24 (a raised budget does not bring back warnings already shown, Q-5), AC-32 and AC-33 (a parent change always leaves at least the final-warning minutes, Q-2), AC-34 (the grace info line names the full final-warning minutes); TC-033 and FR-APP-052 in requirements v1.6 adjusted; Related: TC-005-26 rerun in the US-006 test run (Q-4). Q-3 (time-change Warnings log-only, one finding per change) needs no AC change | Michael (via the Orchestrator), written by PRO |
+| 2026-10-12 | Implemented as version 0.6.0 (installers `EagleEye-Setup-0.6.0.exe`, `EagleEye-ParentApp-Setup-0.6.0.exe`); status `Implemented`. Report: `US-006/implementation-report.md` | DEV |
 
 ---
 
