@@ -117,10 +117,10 @@
                                         <Label Grid.Column="0" Text="{Binding DisplayName}" LineBreakMode="WordWrap" VerticalOptions="Center"
                                                ToolTipProperties.Text="{Binding ProgramPath}" />
                                         <Entry Grid.Column="1" Text="{Binding HoursText}" MaxLength="2" Keyboard="Numeric" WidthRequest="56"
-                                               HorizontalTextAlignment="End" VerticalOptions="Center"
+                                               VerticalOptions="Center"
                                                Unfocused="OnHoursUnfocused" Completed="OnHoursCompleted" />
                                         <Entry Grid.Column="2" Text="{Binding MinutesText}" MaxLength="2" Keyboard="Numeric" WidthRequest="56"
-                                               HorizontalTextAlignment="End" VerticalOptions="Center"
+                                               VerticalOptions="Center"
                                                Unfocused="OnMinutesUnfocused" Completed="OnMinutesCompleted" />
                                         <CheckBox Grid.Column="3" IsChecked="{Binding Monday}" HorizontalOptions="Center" VerticalOptions="Center" />
                                         <CheckBox Grid.Column="4" IsChecked="{Binding Tuesday}" HorizontalOptions="Center" VerticalOptions="Center" />

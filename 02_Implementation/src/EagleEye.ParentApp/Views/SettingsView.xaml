@@ -113,14 +113,14 @@
 
                     <Label Grid.Row="1" Grid.Column="0" Text="{Binding Early.Label}" VerticalOptions="Start" Margin="0,8,0,0" />
                     <Entry Grid.Row="1" Grid.Column="1" Text="{Binding Early.MinutesText}" MaxLength="2" Keyboard="Numeric" WidthRequest="56"
-                           HorizontalOptions="Start" HorizontalTextAlignment="End" VerticalOptions="Start"
+                           HorizontalOptions="Start" VerticalOptions="Start"
                            Unfocused="OnEarlyMinutesUnfocused" Completed="OnEarlyMinutesCompleted" />
                     <Editor Grid.Row="1" Grid.Column="2" Text="{Binding Early.Text}" MaxLength="{Binding Early.TextMaxLength}"
                             AutoSize="TextChanges" MinimumHeightRequest="60" MinimumWidthRequest="320" Unfocused="OnEarlyTextUnfocused" />
 
                     <Label Grid.Row="2" Grid.Column="0" Text="{Binding Final.Label}" VerticalOptions="Start" Margin="0,8,0,0" />
                     <Entry Grid.Row="2" Grid.Column="1" Text="{Binding Final.MinutesText}" MaxLength="2" Keyboard="Numeric" WidthRequest="56"
-                           HorizontalOptions="Start" HorizontalTextAlignment="End" VerticalOptions="Start"
+                           HorizontalOptions="Start" VerticalOptions="Start"
                            Unfocused="OnFinalMinutesUnfocused" Completed="OnFinalMinutesCompleted" />
                     <Editor Grid.Row="2" Grid.Column="2" Text="{Binding Final.Text}" MaxLength="{Binding Final.TextMaxLength}"
                             AutoSize="TextChanges" MinimumHeightRequest="60" MinimumWidthRequest="320" Unfocused="OnFinalTextUnfocused" />

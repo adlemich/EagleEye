@@ -219,3 +219,19 @@ Clean-up: all processes started by DEV were stopped; Michael's service, tray cli
 |---|---|
 | Steps 0 to 12 | Windows Developer Machine |
 | MacBook | Not used. `EagleEye.Shared` (incl. the new `DefaultTexts` resource and its `en` satellite) and `EagleEye.ParentApp.Core` contain no Windows APIs. The new XAML is plain MAUI, and the `CheckBox` mapping stays `#if WINDOWS`. Recommended by ARC at the next MacBook session after the merge: `git pull`, then `pwsh 02_Implementation/scripts/build.ps1` and `pwsh 02_Implementation/scripts/test.ps1`. A failure there is a regression of this story (an issue for DEV). |
+
+---
+
+## 10. Addendum 2026-10-17: patch 0.6.1 (ISSUE-008)
+
+**Defect**: in the Windows parent app, the hours and minutes fields of "Applikations-Regeln" and the minute fields of "Zeit-Ende Warnungen" showed no value (`docs/testing/US-006/issues/ISSUE-008.md`).
+
+**Cause**: `HorizontalTextAlignment="End"` (WinUI `TextAlignment.Right`) in the narrow Entry fields (`WidthRequest="56"`). WinUI draws the right-aligned text in the clipped part of the TextBox. Proven by one-attribute experiments with screenshots. My smoke check of 2026-10-12 read the values through UI Automation, which reports values that are not drawn (lesson: check fields visually with a screenshot).
+
+**Fix**: the `End` alignment was removed from the four Entry types (`Views/SettingsView.xaml`, `Views/RulesView.xaml`); width and column layout are unchanged. Version 0.6.1 (`Directory.Build.props`). Evidence: `docs/testing/US-006/issues/ISSUE-008-after-*.png` (dark and light mode, 200 %).
+
+**Deviations from the 0.6.0 report**:
+- D-17: 150 % scaling not checked by DEV (this PC now runs at 200 %); to be checked on `LEOSERV`.
+- D-18: **no 0.6.1 installers yet.** The NuGet audit advisory GHSA-334f-vvp4-7g6p (`Microsoft.AspNetCore.SignalR.Common` 10.0.12, published after 2026-10-12) makes the restore fail with warnings as errors. A patched package needs internet access, or the advisory needs a suppression; Michael decides. Build and tests were run locally with `NuGetAudit=false` in the shell environment only: 0 warnings, 2 623 tests passed. New SHA-256 hashes follow when the installers are built.
+
+**Reinstall** (once built): the parent app (`EagleEye-ParentApp-Setup-0.6.1.exe`) on every parent PC. The service and tray client code is unchanged; following the 0.4.1 precedent, the service installer gets the same version, but reinstalling it is optional.
