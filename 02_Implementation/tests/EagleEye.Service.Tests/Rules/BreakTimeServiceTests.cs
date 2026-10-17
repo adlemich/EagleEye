@@ -303,6 +303,7 @@ public sealed class BreakTimeServiceTests : IAsyncLifetime
     [InlineData("")]
     [InlineData("  \n\t ")]
     [InlineData(BreakTimeRules.DefaultDisplayText)]
+    [InlineData("Hi! Unfortunately, your parents have set a PC break for this time. You can't use this program right now. Sorry. How about using the time to read a book? \U0001F60A")]
     public async Task SetDisplayTextAsync_EmptyOrDefault_RestoresTheDefault(string text)
     {
         await _service.SetDisplayTextAsync(RequestA, Kid, "eigener Text", Device);

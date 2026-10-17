@@ -14,7 +14,8 @@ Cross-platform parent application built with .NET MAUI. One codebase targets And
 - Show the standard accounts of the service PC and tick the ones under parental control (US-003)
 - Show the daily app usage per account under parental control on the Reports page (US-004)
 - Edit the break times and the display text per account under parental control on the Rules page (US-005)
-- Later stories: app rules, time budgets, pause windows, statistics per kid
+- Edit the application rules (daily budget, weekdays) and the budget text per account on the Rules page, and the two time-elapsed warnings on the Settings page (US-006)
+- Later stories: statistics per kid
 
 ## Structure
 
@@ -26,10 +27,15 @@ EagleEye.ParentApp/
 ├── Views/
 │   ├── MainPage             Desktop layout: menu left, content right, status bar bottom (FR-APP-081);
 │   │                        starts on Reports when paired, on Settings when not (ISSUE-007)
-│   ├── SettingsView         "Visual appearance", "Server connection" and "User accounts on the EagleEye PC"
+│   ├── SettingsView         "Visual appearance", "Server connection", "User accounts on the EagleEye PC" and
+│   │                        "Time-elapsed warnings" (US-006: two fixed rows, columns 160 | 96 | *; flushed when
+│   │                        the page changes)
 │   ├── RulesView            Rules (US-005): account selection, break-time table edited in place (fixed columns
 │   │                        40 | 64 | 88 | 88 | 7 × 48), display text; times saved on leaving the field or Enter,
-│   │                        text on leaving the box; MainPage flushes typed values when the page changes
+│   │                        text on leaving the box; MainPage flushes typed values when the page changes.
+│   │                        US-006: section "Applikations-Regeln" (columns 220 | 64 | 64 | 7 × 48, name with the
+│   │                        program path as tooltip, hours/minutes saved on leaving the field or Enter, days at the
+│   │                        click) and the budget text
 │   ├── ReportsView          Reports: account selection, one table per day (App | Nutzung (HH:MM)), US-004
 | Nutzung (HH:MM)), US-004
 │   └── StatusBarView        Green/red indicator + status text

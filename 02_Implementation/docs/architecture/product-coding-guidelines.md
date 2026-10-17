@@ -15,6 +15,8 @@
 
 > **Amendment 2026-10-10 (US-005, ADR-013, ADR-014) — approved by Michael together with the US-005 implementation plan (2026-10-10)**: §12.2 (tray requests with a result, kid-facing acknowledged dialogs), §12.4 (the agent's single `PostMessageW(WM_CLOSE)` exception, terminating kid processes in the service, service → agent commands), §16.1 (editable tables, WinUI `CheckBox` width, typed times, save on blur, `\r` line breaks), §10.1 (folders `Service/Rules`, `Service/Enforcement`, `ParentApp.Core/Rules`).
 
+> **Amendment 2026-10-12 (US-006, ADR-015, ADR-016) — approved by Michael together with the US-006 implementation plan (2026-10-12)**: §10.1 (folders `Shared/Resources` for the default kid texts, de neutral + en satellite, and `ParentApp.Core/Settings`; `Service/Rules` and `Service/Enforcement` also hold the app rules, the warning settings and the time-limit engine). Rule: default texts shown to users are never hard-coded and never stored by the service. They come from `DefaultTexts` in the displaying app's UI culture (ADR-016).
+
 This document defines the coding standards all EagleEye components must follow. It complements but does not duplicate the system architecture (`arc42/system-architecture.md`) and ADRs — refer to those for architectural decisions, component responsibilities, and design rationale.
 
 **Target runtime**: .NET 10 / C# 14 (LTS, supported until November 2028)
@@ -495,6 +497,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 │   ├── Communication/            # ReconnectSchedule, ConnectBackoff (client reconnect timing)
 │   ├── Data/                     # SqliteDatabase base (pragmas, integrity check, migrations)
 │   ├── Logging/                  # RollingFileLoggerProvider (EagleEye file logging)
+│   ├── Resources/                # DefaultTexts (de neutral, en satellite): default kid texts, ADR-016 (US-006)
 │   └── Extensions/               # Shared extension methods
 ├── EagleEye.Service/             # Windows service
 │   ├── Communication/            # ParentHub, TrayHub, connection management
@@ -519,7 +522,8 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 │   ├── Abstractions/             # ISecretStore, ISecretProtector, IThemeService, IDialogService, ...
 │   ├── Communication/            # SignalR client, certificate trust, ConnectionCoordinator, ParentHubGateway, StateReplica
 │   ├── Accounts/                 # Feature model of the state area UserAccounts (one folder per feature area)
-│   ├── Rules/                    # Feature model of the state area AccountRules (US-005)
+│   ├── Rules/                    # Feature models of the state areas AccountRules (US-005) and AppRules (US-006)
+│   ├── Settings/                 # Feature model of the global state area WarningSettings (US-006)
 │   ├── Data/                     # SQLite (pairing, settings, secrets), YAML reader
 │   ├── ViewModels/               # MVVM view models
 │   └── Resources/                # AppTexts (de, en)

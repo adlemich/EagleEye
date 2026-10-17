@@ -3,11 +3,11 @@ using EagleEye.Service.Statistics;
 
 namespace EagleEye.Service.Enforcement;
 
-/// <summary>Dependency injection of the break-time enforcement (US-005, ADR-013). Verified manually.</summary>
+/// <summary>Dependency injection of the enforcement (US-005, US-006, ADR-013, ADR-015). Verified manually.</summary>
 public static class EnforcementRegistration
 {
-    /// <summary>Registers gate, runner, process access, history, time-change monitor and the facade for the loop.</summary>
-    public static IServiceCollection AddBreakTimeEnforcement(this IServiceCollection services)
+    /// <summary>Registers gate, ledger, time-limit engine, runner, process access, history, time-change monitor and the facade for the loop.</summary>
+    public static IServiceCollection AddAppEnforcement(this IServiceCollection services)
     {
         services.AddSingleton<IBlockedStartRepository, BlockedStartRepository>();
         services.AddSingleton<ITimeChangeFindingRepository, TimeChangeFindingRepository>();
@@ -15,15 +15,19 @@ public static class EnforcementRegistration
         services.AddSingleton<IProcessTable, Win32ProcessTable>();
         services.AddSingleton<IProcessTerminator, Win32ProcessTerminator>();
         services.AddSingleton<OpenAppsView>();
-        services.AddSingleton<IBlockedAppCloser, BlockedAppCloser>();
-        services.AddSingleton(sp => new BlockedStartLog(
-            sp.GetRequiredService<ILogger<BlockedStartLog>>(), new InstanceLogLimiter(sp.GetRequiredService<TimeProvider>())));
-        services.AddSingleton<IBlockedStartRunner, BlockedStartRunner>();
-        services.AddSingleton<BreakTimeGate>();
+        services.AddSingleton<IAppCloser, AppCloser>();
+        services.AddSingleton(sp => new EnforcementLog(
+            sp.GetRequiredService<ILogger<EnforcementLog>>(), new InstanceLogLimiter(sp.GetRequiredService<TimeProvider>())));
+        services.AddSingleton<ICloseSequenceRunner, CloseSequenceRunner>();
+        services.AddSingleton<CloseRegistry>();
+        services.AddSingleton<SessionAppsView>();
+        services.AddSingleton<TodayUsageLedger>();
+        services.AddSingleton<AppStartGate>();
+        services.AddSingleton<TimeLimitEngine>();
         services.AddSingleton<TimeChangeMonitor>();
         services.AddSingleton<EnforcementHistory>();
         services.AddSingleton<IAccountDataPurger>(sp => sp.GetRequiredService<EnforcementHistory>());
-        services.AddSingleton<IBreakTimeEnforcement, BreakTimeEnforcement>();
+        services.AddSingleton<IAppEnforcement, AppEnforcement>();
         return services;
     }
 }

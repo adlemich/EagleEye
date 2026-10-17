@@ -18,6 +18,7 @@ public sealed class RulesViewModelTests
 
     private readonly Mock<IUserAccountsModel> _accounts = new();
     private readonly Mock<IAccountRulesModel> _rules = new();
+    private readonly Mock<IAppRulesModel> _appRules = new();
     private AccountsLoadState _accountsState = AccountsLoadState.Ready;
     private UserAccountListDto _accountList = new(1, null,
     [
@@ -420,12 +421,81 @@ public sealed class RulesViewModelTests
     public void Guards_Throw()
     {
         var dispatcher = new ImmediateDispatcher();
-        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(null!, _rules.Object, dispatcher));
-        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(_accounts.Object, null!, dispatcher));
-        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(_accounts.Object, _rules.Object, null!));
+        var section = new AppRulesSectionViewModel(_appRules.Object, dispatcher);
+        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(null!, _rules.Object, section, dispatcher));
+        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(_accounts.Object, null!, section, dispatcher));
+        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(_accounts.Object, _rules.Object, null!, dispatcher));
+        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(_accounts.Object, _rules.Object, section, null!));
     }
 
-    private RulesViewModel Create() => new(_accounts.Object, _rules.Object, new ImmediateDispatcher());
+    // ---------- US-006: the application rules section and ADR-016 ----------
+
+    [Fact]
+    public void AccountSelection_AlsoSelectsTheAppRulesSection()
+    {
+        var vm = Create();
+
+        vm.SelectedAccount = vm.Accounts[1];
+
+        _appRules.Verify(a => a.SelectAccount(Anna), Times.Once);
+        _appRules.Verify(a => a.SelectAccount(Kid), Times.Once);
+    }
+
+    [Fact]
+    public void FlushPendingEdits_AlsoCommitsTheSection()
+    {
+        _appRules.SetupGet(a => a.LoadState).Returns(AccountsLoadState.Ready);
+        _appRules.SetupGet(a => a.Snapshot).Returns(new AppRulesDto(2, null, Anna, [], "alt"));
+        _appRules.Setup(a => a.SetBudgetTextAsync(It.IsAny<string>())).ReturnsAsync(true);
+        var vm = Create();
+        vm.AppRules.BudgetText = "neu";
+
+        vm.FlushPendingEdits();
+
+        _appRules.Verify(a => a.SetBudgetTextAsync("neu"), Times.Once);
+    }
+
+    [Theory]
+    [InlineData("de-DE", EagleEye.Shared.Constants.BreakTimeRules.DefaultDisplayText)]
+    [InlineData("en-US", "Hi! Unfortunately, your parents have set a PC break for this time. You can't use this program right now. Sorry. How about using the time to read a book? \U0001F60A")]
+    public void DisplayText_UnchangedDefault_InTheAppsLanguage(string culture, string expected)
+    {
+        _snapshot = Rules() with { DisplayText = EagleEye.Shared.Constants.BreakTimeRules.DefaultDisplayText, IsDefaultDisplayText = true };
+
+        Assert.Equal(expected, TestSupport.InCulture(culture, () => Create().DisplayText));
+    }
+
+    [Fact]
+    public void DisplayText_DefaultTypedInTheOtherLanguageWhileDefault_NothingSentAndShownAgain()
+    {
+        _snapshot = Rules() with { DisplayText = EagleEye.Shared.Constants.BreakTimeRules.DefaultDisplayText, IsDefaultDisplayText = true };
+        var vm = TestSupport.InCulture("en-US", Create);
+
+        TestSupport.InCulture("en-US", () =>
+        {
+            vm.DisplayText = EagleEye.Shared.Constants.BreakTimeRules.DefaultDisplayText;
+            vm.CommitDisplayText();
+            return true;
+        });
+
+        _rules.Verify(r => r.SetDisplayTextAsync(It.IsAny<string>()), Times.Never);
+        Assert.StartsWith("Hi! Unfortunately", vm.DisplayText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task DisplayText_CustomChangedToADefault_SentEmptySoTheServiceRestoresTheDefault()
+    {
+        _rules.Setup(r => r.SetDisplayTextAsync(It.IsAny<string>())).ReturnsAsync(true);
+        var vm = Create();
+
+        vm.DisplayText = EagleEye.Shared.Constants.BreakTimeRules.DefaultDisplayText;
+        vm.CommitDisplayText();
+        await vm.LastWrite;
+
+        _rules.Verify(r => r.SetDisplayTextAsync(string.Empty), Times.Once);
+    }
+
+    private RulesViewModel Create() => new(_accounts.Object, _rules.Object, new AppRulesSectionViewModel(_appRules.Object, new ImmediateDispatcher()), new ImmediateDispatcher());
 
     private AccountRulesDto Rules(params BreakTimeEntryDto[] entries) => new(5, null, _selected ?? Anna, entries, "Text", false);
 }

@@ -1,8 +1,17 @@
 # ADR-013: Break-Time Enforcement at App Start — Blocked Starts, Close Sequence and Kill Set
 
-**Status**: Accepted (approved by Michael with the US-005 implementation plan, 2026-10-10; §3 and §9 reflect his answers Q-1 and Q-2)
+**Status**: Accepted (approved by Michael with the US-005 implementation plan, 2026-10-10; §3 and §9 reflect his answers Q-1 and Q-2); US-006 amendment approved with the US-006 implementation plan, 2026-10-12
 **Date**: 2026-10-10
 **Deciders**: ARC, Michael
+
+> **Amendment 2026-10-12 (US-006, ADR-015) — approved by Michael together with the US-006 implementation plan (2026-10-12)**
+>
+> 1. **Gate order** (§1, §3): for an app that becomes open, the break at the start's creation time is checked first (unchanged). Then the **app rule** at the local time of detection: today not allowed (day unticked or budget 0:00) or used ≥ budget → blocked with the budget text. An app without a rule row has the default rule (0:00, no day) and is blocked. Every controlled account is screened (no shortcut for accounts without break entries).
+> 2. **A blocked start creates the app record** (via `UsageService`), without usage.
+> 3. **Close requests** (§4): a blocked start becomes one kind of *close request*. The other kind is **running app** (budget ran out, not allowed after a change or at midnight, break began, grace period ended). A running app's processes stay in the usage report. Its kill set roots are its own program path, which is not excluded as "another open app" (§5).
+> 4. **Break begins close running apps**: US-005 AC-25 ("apps started before the break keep running") is replaced by US-006 AC-29 / TC-042. All running, non-exempt apps of the account are closed when a break comes into effect. There is one message per session.
+> 5. **History** (§7): `BlockedStarts` is rebuilt in migration 5. It has `Kind`, `Reason` (`break time`, `not allowed today`, `budget used up`), `AfterGrace`, app-rule columns, and nullable break-entry columns. The name stays.
+> 6. **Time-change Warnings** (§9): they also name the old and new local date and say that daily budgets use the new day. There is still one finding per change.
 
 ---
 

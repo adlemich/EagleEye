@@ -65,7 +65,7 @@
 
   <!-- DPAPI for the token on Windows (MAUI SecureStorage needs package identity, ADR-009). -->
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.12" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.13" />
   </ItemGroup>
 
 </Project>

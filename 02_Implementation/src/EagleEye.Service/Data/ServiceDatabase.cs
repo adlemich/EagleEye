@@ -12,6 +12,10 @@ namespace EagleEye.Service.Data;
 /// Migration 4 creates <c>BreakTimeEntries</c> and <c>AccountDisplayTexts</c> (the rules of US-005, no row = default
 /// text), <c>BlockedStarts</c> (history of blocked starts, 90 days, ADR-013 §7) and <c>TimeChangeFindings</c>
 /// (time-zone and clock changes, 90 days, ADR-013 §9). History rows have no foreign keys: entries may be deleted later.
+/// Migration 5 (US-006, ADR-015 §8) creates <c>AppRules</c> (no row = default rule 0:00, no day: deny by default, no data
+/// copy), <c>AccountBudgetTexts</c> (no row = default text, ADR-016) and <c>WarningSettings</c> (at most one row; no row =
+/// 5 / 1 minutes and default texts), and rebuilds <c>BlockedStarts</c> with nullable entry columns plus kind, reason and
+/// app-rule columns (old rows: kind "blocked start", reason "break time").
 /// </summary>
 /// <param name="connectionString">SQLite connection string, see <see cref="SqliteDatabase.BuildConnectionString"/>.</param>
 public sealed class ServiceDatabase(string connectionString) : SqliteDatabase(connectionString)
@@ -118,7 +122,70 @@ public sealed class ServiceDatabase(string connectionString) : SqliteDatabase(co
         );
         CREATE INDEX IX_TimeChangeFindings_DetectedUtc ON TimeChangeFindings (DetectedUtc);
         """,
+        """
+        CREATE TABLE AppRules (
+            AppId          INTEGER PRIMARY KEY NOT NULL REFERENCES AppRecords (AppId) ON DELETE CASCADE,
+            BudgetMinutes  INTEGER NOT NULL CHECK (BudgetMinutes BETWEEN 0 AND 1439),
+            Days           INTEGER NOT NULL CHECK (Days BETWEEN 0 AND 127),
+            ChangedUtc     TEXT NOT NULL
+        );
+        CREATE TABLE AccountBudgetTexts (
+            AccountSid   TEXT PRIMARY KEY NOT NULL,
+            Text         TEXT NOT NULL,
+            ChangedUtc   TEXT NOT NULL
+        );
+        CREATE TABLE WarningSettings (
+            Id            INTEGER PRIMARY KEY NOT NULL CHECK (Id = 1),
+            EarlyMinutes  INTEGER NOT NULL CHECK (EarlyMinutes BETWEEN 1 AND 59),
+            EarlyText     TEXT NULL,
+            FinalMinutes  INTEGER NOT NULL CHECK (FinalMinutes BETWEEN 1 AND 59),
+            FinalText     TEXT NULL,
+            ChangedUtc    TEXT NOT NULL,
+            CHECK (EarlyMinutes > FinalMinutes)
+        );
+        CREATE TABLE BlockedStarts_v5 (
+            BlockedStartId   INTEGER PRIMARY KEY AUTOINCREMENT,
+            Kind             TEXT NOT NULL CHECK (Kind IN ('blocked start', 'running app')),
+            Reason           TEXT NOT NULL CHECK (Reason IN ('break time', 'not allowed today', 'budget used up')),
+            AfterGrace       INTEGER NOT NULL DEFAULT 0 CHECK (AfterGrace IN (0, 1)),
+            AccountSid       TEXT NOT NULL,
+            UserName         TEXT NOT NULL,
+            StartedUtc       TEXT NOT NULL,
+            StartedLocal     TEXT NOT NULL,
+            DetectedUtc      TEXT NOT NULL,
+            DisplayName      TEXT NOT NULL,
+            ProcessName      TEXT NOT NULL,
+            ProgramPath      TEXT NOT NULL,
+            ProcessId        INTEGER NOT NULL,
+            Trigger          TEXT NOT NULL,
+            EntryId          INTEGER NULL,
+            EntryStartMinute INTEGER NULL,
+            EntryEndMinute   INTEGER NULL,
+            EntryDays        INTEGER NULL,
+            BudgetMinutes    INTEGER NULL,
+            BudgetDays       INTEGER NULL,
+            UsedSeconds      INTEGER NULL,
+            Weekday          TEXT NOT NULL,
+            Outcome          TEXT NULL,
+            SecondsUntilGone REAL NULL,
+            MessageState     TEXT NULL,
+            CompletedUtc     TEXT NULL
+        );
+        INSERT INTO BlockedStarts_v5 (BlockedStartId, Kind, Reason, AfterGrace, AccountSid, UserName, StartedUtc, StartedLocal,
+            DetectedUtc, DisplayName, ProcessName, ProgramPath, ProcessId, Trigger, EntryId, EntryStartMinute, EntryEndMinute,
+            EntryDays, Weekday, Outcome, SecondsUntilGone, MessageState, CompletedUtc)
+        SELECT BlockedStartId, 'blocked start', 'break time', 0, AccountSid, UserName, StartedUtc, StartedLocal, DetectedUtc,
+            DisplayName, ProcessName, ProgramPath, ProcessId, Trigger, EntryId, EntryStartMinute, EntryEndMinute, EntryDays,
+            Weekday, Outcome, SecondsUntilGone, MessageState, CompletedUtc FROM BlockedStarts;
+        DROP TABLE BlockedStarts;
+        ALTER TABLE BlockedStarts_v5 RENAME TO BlockedStarts;
+        CREATE INDEX IX_BlockedStarts_DetectedUtc ON BlockedStarts (DetectedUtc);
+        CREATE INDEX IX_BlockedStarts_Account ON BlockedStarts (AccountSid);
+        """,
     ];
+
+    /// <summary>All migrations (exposed so tests can build a database of an earlier version).</summary>
+    internal static IReadOnlyList<string> AllMigrations => SchemaMigrations;
 
     /// <inheritdoc />
     protected override IReadOnlyList<string> Migrations => SchemaMigrations;

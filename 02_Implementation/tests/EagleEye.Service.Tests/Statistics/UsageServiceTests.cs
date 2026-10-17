@@ -1,4 +1,5 @@
 using EagleEye.Service.Data;
+using EagleEye.Service.Rules;
 using EagleEye.Service.Statistics;
 using EagleEye.Service.UserAccounts;
 using EagleEye.Shared.Models;
@@ -26,6 +27,8 @@ public sealed class UsageServiceTests : IAsyncLifetime
     private readonly Mock<IUserAccountService> _accounts = new();
     private readonly FakeTimeProvider _time = new(Start);
     private readonly TestLogger<UsageService> _logger = new();
+    private readonly Mock<IAppRecordObserver> _observer = new();
+    private readonly List<(string Sid, long AppId, string Path, string Name)> _seen = [];
     private UsageService _service;
 
     public UsageServiceTests()
@@ -35,7 +38,82 @@ public sealed class UsageServiceTests : IAsyncLifetime
         _broadcaster.Setup(b => b.BroadcastAsync(It.IsAny<DayUsageDto>())).Callback<DayUsageDto>(_broadcasts.Add).Returns(Task.CompletedTask);
         _accounts.Setup(a => a.GetSnapshotAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new UserAccountListDto(1, null,
             [new UserAccountDto(Kid, "kid1", null, false, true), new UserAccountDto(Kid2, "kid2", null, false, false)]));
+        _observer.Setup(o => o.OnAppRecordAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback<string, long, string, string, CancellationToken>((sid, id, path, name, _) => _seen.Add((sid, id, path, name)))
+            .Returns(Task.CompletedTask);
         _service = Create(_repository);
+    }
+
+    [Fact]
+    public async Task EnsureAppRecord_New_CreatesRecordWithoutInstanceOrDayRowAndLogsNewApp()
+    {
+        await _service.EnsureAppRecordAsync(Kid, "kid1", Notepad, "notepad.exe", "Editor");
+
+        var app = await _repository.GetOrCreateAppAsync(Kid, Notepad, "notepad.exe", "Editor", Start);
+        Assert.False(app.Created);
+        Assert.Empty(await _repository.GetOpenInstancesAsync());
+        Assert.Empty(await _repository.GetUsageAsync(Kid, Today, Today));
+        Assert.Single(_logger.Messages(LogLevel.Information), m => m.StartsWith("New app for account kid1: Editor", StringComparison.Ordinal));
+        Assert.Equal([(Kid, app.AppId, Notepad, "Editor")], _seen);
+    }
+
+    [Fact]
+    public async Task EnsureAppRecord_Existing_NoNewAppLogButObserverCalled()
+    {
+        var app = await _repository.GetOrCreateAppAsync(Kid, Notepad, "notepad.exe", "Editor", Start);
+
+        await _service.EnsureAppRecordAsync(Kid, "kid1", Notepad, "notepad.exe", "Editor neu");
+
+        Assert.DoesNotContain(_logger.Messages(LogLevel.Information), m => m.StartsWith("New app", StringComparison.Ordinal));
+        Assert.Equal([(Kid, app.AppId, Notepad, "Editor neu")], _seen);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_InstanceStarted_ObserverCalledOutsideTheLock()
+    {
+        _observer.Setup(o => o.OnAppRecordAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(async () => await _service.PurgeOldDataAsync()); // Would deadlock if called under the lock.
+
+        await ApplyAsync(Started(1)).WaitAsync(TimeSpan.FromSeconds(10));
+
+        _observer.Verify(o => o.OnAppRecordAsync(Kid, It.IsAny<long>(), Notepad, "Editor", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_InstanceEndedOnly_ObserverNotCalled()
+    {
+        await ApplyAsync(Ended(9));
+
+        Assert.Empty(_seen);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_ObserverFails_WarningAndUsageGoesOn()
+    {
+        var failure = new InvalidOperationException("rules");
+        _observer.Setup(o => o.OnAppRecordAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(failure);
+
+        await ApplyAsync(Started(1));
+
+        Assert.True(_logger.Has(LogLevel.Warning, failure));
+        Assert.Single(await _repository.GetOpenInstancesAsync());
+    }
+
+    [Fact]
+    public async Task ApplyAsync_ObserverCancelled_Propagates()
+    {
+        _observer.Setup(o => o.OnAppRecordAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new OperationCanceledException());
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() => ApplyAsync(Started(1)));
+    }
+
+    [Fact]
+    public async Task EnsureAppRecord_Guards_Throw()
+    {
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => _service.EnsureAppRecordAsync(" ", "kid1", Notepad, "notepad.exe", "Editor"));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _service.EnsureAppRecordAsync(Kid, null!, Notepad, "notepad.exe", "Editor"));
     }
 
     public Task InitializeAsync() => _database.InitializeAsync();
@@ -313,7 +391,7 @@ public sealed class UsageServiceTests : IAsyncLifetime
         await Assert.ThrowsAsync<ArgumentNullException>(() => _service.PurgeMissingAccountsAsync(null!));
     }
 
-    private UsageService Create(IUsageRepository repository) => new(repository, _broadcaster.Object, _accounts.Object, _time, _logger);
+    private UsageService Create(IUsageRepository repository) => new(repository, _broadcaster.Object, _accounts.Object, _observer.Object, _time, _logger);
 
     private Task ApplyAsync(InstanceEvent instance, bool isTick = false) =>
         _service.ApplyAsync(new TrackerOutput([instance], [], []), Names, isTick);

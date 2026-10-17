@@ -17,4 +17,16 @@
   <data name="PairingInstruction" xml:space="preserve"><value>Geben Sie diesen Code in der EagleEye-Eltern-App ein.</value></data>
   <data name="PairingValidityFormat" xml:space="preserve"><value>Der Code ist {0} Minuten gültig.</value></data>
   <data name="BreakMessageTitle" xml:space="preserve"><value>EagleEye</value></data>
+  <!-- US-006 AC-34: info line of the kid dialog. {0} app, {1} minutes, {2} start, {3} end (kid's short time). -->
+  <data name="InfoMinutesLeftOne" xml:space="preserve"><value>{0}: noch 1 Minute.</value></data>
+  <data name="InfoMinutesLeftMany" xml:space="preserve"><value>{0}: noch {1} Minuten.</value></data>
+  <data name="InfoBreakBegins" xml:space="preserve"><value>Die Ruhezeit beginnt um {2}.</value></data>
+  <data name="InfoAppGraceOne" xml:space="preserve"><value>{0}: Deine Eltern haben die Regeln geändert. {0} wird in 1 Minute geschlossen.</value></data>
+  <data name="InfoAppGraceMany" xml:space="preserve"><value>{0}: Deine Eltern haben die Regeln geändert. {0} wird in {1} Minuten geschlossen.</value></data>
+  <data name="InfoBreakGraceOne" xml:space="preserve"><value>Deine Eltern haben eine Ruhezeit eingestellt. Alle Apps werden in 1 Minute geschlossen.</value></data>
+  <data name="InfoBreakGraceMany" xml:space="preserve"><value>Deine Eltern haben eine Ruhezeit eingestellt. Alle Apps werden in {1} Minuten geschlossen.</value></data>
+  <data name="InfoNotAllowedToday" xml:space="preserve"><value>{0}: heute nicht erlaubt.</value></data>
+  <data name="InfoBudgetUsedUp" xml:space="preserve"><value>{0}: Zeit-Budget aufgebraucht.</value></data>
+  <data name="InfoBreakTime" xml:space="preserve"><value>Ruhezeit von {2} bis {3}.</value></data>
+  <data name="InfoMidnight" xml:space="preserve"><value>24:00</value></data>
 </root>

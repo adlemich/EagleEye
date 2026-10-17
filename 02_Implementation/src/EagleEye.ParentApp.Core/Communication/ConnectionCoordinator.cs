@@ -2,6 +2,8 @@ using EagleEye.ParentApp.Core.Data;
 using EagleEye.Shared.Communication;
 using EagleEye.Shared.Constants;
 using EagleEye.Shared.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace EagleEye.ParentApp.Core.Communication;
 
@@ -16,8 +18,11 @@ public sealed class ConnectionCoordinator(
     IParentHubClientFactory clientFactory,
     IPairingStore pairingStore,
     IPairedConnectionSink pairedConnection,
-    TimeProvider timeProvider) : IConnectionCoordinator, IAsyncDisposable
+    TimeProvider timeProvider,
+    ILogger<ConnectionCoordinator>? logger = null) : IConnectionCoordinator, IAsyncDisposable
 {
+    private readonly ILogger _logger = logger ?? NullLogger<ConnectionCoordinator>.Instance;
+
     /// <summary>Upper bound for connecting and for each hub call.</summary>
     internal static readonly TimeSpan OperationTimeout = TimeSpan.FromSeconds(15);
 
@@ -200,6 +205,32 @@ public sealed class ConnectionCoordinator(
             await StopPairedAsync().ConfigureAwait(false);
             await pairingStore.DeleteAsync().ConfigureAwait(false);
             SetState(ConnectionState.Initial);
+            return true;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ForgetPairingLocallyAsync()
+    {
+        await _gate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            var state = State;
+            if (state.PairingStatus != PairingStatus.Paired || state.Status == ConnectionStatus.PairedConnected)
+            {
+                return false;
+            }
+
+            await StopPairedAsync().ConfigureAwait(false);
+            await pairingStore.DeleteAsync().ConfigureAwait(false);
+            _logger.LogInformation(
+                "Pairing with {Host} forgotten on this device only (service {Reason}); the device entry may remain on the service.",
+                state.Host, state.LastMessage == ConnectionMessage.CertificateChanged ? "identity changed" : "not reachable");
+            SetState(ConnectionState.Initial with { Host = state.Host, LastMessage = ConnectionMessage.PairingForgotten });
             return true;
         }
         finally

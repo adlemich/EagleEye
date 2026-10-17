@@ -23,7 +23,36 @@ public sealed record StoredRules(IReadOnlyList<StoredBreakTimeEntry> Entries, IR
 /// <param name="HadText">Whether a display text was deleted.</param>
 public sealed record RulesPurge(string AccountSid, int Entries, bool HadText);
 
-/// <summary>A new row of the history of blocked starts (ADR-013 §7, AC-35).</summary>
+/// <summary>The kinds of a history record (US-006 migration 5, ADR-015 §7).</summary>
+public static class CloseKinds
+{
+    /// <summary>A start that was blocked (break time or app rule).</summary>
+    public const string BlockedStart = "blocked start";
+
+    /// <summary>A running app that was closed (budget end, not allowed, midnight, break begin).</summary>
+    public const string RunningApp = "running app";
+}
+
+/// <summary>The reasons of a history record (US-006 migration 5, ADR-015 §6, §7).</summary>
+public static class CloseReasons
+{
+    /// <summary>A break time is in effect.</summary>
+    public const string BreakTime = "break time";
+
+    /// <summary>The app is not allowed today (day not ticked or budget 0:00), also at midnight.</summary>
+    public const string NotAllowedToday = "not allowed today";
+
+    /// <summary>The app's budget is used up.</summary>
+    public const string BudgetUsedUp = "budget used up";
+}
+
+/// <summary>The app rule of a closed app at the moment of the close (history columns of migration 5).</summary>
+/// <param name="BudgetMinutes">The budget.</param>
+/// <param name="Days">The allowed weekdays.</param>
+/// <param name="UsedSeconds">The used time today at that moment.</param>
+public sealed record AppRuleAtClose(int BudgetMinutes, BreakTimeDays Days, long UsedSeconds);
+
+/// <summary>A new row of the history of blocked starts and enforced closes (ADR-013 §7, ADR-015 §7, US-005 AC-35, US-006 AC-37).</summary>
 /// <param name="AccountSid">The account.</param>
 /// <param name="UserName">The account's user name at the time.</param>
 /// <param name="StartedUtc">Creation time of the app's first process.</param>
@@ -33,9 +62,9 @@ public sealed record RulesPurge(string AccountSid, int Entries, bool HadText);
 /// <param name="ProcessName">The process name.</param>
 /// <param name="ProgramPath">The program path.</param>
 /// <param name="ProcessId">The reported window process.</param>
-/// <param name="Trigger"><c>app start</c> or <c>found at agent start</c>.</param>
-/// <param name="Entry">The entry in effect at the start.</param>
-/// <param name="Weekday">The local weekday of the start, e.g. "Mo".</param>
+/// <param name="Trigger"><c>app start</c>, <c>found at agent start</c>, or the trigger of a running-app close.</param>
+/// <param name="Entry">The break entry (reason "break time"), else <c>null</c>.</param>
+/// <param name="Weekday">The local weekday, e.g. "Mo".</param>
 public sealed record BlockedStartRecord(
     string AccountSid,
     string UserName,
@@ -47,8 +76,21 @@ public sealed record BlockedStartRecord(
     string ProgramPath,
     int ProcessId,
     string Trigger,
-    BreakTimeEntryDto Entry,
-    string Weekday);
+    BreakTimeEntryDto? Entry,
+    string Weekday)
+{
+    /// <summary>One of <see cref="CloseKinds"/>.</summary>
+    public string Kind { get; init; } = CloseKinds.BlockedStart;
+
+    /// <summary>One of <see cref="CloseReasons"/>.</summary>
+    public string Reason { get; init; } = CloseReasons.BreakTime;
+
+    /// <summary>Whether the close followed a grace period (US-006 AC-32, AC-33).</summary>
+    public bool AfterGrace { get; init; }
+
+    /// <summary>The app rule at that moment (budget reasons), else <c>null</c>.</summary>
+    public AppRuleAtClose? Rule { get; init; }
+}
 
 /// <summary>A time-zone or clock change found by the service (ADR-013 §9, AC-37).</summary>
 /// <param name="DetectedUtc">When it was found.</param>

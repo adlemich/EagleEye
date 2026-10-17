@@ -29,4 +29,15 @@ public interface IParentClientCallback
     /// is higher than the one held for that account.
     /// </summary>
     Task OnAccountRulesChanged(AccountRulesDto snapshot);
+
+    /// <summary>
+    /// The app list, an app rule or the budget text of one account changed (state area "AppRules:{sid}"), including a
+    /// new app record (US-006 AC-4). Apply only if <see cref="AppRulesDto.Revision"/> is higher than the one held for that account.
+    /// </summary>
+    Task OnAppRulesChanged(AppRulesDto snapshot);
+
+    /// <summary>
+    /// The warning levels changed (state area "WarningSettings"). Apply only if <see cref="WarningSettingsDto.Revision"/> is higher.
+    /// </summary>
+    Task OnWarningSettingsChanged(WarningSettingsDto snapshot);
 }

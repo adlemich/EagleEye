@@ -24,19 +24,27 @@ EagleEye.Service/
 ├── Monitoring/       Sessions (WTS, SCM session/power events), hardened SessionAgentLauncher, supervisor,
 │                     process inspection, ProgramPathPolicy, VersionResourceReader, PackageManifestReader,
 │                     name resolution (impersonating the session user), agent report processor (US-004)
-├── Enforcement/      Break-time enforcement at app start (US-005, ADR-013): BreakTimeGate (start = first
-│                     process, before usage accounting), BlockedStartRunner (message + WM_CLOSE, 20 s,
-│                     ≤ 3 force rounds on the recomputed kill set), KillSetBuilder, EnforcementIgnoreList,
-│                     Win32ProcessTable, Win32ProcessTerminator, BlockedStartLog (limited), history and
-│                     TimeChangeMonitor (time-zone/clock findings), BreakTimeEnforcement (facade for the loop)
+├── Enforcement/      Enforcement (US-005 ADR-013, US-006 ADR-015): AppStartGate (start = first process, before
+│                     usage accounting; break first, then the app rule at detection: not allowed today / budget
+│                     used up), CloseSequenceRunner (message + WM_CLOSE, 20 s, ≤ 3 force rounds on the recomputed
+│                     kill set; blocked starts create the app record), CloseRequest (kind blocked start / running
+│                     app, reason), CloseRegistry, AppCloser (own path stays a root, TI-9), KillSetBuilder,
+│                     EnforcementIgnoreList, Win32ProcessTable/Terminator, EnforcementLog (limited for starts),
+│                     TodayUsageLedger (used time = Reports, fed with the tick's credits), TimeLimitEngine (per tick:
+│                     AppEndCalculator, WarningLedger, GracePolicy = minimum grace of the final minutes,
+│                     KidMessageFactory, MessageOutbox: one message per session and tick; closes running apps,
+│                     one break message per session), SessionAppsView, TimeChangeMonitor (findings; Warning with
+│                     old/new local date), AppEnforcement (facade for the loop)
 ├── Rules/            BreakTimeService (state owner of "AccountRules:{sid}", in-memory snapshot), schedule
-│                     evaluation (start inclusive, end exclusive, 23:59 = midnight), change-log texts
+│                     evaluation (start inclusive, end exclusive, 23:59 = midnight; NextBegin within a horizon),
+│                     change-log texts. US-006: AppRuleService (state owner of "AppRules:{sid}", AppRulesSnapshot,
+│                     no rule row = 0:00, no day), WarningSettingsService (state owner of "WarningSettings")
 ├── Configuration/    Per-user configuration management — rules, budgets, schedules
 ├── Statistics/       Usage accounting (ADR-012): event queue, UsageTracker (monotonic credit, midnight
 │                     split), UsageService (state owner of the usage areas), 5 s accounting loop
 ├── Communication/    SignalR hubs (parent apps, tray client). US-005: TrayHub binds each tray connection to its
 │                     session (Win32TrayClientIdentifier: TCP owner PID + installed path, ADR-014);
-│                     KidMessenger sends ShowBreakTimeMessage as a client result (3 s)
+│                     KidMessenger sends ShowKidMessage (KidMessageDto) as a client result (3 s; Shown/Replaced)
 ├── Certificates/     Self-signed TLS certificate generation and management
 ├── UserAccounts/     Account inventory and selection (US-003): NetApiLocalAccountSource (Win32),
 │                     AccountInventoryFilter (standard only; no built-ins by RID, no defaultuser0),
@@ -44,7 +52,8 @@ EagleEye.Service/
 │                     UserAccountsBroadcaster, AccountInventoryMonitor (checks every 15 s)
 ├── Data/             ServiceDatabase (migrations: 1 PairedDevices, 2 AccountSelections,
 │                     3 AppRecords/AppInstances/DailyUsage, 4 BreakTimeEntries/AccountDisplayTexts/
-│                     BlockedStarts/TimeChangeFindings), repositories
+│                     BlockedStarts/TimeChangeFindings, 5 AppRules/AccountBudgetTexts/WarningSettings and the
+│                     rebuilt BlockedStarts with kind/reason/app-rule columns), repositories
 └── Diagnostics/      Event Log pairing code, admin-only ACL of the logs\ folder
 ```
 
@@ -55,6 +64,8 @@ EagleEye.Service/
 | `UserAccounts` | `UserAccounts/UserAccountService` | `GetUserAccounts` / `SetParentalControl` / `OnUserAccountsChanged` |
 | `UsageDay:{sid}:{day}` | `Statistics/UsageService` | `GetAccountUsage` (today + days with usage, 90 days) / none / `OnDayUsageChanged` (at most once per account every 5 s) |
 | `AccountRules:{sid}` | `Rules/BreakTimeService` | `GetAccountRules` / `AddBreakTimeEntry`, `DeleteBreakTimeEntry`, `SetBreakTimeEntryActive`, `SetBreakTimeEntryTime`, `SetBreakTimeEntryDay`, `SetDisplayText` (field-level, validated against the stored entry) / `OnAccountRulesChanged` |
+| `AppRules:{sid}` | `Rules/AppRuleService` | `GetAppRules` / `SetAppBudget` (hours or minutes, combined with the stored other part), `SetAppDay`, `SetBudgetText` / `OnAppRulesChanged` (also for new and renamed app records) |
+| `WarningSettings` | `Rules/WarningSettingsService` | `GetWarningSettings` / `SetWarningMinutes` (early > final against the stored other level), `SetWarningText` / `OnWarningSettingsChanged` |
 
 Every accepted write and every change of the Windows accounts produces one revision and one broadcast to the group `Parents` (including the sender). Revisions are in memory and start at 1 on every service start.
 

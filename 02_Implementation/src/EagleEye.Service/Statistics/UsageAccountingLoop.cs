@@ -18,7 +18,7 @@ public sealed class UsageAccountingLoop(
     UsageTracker tracker,
     IUsageService usage,
     IUserAccountService userAccounts,
-    IBreakTimeEnforcement enforcement,
+    IAppEnforcement enforcement,
     TimeProvider timeProvider,
     ILogger<UsageAccountingLoop> logger) : BackgroundService
 {
@@ -104,13 +104,14 @@ public sealed class UsageAccountingLoop(
 
     private async Task HandleAsync(UsageEvent usageEvent, CancellationToken ct)
     {
-        var isTick = usageEvent is UsageTick;
+        if (usageEvent is UsageTick)
+        {
+            await HandleTickAsync(ct).ConfigureAwait(false);
+            return;
+        }
+
         switch (usageEvent)
         {
-            case UsageTick:
-                await TickAsync().ConfigureAwait(false);
-                await enforcement.OnTickAsync(_controlled, SessionsInUse(), ct).ConfigureAwait(false);
-                break;
             case AppsObserved observed when _controlled.TryGetValue(observed.AccountSid, out var userName):
                 // US-005 (ADR-013 §1): blocked starts are removed before the tracker, so they never count as usage.
                 var screened = enforcement.Screen(observed, userName, path => tracker.IsOpen(observed.AccountSid, path));
@@ -137,9 +138,23 @@ public sealed class UsageAccountingLoop(
         }
 
         tracker.SetActivity(sid => _sessions.AccountInUse(sid, supervisor.IsObserving));
-        await usage.ApplyAsync(tracker.TakeOutput(isTick), _controlled, isTick, ct).ConfigureAwait(false);
+        await usage.ApplyAsync(tracker.TakeOutput(includeUsage: false), _controlled, isTick: false, ct).ConfigureAwait(false);
         enforcement.PublishOpenApps(tracker.OpenPaths());
-        if (isTick && Today() is var today && today != _today)
+    }
+
+    /// <summary>
+    /// The tick (US-006 Decision 5): advance and reconcile → take the output once → persist it → the enforcement gets the
+    /// same credits for the budgets and evaluates the time limits → the new day.
+    /// </summary>
+    private async Task HandleTickAsync(CancellationToken ct)
+    {
+        await TickAsync().ConfigureAwait(false);
+        tracker.SetActivity(sid => _sessions.AccountInUse(sid, supervisor.IsObserving));
+        var output = tracker.TakeOutput(includeUsage: true);
+        await usage.ApplyAsync(output, _controlled, isTick: true, ct).ConfigureAwait(false);
+        enforcement.PublishOpenApps(tracker.OpenPaths());
+        await enforcement.OnTickAsync(new EnforcementTick(_controlled, SessionsInUse(), output.Credits, tracker.IsOpen), ct).ConfigureAwait(false);
+        if (Today() is var today && today != _today)
         {
             // First tick of a new local day (ADR-012 §5, §6): purge, then the new (empty) today for every account.
             _today = today;

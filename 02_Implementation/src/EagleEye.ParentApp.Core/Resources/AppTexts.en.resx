@@ -84,4 +84,29 @@
   <data name="RulesInvalidTime" xml:space="preserve"><value>Enter a time between 00:00 and 23:59.</value></data>
   <data name="RulesEndBeforeStart" xml:space="preserve"><value>The end time must be later than the start time.</value></data>
   <data name="RulesNoDaySelected" xml:space="preserve"><value>Select at least one day.</value></data>
+  <!-- US-006 -->
+  <data name="RulesSectionAppRules" xml:space="preserve"><value>Application rules</value></data>
+  <data name="RulesAppRulesExplanation" xml:space="preserve"><value>Set here which apps may be used on which days and for how long. If no day is ticked or the daily time budget is zero, your kid cannot use the app. Apps can only be used outside break times. Only apps that your kid has started at least once are listed.</value></data>
+  <data name="RulesColumnApp" xml:space="preserve"><value>App</value></data>
+  <data name="RulesColumnDailyBudget" xml:space="preserve"><value>Daily time budget</value></data>
+  <data name="RulesColumnHours" xml:space="preserve"><value>Hours</value></data>
+  <data name="RulesColumnMinutes" xml:space="preserve"><value>Minutes</value></data>
+  <data name="RulesNoApps" xml:space="preserve"><value>No apps recorded yet.</value></data>
+  <data name="RulesBudgetTextLabel" xml:space="preserve"><value>Display text when budget is used up:</value></data>
+  <data name="RulesInvalidHours" xml:space="preserve"><value>Enter hours between 0 and 23.</value></data>
+  <data name="RulesInvalidBudgetMinutes" xml:space="preserve"><value>Enter minutes between 0 and 59.</value></data>
+  <data name="SectionTimeWarnings" xml:space="preserve"><value>Time-elapsed warnings</value></data>
+  <data name="WarningsExplanation" xml:space="preserve"><value>Here you can set 2 points in time at which your kid gets a warning that it will soon be time to stop. This applies when the time budget of an app will soon be used up, or when a break time is about to begin.</value></data>
+  <data name="WarningsColumnPoint" xml:space="preserve"><value>Point in time</value></data>
+  <data name="WarningsColumnMinutes" xml:space="preserve"><value>Minutes before end</value></data>
+  <data name="WarningsColumnText" xml:space="preserve"><value>Display text</value></data>
+  <data name="WarningsEarly" xml:space="preserve"><value>Early warning</value></data>
+  <data name="WarningsFinal" xml:space="preserve"><value>Final warning</value></data>
+  <data name="WarningsInvalidMinutes" xml:space="preserve"><value>Enter minutes between 1 and 59.</value></data>
+  <data name="WarningsFinalNotLess" xml:space="preserve"><value>The final warning must be less minutes before the end than the early warning.</value></data>
+  <!-- ISSUE-009 -->
+  <data name="ForgetPairingButton" xml:space="preserve"><value>Forget pairing on this device</value></data>
+  <data name="ForgetConfirmTitle" xml:space="preserve"><value>Forget pairing on this device?</value></data>
+  <data name="ForgetConfirmMessageFormat" xml:space="preserve"><value>The EagleEye PC {0} cannot be reached or its identity has changed. The pairing is deleted on this device only. Afterwards the app can be paired again with a new pairing code. The device entry may remain on the EagleEye PC; another parent app cannot remove it there at the moment.</value></data>
+  <data name="InfoPairingForgottenFormat" xml:space="preserve"><value>The pairing with {0} was deleted on this device. Pairing again requires a new pairing code.</value></data>
 </root>

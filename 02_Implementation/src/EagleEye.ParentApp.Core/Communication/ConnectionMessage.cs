@@ -35,4 +35,7 @@ public enum ConnectionMessage
 
     /// <summary>Removing the pairing failed; the pairing is kept.</summary>
     RemoveFailed,
+
+    /// <summary>The pairing was forgotten on this device only (ISSUE-009).</summary>
+    PairingForgotten,
 }

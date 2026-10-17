@@ -30,7 +30,7 @@ public sealed class ParentHubRulesTests
         var context = HubContextFactory.Create("connection-1");
         ParentConnectionState.SetPaired(context.Object, "device-1", DeviceName);
         _hub = new ParentHub(
-            Mock.Of<IPairingManager>(), Mock.Of<IParentConnectionRegistry>(), Mock.Of<IUserAccountService>(), Mock.Of<IUsageService>(), _rules.Object, _logger)
+            Mock.Of<IPairingManager>(), Mock.Of<IParentConnectionRegistry>(), Mock.Of<IUserAccountService>(), Mock.Of<IUsageService>(), _rules.Object, Mock.Of<IAppRuleService>(), Mock.Of<IWarningSettingsService>(), _logger)
         {
             Context = context.Object,
         };

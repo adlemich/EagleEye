@@ -1,11 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — US-005 break times Verified/Closed and merged into main (2026-10-11, build 0.5.0); next story not started
+description: EagleEye workflow status — US-006 Verified/Closed (no test run) and merged into main (2026-10-17, build 0.6.2); next story not started
 metadata:
   type: project
 ---
 
-**As of 2026-10-11. Current: Phase 3, between stories. US-005 "Break times" (build 0.5.0) is `Verified/Closed` by Michael ("no changes required") and merged into main; the branch is deleted. Next: PRO starts US-006, which Michael announced as "approaching a usage limitation": it covers apps already running when a break begins, and possibly process-based enforcement (US-005 plan Q-3) and the time-zone hardening (Q-2).**
+**As of 2026-10-17. Current: Phase 3, between stories. US-006 "App Time Budgets and Time-elapsed Warnings" (delivered build 0.6.2) closed by Michael WITHOUT a manual test run ("Close as tested, then merge") and merged into main; branch deleted. All 39 ACs unverified manually; live enforcement never ran in a kid session (D-15). Test report `docs/testing/US-006/test-report.md` lists follow-ups F-1..F-8: F-1 TC-005-26/TC-006-34 agent-token rerun (skipped 3x), F-2 focused live enforcement run against 0.6.2, F-3 LEOSERV checks (150 %, "–" checkboxes), F-4 confirm ISSUE-008/009, F-5 US-002 docs for ISSUE-009 local forget-pairing (D-19), F-8 Michael must set rules for every controlled account before kids use 0.6.2 (deny by default). Issues filed under `docs/testing/US-006/issues/` (left there). Dependencies: Microsoft packages on 10.0.13, `docs/dev-process/dependency-log.md`. MacBook: build/test not yet run after 10.0.13 update (first restore needs internet).**
 
 - US-005 run 01: 22 Pass, 0 Fail, 13 Skipped. Not verified manually: AC-18, 19, 33, 35, 37; security TC-005-26/27/29. The agent-token check (TC-004-23 = TC-005-26) has been skipped twice, so ARC's question about write-restriction stays open. Details: `docs/testing/US-005/test-report.md`.
 - US-005 decisions: a start = creation of the app's first process; graceful close, force after 20 s (≤ 30 s); the dialog is topmost (not system-modal); time-zone changes are logged and stored; accessibility tools are blocked during breaks.

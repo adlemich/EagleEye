@@ -1,0 +1,9 @@
+# Dependency Log
+
+*Owner: DEV · Audience: Michael, Orchestrator, ARC, TES*
+
+Records every change of NuGet package versions and of the .NET SDK used for a delivery: why, what changed, how it was verified. Newest first. Package versions are set per project (no central package management). Restore runs with NuGet audit enabled, and warnings are errors: a known vulnerability breaks the build until it is fixed or explicitly accepted by Michael.
+
+| Date | Version | Change | Reason | Verified |
+|---|---|---|---|---|
+| 2026-10-17 | 0.6.1 (US-006, ISSUE-008) | `Microsoft.AspNetCore.SignalR.Client` 10.0.12 → **10.0.13** (`EagleEye.ParentApp.Core`, `EagleEye.TrayClient`; brings `SignalR.Common` 10.0.13). The same servicing band for every other Microsoft 10.0.x package: `Microsoft.Data.Sqlite`, `Microsoft.Extensions.Logging.Abstractions` (Shared), `Microsoft.Extensions.Hosting.WindowsServices`, `System.Security.Cryptography.ProtectedData` (Service, ParentApp) 10.0.12 → 10.0.13. Unchanged: `CommunityToolkit.Mvvm` 8.4.2, MAUI (`$(MauiVersion)`), test packages. Build machine: .NET SDK 10.0.402 / ASP.NET Core runtime 10.0.13 (the self-contained service ships the 10.0.13 server-side SignalR). | High-severity advisory **GHSA-334f-vvp4-7g6p** for `Microsoft.AspNetCore.SignalR.Common` 10.0.12 (NuGet audit, NU1903), published after the 0.6.0 build; 10.0.13 is the lowest patched version. Option (a) chosen by Michael; internet granted for this update only. No suppression. | `build.ps1` and `test.ps1` with audit on: 0 warnings, 0 errors, 2 623 tests passed. `dotnet list package --vulnerable --include-transitive`: none (ParentApp.Core, TrayClient, Service). Published `SignalR.Client`/`SignalR.Common`/`SignalR.Core` assemblies are file version 10.0.13 (10.0.1326.50504). Smoke check: the parent app and the tray client connect to the console service. |

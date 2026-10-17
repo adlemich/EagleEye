@@ -18,6 +18,7 @@ public static class UsageRecordingRegistration
         services.AddSingleton<UsageService>();
         services.AddSingleton<IUsageService>(sp => sp.GetRequiredService<UsageService>());
         services.AddSingleton<IAccountDataPurger>(sp => sp.GetRequiredService<UsageService>());
+        services.AddSingleton<IAppInventory>(sp => sp.GetRequiredService<UsageService>());
 
         // UserAccountService → purgers (UsageService, BreakTimeService, …) → UserAccountService: Lazy breaks the cycle.
         services.AddSingleton(sp => new Lazy<IEnumerable<IAccountDataPurger>>(sp.GetServices<IAccountDataPurger>));

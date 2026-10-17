@@ -21,9 +21,10 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
     private readonly Mock<ISessionAgentSupervisor> _supervisor = new();
     private readonly Mock<IUsageService> _usage = new();
     private readonly Mock<IUserAccountService> _accounts = new();
-    private readonly Mock<IBreakTimeEnforcement> _enforcement = new();
+    private readonly Mock<IAppEnforcement> _enforcement = new();
     private readonly TestLogger<UsageAccountingLoop> _logger = new();
     private readonly ConcurrentQueue<(TrackerOutput Output, bool IsTick)> _applied = new();
+    private readonly ConcurrentQueue<(string What, IReadOnlyList<UsageCredit> Credits)> _order = new();
     private List<SessionInfo> _currentSessions = [new(2, Kid, SessionConnectState.Active, false)];
     private List<ControlledAccount> _controlled = [new(Kid, "kid1")];
     private UsageAccountingLoop _loop = null!;
@@ -34,7 +35,8 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
         _time.SetLocalTimeZone(TestZones.Berlin);
         _enforcement.Setup(e => e.Screen(It.IsAny<AppsObserved>(), It.IsAny<string>(), It.IsAny<Func<string, bool>>()))
             .Returns<AppsObserved, string, Func<string, bool>>((observed, _, _) => observed);
-        _enforcement.Setup(e => e.OnTickAsync(It.IsAny<IReadOnlyDictionary<string, string>>(), It.IsAny<IReadOnlyList<SessionInUse>>(), It.IsAny<CancellationToken>()))
+        _enforcement.Setup(e => e.OnTickAsync(It.IsAny<EnforcementTick>(), It.IsAny<CancellationToken>()))
+            .Callback<EnforcementTick, CancellationToken>((tick, _) => _order.Enqueue(("enforcement", tick.Credits)))
             .Returns(Task.CompletedTask);
         _enforcement.Setup(e => e.PurgeOldDataAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _enforcement.Setup(e => e.StopAsync()).Returns(Task.CompletedTask);
@@ -42,7 +44,11 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
         _supervisor.Setup(s => s.IsObserving(It.IsAny<int>())).Returns(true);
         _accounts.Setup(a => a.GetControlledAccountsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => _controlled);
         _usage.Setup(u => u.ApplyAsync(It.IsAny<TrackerOutput>(), It.IsAny<IReadOnlyDictionary<string, string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .Callback<TrackerOutput, IReadOnlyDictionary<string, string>, bool, CancellationToken>((o, _, tick, _) => _applied.Enqueue((o, tick)))
+            .Callback<TrackerOutput, IReadOnlyDictionary<string, string>, bool, CancellationToken>((o, _, tick, _) =>
+            {
+                _applied.Enqueue((o, tick));
+                _order.Enqueue((tick ? "usage tick" : "usage", o.Credits));
+            })
             .Returns(Task.CompletedTask);
         _loop = new UsageAccountingLoop(
             _queue, _sessions.Object, _supervisor.Object, new UsageTracker(_time, new TestLogger<UsageTracker>()),
@@ -191,7 +197,7 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
         _queue.Enqueue(new PowerSuspended());
         _queue.Enqueue(new PowerResumed());
 
-        await WaitFor(() => _enforcement.Invocations.Count(i => i.Method.Name == nameof(IBreakTimeEnforcement.PowerChanged)) == 2);
+        await WaitFor(() => _enforcement.Invocations.Count(i => i.Method.Name == nameof(IAppEnforcement.PowerChanged)) == 2);
     }
 
     [Fact]
@@ -215,9 +221,27 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
         await TickAsync();
 
         _enforcement.Verify(e => e.OnTickAsync(
-            It.Is<IReadOnlyDictionary<string, string>>(d => d[Kid] == "kid1"),
-            It.Is<IReadOnlyList<SessionInUse>>(s => s.Count == 1 && s[0] == new SessionInUse(2, Kid, "kid1")),
+            It.Is<EnforcementTick>(t => t.ControlledAccounts[Kid] == "kid1" && t.SessionsInUse.Count == 1 && t.SessionsInUse[0] == new SessionInUse(2, Kid, "kid1")),
             It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task Tick_UsagePersistedFirst_EnforcementGetsTheSameCreditsAndTheTrackersOpenState()
+    {
+        Observe();
+        await WaitFor(() => Started().Any());
+        _order.Clear();
+
+        await TickAsync();
+        await WaitFor(() => _order.Any(s => s.What == "enforcement"));
+
+        var steps = _order.ToList();
+        var usageTick = steps.FindIndex(s => s.What == "usage tick");
+        var enforcement = steps.FindIndex(s => s.What == "enforcement");
+        Assert.True(usageTick >= 0 && enforcement == usageTick + 1);
+        Assert.Same(steps[usageTick].Credits, steps[enforcement].Credits);
+        Assert.Equal(5, steps[enforcement].Credits.Sum(c => c.Seconds));
+        _enforcement.Verify(e => e.OnTickAsync(It.Is<EnforcementTick>(t => t.IsOpen(Kid, Notepad)), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
     [Fact]

@@ -14,10 +14,10 @@ public interface IServiceConnection : IAsyncDisposable
     event Action<string>? PairingCodeReceived;
 
     /// <summary>
-    /// Answers <c>ShowBreakTimeMessage</c> requests of the service (ADR-014 §2) with the display text; must return at
-    /// once. Called on a thread-pool thread. Without a handler the request fails (the service logs "did not answer").
+    /// Answers <c>ShowKidMessage</c> requests of the service (ADR-014 §2 as amended by US-006); must return at once.
+    /// Called on a thread-pool thread. Without a handler the request fails (the service logs "did not answer").
     /// </summary>
-    Func<string, KidMessageResult>? BreakTimeMessageHandler { get; set; }
+    Func<KidMessageDto, KidMessageResult>? KidMessageHandler { get; set; }
 
     /// <summary>Whether the connection to the service is currently established.</summary>
     bool IsConnected { get; }

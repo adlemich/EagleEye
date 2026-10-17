@@ -37,6 +37,40 @@ public sealed class BlockedStartRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Insert_BreakRecord_DefaultKindAndReason()
+    {
+        var id = await _repository.InsertAsync(Record(Kid, Now));
+
+        Assert.Equal(["blocked start", "break time", "0", null, null, null], await NewColumnsAsync(id));
+    }
+
+    [Fact]
+    public async Task Insert_RunningAppBudgetRecord_StoresKindReasonRuleAndNoEntry()
+    {
+        var record = Record(Kid, Now) with
+        {
+            Entry = null,
+            Trigger = "grace period ended",
+            Kind = CloseKinds.RunningApp,
+            Reason = CloseReasons.BudgetUsedUp,
+            AfterGrace = true,
+            Rule = new AppRuleAtClose(45, BreakTimeDays.All, 2705),
+        };
+
+        var id = await _repository.InsertAsync(record);
+
+        Assert.Equal(["running app", "budget used up", "1", "45", "127", "2705"], await NewColumnsAsync(id));
+        Assert.Equal(["grace period ended", null, null, null, null], (await RowAsync(id))[9..14]);
+    }
+
+    [Fact]
+    public async Task Insert_UnknownKind_RejectedBySchema()
+    {
+        await Assert.ThrowsAnyAsync<Exception>(() => _repository.InsertAsync(Record(Kid, Now) with { Kind = "other" }));
+        await Assert.ThrowsAnyAsync<Exception>(() => _repository.InsertAsync(Record(Kid, Now) with { Reason = "other" }));
+    }
+
+    [Fact]
     public async Task Complete_StoresOutcome()
     {
         var id = await _repository.InsertAsync(Record(Kid, Now));
@@ -105,6 +139,25 @@ public sealed class BlockedStartRepositoryTests : IAsyncLifetime
     private static BlockedStartRecord Record(string sid, DateTimeOffset detected) => new(
         sid, "kid1", detected.AddSeconds(-2), new DateTime(2026, 10, 10, 20, 10, 0), detected, "Editor", "notepad.exe",
         @"C:\Windows\System32\notepad.exe", 5120, "app start", new BreakTimeEntryDto(3, true, 1200, 1439, (BreakTimeDays)31), "Sa");
+
+    private Task<string?[]> NewColumnsAsync(long id)
+    {
+        return _database.ExecuteAsync(async (connection, token) =>
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT Kind, Reason, AfterGrace, BudgetMinutes, BudgetDays, UsedSeconds FROM BlockedStarts WHERE BlockedStartId = @id;";
+            command.Parameters.AddWithValue("@id", id);
+            using var reader = await command.ExecuteReaderAsync(token);
+            await reader.ReadAsync(token);
+            var values = new string?[reader.FieldCount];
+            for (var i = 0; i < values.Length; i++)
+            {
+                values[i] = reader.IsDBNull(i) ? null : Convert.ToString(reader.GetValue(i), System.Globalization.CultureInfo.InvariantCulture);
+            }
+
+            return values;
+        });
+    }
 
     private Task<string?[]> RowAsync(long id)
     {

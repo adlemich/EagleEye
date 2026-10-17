@@ -17,10 +17,11 @@ public interface ITrayClientCallback
     Task OnShowPairingCode(string code);
 
     /// <summary>
-    /// Shows the account's display text after a blocked start (FR-TRAY-022, ADR-014). Sent to one verified
-    /// tray connection of the session as a request with a result (SignalR client results). The tray answers
-    /// at once, without waiting for "OK".
+    /// Shows a message in the kid dialog (FR-TRAY-020 to FR-TRAY-022, ADR-014 as amended by US-006). Sent to one verified
+    /// tray connection of the session as a request with a result (SignalR client results). The tray answers at once,
+    /// without waiting for "OK". If a dialog is open, its text is replaced (AC-34). The tray renders a default text
+    /// (<see cref="KidMessageDto.ParentText"/> = null) and the info line in the kid's language (ADR-016).
     /// </summary>
-    /// <param name="message">The text to show.</param>
-    Task<KidMessageResult> ShowBreakTimeMessage(BreakTimeMessageDto message);
+    /// <param name="message">The message to show.</param>
+    Task<KidMessageResult> ShowKidMessage(KidMessageDto message);
 }

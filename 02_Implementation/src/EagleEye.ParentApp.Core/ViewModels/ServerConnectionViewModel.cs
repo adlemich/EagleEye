@@ -8,7 +8,8 @@ namespace EagleEye.ParentApp.Core.ViewModels;
 /// <summary>
 /// "Server connection" section (US-002 AC-8, AC-11 to AC-30): host entry while not paired, code
 /// and device-name entry while pairing, pairing details and "Remove pairing" when paired (enabled
-/// only while connected, AC-30), and the last error message.
+/// only while connected, AC-30), "Forget pairing on this device" when the paired service cannot be used (ISSUE-009), and
+/// the last error message.
 /// </summary>
 public sealed class ServerConnectionViewModel : ObservableObject
 {
@@ -31,6 +32,7 @@ public sealed class ServerConnectionViewModel : ObservableObject
         NewCodeCommand = new AsyncRelayCommand(_coordinator.RequestNewCodeAsync);
         CancelCommand = new AsyncRelayCommand(_coordinator.CancelPairingAsync);
         RemoveCommand = new AsyncRelayCommand(RemoveAsync, () => CanRemove);
+        ForgetCommand = new AsyncRelayCommand(ForgetAsync, () => CanForget);
 
         Apply(coordinator.State);
         coordinator.StateChanged += state => dispatcher.Post(() => Apply(state));
@@ -50,6 +52,9 @@ public sealed class ServerConnectionViewModel : ObservableObject
 
     /// <summary>Asks for confirmation and removes the pairing (AC-26, AC-27).</summary>
     public IAsyncRelayCommand RemoveCommand { get; }
+
+    /// <summary>Asks for confirmation and forgets the pairing on this device only (ISSUE-009).</summary>
+    public IAsyncRelayCommand ForgetCommand { get; }
 
     /// <summary>The host entry (editable only when not paired, AC-25).</summary>
     public string HostInput
@@ -97,6 +102,13 @@ public sealed class ServerConnectionViewModel : ObservableObject
 
     /// <summary>Paired but not connected: the AC-30 hint is shown.</summary>
     public bool ShowRemoveHint => IsPaired && !CanRemove;
+
+    /// <summary>
+    /// "Forget pairing on this device" is offered (ISSUE-009): paired, not connected, and the last connection attempt
+    /// failed because the service presented another identity or could not be reached (US-002 AC-12 states).
+    /// </summary>
+    public bool CanForget =>
+        IsPaired && !CanRemove && _state.LastMessage is ConnectionMessage.CertificateChanged or ConnectionMessage.Unreachable;
 
     /// <summary>"Paired with: &lt;host&gt;" (read-only while paired, AC-25).</summary>
     public string PairedWithText => AppTexts.Format(AppTexts.PairedWithFormat, _state.Host);
@@ -148,6 +160,19 @@ public sealed class ServerConnectionViewModel : ObservableObject
         }
     }
 
+    private async Task ForgetAsync()
+    {
+        var confirmed = await _dialogs.ConfirmAsync(
+            AppTexts.ForgetConfirmTitle,
+            AppTexts.Format(AppTexts.ForgetConfirmMessageFormat, _state.Host),
+            AppTexts.ForgetPairingButton,
+            AppTexts.CancelButton);
+        if (confirmed)
+        {
+            await _coordinator.ForgetPairingLocallyAsync();
+        }
+    }
+
     private void Apply(ConnectionState state)
     {
         _state = state;
@@ -159,5 +184,6 @@ public sealed class ServerConnectionViewModel : ObservableObject
         // All derived properties depend on the state.
         OnPropertyChanged(string.Empty);
         RemoveCommand.NotifyCanExecuteChanged();
+        ForgetCommand.NotifyCanExecuteChanged();
     }
 }

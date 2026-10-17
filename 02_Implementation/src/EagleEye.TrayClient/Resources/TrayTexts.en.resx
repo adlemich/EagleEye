@@ -17,4 +17,16 @@
   <data name="PairingInstruction" xml:space="preserve"><value>Enter this code in the EagleEye parent app.</value></data>
   <data name="PairingValidityFormat" xml:space="preserve"><value>The code is valid for {0} minutes.</value></data>
   <data name="BreakMessageTitle" xml:space="preserve"><value>EagleEye</value></data>
+  <!-- US-006 AC-34: info line of the kid dialog. -->
+  <data name="InfoMinutesLeftOne" xml:space="preserve"><value>{0}: 1 minute left.</value></data>
+  <data name="InfoMinutesLeftMany" xml:space="preserve"><value>{0}: {1} minutes left.</value></data>
+  <data name="InfoBreakBegins" xml:space="preserve"><value>Break time begins at {2}.</value></data>
+  <data name="InfoAppGraceOne" xml:space="preserve"><value>{0}: your parents changed the rules. {0} closes in 1 minute.</value></data>
+  <data name="InfoAppGraceMany" xml:space="preserve"><value>{0}: your parents changed the rules. {0} closes in {1} minutes.</value></data>
+  <data name="InfoBreakGraceOne" xml:space="preserve"><value>Your parents set a break time. All apps close in 1 minute.</value></data>
+  <data name="InfoBreakGraceMany" xml:space="preserve"><value>Your parents set a break time. All apps close in {1} minutes.</value></data>
+  <data name="InfoNotAllowedToday" xml:space="preserve"><value>{0}: not allowed today.</value></data>
+  <data name="InfoBudgetUsedUp" xml:space="preserve"><value>{0}: time budget used up.</value></data>
+  <data name="InfoBreakTime" xml:space="preserve"><value>Break time from {2} to {3}.</value></data>
+  <data name="InfoMidnight" xml:space="preserve"><value>midnight</value></data>
 </root>

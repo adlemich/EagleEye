@@ -23,6 +23,8 @@ public sealed class ParentHub(
     IUserAccountService userAccounts,
     IUsageService usage,
     IBreakTimeService rules,
+    IAppRuleService appRules,
+    IWarningSettingsService warnings,
     ILogger<ParentHub> logger) : Hub<IParentClientCallback>, IParentHub
 {
     /// <summary>Group of all paired parent connections.</summary>
@@ -42,6 +44,8 @@ public sealed class ParentHub(
     internal const string EndNotAfterStartMessage = "The end time must be later than the start time.";
     internal const string NoDaySelectedMessage = "Select at least one day.";
     internal const string TooManyEntriesMessage = "Too many entries.";
+    internal const string AppNotFoundMessage = "The app no longer exists.";
+    internal const string FinalNotLessMessage = "The final warning must be less minutes before the end than the early warning.";
 
     /// <inheritdoc />
     public async Task<AccountRulesDto> GetAccountRules(string accountSid)
@@ -93,8 +97,75 @@ public sealed class ParentHub(
     /// <inheritdoc />
     public Task<StateWriteAckDto> SetDisplayText(Guid requestId, string accountSid, string text) =>
         WriteRulesAsync(
-            requestId, accountSid, text is not null && BreakTimeRules.IsValidDisplayText(BreakTimeRules.NormalizeLineBreaks(text)),
-            device => rules.SetDisplayTextAsync(requestId, accountSid, text!, device)); // Checked for null in the condition.
+            requestId, accountSid, IsValidText(text),
+            device => rules.SetDisplayTextAsync(requestId, accountSid, text, device));
+
+    /// <inheritdoc />
+    public async Task<AppRulesDto> GetAppRules(string accountSid)
+    {
+        if (!IsValidSid(accountSid))
+        {
+            throw new HubException(InvalidRequestMessage);
+        }
+
+        try
+        {
+            return await appRules.GetAsync(accountSid);
+        }
+        catch (UnknownAccountException)
+        {
+            throw new HubException(UnknownAccountMessage);
+        }
+        catch (Exception ex) when (ex is not HubException)
+        {
+            logger.LogError(ex, "Reading the app rules of {AccountSid} failed.", accountSid);
+            throw new HubException(RulesUnavailableMessage);
+        }
+    }
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetAppBudget(Guid requestId, string accountSid, long appId, AppBudgetPart part, int value) =>
+        WriteRulesAsync(
+            requestId, accountSid, AppRuleRules.IsValidPart(part, value),
+            device => appRules.SetBudgetAsync(requestId, accountSid, appId, part, value, device));
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetAppDay(Guid requestId, string accountSid, long appId, DayOfWeek day, bool isAllowed) =>
+        WriteRulesAsync(
+            requestId, accountSid, Enum.IsDefined(day),
+            device => appRules.SetDayAsync(requestId, accountSid, appId, day, isAllowed, device));
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetBudgetText(Guid requestId, string accountSid, string text) =>
+        WriteRulesAsync(
+            requestId, accountSid, IsValidText(text),
+            device => appRules.SetBudgetTextAsync(requestId, accountSid, text, device));
+
+    /// <inheritdoc />
+    public async Task<WarningSettingsDto> GetWarningSettings()
+    {
+        try
+        {
+            return await warnings.GetAsync();
+        }
+        catch (Exception ex) when (ex is not HubException)
+        {
+            logger.LogError(ex, "Reading the warning settings failed.");
+            throw new HubException(RulesUnavailableMessage);
+        }
+    }
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetWarningMinutes(Guid requestId, WarningLevel level, int minutes) =>
+        WriteCoreAsync(
+            requestId, Enum.IsDefined(level) && WarningRules.IsValidMinutes(minutes), "warning settings",
+            device => warnings.SetMinutesAsync(requestId, level, minutes, device));
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetWarningText(Guid requestId, WarningLevel level, string text) =>
+        WriteCoreAsync(
+            requestId, Enum.IsDefined(level) && IsValidText(text), "warning settings",
+            device => warnings.SetTextAsync(requestId, level, text, device));
 
     /// <inheritdoc />
     public async Task<AccountUsageDto> GetAccountUsage(string accountSid)
@@ -268,10 +339,15 @@ public sealed class ParentHub(
     /// Common part of the rules writes (US-005, ADR-010): input check, the device name from the connection,
     /// and the mapping of the service's exceptions to safe texts (coding guidelines §7.4).
     /// </summary>
-    private async Task<StateWriteAckDto> WriteRulesAsync(
-        Guid requestId, string accountSid, bool argumentsValid, Func<string, Task<StateWriteAckDto>> write)
+    private Task<StateWriteAckDto> WriteRulesAsync(
+        Guid requestId, string accountSid, bool argumentsValid, Func<string, Task<StateWriteAckDto>> write) =>
+        WriteCoreAsync(requestId, IsValidSid(accountSid) && argumentsValid, accountSid, write);
+
+    /// <summary>The common part of every state write: input check, device name, safe error texts.</summary>
+    private async Task<StateWriteAckDto> WriteCoreAsync(
+        Guid requestId, bool argumentsValid, string scope, Func<string, Task<StateWriteAckDto>> write)
     {
-        if (requestId == Guid.Empty || !IsValidSid(accountSid) || !argumentsValid)
+        if (requestId == Guid.Empty || !argumentsValid)
         {
             throw new HubException(InvalidRequestMessage);
         }
@@ -283,12 +359,12 @@ public sealed class ParentHub(
         }
         catch (Exception ex) when (ex is not HubException)
         {
-            throw new HubException(RulesWriteFailure(ex, accountSid));
+            throw new HubException(RulesWriteFailure(ex, scope));
         }
     }
 
     /// <summary>The safe client text for a failed rules write; unexpected failures are logged.</summary>
-    private string RulesWriteFailure(Exception ex, string accountSid)
+    private string RulesWriteFailure(Exception ex, string scope)
     {
         switch (ex)
         {
@@ -296,15 +372,26 @@ public sealed class ParentHub(
                 return UnknownAccountMessage;
             case EntryNotFoundException:
                 return EntryNotFoundMessage;
+            case AppNotFoundException:
+                return AppNotFoundMessage;
             case TooManyEntriesException:
                 return TooManyEntriesMessage;
             case RuleValidationException validation:
-                return validation.Violation == RuleViolation.NoDaySelected ? NoDaySelectedMessage : EndNotAfterStartMessage;
+                return validation.Violation switch
+                {
+                    RuleViolation.NoDaySelected => NoDaySelectedMessage,
+                    RuleViolation.FinalNotLessThanEarly => FinalNotLessMessage,
+                    _ => EndNotAfterStartMessage,
+                };
             default:
-                logger.LogError(ex, "Changing the rules of {AccountSid} failed.", accountSid);
+                logger.LogError(ex, "Changing the rules of {Scope} failed.", scope);
                 return SaveFailedMessage;
         }
     }
+
+    /// <summary>Whether a kid text is acceptable (≤ 500 code units after line-break normalization, no lone surrogates).</summary>
+    private static bool IsValidText([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] string? text) =>
+        text is not null && BreakTimeRules.IsValidDisplayText(BreakTimeRules.NormalizeLineBreaks(text));
 
     /// <summary>Whether the text is a syntactically valid SID.</summary>
     internal static bool IsValidSid(string? sid)

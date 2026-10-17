@@ -1,8 +1,14 @@
 # ADR-014: Session-Bound Tray Connections and the Kid's Message Box
 
-**Status**: Accepted (approved by Michael with the US-005 implementation plan, 2026-10-10)
+**Status**: Accepted (approved by Michael with the US-005 implementation plan, 2026-10-10); US-006 amendment approved with the US-006 implementation plan, 2026-10-12
 **Date**: 2026-10-10
 **Deciders**: ARC, Michael
+
+> **Amendment 2026-10-12 (US-006, ADR-015, ADR-016) — approved by Michael together with the US-006 implementation plan (2026-10-12)**
+>
+> 1. **One request for all kid messages**: `ITrayClientCallback.ShowKidMessage(KidMessageDto)` replaces `ShowBreakTimeMessage`. The DTO carries a **reason** (warnings, grace periods, blocked or closed by budget, break time), the parent's text or `null` for the default, and the data of the info line (app name, minutes, break times). Service and tray client ship in one installer, so the old method is removed.
+> 2. **One dialog per session, newer replaces** (§2, §3): if a dialog is open, the tray client replaces its text, re-asserts topmost, makes one foreground attempt, and answers `Replaced`. `AlreadyOpen` is no longer sent. Message state `shown (replaced the open message)`.
+> 3. **Info line**: below the parent's text the dialog shows one line of EagleEye text in the kid's Windows display language, naming the app or break and the minutes (US-006 AC-34). The tray client renders defaults and the info line itself (ADR-016).
 
 ---
 

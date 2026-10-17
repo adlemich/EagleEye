@@ -84,4 +84,29 @@
   <data name="RulesInvalidTime" xml:space="preserve"><value>Bitte eine Uhrzeit zwischen 00:00 und 23:59 eingeben.</value></data>
   <data name="RulesEndBeforeStart" xml:space="preserve"><value>Die End-Zeit muss nach der Start-Zeit liegen.</value></data>
   <data name="RulesNoDaySelected" xml:space="preserve"><value>Mindestens ein Tag muss ausgewählt sein.</value></data>
+  <!-- US-006 -->
+  <data name="RulesSectionAppRules" xml:space="preserve"><value>Applikations-Regeln</value></data>
+  <data name="RulesAppRulesExplanation" xml:space="preserve"><value>Lege hier fest, welche Applikationen an welchen Tagen für wie lange verwendet werden dürfen. Wenn kein Tag aktiv ist oder das tägliche Zeitbudget null ist, kann die Applikation vom Kind nicht verwendet werden. Applikationen können generell nur außerhalb der Ruhezeiten verwendet werden. Es werden nur Applikationen angezeigt, die mindestens ein Mal vom Kind gestartet wurden.</value></data>
+  <data name="RulesColumnApp" xml:space="preserve"><value>Applikation</value></data>
+  <data name="RulesColumnDailyBudget" xml:space="preserve"><value>Tägliches Zeit-Budget</value></data>
+  <data name="RulesColumnHours" xml:space="preserve"><value>Stunden</value></data>
+  <data name="RulesColumnMinutes" xml:space="preserve"><value>Minuten</value></data>
+  <data name="RulesNoApps" xml:space="preserve"><value>Noch keine Applikationen aufgezeichnet.</value></data>
+  <data name="RulesBudgetTextLabel" xml:space="preserve"><value>Anzeige Text wenn Budget aufgebraucht:</value></data>
+  <data name="RulesInvalidHours" xml:space="preserve"><value>Bitte Stunden zwischen 0 und 23 eingeben.</value></data>
+  <data name="RulesInvalidBudgetMinutes" xml:space="preserve"><value>Bitte Minuten zwischen 0 und 59 eingeben.</value></data>
+  <data name="SectionTimeWarnings" xml:space="preserve"><value>Zeit-Ende Warnungen</value></data>
+  <data name="WarningsExplanation" xml:space="preserve"><value>Hier kannst du 2 Zeitpunkte einstellen, bei denen dein Kind eine Warnung erhält, wenn es bald Zeit wird aufzuhören. Dies gilt, wenn das Zeit-Budget für eine Applikation bald erreicht wird, oder bald eine Ruhezeit ansteht.</value></data>
+  <data name="WarningsColumnPoint" xml:space="preserve"><value>Zeitpunkt</value></data>
+  <data name="WarningsColumnMinutes" xml:space="preserve"><value>Minuten vor Ende</value></data>
+  <data name="WarningsColumnText" xml:space="preserve"><value>Anzeigetext</value></data>
+  <data name="WarningsEarly" xml:space="preserve"><value>Frühe Warnung</value></data>
+  <data name="WarningsFinal" xml:space="preserve"><value>Finale Warnung</value></data>
+  <data name="WarningsInvalidMinutes" xml:space="preserve"><value>Bitte Minuten zwischen 1 und 59 eingeben.</value></data>
+  <data name="WarningsFinalNotLess" xml:space="preserve"><value>Die finale Warnung muss weniger Minuten vor dem Ende liegen als die frühe Warnung.</value></data>
+  <!-- ISSUE-009 -->
+  <data name="ForgetPairingButton" xml:space="preserve"><value>Kopplung auf diesem Gerät löschen</value></data>
+  <data name="ForgetConfirmTitle" xml:space="preserve"><value>Kopplung auf diesem Gerät löschen?</value></data>
+  <data name="ForgetConfirmMessageFormat" xml:space="preserve"><value>Der EagleEye-PC {0} ist nicht erreichbar oder seine Identität hat sich geändert. Die Kopplung wird nur auf diesem Gerät gelöscht. Danach kann die App mit einem neuen Kopplungscode neu gekoppelt werden. Der Geräte-Eintrag kann auf dem EagleEye-PC bestehen bleiben; eine andere Eltern-App kann ihn dort derzeit nicht entfernen.</value></data>
+  <data name="InfoPairingForgottenFormat" xml:space="preserve"><value>Die Kopplung mit {0} wurde auf diesem Gerät gelöscht. Für eine neue Kopplung ist ein neuer Kopplungscode nötig.</value></data>
 </root>

@@ -29,7 +29,11 @@ EagleEye.ParentApp.Core/
 │                        selection, revision rule per day, 90-day and empty-day trimming)
 ├── Rules/               US-005: AccountRulesModel (area "AccountRules:{sid}" of the selected account, field-level
 │                        writes confirmed by snapshot, 4 s timeout), TimeOfDayText (7:30, 730, 7, 20.00 → HH:MM),
-│                        BreakTimeEditRules (end > start, ≥ 1 day, ≤ 20 entries)
+│                        BreakTimeEditRules (end > start, ≥ 1 day, ≤ 20 entries). US-006: SelectedAccountModel
+│                        (shared replica/write logic of the per-account areas), AppRulesModel ("AppRules:{sid}"),
+│                        AppBudgetText (hours 0…23, minutes 0…59, ASCII digits, ≤ 2 digits)
+├── Settings/            US-006: WarningSettingsModel (global area "WarningSettings", one fixed key of
+│                        SelectedAccountModel), WarningEditRules (1…59, early > final)
 ├── Appearance/         HeadingBarPalette: heading bar colours (platform accent or app primary #1E7B3A,
 │                        white or black text by WCAG contrast, ISSUE-007); RgbColor
 ├── Data/
@@ -41,7 +45,11 @@ EagleEye.ParentApp.Core/
 │                        UserAccountItemViewModel, AccountDisplayName, StatusBarViewModel, ReportsViewModel,
 │                        DayUsageViewModel, AppUsageRowViewModel, UsageDuration, ControlledAccountSelection
 │                        (account picker of Reports and Rules), RulesViewModel, BreakTimeRowViewModel (US-005:
-│                        rows merged by entry id; typed or pending fields are never overwritten by snapshots)
+│                        rows merged by entry id; typed or pending fields are never overwritten by snapshots).
+│                        US-006: AppRulesSectionViewModel (hosted by RulesViewModel; rows merged by app id, sorted
+│                        by name in the parent's culture ignoring case), AppRuleRowViewModel, WarningSettingsViewModel,
+│                        WarningRowViewModel, KidTextEditing (ADR-016: defaults shown in the app's language; a text
+│                        equal to any default is sent as "" so the service stores the default)
 │                        (CommunityToolkit.Mvvm, no source generators)
 ├── AppTexts.cs          Typed access to the localized texts
 └── Resources/           AppTexts.resx (German, default) and AppTexts.en.resx (English)
