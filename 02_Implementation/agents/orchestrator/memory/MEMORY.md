@@ -4,7 +4,7 @@ One line per memory. Content lives in the linked files, never here.
 
 - [Michael — project owner](michael-project-owner.md) — professional engineer, reviewer and sole approval authority; works on a Windows machine and a MacBook.
 - [Memory lives in the project](memory-lives-in-project.md) — memory files belong in this folder, never under ~/.claude.
-- [Current phase](eagleeye-current-phase.md) — US-006 closed without test run and merged (2026-10-17, 0.6.2); follow-ups F-1..F-8 open; next story not started.
+- [Current phase](eagleeye-current-phase.md) — US-007 iOS parent app, step a: story written (59 ACs, 20 OQs, split proposed), awaiting approval.
 - [US-001 lessons](us001-lessons.md) — localization in every plan, ACs quote English examples, German UI labels in test manuals, publisher "Michael Adler".
 - [Workflow and gates](eagleeye-workflow-gates.md) — five agents, file-based handoffs, approval gates, manual test loop, one feature branch per story merged on close.
 - [Dev and test setup](eagleeye-dev-test-setup.md) — two machines (Windows: service/tray/Win+Android client + manual testing; MacBook: macOS app); ADR-007.
