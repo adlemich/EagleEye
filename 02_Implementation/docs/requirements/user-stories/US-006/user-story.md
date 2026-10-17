@@ -1,6 +1,6 @@
 # US-006: App Time Budgets and Time-elapsed Warnings
 
-**Status**: Implemented (DEV, 2026-10-12; see `US-006/implementation-report.md`)
+**Status**: Verified/Closed (closed by Michael, 2026-10-17, "Close as tested, then merge", **without a manual test run**: all 39 ACs are not verified manually; delivered build 0.6.2; see `02_Implementation/docs/testing/US-006/test-report.md`)
 **Created**: 2026-10-12
 **Approved**: by Michael, 2026-10-12, with his answers to OQ-1 to OQ-19 (changes in OQ-6, OQ-8, OQ-11, OQ-18)
 **Component(s)**: EagleEye.Service, EagleEye.TrayClient, EagleEye.ParentApp, EagleEye.Shared
@@ -234,6 +234,8 @@ References: FR-SVC-011, FR-SVC-012, FR-SVC-020 to FR-SVC-025, FR-SVC-032, FR-SVC
 | 2026-10-12 | Story approved; OQ-1 to OQ-19 answered (proposals accepted except OQ-6, OQ-8, OQ-11, OQ-18); requirements v1.6 approved and applied. Changed: AC-10 and AC-14 (German and English default texts), AC-15 (range 1..59, early > final, no switching off), AC-24 (exception for the grace period), AC-32 and AC-33 (grace period of the final-warning minutes instead of closing at once), AC-34 (info lines for the grace period), AC-37 (grace periods logged); added: AC-39 (time-zone and clock changes logged as Warning), TC-025, TC-033 | Michael (via the Orchestrator), written by PRO |
 | 2026-10-12 | Implementation plan approved (`US-006/implementation-plan.md`) with answers Q-1 to Q-5 (ARC's proposals accepted); status `Analyzed`. Changed: AC-10 (English default of the break display text, Q-1), AC-24 (a raised budget does not bring back warnings already shown, Q-5), AC-32 and AC-33 (a parent change always leaves at least the final-warning minutes, Q-2), AC-34 (the grace info line names the full final-warning minutes); TC-033 and FR-APP-052 in requirements v1.6 adjusted; Related: TC-005-26 rerun in the US-006 test run (Q-4). Q-3 (time-change Warnings log-only, one finding per change) needs no AC change | Michael (via the Orchestrator), written by PRO |
 | 2026-10-12 | Implemented as version 0.6.0 (installers `EagleEye-Setup-0.6.0.exe`, `EagleEye-ParentApp-Setup-0.6.0.exe`); status `Implemented`. Report: `US-006/implementation-report.md` | DEV |
+| 2026-10-12 to 2026-10-17 | Fixes during live use: ISSUE-008 (0.6.1), ISSUE-009 (0.6.2); delivered build **0.6.2** (`EagleEye-Setup-0.6.2.exe`, `EagleEye-ParentApp-Setup-0.6.2.exe`) | DEV, TES |
+| 2026-10-17 | Story closed by Michael without a manual test run ("Close as tested, then merge"): test run 01 not executed, **all 39 ACs not verified manually** (they rest on DEV's unit tests and smoke check); status `Verified/Closed`; see `02_Implementation/docs/testing/US-006/test-report.md` (follow-ups F-1 to F-8) | Michael |
 
 ---
 
@@ -393,6 +395,9 @@ All 19 questions are **resolved**. Michael accepted the proposals except in OQ-6
 - General product requirements: v1.6 amendment, approved by Michael together with this story on 2026-10-12 and applied (new: FR-APP-053 budget text, FR-APP-054 warning levels, TC-025, TC-033)
 - Architecture: ADR-005 (ignore list), ADR-006 (graceful-then-force termination), ADR-010 (event-driven state propagation), ADR-011 (session agent)
 - Open points from US-005: plan Q-2 and Q-3 (see Out of Scope). Agent-token check TC-005-26: TES reruns it in the US-006 test run (plan Q-4), because graceful closes of running apps depend on it
+- Follow-ups for PRO from `02_Implementation/docs/testing/US-006/test-report.md` §6 (not yet scheduled):
+  - **F-2**: a focused live enforcement run against 0.6.2 (test-run-02, TC-006-12 to -26 and others), or the same cases in the next story that touches enforcement.
+  - **F-5**: update the US-002 docs (user story AC-30, Q-3, and the architecture docs) for the ISSUE-009 local "forget pairing" (implementation report D-19). Recorded here only; the US-002 docs are not changed yet.
 - Implementation Plan: `US-006/implementation-plan.md` (added by ARC)
 - Issues: `US-006/issues/` (added by TES)
 - Manual tests: `docs/testing/US-006/` (added by TES)
