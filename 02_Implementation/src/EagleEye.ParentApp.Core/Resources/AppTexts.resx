@@ -104,4 +104,9 @@
   <data name="WarningsFinal" xml:space="preserve"><value>Finale Warnung</value></data>
   <data name="WarningsInvalidMinutes" xml:space="preserve"><value>Bitte Minuten zwischen 1 und 59 eingeben.</value></data>
   <data name="WarningsFinalNotLess" xml:space="preserve"><value>Die finale Warnung muss weniger Minuten vor dem Ende liegen als die frühe Warnung.</value></data>
+  <!-- ISSUE-009 -->
+  <data name="ForgetPairingButton" xml:space="preserve"><value>Kopplung auf diesem Gerät löschen</value></data>
+  <data name="ForgetConfirmTitle" xml:space="preserve"><value>Kopplung auf diesem Gerät löschen?</value></data>
+  <data name="ForgetConfirmMessageFormat" xml:space="preserve"><value>Der EagleEye-PC {0} ist nicht erreichbar oder seine Identität hat sich geändert. Die Kopplung wird nur auf diesem Gerät gelöscht. Danach kann die App mit einem neuen Kopplungscode neu gekoppelt werden. Der Geräte-Eintrag kann auf dem EagleEye-PC bestehen bleiben; eine andere Eltern-App kann ihn dort derzeit nicht entfernen.</value></data>
+  <data name="InfoPairingForgottenFormat" xml:space="preserve"><value>Die Kopplung mit {0} wurde auf diesem Gerät gelöscht. Für eine neue Kopplung ist ein neuer Kopplungscode nötig.</value></data>
 </root>

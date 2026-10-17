@@ -27,4 +27,11 @@ public interface IConnectionCoordinator
     /// <summary>De-registers this device at the service and forgets the pairing (only when connected).</summary>
     /// <returns><c>true</c> if the pairing was removed.</returns>
     Task<bool> RemovePairingAsync();
+
+    /// <summary>
+    /// Forgets the stored pairing on this device only (ISSUE-009): allowed only while paired and not connected. The
+    /// device entry may remain on the service. Returns to the unpaired state, so a new pairing with a new code works.
+    /// </summary>
+    /// <returns><c>true</c> if the pairing was forgotten.</returns>
+    Task<bool> ForgetPairingLocallyAsync();
 }

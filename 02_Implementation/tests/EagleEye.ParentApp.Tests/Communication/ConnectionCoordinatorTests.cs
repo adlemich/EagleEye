@@ -593,6 +593,65 @@ public sealed class ConnectionCoordinatorTests : IAsyncLifetime
         Assert.False(await _coordinator.RemovePairingAsync());
     }
 
+    // ---------- Forget pairing locally (ISSUE-009) ----------
+
+    [Theory]
+    [InlineData(true, ConnectionMessage.CertificateChanged, "identity changed")]
+    [InlineData(false, ConnectionMessage.Unreachable, "not reachable")]
+    public async Task ForgetPairingLocallyAsync_PairedNotConnected_DeletesLocallyStopsLoopAndLogs(bool pinMismatch, ConnectionMessage expectedBefore, string reason)
+    {
+        var logger = new ListLogger();
+        await using var coordinator = new ConnectionCoordinator(_factory.Object, _store.Object, _sink.Object, _time, logger);
+        StorePairing(thumbprint: pinMismatch ? "00" : null);
+        EnqueueClient(startFails: true);
+        await coordinator.InitializeAsync();
+        Assert.Equal(expectedBefore, coordinator.State.LastMessage);
+        var attempts = _created.Count;
+
+        var forgotten = await coordinator.ForgetPairingLocallyAsync();
+        _time.Advance(TimeSpan.FromMinutes(5));
+
+        Assert.True(forgotten);
+        Assert.Equal(ConnectionState.Initial with { Host = Host, LastMessage = ConnectionMessage.PairingForgotten }, coordinator.State);
+        _store.Verify(s => s.DeleteAsync(), Times.Once);
+        Assert.Equal(attempts, _created.Count);
+        Assert.Equal(
+            $"Pairing with {Host} forgotten on this device only (service {reason}); the device entry may remain on the service.",
+            logger.Messages.Single());
+    }
+
+    [Fact]
+    public async Task ForgetPairingLocallyAsync_ThenPairingAgain_Works()
+    {
+        StorePairing(thumbprint: "00");
+        EnqueueClient(startFails: true);
+        await _coordinator.InitializeAsync();
+        await _coordinator.ForgetPairingLocallyAsync();
+
+        await BeginPairingAsync();
+
+        Assert.Equal(ConnectionStatus.AwaitingCode, _coordinator.State.Status);
+    }
+
+    [Fact]
+    public async Task ForgetPairingLocallyAsync_Connected_RefusedNothingDeleted()
+    {
+        await ConnectPairedAsync();
+
+        Assert.False(await _coordinator.ForgetPairingLocallyAsync());
+        _store.Verify(s => s.DeleteAsync(), Times.Never);
+        Assert.Equal(ConnectionStatus.PairedConnected, _coordinator.State.Status);
+    }
+
+    [Fact]
+    public async Task ForgetPairingLocallyAsync_NotPairedOrPairing_Refused()
+    {
+        Assert.False(await _coordinator.ForgetPairingLocallyAsync());
+        await BeginPairingAsync();
+        Assert.False(await _coordinator.ForgetPairingLocallyAsync());
+        _store.Verify(s => s.DeleteAsync(), Times.Never);
+    }
+
     // ---------- General ----------
 
     [Fact]
@@ -808,5 +867,19 @@ public sealed class ConnectionCoordinatorTests : IAsyncLifetime
         var states = new List<ConnectionState>();
         _coordinator.StateChanged += states.Add;
         return states;
+    }
+
+    private sealed class ListLogger : Microsoft.Extensions.Logging.ILogger<ConnectionCoordinator>
+    {
+        public List<string> Messages { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull => null;
+
+        public bool IsEnabled(Microsoft.Extensions.Logging.LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            Microsoft.Extensions.Logging.LogLevel logLevel, Microsoft.Extensions.Logging.EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+            Messages.Add(formatter(state, exception));
     }
 }

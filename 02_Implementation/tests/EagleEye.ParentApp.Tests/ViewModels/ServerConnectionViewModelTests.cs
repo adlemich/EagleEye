@@ -187,6 +187,63 @@ public sealed class ServerConnectionViewModelTests
         _coordinator.Verify(c => c.RemovePairingAsync(), Times.Never);
     }
 
+    [Theory]
+    [InlineData(ConnectionStatus.PairedDisconnected, ConnectionMessage.CertificateChanged, true)]
+    [InlineData(ConnectionStatus.PairedConnecting, ConnectionMessage.CertificateChanged, true)]
+    [InlineData(ConnectionStatus.PairedDisconnected, ConnectionMessage.Unreachable, true)]
+    [InlineData(ConnectionStatus.PairedConnecting, ConnectionMessage.Unreachable, true)]
+    [InlineData(ConnectionStatus.PairedDisconnected, ConnectionMessage.None, false)]
+    [InlineData(ConnectionStatus.PairedConnecting, ConnectionMessage.None, false)]
+    [InlineData(ConnectionStatus.PairedConnected, ConnectionMessage.None, false)]
+    [InlineData(ConnectionStatus.PairedConnected, ConnectionMessage.RemoveFailed, false)]
+    [InlineData(ConnectionStatus.NotPaired, ConnectionMessage.Unreachable, false)]
+    [InlineData(ConnectionStatus.AwaitingCode, ConnectionMessage.None, false)]
+    public void ForgetCommand_OfferedOnlyWhenTheStoredServiceCannotBeUsed(ConnectionStatus status, ConnectionMessage message, bool expected)
+    {
+        var viewModel = CreateViewModel(new ConnectionState(status, "kid-pc", "n", message));
+
+        Assert.Equal((expected, expected), (viewModel.CanForget, viewModel.ForgetCommand.CanExecute(null)));
+    }
+
+    [Fact]
+    public async Task ForgetCommand_Confirmed_ForgetsLocally()
+    {
+        var viewModel = CreateViewModel(new ConnectionState(ConnectionStatus.PairedDisconnected, "kid-pc", "n", ConnectionMessage.CertificateChanged));
+        _dialogs.Setup(d => d.ConfirmAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
+
+        await viewModel.ForgetCommand.ExecuteAsync(null);
+
+        _coordinator.Verify(c => c.ForgetPairingLocallyAsync(), Times.Once);
+        _coordinator.Verify(c => c.RemovePairingAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task ForgetCommand_Cancelled_KeepsPairing()
+    {
+        var viewModel = CreateViewModel(new ConnectionState(ConnectionStatus.PairedDisconnected, "kid-pc", "n", ConnectionMessage.Unreachable));
+        _dialogs.Setup(d => d.ConfirmAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
+
+        await viewModel.ForgetCommand.ExecuteAsync(null);
+
+        _coordinator.Verify(c => c.ForgetPairingLocallyAsync(), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("en-US", "Forget pairing on this device?",
+        "The EagleEye PC kid-pc cannot be reached or its identity has changed. The pairing is deleted on this device only. Afterwards the app can be paired again with a new pairing code. The device entry may remain on the EagleEye PC; another parent app cannot remove it there at the moment.",
+        "Forget pairing on this device", "Cancel")]
+    [InlineData("de-DE", "Kopplung auf diesem Gerät löschen?",
+        "Der EagleEye-PC kid-pc ist nicht erreichbar oder seine Identität hat sich geändert. Die Kopplung wird nur auf diesem Gerät gelöscht. Danach kann die App mit einem neuen Kopplungscode neu gekoppelt werden. Der Geräte-Eintrag kann auf dem EagleEye-PC bestehen bleiben; eine andere Eltern-App kann ihn dort derzeit nicht entfernen.",
+        "Kopplung auf diesem Gerät löschen", "Abbrechen")]
+    public async Task ForgetCommand_DialogTexts(string culture, string title, string message, string accept, string cancel)
+    {
+        var viewModel = CreateViewModel(new ConnectionState(ConnectionStatus.PairedDisconnected, "kid-pc", "n", ConnectionMessage.CertificateChanged));
+
+        await TestSupport.InCulture(culture, () => viewModel.ForgetCommand.ExecuteAsync(null));
+
+        _dialogs.Verify(d => d.ConfirmAsync(title, message, accept, cancel), Times.Once);
+    }
+
     [Fact]
     public async Task RemoveCommand_AsksWithHostInMessage()
     {

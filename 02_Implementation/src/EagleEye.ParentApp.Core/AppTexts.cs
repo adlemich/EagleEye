@@ -114,6 +114,10 @@ public static class AppTexts
     public static string WarningsFinal => Get(nameof(WarningsFinal));
     public static string WarningsInvalidMinutes => Get(nameof(WarningsInvalidMinutes));
     public static string WarningsFinalNotLess => Get(nameof(WarningsFinalNotLess));
+    public static string ForgetPairingButton => Get(nameof(ForgetPairingButton));
+    public static string ForgetConfirmTitle => Get(nameof(ForgetConfirmTitle));
+    public static string ForgetConfirmMessageFormat => Get(nameof(ForgetConfirmMessageFormat));
+    public static string InfoPairingForgottenFormat => Get(nameof(InfoPairingForgottenFormat));
 #pragma warning restore CS1591
 
     /// <summary>Formats a composite text with the current culture.</summary>

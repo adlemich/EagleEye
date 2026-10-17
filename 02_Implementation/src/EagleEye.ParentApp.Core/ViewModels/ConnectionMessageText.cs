@@ -20,6 +20,7 @@ internal static class ConnectionMessageText
             ConnectionMessage.DeviceNameRequired => AppTexts.ErrorDeviceNameRequired,
             ConnectionMessage.CertificateChanged => AppTexts.Format(AppTexts.ErrorCertificateChangedFormat, state.Host),
             ConnectionMessage.PairingLost => AppTexts.Format(AppTexts.InfoPairingLostFormat, state.Host),
+            ConnectionMessage.PairingForgotten => AppTexts.Format(AppTexts.InfoPairingForgottenFormat, state.Host),
             _ => AppTexts.ErrorRemoveFailed,
         };
     }

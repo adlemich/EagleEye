@@ -104,4 +104,9 @@
   <data name="WarningsFinal" xml:space="preserve"><value>Final warning</value></data>
   <data name="WarningsInvalidMinutes" xml:space="preserve"><value>Enter minutes between 1 and 59.</value></data>
   <data name="WarningsFinalNotLess" xml:space="preserve"><value>The final warning must be less minutes before the end than the early warning.</value></data>
+  <!-- ISSUE-009 -->
+  <data name="ForgetPairingButton" xml:space="preserve"><value>Forget pairing on this device</value></data>
+  <data name="ForgetConfirmTitle" xml:space="preserve"><value>Forget pairing on this device?</value></data>
+  <data name="ForgetConfirmMessageFormat" xml:space="preserve"><value>The EagleEye PC {0} cannot be reached or its identity has changed. The pairing is deleted on this device only. Afterwards the app can be paired again with a new pairing code. The device entry may remain on the EagleEye PC; another parent app cannot remove it there at the moment.</value></data>
+  <data name="InfoPairingForgottenFormat" xml:space="preserve"><value>The pairing with {0} was deleted on this device. Pairing again requires a new pairing code.</value></data>
 </root>

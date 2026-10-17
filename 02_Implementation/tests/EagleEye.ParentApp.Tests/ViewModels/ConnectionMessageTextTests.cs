@@ -18,6 +18,7 @@ public sealed class ConnectionMessageTextTests
     [InlineData(ConnectionMessage.CertificateChanged, "The identity of the EagleEye PC kid-pc has changed. The connection was refused.")]
     [InlineData(ConnectionMessage.PairingLost, "This PC is no longer paired with kid-pc.")]
     [InlineData(ConnectionMessage.RemoveFailed, "The pairing could not be removed. Please try again.")]
+    [InlineData(ConnectionMessage.PairingForgotten, "The pairing with kid-pc was deleted on this device. Pairing again requires a new pairing code.")]
     public void Compose_English(ConnectionMessage message, string expected)
     {
         var text = TestSupport.InCulture("en-US", () => ConnectionMessageText.Compose(State(message)));
@@ -28,6 +29,7 @@ public sealed class ConnectionMessageTextTests
     [Theory]
     [InlineData(ConnectionMessage.Unreachable, "Verbindungsfehler: Keine Verbindung zum EagleEye-Dienst unter kid-pc möglich.")]
     [InlineData(ConnectionMessage.WrongCode, "Der Kopplungscode ist falsch.")]
+    [InlineData(ConnectionMessage.PairingForgotten, "Die Kopplung mit kid-pc wurde auf diesem Gerät gelöscht. Für eine neue Kopplung ist ein neuer Kopplungscode nötig.")]
     [InlineData(ConnectionMessage.CodeExpired, "Der Kopplungscode ist abgelaufen.")]
     [InlineData(ConnectionMessage.DeviceNameRequired, "Bitte einen Gerätenamen eingeben (höchstens 50 Zeichen).")]
     public void Compose_German(ConnectionMessage message, string expected)

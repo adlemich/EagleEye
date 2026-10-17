@@ -65,6 +65,9 @@
                     <Label Text="{x:Static core:AppTexts.RemoveNeedsConnection}"
                            IsVisible="{Binding ShowRemoveHint}"
                            Style="{StaticResource SecondaryText}" />
+                    <!-- ISSUE-009: local way out when the paired service cannot be used. -->
+                    <Button Text="{x:Static core:AppTexts.ForgetPairingButton}" Command="{Binding ForgetCommand}"
+                            IsVisible="{Binding CanForget}" Style="{StaticResource SecondaryButton}" HorizontalOptions="Start" />
                 </VerticalStackLayout>
 
                 <Label Text="{Binding MessageText}" IsVisible="{Binding HasMessage}" Style="{StaticResource ErrorText}" />
