@@ -30,6 +30,9 @@ public partial class MainPage : ContentPage
             }
         };
         StatusBarRegion.Content = statusBar;
+#if MACCATALYST
+        MenuList.ItemTemplate = Platforms.MacCatalyst.MacNavigationTemplate.Create();
+#endif
         Loaded += OnLoaded;
     }
 

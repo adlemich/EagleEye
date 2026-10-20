@@ -24,6 +24,10 @@ public partial class App : Application
     public App(IServiceProvider services)
     {
         InitializeComponent();
+#if MACCATALYST
+        // US-007 G-11: Mac-only styles after Styles.xaml (merged dictionaries are searched last-added first).
+        Resources.MergedDictionaries.Add(new global::EagleEye.ParentApp.Resources.Styles.MacStyles());
+#endif
         _services = services;
     }
 

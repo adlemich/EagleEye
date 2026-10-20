@@ -190,3 +190,10 @@ Prompt text (German macOS, Michael's screenshot): title „EagleEye möchte dein
 | G-18 | **Done (Step 2)**: `RuntimeIdentifier=maccatalyst-arm64` | Step 2 |
 | G-3 | **Done (Step 3)**: `ApplicationTitle` "EagleEye Parent App" for maccatalyst only (bundle `EagleEye Parent App.app`, `CFBundleName`/`CFBundleDisplayName`), window title "EagleEye" unchanged; copyright in Info.plist and `InfoPlist.strings`; close quits (flush + 500 ms + `Quit()`); check by Michael pending | Step 3 |
 | (AC-12 to AC-15) | **Done (Step 4)**: `UiCulturePolicy` (Core) + `MacCultureSetup` (first preferred language → en/de; formats = UI language + macOS region); `CFBundleDevelopmentRegion` de, `CFBundleLocalizations` de/en; check by Michael pending | Step 4 |
+| G-10 | **Done (Step 5)**: heading bars from `NSColor.controlAccentColor` (verified: red accent reads as RGB 255/82/87), fallback `AppleAccentPalette`; refreshed on window activation | Step 5 |
+| G-11 | **Done (Step 5, Mac only)**: `Resources/Styles/MacStyles.xaml` (merged on Mac only): buttons in the heading-bar colours | Step 5 |
+| G-12 | **Done (Step 5, Mac only)**: `MacControlMappings`: an `Entry` in a `Grid` cell keeps its own width (minimum = `WidthRequest`) or fills the cell, instead of the style's 320 minimum. Cause: WinUI clips the 320 minimum at the cell, Catalyst does not | Step 5 |
+| G-13 | **Done (Step 5, Mac only)**: `Editor` border (1 pt, mid grey, radius 4) | Step 5 |
+| G-14 | **Expected by design**: the pages state that heading bars fill the content area; Settings shows a right gap only where the scroll indicator is. Michael to confirm after G-12 | Step 5 (check) |
+| G-15 | **Done (Step 5, Mac only)**: `Picker` with theme field colours, border and a chevron | Step 5 |
+| G-16 | **Done (Step 5, Mac only)**: `MacNavigationTemplate`: selected menu item in the heading-bar colours | Step 5 |

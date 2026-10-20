@@ -28,6 +28,9 @@ public static class MauiProgram
         // US-005 (coding guidelines §16.1): WinUI gives a CheckBox a minimum width of about 120; the Rules table needs
         // narrow checkbox columns (AC-4, 150 % scaling).
         Microsoft.Maui.Handlers.CheckBoxHandler.Mapper.AppendToMapping("EagleEyeNoMinWidth", (handler, _) => handler.PlatformView.MinWidth = 0);
+#elif MACCATALYST
+        // US-007 G-12, G-13, G-15: Mac-only control fixes.
+        Platforms.MacCatalyst.MacControlMappings.Register();
 #endif
 
         var services = builder.Services;
