@@ -2,7 +2,7 @@
 
 **Author**: DEV
 **Date**: 2026-10-20
-**Status**: In progress. Attempt 1 failed (pairing not stored, §3). Fix FL-1 built and launched; waiting for Michael's second pairing attempt.
+**Status**: In progress. Attempts 1 and 2 failed (token not stored, §3). Root cause found and fixed by DEV without Michael (FL-2, verified by a probe of the real store). Waiting for Michael's third attempt.
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-007/implementation-plan.md`, Step 1, Decision 1
 **Host**: MacBook (macOS 27.0.1, Apple Silicon), Xcode 27.1, .NET SDK 10.0.401, workload `maui-maccatalyst` 10.0.110
 **Build**: 0.7.0, Debug, Mac Catalyst
@@ -33,7 +33,9 @@ Purpose: run the Mac app as it is, pair it with the service PC `192.168.1.37`, a
 | G-1 | Info.plist | Console notice at start: `performFetchWithCompletionHandler:` implemented (MAUI default delegate) but no `fetch` background mode. Harmless; noise in the console. | — | 2 (check; likely ignore) |
 | G-2 | Data path | Database in the sandbox container under `Documents/EagleEye`, not `~/Library/Application Support/EagleEye/`. | AC-6, AC-24 | 2 (no sandbox, Decision 4) |
 | G-3 | App shell | Bundle and app name "EagleEye" (not "EagleEye Parent App"). | AC-4 | 3 |
-| G-4 | Secret store | MAUI `SecureStorage` throws when the token is stored after a successful pairing (ad-hoc build, no keychain entitlement; TI-1 confirmed). Pairing impossible. | AC-20, AC-24 | **Fixed in Step 1 (FL-1)**, see §3 |
+| G-4 | Secret store | MAUI `SecureStorage` throws when the token is stored after a successful pairing (ad-hoc build, no keychain entitlement; TI-1 confirmed). Pairing impossible. | AC-20, AC-24 | **Fixed in Step 1 (FL-1, then FL-2)**, see §3 |
+| G-8 | Secret store (design, **for ARC**) | **ADR-020 §2 assumption does not hold:** on Mac Catalyst the `SecItem` API always uses the data-protection keychain. `kSecUseDataProtectionKeychain = false` is ignored; every write returns `errSecMissingEntitlement` (-34018), with and without App Sandbox. K-1 *and* K-2 via `SecItem` are impossible for an ad-hoc build; adding `keychain-access-groups` makes macOS refuse to launch the app. What works: the legacy file-keychain API (`SecKeychainAddGenericPassword` etc., deprecated since macOS 10.10 but present in macOS 27), which writes to the login keychain (K-1) with and without sandbox, without a prompt for the creating build. FL-2 uses it. ARC to confirm this as the ADR-020 §2 implementation (risk: Apple may remove the deprecated API; survival across a rebuild still to be probed in step 1.4 and Step 2). Evidence: `US-007/evidence/keychain-probe-results.txt`. | AC-5, AC-24 | ARC review before Step 2 |
+| G-9 | Secret store | The legacy add call sets no label: the item shows in Keychain Access with name = service `com.adlemich.eagleeye`, not "EagleEye Parent App" (plan Data Locations). Setting the label needs an attribute list (`kSecLabelItemAttr`). | AC-24 (presentation only) | 2 |
 | G-5 | Pairing UI (Core) | **A pairing failure after the code was accepted is silent.** An exception from `PairingStore.SaveAsync` escapes `ConnectionCoordinator.SubmitCodeAsync`: no message is set, the pairing session stays open, and the UI shows nothing. A second click sends the code again; the service has already used it and answers "wrong code". The service keeps the device registered with a token that no app holds (orphan, see §3). Same on Windows if the DPAPI store failed. | AC-20, AC-24 | 2 (with `SecretStoreUnavailableException` handling: abort the session, show `ErrorKeychainAccess` or a pairing error). ARC to decide whether Core handles it in `CompletePairingAsync`. |
 | G-6 | Local network | First connection attempt after "Verbinden" failed with "Local network prohibited" (`NSURLErrorDomain -1009`, "Network is down"); the next attempt 1.5 minutes later went through. Michael reported no prompt text; the app has no `NSLocalNetworkUsageDescription` (TI-4), so the prompt, if shown, had no explanation. The UI showed a connection error for the first attempt (to be confirmed). | AC-17, AC-18 | 2 (Info.plist text, TI-4) |
 | G-7 | TLS handler | **Finding for ARC (TI-2 not reproduced):** the native handler (`NSUrlSessionHandler`) *did* call `ServerCertificateCustomValidationCallback` on .NET 10 / Mac Catalyst. Log: "Trust evaluate failure: [leaf AnchorTrusted …]" (system trust), then "auth completion disp=0", "Certificate verification result: OK", negotiate HTTP 200 over h2, and the hub call `SubmitPairingCode` reached the service. The managed handler was therefore not needed in Step 1. ADR-020 §3 can stay (it removes a dependency on Apple's handler behaviour), but it is no longer a blocker. | AC-19 | 2 (keep or drop `UseNativeHttpHandler=false`; ARC) |
@@ -69,7 +71,41 @@ Code path: `ServerConnectionViewModel.PairCommand` → `ConnectionCoordinator.Su
 
 **DEV self-test without Michael (17:00)**: a dummy row in `ServerConnections` (no token) makes `PairingStore.LoadAsync` read the Keychain at start. Result: the read goes to `com.apple.securityd.xpc` (file-based keychain daemon) and returns without an exception (no managed exception in the log; `SecretStoreUnavailableException` is not caught by `MainPage` and would have shown up as MAUI's did). So **K-1 is reachable from the sandboxed, ad-hoc-signed Catalyst app**. The write (`SecItemAdd`) is only exercised by a real pairing. Dummy row removed afterwards.
 
-### Attempt 2
+### Attempt 2 (2026-10-20, 17:04 to 17:05, FL-1 build) — failed
+
+Michael: "Same problem, it does not pair." Analysis from the unified log (no input from Michael needed):
+
+| Time | Observed |
+|---|---|
+| 17:04:32 | First connection blocked: "Local network prohibited" (G-6 again; the new build is a new code identity). |
+| 17:04:34 | Next attempt: TLS ok, negotiate 200. |
+| 17:05:02 | Keychain call, then `EagleEye.ParentApp.Core.Abstractions.SecretStoreUnavailableException` (reason redacted in the log) escapes to AppKit. |
+| 17:05:18 | Second click: same exception again. |
+| — | No Keychain item, no `ServerConnections` row. Two more orphan devices on the service, most likely (G-5). |
+
+So the flow stops at the Keychain write in `MacKeychainSecretStore.SetAsync`, after the service has accepted the code and returned the token. My startup self-test of FL-1 had only exercised the *read*, which returns "not found" either way, so it could not detect this.
+
+### Keychain probe without Michael (17:06 to 17:15)
+
+A temporary Debug-only probe (environment variable `EAGLEEYE_KCPROBE=1`, passed with `open --env`; the app runs the probe and exits) printed the OSStatus of add, read, update and delete for several variants. Full results: `US-007/evidence/keychain-probe-results.txt`; source: `US-007/evidence/keychain-probe.patch` (not committed to `src/`).
+
+| Variant | Write result |
+|---|---|
+| `SecItem`, login keychain (`UseDataProtectionKeychain = false`), with or without label and sync attribute | -34018 `errSecMissingEntitlement` |
+| `SecItem`, data-protection keychain, with or without `AfterFirstUnlockThisDeviceOnly` | -34018 |
+| All of the above **without App Sandbox** (empty entitlements, clean rebuild) | -34018 |
+| `keychain-access-groups` entitlement on the ad-hoc build | app does not launch ("Launchd job spawn failed", POSIX 163) |
+| Legacy `SecKeychain…` API (P/Invoke), with and without sandbox | add, find, modify, delete all 0; no prompt |
+
+**Root cause**: on Mac Catalyst every `SecItem` call goes to the data-protection keychain, which needs a keychain access group entitlement; an ad-hoc build cannot carry one (G-8).
+
+### Fix FL-2 (replaces the FL-1 implementation; same class, same contract)
+
+`MacKeychainSecretStore` now uses the legacy file-keychain API through `DllImport` into Security.framework: `SecKeychainFindGenericPassword`, `SecKeychainAddGenericPassword`, `SecKeychainItemModifyAttributesAndData`, `SecKeychainItemDelete` (+ `SecKeychainItemFreeContent`, `CFRelease`). Default keychain = login keychain (K-1), service `com.adlemich.eagleeye`, account `pairing-token`. Not found → `null`; other status → `SecretStoreUnavailableException`. Debug builds write one line per operation to stderr: `EagleEye keychain <read|write|delete>: OSStatus <n>` (never the value), so any further failure is visible in the console log of the next attempt. Sandbox, entitlements and `UseNativeHttpHandler` unchanged.
+
+**DEV verification of the real store** (probe, sandbox on): write 0, read 0 (value matches), overwrite 0, read 0 (new value), delete 0, read -25300 (null), delete again -25300 (ok). No prompt; no item left.
+
+### Attempt 3
 
 *Pending: Michael pairs again with a new code.*
 

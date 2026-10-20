@@ -1,0 +1,26 @@
+US-007 first light - Keychain probe results (DEV, MacBook, 2026-10-20, macOS 27.0.1, .NET 10 Mac Catalyst, Debug, ad-hoc signed)
+Probe started with: open -n -W --env EAGLEEYE_KCPROBE=1 --stdout <log> --stderr <log> EagleEye.app
+Service com.adlemich.eagleeye.probe; no secret printed. OSStatus: 0 ok, -25300 errSecItemNotFound, -34018 errSecMissingEntitlement.
+
+1) SecItem API (Security.SecKeyChain / SecRecord), App Sandbox ON (entitlements as on main)
+A login (UseDataProtectionKeychain=false), label, Synchronizable=false : add=-34018 read=-25300 update=-34018 delete=-34018
+B login, label, no sync attr                                           : add=-34018 read=-25300 update=-34018 delete=-34018
+C login, no label                                                      : add=-34018 read=-25300 update=-34018 delete=-34018
+D no keychain attribute                                                : add=-34018 read=-25300 update=-34018 delete=-34018
+E data-protection keychain                                             : add=-34018 read=-25300 update=-34018 delete=-34018
+F data-protection, AfterFirstUnlockThisDeviceOnly                      : add=-34018 read=-25300 update=-34018 delete=-34018
+
+2) Same A-F with EMPTY entitlements (no App Sandbox, clean rebuild, codesign shows [Dict] empty): identical, all writes -34018.
+
+3) Entitlement keychain-access-groups = [com.adlemich.eagleeye] (ad-hoc): app does not launch
+   (RBSRequestErrorDomain Code=5 "Launch failed", POSIX 163 "Launchd job spawn failed").
+
+4) Legacy file-keychain API (SecKeychainAddGenericPassword / FindGenericPassword / ItemModifyAttributesAndData / ItemDelete via P/Invoke)
+G no sandbox : add=0 find=0 match=True modify=0 delete=0
+G sandbox ON : add=0 find=0 match=True modify=0 delete=0   (no prompt)
+
+5) Real MacKeychainSecretStore (FL-2, legacy API), sandbox ON, Debug trace on stderr:
+write 0, read 0, write(overwrite) 0, read 0, delete 0, read -25300, delete -25300
+KCPROBE store: first=True overwrite=True afterRemove=True ; no item left (security find-generic-password: none)
+
+Probe source: keychain-probe.patch (final version = step 5; steps 1-4 used variants of the same probe, results above).
