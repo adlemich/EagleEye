@@ -1,9 +1,11 @@
 # EagleEye -- General Product Requirements
 
-*Status: Approved v1.6 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07; v1.4 approved by Michael 2026-10-07; v1.5 approved by Michael 2026-10-10; v1.6 approved by Michael 2026-10-12)*
+*Status: Draft v1.7, awaiting Michael's approval (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07; v1.4 approved by Michael 2026-10-07; v1.5 approved by Michael 2026-10-10; v1.6 approved by Michael 2026-10-12)*
 *Approved: v1.0 by Michael*
 *Maintainer: PRO Agent*
-*Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07, 2026-10-10, 2026-10-12*
+*Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07, 2026-10-10, 2026-10-12, 2026-10-20*
+
+> **v1.7 amendment (2026-10-20, decided by Michael, change request CR-001; awaiting approval)**: the **iOS (iPhone) and Android parent apps are removed from the product**. The parent app ships only as (1) the **Windows parent app** with its own per-user installer (FR-APP-092) and (2) the **Mac app** (Mac Catalyst, direct `.dmg`). Both are now **production platforms**; the Windows parent app is no longer only an "initial testing vehicle". Reason: Michael will not pay for an Apple Developer account (99 EUR/year) just to run his own app on his own phone; Android is dropped with iOS. Decision record: `02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`. This supersedes the platform parts of v1.1 and Q-3. *Note on the number: a v1.7 draft also existed on the aborted US-007 branch; it never reached `main` and is void, together with its FR-APP-100 to FR-APP-102 (these IDs stay unused).* Changed: §1.1, G-6, §2.1 (Devices, Constraints), FR-SVC-094 (example), §3.3 title, intro and platform roles, FR-APP-080 (removed), FR-APP-082, FR-APP-090, FR-APP-091, §3.3.10 (new: FR-APP-110 to FR-APP-112), FR-CR-011, §4.2 step 8, NFR-L-010, §9.2 and §9.3 (removed), §9.4, §9.5, §10, §11 (Q-3 superseded by Q-5; Q-6, Q-7 new).
 
 > **v1.6 amendment (2026-10-12, directed by Michael, with US-006; approved by Michael 2026-10-12)**: per-app **daily time budgets** replace the allow-list. For every app in an account's inventory, the parent sets one daily budget (0:00 to 23:59) and the weekdays on which the app may be used. Apps found for the first time are blocked (0:00, no day ticked). A start of an app that is not allowed today or whose budget is used up is blocked like a break-time block, with a budget text per account. Two fixed **warning levels** (early, default 5 min; final, default 1 min; 1..59 min, early > final), each with a text, are set once for all accounts. They apply both before a budget runs out and before a break time begins. When a budget runs out or a break begins, running apps are closed gracefully and, after 20 s, by force. A parent change never leaves a running app less than the final-warning minutes (grace period). The default break display text gets an English version. Time-zone and clock changes that affect budgets or the day boundary are detected and logged as Warnings. Changed: §3.1.2, FR-SVC-011, FR-SVC-020, FR-SVC-021 (note), FR-SVC-022, FR-SVC-024, FR-SVC-025, FR-SVC-032, FR-SVC-017, FR-SVC-047, FR-TRAY-020, FR-TRAY-021, §3.3.3 (FR-APP-030, FR-APP-031, FR-APP-033), FR-APP-040, FR-APP-041, FR-APP-052, FR-APP-053 (new), FR-APP-054 (new), §4.3 steps 12 and 13, §4.4 steps 19 to 23, TC-020, TC-025 (new), TC-030, TC-031, TC-032, TC-033 (new), TC-040, TC-041, TC-042, MU-011, TC-024.
 
@@ -50,7 +52,7 @@
 
 ### 1.1 Vision
 
-EagleEye is a parental control solution that enables parents to monitor and control application usage on their children's Windows PCs. Parents manage rules remotely from a mobile phone or Mac, while the Windows service enforces those rules transparently and reliably.
+EagleEye is a parental control solution that enables parents to monitor and control application usage on their children's Windows PCs. Parents manage rules from the EagleEye parent app on a Windows PC or a Mac on the home network, while the Windows service enforces those rules transparently and reliably.
 
 ### 1.2 Goals
 
@@ -61,7 +63,7 @@ EagleEye is a parental control solution that enables parents to monitor and cont
 | G-3 | Let parents set daily time budgets per application and per-weekday pause windows. |
 | G-4 | Enforce budgets and pause windows automatically, preventing unauthorized usage. |
 | G-5 | Provide timely notifications to the child before an application is about to be shut down. |
-| G-6 | Support remote configuration and statistics viewing from Android and iOS (primary), Windows and macOS parent apps via the local LAN. |
+| G-6 | Support remote configuration and statistics viewing from the Windows and macOS parent apps via the local LAN. *(v1.7; was: Android and iOS (primary), Windows and macOS)* |
 | G-7 | Support multiple child accounts on a single Windows PC, each with independent rules. |
 
 ### 1.3 Success Criteria
@@ -80,10 +82,10 @@ EagleEye is a parental control solution that enables parents to monitor and cont
 |-----------|--------|
 | **Role** | Father, mother, grandparent, or other legal guardian responsible for the child. |
 | **Windows account** | Local administrator account. Required for installing EagleEye and the applications the child may use. |
-| **Devices** | Android phone (Android 14+) or iPhone (iOS 26+) as primary devices; also Windows 11 PC or MacBook (macOS 26+, Apple Silicon). |
+| **Devices** | Windows 11 PC (x64) or Mac (macOS 26+, Apple Silicon). *(v1.7; was: Android phone or iPhone as primary devices)* |
 | **Technical skill** | Can follow a guided installer and enter a hostname/IP address. Does not need developer or networking expertise. |
 | **Needs** | (1) Control which apps the child may use. (2) Set time budgets and pause windows. (3) View usage statistics remotely. (4) Receive real-time event notifications (e.g. child attempts a blocked app). |
-| **Constraints** | May not always be physically near the Windows PC. Manages rules from a mobile device on the same LAN (or via home VPN at the user's own setup). |
+| **Constraints** | May not always be physically near the Windows PC. Manages rules from a Windows PC (the monitored PC itself or another one) or a Mac on the same LAN (or via home VPN at the user's own setup). *(v1.7; was: from a mobile device)* |
 
 ### 2.2 Kid
 
@@ -199,7 +201,7 @@ The service classifies every process running in a standard user's session into o
 | FR-SVC-091 | The pairing code shall be pushed to the tray client, which displays it as a popup notification to the user at the Windows PC. |
 | FR-SVC-092 | If no tray client is connected (no kid session active), the service shall write the pairing code to the Windows Event Log as an informational entry. |
 | FR-SVC-093 | The pairing code shall expire after 5 minutes. An expired code must be rejected. |
-| FR-SVC-094 | During pairing, the parent app shall submit the code along with a user-chosen device name (e.g. "Mom's iPhone") to identify the client. |
+| FR-SVC-094 | During pairing, the parent app shall submit the code along with a user-chosen device name (e.g. "Mom's MacBook") to identify the client. *(v1.7: example changed)* |
 | FR-SVC-095 | Upon successful pairing, the service stores the device name and a persistent credential. All subsequent connections from that client are authenticated using the stored credential. |
 | FR-SVC-096 | Multiple parent apps may be paired simultaneously. |
 | FR-SVC-097 | Any paired parent app may de-register any other paired parent app (or itself) by sending a de-registration command to the service. |
@@ -248,17 +250,17 @@ The tray client is a lightweight executable that runs in the kid's user session.
 | FR-TRAY-060 | The tray client shall be packaged and installed together with `EagleEye.Service` in a single installer. |
 | FR-TRAY-070 | The tray client shall display the 6-digit pairing code as a popup when requested by the service (FR-SVC-091). |
 
-### 3.3 EagleEye.ParentApp (Android, iOS, Windows, macOS)
+### 3.3 EagleEye.ParentApp (Windows, macOS)
 
-The parent app is a single MAUI codebase deployed to Android, iOS, Windows and macOS. It connects to `EagleEye.Service` over the local LAN.
+The parent app is a single MAUI codebase deployed to Windows and macOS. It connects to `EagleEye.Service` over the local LAN. *(v1.7; was: Android, iOS, Windows and macOS)*
 
-**Platform roles (Michael, 2026-10-03):**
+**Platform roles (Michael, 2026-10-20; supersede the roles of 2026-10-03):**
 
 | Platform | Role |
 |----------|------|
-| **Android, iOS** | Primary platforms for production use |
-| **Windows** | Initial testing vehicle for parent-side functionality. Built first, so features can be exercised on the Windows developer machine before the mobile apps exist. Remains available as an extra app. |
-| **macOS** | Desktop parent app, developed on the MacBook |
+| **Windows** | Production parent app, with its own installer (FR-APP-092, §9.5). Runs on the monitored PC or on another Windows PC on the LAN (FR-APP-091). |
+| **macOS** | Production parent app (Mac Catalyst, direct `.dmg`, §3.3.10, §9.4). Runs on a Mac on the LAN. |
+| **Android, iOS** | **Removed (v1.7, 2026-10-20).** No Android or iOS parent app is developed or shipped. |
 
 #### 3.3.1 Connection
 
@@ -324,25 +326,35 @@ The parent app is a single MAUI codebase deployed to Android, iOS, Windows and m
 
 | ID | Requirement |
 |----|-------------|
-| FR-APP-080 | On iOS and Android, the app shall operate in portrait orientation only and follow platform-typical look and feel. |
+| FR-APP-080 | **Removed (v1.7, 2026-10-20).** Was: "On iOS and Android, the app shall operate in portrait orientation only and follow platform-typical look and feel." The iOS and Android parent apps are no longer part of the product. |
 | FR-APP-081 | On macOS and Windows, the app shall present a desktop-style UI. |
-| FR-APP-082 | The app shall be functionally identical across all platforms. |
+| FR-APP-082 | The app shall be functionally identical on Windows and macOS. *(v1.7; was: across all platforms)* |
 | FR-APP-083 | The parent shall be able to switch the app between a light and a dark appearance in the app settings. The choice is stored per app installation and kept across restarts and updates. Until the parent has chosen, the app follows the operating system's light/dark setting. *(v1.2)* |
 
 #### 3.3.9 Windows Parent App (added in v1.1)
 
 | ID | Requirement |
 |----|-------------|
-| FR-APP-090 | The Windows parent app shall provide the same functionality as the other parent apps (FR-APP-082). |
-| FR-APP-091 | The Windows parent app shall work both on the same PC as `EagleEye.Service` and remotely from another PC on the LAN. In both cases it uses the same communication model as the mobile apps: TLS-encrypted connection, pairing (FR-SVC-090 to FR-SVC-098) and the parent API. There is no special local or privileged access path. |
+| FR-APP-090 | The Windows parent app shall provide the same functionality as the macOS parent app (FR-APP-082). *(v1.7; was: as the other parent apps)* |
+| FR-APP-091 | The Windows parent app shall work both on the same PC as `EagleEye.Service` and remotely from another PC on the LAN. In both cases it uses the same communication model as the macOS parent app: TLS-encrypted connection, pairing (FR-SVC-090 to FR-SVC-098) and the parent API. There is no special local or privileged access path. *(v1.7; was: as the mobile apps)* |
 | FR-APP-092 | The Windows parent app shall be delivered as its own Windows installer, separate from and independent of the `EagleEye.Service` installer. The installer shall be self-contained: no other software (e.g. a runtime) has to be installed before or alongside it. It shall provide a guided wizard for install, repair (re-install over an existing installation) and uninstall, and uninstalling shall remove the application cleanly. *(v1.2; replaces the v1.1 copy deployment.)* |
+
+#### 3.3.10 macOS Parent App (added in v1.7)
+
+*FR-APP-100 to FR-APP-102 are not used: they belonged to the void v1.7 draft of the aborted US-007.*
+
+| ID | Requirement |
+|----|-------------|
+| FR-APP-110 | The macOS parent app shall provide the same functionality as the Windows parent app (FR-APP-082), with a desktop-style UI (FR-APP-081). *(v1.7)* |
+| FR-APP-111 | The macOS parent app shall connect from a Mac on the LAN to `EagleEye.Service` with the same communication model as the Windows parent app: TLS-encrypted connection, pairing (FR-SVC-090 to FR-SVC-098) and the parent API. *(v1.7)* |
+| FR-APP-112 | The macOS parent app shall be delivered as a `.dmg` disk image for direct distribution, outside the Mac App Store (§9.4). *(v1.7; was only stated in §9.4)* |
 
 ### 3.4 Code Reuse
 
 | ID | Requirement |
 |----|-------------|
 | FR-CR-010 | Common logic, data models, and communication contracts shared across components shall be implemented once and reused, to minimize long-term maintenance effort. |
-| FR-CR-011 | The parent app shall share a single codebase across Windows, macOS, Android and iOS. Only platform-specific UI code may differ. |
+| FR-CR-011 | The parent app shall share a single codebase across Windows and macOS. Only platform-specific UI code may differ. *(v1.7; was: Windows, macOS, Android and iOS)* |
 
 ---
 
@@ -366,7 +378,7 @@ This describes the end-to-end workflow from installation to daily use.
 
 | Step | Actor | Action |
 |------|-------|--------|
-| 8 | Parent | Installs the EagleEye parent app on their mobile phone (Android or iOS), Windows PC (EagleEye parent app installer) or MacBook. |
+| 8 | Parent | Installs the EagleEye parent app on a Windows PC (EagleEye parent app installer) or a Mac (`.dmg`). *(v1.7; was: also on a mobile phone, Android or iOS)* |
 | 9 | Parent | Opens the parent app and enters the Windows machine's hostname (or IP address). |
 | 10 | Parent | The app connects to `EagleEye.Service` over TLS on the local LAN. |
 
@@ -503,7 +515,7 @@ This describes the end-to-end workflow from installation to daily use.
 
 | ID | Requirement |
 |----|-------------|
-| NFR-L-010 | The tray client and all parent apps (Windows, macOS, Android, iOS) shall support multiple languages. |
+| NFR-L-010 | The tray client and all parent apps (Windows, macOS) shall support multiple languages. *(v1.7; was: Windows, macOS, Android, iOS)* |
 | NFR-L-011 | The initial languages to support are German (default) and English. |
 | NFR-L-012 | All user-facing text (labels, notifications, messages, error texts) shall be externalised for translation rather than hard-coded. |
 
@@ -530,23 +542,13 @@ This describes the end-to-end workflow from installation to daily use.
 | **Installer** | Inno Setup -- provides install, repair, uninstall wizard |
 | **Components installed** | `EagleEye.Service` (Windows service) and `EagleEye.TrayClient` (user-session tray app) |
 
-### 9.2 iOS (ParentApp)
+### 9.2 iOS (ParentApp) — removed in v1.7
 
-| Attribute | Requirement |
-|-----------|-------------|
-| **OS** | iOS 26 and newer |
-| **Framework** | .NET MAUI |
-| **Orientation** | Portrait only |
-| **Distribution** | Manual sideloading (Xcode / ios-deploy). No App Store for v1. |
+**Removed (v1.7, 2026-10-20).** There is no iOS (iPhone) parent app. Was: iOS 26 and newer, .NET MAUI, portrait only, manual sideloading via Xcode / ios-deploy.
 
-### 9.3 Android (ParentApp)
+### 9.3 Android (ParentApp) — removed in v1.7
 
-| Attribute | Requirement |
-|-----------|-------------|
-| **OS** | Android 14 and newer |
-| **Framework** | .NET MAUI |
-| **Orientation** | Portrait only |
-| **Distribution** | Manual sideloading (adb). No Play Store for v1. |
+**Removed (v1.7, 2026-10-20).** There is no Android parent app. Was: Android 14 and newer, .NET MAUI, portrait only, manual sideloading via adb.
 
 ### 9.4 macOS (ParentApp)
 
@@ -555,8 +557,10 @@ This describes the end-to-end workflow from installation to daily use.
 | **OS** | macOS 26 and newer |
 | **Architecture** | Apple Silicon |
 | **Framework** | .NET MAUI (Mac Catalyst) |
-| **UI** | Desktop-style (not portrait-locked) |
-| **Distribution** | Direct `.dmg` distribution. No Mac App Store for v1. |
+| **UI** | Desktop-style |
+| **Distribution** | Direct `.dmg` distribution (FR-APP-112). No Mac App Store for v1. Code signing and notarisation: open, see Q-7. |
+| **Deployment** | Runs on a Mac on the same LAN as the Windows PC running the service (FR-APP-111) |
+| **Purpose** | Production parent app (see §3.3). *(v1.7)* |
 
 ### 9.5 Windows (ParentApp) — added in v1.1
 
@@ -564,10 +568,10 @@ This describes the end-to-end workflow from installation to daily use.
 |-----------|-------------|
 | **OS** | Windows 11 (x64) |
 | **Framework** | .NET MAUI (WinUI) |
-| **UI** | Desktop-style (not portrait-locked), like macOS |
-| **Distribution** | Separate, extra app with **its own self-contained installer** (install, repair, uninstall wizard), FR-APP-092. Not part of the EagleEye service installer. *(v1.2; v1.1 used copy deployment.)* |
+| **UI** | Desktop-style, like macOS |
+| **Distribution** | Separate app with **its own self-contained installer** (install, repair, uninstall wizard), FR-APP-092. Not part of the EagleEye service installer. *(v1.2; v1.1 used copy deployment.)* |
 | **Deployment** | May run on the same PC as the service, or on another Windows PC on the LAN (FR-APP-091) |
-| **Purpose** | Initial testing vehicle for the parent-side functionality (see §3.3) |
+| **Purpose** | Production parent app (see §3.3). *(v1.7; was: initial testing vehicle for the parent-side functionality)* |
 
 ---
 
@@ -579,8 +583,9 @@ The following are explicitly **not** included in the initial version of EagleEye
 |------|-------|
 | **Remote access (WAN)** | Parent app connects via local LAN only. Users may set up their own VPN. Architecture should not block future remote access. |
 | **Full-screen DirectX overlay** | The tray client overlay uses a topmost window. True DirectX/game overlay injection is deferred. |
-| **App Store / Play Store distribution** | iOS and Android apps are sideloaded. Store distribution comes when the product matures. |
+| **iOS and Android parent apps** | Removed from the product (v1.7, Michael 2026-10-20, CR-001). Not planned; this also removes App Store and Play Store distribution. *(v1.7; was: "App Store / Play Store distribution", with sideloaded iOS and Android apps)* |
 | **Mac App Store distribution** | macOS app is distributed as `.dmg`. |
+| **Microsoft Store distribution** | The Windows parent app is distributed with its own installer (FR-APP-092). *(v1.7: made explicit)* |
 | **Web browser content filtering** | EagleEye controls which applications run, not what content is accessed within an allowed browser. |
 | **Internet-based account system** | No cloud accounts, no user registration. All data is local. |
 | **CI/CD pipeline** | Builds and tests are run via local PowerShell scripts. No hosted CI/CD. |
@@ -591,15 +596,25 @@ The following are explicitly **not** included in the initial version of EagleEye
 
 ## 11. Open Questions
 
-No open questions. The questions raised by the v1.1 amendment were answered by Michael on 2026-10-03:
+### 11.1 Answered
+
+The questions raised by the v1.1 amendment were answered by Michael on 2026-10-03; later answers are dated:
 
 | ID | Question | Answer (Michael, 2026-10-03) |
 |----|----------|------------------------------|
-| Q-1 | How is the Windows parent app distributed? | An extra app; no installer needed. A single executable that is simply copied is sufficient. → §9.5, FR-APP-092 |
-| Q-2 | May the Windows parent app run on the same PC as the service? | Yes, and remotely as well. It uses the same communication model as the mobile apps. → FR-APP-091 |
-| Q-3 | Which parent-app platform comes first? | Android and iOS are the primary platforms for production. The Windows client is used for initial testing. → §3.3 |
+| Q-1 | How is the Windows parent app distributed? | An extra app; no installer needed. A single executable that is simply copied is sufficient. → §9.5, FR-APP-092. *Superseded by Q-4.* |
+| Q-2 | May the Windows parent app run on the same PC as the service? | Yes, and remotely as well. It uses the same communication model as the mobile apps. → FR-APP-091 (v1.7: the mobile apps no longer exist; the model is the one of all parent apps) |
+| Q-3 | Which parent-app platform comes first? | Android and iOS are the primary platforms for production. The Windows client is used for initial testing. → §3.3. *Superseded by Q-5.* |
 | Q-4 | How is the Windows parent app distributed? (supersedes Q-1) | Michael, 2026-10-04: as an additional, full, clean and self-contained Windows installer next to the service installer. This replaces the copy-only deployment. → §9.5, FR-APP-092 |
+| Q-5 | On which platforms does the parent app ship? (supersedes Q-3) | Michael, 2026-10-20: only as the Windows parent app (own installer) and the Mac app (Mac Catalyst, `.dmg`). The iPhone and Android apps are removed: no paid Apple Developer account just to run his own app on his own phone; Android is dropped with it. Windows and Mac are the production platforms. → §3.3, §9, §10, CR-001 |
+
+### 11.2 Open (v1.7, to be answered with the approval of CR-001)
+
+| ID | Question | PRO's proposal |
+|----|----------|----------------|
+| Q-6 | Is the Mac app a full-parity production platform now, and when does it catch up? Up to US-006 all parent features were built and tested only in the Windows parent app; the Mac app has none of them on `main`. | Full parity (FR-APP-082). Keep building and testing each feature on Windows first; one dedicated story brings the Mac app up to the US-006 feature level, after which stories name both parent apps as platforms. |
+| Q-7 | Without a paid Apple Developer account, the `.dmg` cannot be signed with a Developer ID or notarised, so macOS asks the user to confirm the first start (Gatekeeper). Is that acceptable for the Mac app? | Accept it for v1: ad-hoc signed, not notarised; the installation instructions tell the parent how to allow the first start. A paid account would only be reconsidered if this proves unworkable. |
 
 ---
 
-*End of General Product Requirements — Approved v1.6*
+*End of General Product Requirements — Draft v1.7 (last approved: v1.6)*

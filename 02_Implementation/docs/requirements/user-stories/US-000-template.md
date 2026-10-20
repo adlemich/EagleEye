@@ -3,7 +3,7 @@
 **Status**: New | Analyzed | Implemented | Verified/Closed
 **Created**: YYYY-MM-DD
 **Component(s)**: EagleEye.Service | EagleEye.TrayClient | EagleEye.ParentApp | EagleEye.Shared
-**Platform(s)**: Windows (service/tray) | ParentApp Windows | ParentApp Android | ParentApp macOS
+**Platform(s)**: Windows (service/tray) | ParentApp Windows | ParentApp macOS
 
 ---
 
