@@ -105,27 +105,29 @@ Found with `git grep -i -E "android|ios|iphone|ipad|mobile|phone|adb|xcode|sidel
 
 ### 6.2 DEV (after the ARC updates, on its own branch or story as the Orchestrator decides)
 
+**Status (DEV, 2026-10-20)**: DEV rows done on this branch in `0749f74`, verified on the MacBook (`build.ps1` green with 0 warnings, `test.ps1` 1197/1197 green, `env-check.ps1` runs). The Windows build, tests and installer packaging still have to be verified on the Windows machine. The `-SkipAndroid` hints in `README.md` and `02_Implementation/docs/dev-process/dev-environments.md` are removed.
+
 | File | What must change |
 |---|---|
-| `02_Implementation/src/EagleEye.ParentApp/EagleEye.ParentApp.csproj` | Remove the `net10.0-android` TFM (Windows host keeps only `net10.0-windows10.0.19041.0`), Android `SupportedOSPlatformVersion` and comments |
-| `02_Implementation/src/EagleEye.ParentApp/Platforms/Android/` | Delete (`MainActivity.cs`, `MainApplication.cs`, `AndroidManifest.xml`, `AndroidAccentColor.cs`, resources) |
-| `02_Implementation/src/EagleEye.ParentApp/Platforms/iOS/` | Delete (holds only `.gitkeep`; no iOS TFM on `main`) |
-| `02_Implementation/src/EagleEye.ParentApp/Services/HeadingBarColorService.cs` | Remove the `#elif ANDROID` branch and Android doc comment |
-| `02_Implementation/src/EagleEye.ParentApp/Services/MauiSecureStorageSecretStore.cs` | Doc comment: "Android, iOS and macOS" → macOS (Keychain) |
-| `02_Implementation/src/EagleEye.ParentApp.Core/Appearance/HeadingBarPalette.cs` | Doc comment mentions Android `colorPrimary` |
-| `02_Implementation/src/EagleEye.ParentApp/Platforms/MacCatalyst/Info.plist` | `UISupportedInterfaceOrientations~ipad` key is an iPad leftover from the template; remove if not needed by Mac Catalyst |
-| `02_Implementation/src/EagleEye.ParentApp/README.md` | Platform table and build hosts: drop Android and iOS rows, sideloading, Android SDK hints and `Platforms/Android` in the tree |
-| `02_Implementation/scripts/build.ps1` | Remove the Android build step, `-SkipAndroid` switch and `Get-AndroidToolchainArgs` |
-| `02_Implementation/scripts/env-check.ps1` | Windows "Responsible for" text; drop the `adb` check and `android`/`ios` workload patterns; keep Xcode for Mac Catalyst |
-| `02_Implementation/scripts/package-windows.ps1` | Comment about the Android target on a multi-targeted project; re-check whether `--runtime` can now be passed |
-| `02_Implementation/scripts/package-macos.ps1` | Check only (Xcode requirement stays for Mac Catalyst); no Developer-ID signing or notarisation (Q-7) |
-| `02_Implementation/.vscode/launch.json` | Launch config name "Windows / Android on Windows" |
-| `.gitignore` | "MAUI / Mobile" section, `Platforms/Android/GoogleServicesJson/`, `03_Delivery/android/*.apk` |
-| `secrets/secrets.template.json` | Remove the `android` section; remove or neutralise the `apple` section (no iOS; Mac needs no Developer account, Q-7). Never put values in the template |
-| `03_Delivery/android/` | Delete the folder and its README |
-| Unit tests | Re-run the full suite after removing the Android target; no test references Android today |
+| `02_Implementation/src/EagleEye.ParentApp/EagleEye.ParentApp.csproj` | Remove the `net10.0-android` TFM (Windows host keeps only `net10.0-windows10.0.19041.0`), Android `SupportedOSPlatformVersion` and comments **Done (0749f74).** |
+| `02_Implementation/src/EagleEye.ParentApp/Platforms/Android/` | Delete (`MainActivity.cs`, `MainApplication.cs`, `AndroidManifest.xml`, `AndroidAccentColor.cs`, resources) **Done (0749f74).** |
+| `02_Implementation/src/EagleEye.ParentApp/Platforms/iOS/` | Delete (holds only `.gitkeep`; no iOS TFM on `main`) **Done (0749f74).** |
+| `02_Implementation/src/EagleEye.ParentApp/Services/HeadingBarColorService.cs` | Remove the `#elif ANDROID` branch and Android doc comment **Done (0749f74).** |
+| `02_Implementation/src/EagleEye.ParentApp/Services/MauiSecureStorageSecretStore.cs` | Doc comment: "Android, iOS and macOS" → macOS (Keychain) **Done (0749f74).** |
+| `02_Implementation/src/EagleEye.ParentApp.Core/Appearance/HeadingBarPalette.cs` | Doc comment mentions Android `colorPrimary` **Done (0749f74).** |
+| `02_Implementation/src/EagleEye.ParentApp/Platforms/MacCatalyst/Info.plist` | `UISupportedInterfaceOrientations~ipad` key is an iPad leftover from the template; remove if not needed by Mac Catalyst **Done (0749f74).** Removed. |
+| `02_Implementation/src/EagleEye.ParentApp/README.md` | Platform table and build hosts: drop Android and iOS rows, sideloading, Android SDK hints and `Platforms/Android` in the tree **Done (0749f74).** |
+| `02_Implementation/scripts/build.ps1` | Remove the Android build step, `-SkipAndroid` switch and `Get-AndroidToolchainArgs` **Done (0749f74).** |
+| `02_Implementation/scripts/env-check.ps1` | Windows "Responsible for" text; drop the `adb` check and `android`/`ios` workload patterns; keep Xcode for Mac Catalyst **Done (0749f74).** |
+| `02_Implementation/scripts/package-windows.ps1` | Comment about the Android target on a multi-targeted project; re-check whether `--runtime` can now be passed **Done (0749f74).** `--runtime win-x64` now passed. |
+| `02_Implementation/scripts/package-macos.ps1` | Check only (Xcode requirement stays for Mac Catalyst); no Developer-ID signing or notarisation (Q-7) **Done (0749f74).** Stub aligned: ad-hoc only, no secrets file, no Apple credentials. |
+| `02_Implementation/.vscode/launch.json` | Launch config name "Windows / Android on Windows" **Done (0749f74).** |
+| `.gitignore` | "MAUI / Mobile" section, `Platforms/Android/GoogleServicesJson/`, `03_Delivery/android/*.apk` **Done (0749f74).** |
+| `secrets/secrets.template.json` | Remove the `android` section; remove or neutralise the `apple` section (no iOS; Mac needs no Developer account, Q-7). Never put values in the template **Done (0749f74).** Both sections removed. |
+| `03_Delivery/android/` | Delete the folder and its README **Done (0749f74).** |
+| Unit tests | Re-run the full suite after removing the Android target; no test references Android today **Done (0749f74).** MacBook: 1197/1197 green (Shared 282, ParentApp 915); Windows run pending. |
 
-Also on the **MacBook** (from the Orchestrator memory): the Mac Catalyst build may need `ValidateXcodeVersion=false` again or a matching Xcode, since that fix was on the deleted US-007 branch.
+Also on the **MacBook** (from the Orchestrator memory): the Mac Catalyst build may need `ValidateXcodeVersion=false` again or a matching Xcode, since that fix was on the deleted US-007 branch. **Done (0749f74)**: the build failed with "requires Xcode 27.0, current 27.1"; `ValidateXcodeVersion=false` is set in `EagleEye.ParentApp.csproj`, scoped to `maccatalyst`, with a comment; decision recorded in `02_Implementation/docs/dev-process/dev-environments.md` §5.
 
 ### 6.3 Orchestrator
 
