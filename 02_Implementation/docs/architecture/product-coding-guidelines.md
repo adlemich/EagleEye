@@ -1,6 +1,6 @@
 # EagleEye — Product Coding Guidelines
 
-*Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); CR-001 amendment proposed (2026-10-20)*
+*Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); CR-001 amendment approved (2026-10-20)*
 *Maintainer: ARC Agent | Last Updated: 2026-10-20*
 
 > **Amendment 2026-10-04 (US-002, ADR-008, ADR-009)**: §10.1, §10.2, §10.4 (`ParentApp.Core`, Shared `Communication/` and `Data/`), §12.2 (pairing code in a topmost window), §16.1 (packaging per ADR-009, token storage via DPAPI `ISecretStore`).
@@ -17,7 +17,7 @@
 
 > **Amendment 2026-10-12 (US-006, ADR-015, ADR-016) — approved by Michael together with the US-006 implementation plan (2026-10-12)**: §10.1 (folders `Shared/Resources` for the default kid texts, de neutral + en satellite, and `ParentApp.Core/Settings`; `Service/Rules` and `Service/Enforcement` also hold the app rules, the warning settings and the time-limit engine). Rule: default texts shown to users are never hard-coded and never stored by the service. They come from `DefaultTexts` in the displaying app's UI culture (ADR-016).
 
-> **Amendment 2026-10-20 (CR-001, ADR-019) — proposed, for Michael's approval of the CR-001 ARC follow-ups**: iOS and Android parent apps dropped. §14 (iOS) and §15 (Android) removed (numbers kept), TOC updated; §10.1 and §10.4 without `Platforms/Android` and `Platforms/iOS`; §13 (macOS is a production platform; unsigned `.dmg`; desktop layout only); §16.1 (Windows is a production platform; secure storage and packaging notes without Android).
+> **Amendment 2026-10-20 (CR-001, ADR-019) — approved by Michael 2026-10-20**: iOS and Android parent apps dropped. §14 (iOS) and §15 (Android) removed (numbers kept), TOC updated; §10.1 and §10.4 without `Platforms/Android` and `Platforms/iOS`; §13 (macOS is a production platform; unsigned `.dmg`; desktop layout only); §16.1 (Windows is a production platform; secure storage and packaging notes without Android).
 
 This document defines the coding standards all EagleEye components must follow. It complements but does not duplicate the system architecture (`arc42/system-architecture.md`) and ADRs — refer to those for architectural decisions, component responsibilities, and design rationale.
 

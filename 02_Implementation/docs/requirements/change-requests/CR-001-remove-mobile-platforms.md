@@ -84,7 +84,7 @@ Found with `git grep -i -E "android|ios|iphone|ipad|mobile|phone|adb|xcode|sidel
 
 ### 6.1 ARC (after Michael approves this CR)
 
-**Status (ARC, 2026-10-20)**: ARC rows done on this branch in `6f23416` (arc42, ADRs, new ADR-019) and `ebba2b1` (coding guidelines, dev-process docs). The new ADR-019 and the arc42/guidelines amendments are marked *Proposed* until Michael approves them. The two testing rows stay with TES. **TES (2026-10-20)**: testing rows done in `ae4ecb2`.
+**Status (ARC, 2026-10-20)**: ARC rows done on this branch in `6f23416` (arc42, ADRs, new ADR-019) and `ebba2b1` (coding guidelines, dev-process docs). The new ADR-019 and the arc42/guidelines amendments were approved by Michael on 2026-10-20 (ADR-019 Accepted). The two testing rows stay with TES. **TES (2026-10-20)**: testing rows done in `ae4ecb2`.
 
 | File | What must change |
 |---|---|
@@ -161,4 +161,4 @@ Both answers are also recorded in `02_Implementation/docs/requirements/general-p
 | CR written, requirements v1.7 drafted | PRO | Done 2026-10-20 |
 | Approve CR-001 and requirements v1.7, answer Q-6 and Q-7 | Michael | Approved 2026-10-20 |
 | Merge `change/CR-001-remove-mobile-platforms` into `main` (`--no-ff`) | Orchestrator | After approval |
-| Follow-ups §6 | ARC, DEV, Orchestrator | Orchestrator CLAUDE.md files done (916abfb); ARC docs done (6f23416, ebba2b1), ADR-019 proposed; the rest after the merge |
+| Follow-ups §6 | ARC, DEV, Orchestrator | Orchestrator CLAUDE.md files done (916abfb); ARC docs done (6f23416, ebba2b1), ADR-019 Accepted 2026-10-20; TES done (ae4ecb2); DEV done (0749f74). Merge approved by Michael 2026-10-20 **before** the Windows check; Windows build/test/packaging (incl. `--runtime win-x64` in `package-windows.ps1`) is still open and is done by Michael on `main` |

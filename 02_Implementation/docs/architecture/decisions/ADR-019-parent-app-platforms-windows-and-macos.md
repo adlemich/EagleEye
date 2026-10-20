@@ -1,6 +1,6 @@
 # ADR-019: Parent App Platforms — Windows and macOS Only, Unsigned Mac Distribution
 
-**Status**: Proposed (records the decisions Michael approved in CR-001 on 2026-10-20; becomes Accepted when Michael approves the ARC follow-ups of CR-001)
+**Status**: Accepted (Michael, 2026-10-20; records CR-001)
 **Date**: 2026-10-20
 **Deciders**: Michael (project owner), ARC
 

@@ -1,6 +1,6 @@
 # EagleEye — System Architecture
 
-*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); US-004 amendment proposed with the US-004 plan; US-005 amendment approved with the US-005 plan (2026-10-10); US-006 amendment approved with the US-006 plan (2026-10-12); CR-001 amendment proposed (2026-10-20)*
+*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); US-004 amendment proposed with the US-004 plan; US-005 amendment approved with the US-005 plan (2026-10-10); US-006 amendment approved with the US-006 plan (2026-10-12); CR-001 amendment approved (2026-10-20)*
 *Maintainer: ARC Agent | Last Updated: 2026-10-20*
 
 > **Amendment 2026-10-03 (ADR-007)**: Windows desktop target added to the ParentApp; two-machine development; manual acceptance testing. Affected: §1.1, §2.1, §2.2, §3.2, §4.2, §5.5, §7, §8.10, §9. Amendments approved by Michael on 2026-10-03.
@@ -17,7 +17,7 @@
 >
 > **Amendment 2026-10-12 (US-006, ADR-015, ADR-016) — approved by Michael together with the US-006 implementation plan (2026-10-12)**: per-app daily budgets and weekdays (state area `AppRules:{sid}`, deny by default as "no rule row"), two global warning levels (state area `WarningSettings`), a tick-based time-limit engine that warns, grants grace periods after parent changes and closes **running** apps (budget end, midnight, break begin) with the US-005 close sequence, blocked starts that create the app record, one kid dialog per session whose text a newer message replaces, and default kid texts rendered in the language of the displaying app (Shared resources). ADR-006, ADR-012, ADR-013 and ADR-014 amended. Affected: §5.2 (Enforcement, Configuration), §6.3, §8.4, §8.6, §8.7, §8.13, §9, §11 (R-14 updated, R-15, R-16).
 >
-> **Amendment 2026-10-20 (CR-001, ADR-019) — proposed, for Michael's approval of the CR-001 ARC follow-ups**: the iOS and Android parent apps are dropped (Michael, 2026-10-20, requirements v1.7). The parent app has two production platforms, **Windows** (WinUI, per-user installer, ADR-009) and **macOS** (Mac Catalyst, unsigned and un-notarised `.dmg`). The Windows parent app is no longer only the initial testing vehicle. The Windows machine builds no Android target, the MacBook no iOS target. ADR-001, ADR-002, ADR-004, ADR-007, ADR-008, ADR-009 and ADR-010 amended. Affected: §1.1, §1.2, §2.1, §2.2, §3.1, §3.2, §4.2, §5.5, §7 (incl. §7.1.1, §7.4), §8.2, §8.4, §8.10, §9, §10.2 (QS-07), §11 (R-1 void, R-3).
+> **Amendment 2026-10-20 (CR-001, ADR-019) — approved by Michael 2026-10-20**: the iOS and Android parent apps are dropped (Michael, 2026-10-20, requirements v1.7). The parent app has two production platforms, **Windows** (WinUI, per-user installer, ADR-009) and **macOS** (Mac Catalyst, unsigned and un-notarised `.dmg`). The Windows parent app is no longer only the initial testing vehicle. The Windows machine builds no Android target, the MacBook no iOS target. ADR-001, ADR-002, ADR-004, ADR-007, ADR-008, ADR-009 and ADR-010 amended. Affected: §1.1, §1.2, §2.1, §2.2, §3.1, §3.2, §4.2, §5.5, §7 (incl. §7.1.1, §7.4), §8.2, §8.4, §8.10, §9, §10.2 (QS-07), §11 (R-1 void, R-3).
 
 ---
 
@@ -1183,7 +1183,7 @@ All architectural decisions are recorded as ADRs in `02_Implementation/docs/arch
 | ADR-014 | Session-Bound Tray Connections and the Kid's Message Box | Accepted (approved with the US-005 implementation plan, 2026-10-10) |
 | ADR-015 | Time Limits for Running Apps — End of Allowed Time, Warnings, Grace Periods and Enforced Closes | Accepted (approved with the US-006 implementation plan, 2026-10-12) |
 | ADR-016 | Default Kid Texts Are Rendered in the Language of the Displaying App | Accepted (approved with the US-006 implementation plan, 2026-10-12) |
-| ADR-019 | Parent App Platforms — Windows and macOS Only, Unsigned Mac Distribution | Proposed (records CR-001, approved by Michael 2026-10-20) |
+| ADR-019 | Parent App Platforms — Windows and macOS Only, Unsigned Mac Distribution | Accepted (2026-10-20, CR-001) |
 
 ADR-017 and ADR-018 are unused: they were drafts on the aborted US-007 iOS branch and never reached `main` (ADR-019 numbering note).
 
