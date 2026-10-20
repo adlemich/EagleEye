@@ -5,9 +5,9 @@
 **Branch**: `feature/US-007-macos-parent-app-parity`
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-007/implementation-plan.md` (approved 2026-10-20 with Q-1 and Q-2), ADR-020, the US-007 amendments of ADR-019, arc42 and coding guidelines §13
 **Machine(s) used**: MacBook so far (see §7)
-**Story status**: Analyzed (in progress: Step 1 "first light")
+**Story status**: Analyzed (in progress: Step 1 "first light" done; Step 2 waits for ARC's review)
 
-> This report grows with each plan step. Steps done: 0. Step 1 in progress. Steps 2 to 9 not started (Step 2 waits for ARC's review of `US-007/first-light.md`).
+> This report grows with each plan step. Steps done: 0 and 1. Steps 2 to 9 not started (Step 2 waits for ARC's review of `US-007/first-light.md` §6).
 
 ---
 
@@ -16,7 +16,7 @@
 | Step | State | Content |
 |---|---|---|
 | 0 | Done | Version 0.7.0 (`Directory.Build.props`). Build and unit tests green on the MacBook. |
-| 1 | In progress | Mac app built and launched on the MacBook. Attempts 1 and 2 failed: the token could not be stored in the Keychain. FL-1 pulled `MacKeychainSecretStore` forward from Step 2 (on `SecItem`, still -34018); FL-2 moved it to the legacy file-keychain API (K-1), verified by DEV with a probe of the real store. **Attempt 3 paired** (green "Verbunden mit 192.168.1.37", real data loads). Gaps G-1 to G-18 in the gap list. Keychain probe and Release probe partly done; waiting for Michael's answer to the Keychain prompt after a rebuild. Gap list in `02_Implementation/docs/requirements/user-stories/US-007/first-light.md`. |
+| 1 | Done | Mac app built and launched on the MacBook. Attempts 1 and 2 failed: the token could not be stored in the Keychain. FL-1 pulled `MacKeychainSecretStore` forward from Step 2 (on `SecItem`, still -34018); FL-2 moved it to the legacy file-keychain API (K-1), verified by DEV with a probe of the real store. **Attempt 3 paired** (green "Verbunden mit 192.168.1.37", real data loads). Gaps G-1 to G-18 in the gap list. Keychain probe: pairing survives restart and rebuild; one prompt per new build, then silent for the last-approved build (partition list, `first-light.md` §4). Release probe: works (hub calls, restart). Gap list in `02_Implementation/docs/requirements/user-stories/US-007/first-light.md`. |
 
 ## 2. Deviations from the Implementation Plan
 
@@ -48,11 +48,13 @@ New tests: `SecretStoreUnavailableExceptionTests` (operation and status, message
 - G-8 (for ARC): the ADR-020 §2 SecItem design cannot work on Mac Catalyst for an ad-hoc build; FL-2 uses the deprecated legacy keychain API. Whether the item survives a rebuild (new code signature; expected: one prompt) is the step 1.4 probe.
 - A pairing failure is still silent in the UI (G-5, Core, Step 2). For the next attempt, Debug builds log every Keychain operation's OSStatus to stderr, which is captured with `open --stdout/--stderr`.
 - Attempts 1 and 2 most likely left four orphan paired devices "Michael's MacBook" on the service (harmless, no UI to remove them).
-- The Keychain (TI-1, across rebuilds) and Release trimming (TI-5) probes are still pending.
+- Keychain prompt rule (`first-light.md` §4): only the most recently approved build is silent. For the parent this means one prompt per update (OQ-3); in daily development a prompt after every rebuild or build switch.
+- The Release arm64 bundle from `dotnet publish` is only linker-signed; packaging must use and verify the fully signed bundle (Step 7).
+- Decisions for ARC before Step 2: `first-light.md` §6.
 
 ## 6. How to Test
 
-Not yet (story in progress). Current dev build: `02_Implementation/src/EagleEye.ParentApp/bin/Debug/net10.0-maccatalyst/maccatalyst-arm64/EagleEye.app`, started with `open`.
+Not yet (story in progress). For first light, see `first-light.md` §1 (launch note). Current dev build: `02_Implementation/src/EagleEye.ParentApp/bin/Debug/net10.0-maccatalyst/maccatalyst-arm64/EagleEye.app`, started with `open`.
 
 ## 7. Machine(s) Used
 

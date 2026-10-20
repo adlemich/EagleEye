@@ -2,7 +2,7 @@
 
 **Author**: DEV
 **Date**: 2026-10-20
-**Status**: In progress. **Paired and connected** on attempt 3 (FL-2 build, 17:15). Walk-through gaps recorded from Michael's screenshots. Keychain probe: restart done; rebuild prompt waiting for Michael. Release probe prepared.
+**Status**: **Step 1 complete** (2026-10-20). Paired and connected on attempt 3 (FL-2 build). Gap list G-1 to G-18, Keychain probe and Release probe done. Waiting for ARC's review (§6) before Step 2.
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-007/implementation-plan.md`, Step 1, Decision 1
 **Host**: MacBook (macOS 27.0.1, Apple Silicon), Xcode 27.1, .NET SDK 10.0.401, workload `maui-maccatalyst` 10.0.110
 **Build**: 0.7.0, Debug, Mac Catalyst
@@ -125,7 +125,24 @@ Paired and connected; real data loads (see the screenshots above). Console trace
 |---|---|
 | Quit and start the same build (DEV, 17:19) | Silent: `EagleEye keychain read: OSStatus 0`, negotiate 200, no exception, connected without a code. |
 | Rebuild with a new code signature (DEV, 17:19; temporary `-p:ApplicationVersion=2`, Info.plist changes, CDHash `bb335b0e…` → `888faa42…`), then start | The Keychain read blocks; `SecurityAgent` shows a Keychain prompt. Answered at 17:19:57 (button not yet known): read OSStatus 0, connected, **no re-pairing**. |
-| Quit and start the rebuilt build again (DEV, 17:23) | **Prompt again** (`SecurityAgent` running, read blocked). Either the 17:19 answer was a one-time "Allow", or "Always Allow" does not persist for an ad-hoc build. *Pending: Michael answers with "Always Allow"; DEV then restarts once more.* |
+| Quit and start the rebuilt build again (DEV, 17:23) | **Prompt again**, although Michael had clicked „Immer erlauben" at 17:19. He answered „Immer erlauben" again. |
+| Release build (Michael, ~17:30), first start | **One** prompt, „Immer erlauben" → green, Regeln and Berichte with his data. |
+| Release build, restart (Michael; DEV again at 17:34) | **Silent**, connected. |
+| Debug build, two restarts after that (DEV, 17:33) | **Prompt each time** (read blocked). |
+
+Prompt text (German macOS, Michael's screenshot): title „EagleEye möchte deine vertraulichen Informationen verwenden, die in „com.adlemich.eagleeye" in deinem Schlüsselbund gesichert sind.", body „Um dies zu erlauben, gib das Passwort für den Schlüsselbund „Anmeldung" ein.", field „Passwort:", buttons „Immer erlauben" / „Nicht erlauben" / „Erlauben"; icon: the EagleEye icon on a lock.
+
+**Analysis** (DEV, `security dump-keychain -a`, only this item's attributes and ACL, never the secret):
+
+- The item's access list (`decrypt` entry) holds all three approved identities, each as `requirement: cdhash H"…"` with the build path: Release `0fcce897…`, Debug rebuild `888faa42…`, original Debug `bb335b0e…` (creator).
+- The **partition list** (`partition_id` entry, checked in addition by macOS since 10.12) holds only `cdhash:0fcce897…` (the Release build, listed twice). Each „Immer erlauben" by a new ad-hoc identity **replaces** the partition list with that build's cdhash instead of adding it.
+- Result: **only the most recently approved build starts silently**; any other build prompts, even if it was approved before. The Debug signature itself is fine (cdhash unchanged since 17:19:33, `codesign --verify` valid on disk and for the running process), so neither re-signing nor an invalid signature is the cause.
+- Not fully explained: the Debug rebuild prompted again at 17:23 right after its own „Immer erlauben" at 17:19 (before any other build was approved). Most likely the first approval of a non-creator build updates the access list but not the partition list; the second one did. Not reproduced further, because each repeat needs Michael's password.
+- Side note: the Release arm64 bundle that ran is only linker-signed (no sealed resources; `dotnet publish` fully signs the universal bundle only). The ACL check worked with it. Packaging (Step 7) must sign and verify the final bundle (`codesign --verify --deep --strict`).
+
+**Conclusion for OQ-3 and AC-5**: for the parent (one installed build, an update replaces it): **one prompt after each update, answered once with „Immer erlauben", then silent**, and the pairing survives (no re-pairing): matches OQ-3. Expect possibly a second prompt at the next start after the first approval (the 17:23 observation); TES should check this in the update test (AC-5).
+
+**Daily development**: every new Debug build, and every switch between two builds (Debug ↔ Release, or two checkouts), asks for the login password at the next start, because only the last-approved build is in the partition list. This is a nuisance, not a blocker. Options for ARC: accept it; or revisit Q-1 (a local self-signed signing identity gives a stable designated requirement across builds, so the partition entry would stay valid); or use a separate Keychain service name for Debug builds (keeps the dev item apart, but does not avoid the prompt).
 | MAUI `SecureStorage` items from the dev builds | None (`SecureStorage` never stored anything). The removal script needs no entry for them (plan, Removal script table). |
 | Data folder actually used | `~/Library/Containers/com.adlemich.eagleeye/Data/Documents/EagleEye/` (G-2). |
 
@@ -135,4 +152,26 @@ Paired and connected; real data loads (see the screenshots above). Console trace
 |---|---|
 | `dotnet publish -c Release` | 0 warnings. Universal app + `.pkg` (G-18); the arm64 bundle is `src/EagleEye.ParentApp/bin/Release/net10.0-maccatalyst/maccatalyst-arm64/EagleEye.app` (AOT data, trimmed). |
 | JSON reflection (TI-5) | `System.Text.Json.JsonSerializer.IsReflectionEnabledByDefault` = **true** in the published `runtimeconfig.bin` (MAUI default for Apple targets). Hub calls are therefore expected to work. |
-| Release run with hub calls | *Pending (Michael, after the Keychain prompt).* |
+| Release run with hub calls (Michael, ~17:30) | **Works**: one Keychain prompt, then green; Regeln and Berichte load his data; restart silent. `release-run.log` (console output) holds no exception or error, only system notices. TI-5 needs no change for now; re-check with the final packaged bundle in Step 7. |
+
+## 6. Summary and recommendations for ARC
+
+**Result**: the Mac app runs on the MacBook, pairs with the service PC `192.168.1.37` and shows Michael's real Settings, Rules and Reports, in Debug and Release. Michael sees green "Verbunden mit 192.168.1.37".
+
+**First-light fixes made** (code on the branch):
+
+| Fix | What | Plan step it belongs to |
+|---|---|---|
+| FL-1 | `MacKeychainSecretStore` registered instead of MAUI `SecureStorage`; `SecretStoreUnavailableException` (Core) + unit tests; `MauiSecureStorageSecretStore` deleted. | 2 (Decision 2), pulled forward |
+| FL-2 | `MacKeychainSecretStore` on the legacy `SecKeychain…` API (P/Invoke), login keychain (K-1); Debug-only OSStatus trace on stderr. | 2, pulled forward, deviates from ADR-020 §2 (G-8) |
+
+**Decisions needed before Step 2**:
+
+1. **G-8, ADR-020 §2 revision.** The `SecItem` design cannot work on Mac Catalyst for an ad-hoc build (K-1 and K-2 both -34018; entitlement → no launch). Proposal: ADR-020 §2 states K-1 via the legacy file-keychain API (`SecKeychainAddGenericPassword`, `SecKeychainFindGenericPassword`, `SecKeychainItemModifyAttributesAndData`, `SecKeychainItemDelete`). **Risk**: the API has been deprecated since macOS 10.10; Apple could remove it in a future macOS. Then the store fails with `SecretStoreUnavailableException`, and the way out is a signing identity with a provisioning profile (needs an Apple Developer account, which CR-001 Q-7 excludes) or another secret mechanism. Mitigation: keep the store behind `ISecretStore` (already), check on each macOS major update (dev-environments §5), arc42 R-3. The Step 2 "spike" is largely done by this probe; what remains is the deny case and the removal-script deletion (`security delete-generic-password`).
+2. **OQ-3 / AC-5 behaviour** (§4): one prompt per update, then silent, pairing kept. Note the partition-list rule for daily dev use and decide whether Q-1 should be revisited (§4, Daily development).
+3. **G-5, silent pairing failure (Core)**: how `ConnectionCoordinator.CompletePairingAsync` handles a failing `SaveAsync` (abort the session, show `ErrorKeychainAccess` or a pairing error). It also affects Windows and leaves an orphan device on the service each time (attempts 1 and 2 most likely left four orphan "Michael's MacBook" devices; harmless).
+4. **G-7, `UseNativeHttpHandler=false`**: not needed (the native handler runs the trust callback). Keep for robustness (ADR-020 §3) or drop.
+5. **G-9 label**: setting the item label "EagleEye Parent App" with the legacy API needs an attribute list; or accept the service name as the visible name (plan Data Locations).
+6. **Debug OSStatus trace** in `MacKeychainSecretStore` (Debug only, never the value): keep as a diagnosis aid or remove in Step 2.
+
+**Gaps for Steps 2 to 6** (details in §2): Step 2: G-1, G-2, G-5, G-6, G-9, G-18 (and the FL items above). Step 3: G-3. Step 5: G-10 to G-16 (accent colours, button contrast, value fields stretching, editor borders, page width on Regeln/Berichte, picker, navigation contrast). Step 6: G-17 (tooltip check). No gap so far requires a Mac-only copy of a view or makes a page unusable on Catalyst.
