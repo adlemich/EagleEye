@@ -1,6 +1,6 @@
 # ADR-020: macOS Platform Layer under Ad-hoc Signing — Keychain, TLS Handler, No App Sandbox, Language
 
-**Status**: Accepted (approved by Michael with the US-007 implementation plan, 2026-10-20; plan Q-1: ad-hoc signing stays, no local signing identity). **Revision 1 (2026-10-20, after US-007 first light) — Proposed, pending Michael's approval**: §2 implementation API changed (legacy `SecKeychain…` API instead of `SecItem…`), update behaviour (partition list) recorded, Debug builds use their own keychain item and data folder, deprecation risk added. Until approved, the rest of this ADR stays Accepted as written.
+**Status**: Accepted (approved by Michael with the US-007 implementation plan, 2026-10-20; plan Q-1: ad-hoc signing stays, no local signing identity). **Revision 1 (2026-10-20, after US-007 first light) — Accepted (approved by Michael, 2026-10-20)**: §2 implementation API changed (legacy `SecKeychain…` API instead of `SecItem…`), update behaviour (partition list) recorded, Debug builds use their own keychain item and data folder, deprecation risk added. Plan Q-4 (2026-10-20): up to two prompts per update, then silent.
 **Date**: 2026-10-20 (revision 1: 2026-10-20)
 **Deciders**: ARC, Michael
 
@@ -30,7 +30,7 @@ The Mac app runs **without** the App Sandbox. `Platforms/MacCatalyst/Entitlement
 
 ### 2. Own Keychain secret store through the Security framework
 
-> **Revision 1 (Proposed, pending Michael's approval).** First light (`02_Implementation/docs/requirements/user-stories/US-007/first-light.md` §3, §4; evidence `US-007/evidence/keychain-probe-results.txt`) showed:
+> **Revision 1 (Accepted, approved by Michael 2026-10-20).** First light (`02_Implementation/docs/requirements/user-stories/US-007/first-light.md` §3, §4; evidence `US-007/evidence/keychain-probe-results.txt`) showed:
 >
 > - On Mac Catalyst **every `SecItem…` call goes to the data-protection keychain**; `kSecUseDataProtectionKeychain = false` is ignored. Every write returns `errSecMissingEntitlement` (-34018), for K-1 and K-2, with and without App Sandbox. Adding `keychain-access-groups` stops the ad-hoc app from launching. So the `SecItem` design below cannot work for an ad-hoc build.
 > - The **legacy file-keychain API** (`SecKeychainFindGenericPassword`, `SecKeychainAddGenericPassword`, `SecKeychainItemModifyAttributesAndData`, `SecKeychainItemDelete`, P/Invoke into Security.framework; deprecated since macOS 10.10, present in macOS 27) works on the default (login) keychain, with and without sandbox, without a prompt for the creating build.
@@ -38,12 +38,12 @@ The Mac app runs **without** the App Sandbox. `Platforms/MacCatalyst/Entitlement
 > **Decision (replaces the API list and the K-1/K-2 table below):**
 >
 > 1. `MacKeychainSecretStore` uses the legacy file-keychain API on the **login keychain** (K-1). Item attributes as below (generic password, service `com.adlemich.eagleeye`, account = key). The label "EagleEye Parent App" is set through an attribute list (`kSecLabelItemAttr`) when the item is created; if that proves fragile, the visible name stays the service name (accepted, presentation only). K-2 is dropped: it is not reachable for an ad-hoc build. Plan Q-3 (app-side purge) is void.
-> 2. **Update behaviour (accepted under story OQ-3).** For an ad-hoc build, "Always Allow" writes the build's cdhash into the item's access list **and replaces** the item's partition list with that cdhash. Hence: the build that was approved last starts silently; any other build prompts once for the login password. For the parent (one installed build at a time): **one prompt after each update, then silent; the pairing survives, no re-pairing.** A second prompt at the first restart after an update was seen once in development and is tolerated (plan Q-4).
+> 2. **Update behaviour (accepted under story OQ-3).** For an ad-hoc build, "Always Allow" writes the build's cdhash into the item's access list **and replaces** the item's partition list with that cdhash. Hence: the build that was approved last starts silently; any other build prompts once for the login password. For the parent (one installed build at a time): **one prompt after each update, then silent; the pairing survives, no re-pairing.** A second prompt at the first restart after an update was seen once in development and is tolerated (plan Q-4, Michael 2026-10-20: up to two prompts per update, then silent; more than two, or a prompt at every start of the same build, is a failure).
 > 3. **Debug builds use their own item and data folder**: service `com.adlemich.eagleeye.debug` and `~/Library/Application Support/EagleEye-Debug/` (Mac Catalyst Debug only; the existing `EAGLEEYE_DEV_APP_DATA_DIR` still overrides the folder). A dev build then never takes over the partition list of the installed Release item, so Michael's installed app stays silent while DEV iterates, and a Debug pairing never overwrites the installed app's pairing. Debug builds still prompt after each rebuild (accepted dev nuisance).
 > 4. **Deprecation risk.** If Apple removes the legacy API, the store throws `SecretStoreUnavailableException` (pairing cannot be read or saved; the app shows the Keychain message, nothing is deleted). There is no supported exit inside the current constraints: `SecItem` needs a keychain access group, which needs a provisioning profile, which needs a paid Apple Developer account (excluded by CR-001 Q-7). Mitigation: the store stays behind `ISecretStore`; DEV checks the Mac app on each macOS major release and each Xcode/.NET workload update (dev-environments §5); if the API disappears, Michael decides between a paid account and a different secret mechanism (arc42 R-3).
 > 5. The debug-only OSStatus trace (stderr, status code only, never the value) stays in Debug builds; Release builds have none.
 >
-> The text below is the original decision of 2026-10-20, kept for history; where it conflicts with Revision 1, Revision 1 applies once approved.
+> The text below is the original decision of 2026-10-20, kept for history; where it conflicts with Revision 1, Revision 1 applies.
 
 `MauiSecureStorageSecretStore` is replaced by `Platforms/MacCatalyst/MacKeychainSecretStore` (`ISecretStore`), which calls the Security framework (`SecItemAdd`, `SecItemCopyMatching`, `SecItemUpdate`, `SecItemDelete`) directly:
 

@@ -1,6 +1,6 @@
 # Implementation Plan: US-007 — macOS Parent App Parity
 
-**Status**: Approved by Michael (2026-10-20), with his answers to Q-1 and Q-2 (both as recommended), incl. ADR-020 and the amendments of ADR-019, arc42 and the coding guidelines. **Revision 1 (2026-10-20, Step 1 review) — proposed, pending Michael's approval**: see "Step 1 Review" (ADR-020 §2 Revision 1, arc42 R-3, Steps 2 to 7 adjusted, Q-4 to Q-5).
+**Status**: Approved by Michael (2026-10-20), with his answers to Q-1 and Q-2 (both as recommended), incl. ADR-020 and the amendments of ADR-019, arc42 and the coding guidelines. **Revision 1 (2026-10-20, Step 1 review) — approved by Michael 2026-10-20**, with his answers to Q-4 and Q-5 (both as recommended): see "Step 1 Review" (ADR-020 §2 Revision 1, arc42 R-3, Steps 2 to 7 adjusted).
 **Date**: 2026-10-20
 **Author**: ARC
 **User story**: `02_Implementation/docs/requirements/user-stories/US-007/user-story.md` (approved 2026-10-20, 36 ACs in groups A to I, OQ-1 to OQ-4 answered)
@@ -257,7 +257,7 @@ The script touches nothing outside the paths above. Every path contains `com.adl
 
 ---
 
-## Step 1 Review (ARC, 2026-10-20) — Revision 1, proposed, pending Michael's approval
+## Step 1 Review (ARC, 2026-10-20) — Revision 1, approved by Michael 2026-10-20
 
 *Input: `US-007/first-light.md` (gap list G-1 to G-18, Keychain and Release probes), `US-007/implementation-report.md` (DV-1, DV-2), `US-007/evidence/`, screenshots in `US-007/input/`. Result of Step 1: the Mac app pairs with `192.168.1.37` and shows Michael's real data in Debug and Release. **No gap changes the plan's structure or needs a story split.** DV-1 (store pulled forward into Step 1) is accepted. DV-2 is accepted through ADR-020 Revision 1.*
 
@@ -285,7 +285,7 @@ The script touches nothing outside the paths above. Every path contains `com.adl
 
 **Windows impact**: behaviour change only in a failure path that has never been seen on Windows (DPAPI or SQLite failing while saving); no visible change in normal use. Windows unit tests cover it (same Core code); no Windows manual test needed beyond the Step 8 smoke check.
 **Unit tests** (add to the Unit Test Requirements): save throws each caught type → session ended, message set (`KeychainSaveFailed` vs `PairingSaveFailed`), `DeleteAsync` called, revoke attempted with device ID, pinned trust and token; revoke failing or timing out → same message, no exception; `DeleteAsync` throwing → still the message; an uncaught exception type → propagates; state never `PairedConnected`.
-**Orphan devices**: the hub method lets any paired app remove any device ID, but no parent app has a device list or a "remove other device" function (rest of FR-APP-015, out of scope of US-007). The four orphans "Michael's MacBook" left by first light are harmless (no device limit, tokens never stored anywhere). They stay until a later **device-management story** (FR-APP-015: list paired devices, remove others), which PRO should keep on the backlog; it also covers R-8/R-9 of arc42. No clean-up in US-007.
+**Orphan devices**: the hub method lets any paired app remove any device ID, but no parent app has a device list or a "remove other device" function (rest of FR-APP-015, out of scope of US-007). The four orphans "Michael's MacBook" left by first light are harmless (no device limit, tokens never stored anywhere). They stay until a later **device-management story** (FR-APP-015: list paired devices, remove others), which PRO should keep on the backlog; it also covers R-8/R-9 of arc42. No clean-up in US-007. **Backlog note for PRO** recorded in `US-007/user-story.md` (Out of Scope, follow-up note).
 
 ### R-4. TLS handler (G-7)
 **Keep** `UseNativeHttpHandler=false` (ADR-020 §3, revision note). The native handler did run the callback, and the managed fallback build also worked, but keeping the managed handler gives one TLS stack on both platforms, no App Transport Security and no dependence on how Apple's handler orders system trust and the callback. Step 2 sets it; Step 6 checks the pin mismatch case (AC-19, "identity changed") on the Mac.
@@ -569,15 +569,15 @@ Not unit-tested (platform code, verified manually): `MacKeychainSecretStore`, `M
 
 ## Open Questions for Michael
 
-Q-1 and Q-2 answered 2026-10-20 (as recommended). Q-3 void after the Step 1 review. Q-4 and Q-5 are new with Revision 1 (open).
+Q-1 and Q-2 answered 2026-10-20 (as recommended). Q-3 void after the Step 1 review. Q-4 and Q-5 (new with Revision 1) answered 2026-10-20 (as recommended).
 
 | ID | Question | Recommendation (default) | Answer |
 |---|---|---|---|
 | **Q-1** | **Avoid the Keychain prompt after every update?** With ad-hoc signing, each new build may ask once for your login password ("Always Allow", OQ-3). A **local self-signed code-signing certificate** on the MacBook (created once in Keychain Access, private key stays on the MacBook) would give every build the same identity, so the prompt would not come back. Gatekeeper still blocks the first start (not an Apple certificate). Cost: a one-time setup step and a key to keep. | **No, keep ad-hoc signing** as accepted in OQ-3. Revisit if the prompts during the test run bother you; it can be added later without other changes. | **Resolved** (Michael, 2026-10-20): no self-signed certificate; ad-hoc signing stays. |
 | **Q-2** | **Dock entry on removal.** If you kept the app in the Dock, a "?" icon stays after removal. The removal script could delete that Dock entry itself (edit the Dock settings and restart the Dock), or the instructions tell you to remove it first. | **Instructions + reminder** (D-3): the script only checks and tells you. It never edits settings that do not belong to the app. | **Resolved** (Michael, 2026-10-20): the script does not remove the Dock entry; it only checks and reminds. |
 | **Q-3** | *(Only if the Step 2 spike ends with K-2.)* The data-protection keychain item cannot be deleted by a script. The app would need a "delete my data" function to be run before the app is moved to the Trash. | Not asked now. Raised by ARC with the spike result if it happens. | **Void** (Step 1 review R-1): K-2 is not reachable; the login keychain item is deleted by the script. |
-| **Q-4** *(Revision 1)* | **Up to two Keychain prompts after an update?** Normally one prompt after an update, then silent. Once in development a second prompt came at the first restart after "Always Allow". The pairing is never lost. | **Accept up to two prompts per update** (the first start and possibly the first restart), then silent. TES records the count as a note, not a Fail. More than two, or a prompt at every start of the same build, is a Fail. | Open |
-| **Q-5** *(Revision 1)* | **Button and menu colour on Windows.** On the Mac, buttons and the selected menu item will use the macOS accent colour (G-11, G-16), like the heading bars. Should the Windows app get the same (Windows accent colour), for a consistent look? | **No, Windows unchanged in US-007** (AC-35: no visible change). If you want it, it becomes a small separate change with its own check. | Open |
+| **Q-4** *(Revision 1)* | **Up to two Keychain prompts after an update?** Normally one prompt after an update, then silent. Once in development a second prompt came at the first restart after "Always Allow". The pairing is never lost. | **Accept up to two prompts per update** (the first start and possibly the first restart), then silent. TES records the count as a note, not a Fail. More than two, or a prompt at every start of the same build, is a Fail. | **Resolved** (Michael, 2026-10-20): accepted as recommended. |
+| **Q-5** *(Revision 1)* | **Button and menu colour on Windows.** On the Mac, buttons and the selected menu item will use the macOS accent colour (G-11, G-16), like the heading bars. Should the Windows app get the same (Windows accent colour), for a consistent look? | **No, Windows unchanged in US-007** (AC-35: no visible change). If you want it, it becomes a small separate change with its own check. | **Resolved** (Michael, 2026-10-20): no, Windows stays unchanged in US-007. |
 
 ---
 

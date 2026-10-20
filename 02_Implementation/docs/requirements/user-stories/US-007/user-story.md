@@ -230,6 +230,7 @@ end note
 ## Out of Scope
 
 - New parent-app features. The Mac app gets exactly the features of the Windows app 0.6.2. Features the Windows app does not have stay out for both apps: the list of all paired devices and removing other devices (rest of FR-APP-015), the re-scan of installed applications (FR-APP-033), "used vs. budget" on Reports (FR-APP-061), events to the parent (FR-APP-070), showing the history of blocked starts.
+  - *Follow-up for PRO (backlog, from ARC's Step 1 review, 2026-10-20)*: a **device-management story** (rest of FR-APP-015: list the paired devices on the service, remove other devices). Needed among other things to clean up **orphan devices**: first light left four "Michael's MacBook" entries on the service (pairing accepted by the service, token never saved by the app, G-5). They are harmless (no device limit, tokens stored nowhere) but cannot be removed by any parent app today. US-007 prevents new orphans (best-effort revoke, plan Step 1 Review R-3). Related: arc42 R-8, R-9.
 - Developer-ID signing, notarisation, the Mac App Store, distribution to other people, automatic updates (ADR-019, §10).
 - Intel Macs and macOS versions older than 26 (§9.4).
 - Mac-only extras: menu bar icon, macOS notifications, widgets, Touch ID, Shortcuts, Handoff, several windows.
