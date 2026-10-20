@@ -124,7 +124,8 @@ Paired and connected; real data loads (see the screenshots above). Console trace
 | Check | Result |
 |---|---|
 | Quit and start the same build (DEV, 17:19) | Silent: `EagleEye keychain read: OSStatus 0`, negotiate 200, no exception, connected without a code. |
-| Rebuild with a new code signature (DEV, 17:19; temporary `-p:ApplicationVersion=2`, Info.plist changes, CDHash `bb335b0e…` → `888faa42…`), then start | The Keychain read blocks; `SecurityAgent` is running, so macOS shows a Keychain prompt. *Michael's answer pending.* |
+| Rebuild with a new code signature (DEV, 17:19; temporary `-p:ApplicationVersion=2`, Info.plist changes, CDHash `bb335b0e…` → `888faa42…`), then start | The Keychain read blocks; `SecurityAgent` shows a Keychain prompt. Answered at 17:19:57 (button not yet known): read OSStatus 0, connected, **no re-pairing**. |
+| Quit and start the rebuilt build again (DEV, 17:23) | **Prompt again** (`SecurityAgent` running, read blocked). Either the 17:19 answer was a one-time "Allow", or "Always Allow" does not persist for an ad-hoc build. *Pending: Michael answers with "Always Allow"; DEV then restarts once more.* |
 | MAUI `SecureStorage` items from the dev builds | None (`SecureStorage` never stored anything). The removal script needs no entry for them (plan, Removal script table). |
 | Data folder actually used | `~/Library/Containers/com.adlemich.eagleeye/Data/Documents/EagleEye/` (G-2). |
 
