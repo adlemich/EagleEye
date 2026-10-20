@@ -2,6 +2,7 @@
 
 **Status**: New
 **Created**: 2026-10-20
+**Approved**: by Michael, 2026-10-20, with his answers to OQ-1 to OQ-4 (change in OQ-2) (status becomes `Analyzed` when the implementation plan is approved)
 **Component(s)**: EagleEye.ParentApp (incl. EagleEye.ParentApp.Core). EagleEye.Service, EagleEye.TrayClient and EagleEye.Shared: no behaviour change expected (regression only, group I)
 **Platform(s)**: ParentApp macOS (new, MacBook) · ParentApp Windows (unchanged, regression) · Windows (service/tray, unchanged, regression)
 
@@ -83,11 +84,18 @@ References: FR-APP-010 to FR-APP-014, FR-APP-015 (own device only, as in US-002)
 
 ### B. Package, installation, update, removal (FR-APP-112, §9.4)
 
-- [ ] **AC-2**: The Mac app is delivered as a `.dmg` disk image in `03_Delivery/macos/`, built on the MacBook by `02_Implementation/scripts/package-macos.ps1`. The file name contains the product version (e.g. `EagleEye-ParentApp-0.7.0.dmg`). Opening the `.dmg` shows the app "EagleEye Parent App" and a shortcut to *Applications*. The parent installs it by dragging the app onto that shortcut. No installer program, no admin password and no Apple account are needed.
+- [ ] **AC-2**: The Mac app is delivered as a `.dmg` disk image in `03_Delivery/macos/`, built on the MacBook by `02_Implementation/scripts/package-macos.ps1`. The file name contains the product version (e.g. `EagleEye-ParentApp-0.7.0.dmg`). Opening the `.dmg` shows the app "EagleEye Parent App", a shortcut to *Applications*, the removal script of AC-6 and the install instructions (which also explain the removal, AC-6). The parent installs it by dragging the app onto that shortcut. No installer program, no admin password and no Apple account are needed.
 - [ ] **AC-3**: On a Mac with no other software installed for EagleEye (in particular no separately installed .NET runtime), the app starts from *Applications*, Launchpad or Spotlight without any further installation step. On the very first start macOS blocks the unsigned app (Gatekeeper). After the parent allows it once (*System Settings → Privacy & Security → Open Anyway*, confirmed once), the app starts, and every later start happens without a warning. The install instructions for the parent describe this step (ADR-019 §3).
 - [ ] **AC-4**: The app is shown as "EagleEye Parent App" in Finder, Launchpad, Spotlight and the Dock, with the EagleEye app icon (the same icon as the Windows app). Its window title is "EagleEye", as on Windows. Finder *Get Info* and the "About EagleEye Parent App" panel of the app menu (AC-8) show the product version of the build (the same version number as the Windows app of the same build, AC-36) and "Michael Adler" as the publisher (copyright line).
 - [ ] **AC-5**: When the parent installs the `.dmg` of the same or a newer version over an existing installation (drag to *Applications*, "Replace"), the app starts afterwards with its pairing and its appearance setting kept: it connects without a new pairing code (US-002 AC-4). See OQ-3 for a possible one-time macOS Keychain prompt.
-- [ ] **AC-6**: When the parent removes the app (drag "EagleEye Parent App" from *Applications* to the Trash and empty it) and follows the removal steps in the instructions (OQ-2), no program files, Dock or Launchpad entry, stored connection or pairing data and no Keychain entry of the app remain on the Mac. After a new installation, the app starts unpaired with the host dialog (US-002 AC-11). As on Windows, removing the device entry on the service is not part of removing the app (US-002 Decision Q-2).
+- [ ] **AC-6**: There is no uninstaller app. The `.dmg` also contains a **removal script** (OQ-2). The install instructions explain how to run it and recommend using "Remove pairing" ("Kopplung aufheben", AC-23) first, so that the service forgets the device. When the parent quits the app, moves "EagleEye Parent App" from *Applications* to the Trash and runs the removal script as described:
+  - the script deletes the app's data folder (pairing, appearance), its Keychain entry and every other leftover of the app, such as preferences and caches, and reports what it removed;
+  - afterwards no program files, Dock or Launchpad entry, stored connection or pairing data, Keychain entry, preferences or caches of the app remain on the Mac (the implementation plan lists the locations that TES checks in Finder and in *Keychain Access*);
+  - running the script a second time, or when the app was never started, ends without an error;
+  - the script removes nothing that does not belong to the app;
+  - after a new installation, the app starts unpaired with the host dialog (US-002 AC-11).
+
+  As on Windows, the script does not remove the device entry on the service (US-002 Decision Q-2); that is what "Remove pairing" before the removal is for.
 
 ### C. Window, menu and look (FR-APP-081, FR-APP-083)
 
@@ -148,6 +156,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-015 (own device only, as in US-002)
 | Date | Change | Source |
 |---|---|---|
 | 2026-10-20 | Story created (status `New`) | Michael's scope (CR-001 Q-6, Orchestrator brief 2026-10-20), written by PRO |
+| 2026-10-20 | Story approved; OQ-1, OQ-3, OQ-4 answered as proposed; OQ-2 changed: the `.dmg` also delivers a removal script for the leftover data (data folder, Keychain entry, preferences, caches), explained in the install instructions with "Remove pairing" first. Changed: AC-2, AC-6, UI notes (install flow). Status stays `New` until ARC's plan is approved (then `Analyzed`) | Michael (via the Orchestrator), written by PRO |
 
 ---
 
@@ -201,6 +210,10 @@ participant "EagleEye\nParent App" as App
 
 Parent -> F : open EagleEye-ParentApp-<version>.dmg
 Parent -> F : drag app to Applications
+note right of F
+the .dmg also holds the install
+instructions and the removal script (AC-6)
+end note
 Parent -> App : first start
 G --> Parent : "cannot be opened" (unsigned)
 Parent -> G : System Settings → Privacy & Security → Open Anyway
@@ -236,16 +249,16 @@ Fallback, only if ARC's analysis shows that the Mac platform work is much larger
 
 ---
 
-## Open Questions for Michael
+## Open Questions (answered by Michael, 2026-10-20)
 
-Each question has a proposed default. If Michael accepts all defaults, the ACs stay as written.
+Answered by Michael on 2026-10-20: OQ-1, OQ-3 and OQ-4 as proposed; OQ-2 changed (removal script in the `.dmg`, AC-2 and AC-6 adjusted).
 
 | ID | Question | Proposed default | Answer |
 |---|---|---|---|
-| OQ-1 | **Closing the window.** On the Mac, closing the last window can either quit the app (as on Windows) or keep it running in the Dock until Command + Q. The app has no background function. | **Closing the window quits the app** (AC-8), like the Windows app and like single-window Mac apps such as System Settings. | |
-| OQ-2 | **Removing the app.** macOS has no uninstaller: dragging the app to the Trash leaves its data (pairing, appearance) and its Keychain entry on the Mac. On Windows, uninstalling removes all data (US-002 AC-5). | **No uninstaller.** The install instructions list the remaining items (data folder, Keychain entry) and how to delete them by hand (AC-6). Before removing the app, the parent can use "Remove pairing" so that the service forgets the device. | |
-| OQ-3 | **Updates and the Keychain.** The app is only ad-hoc signed, and each build has a new signature. macOS may then ask once after an update whether the new version may use the stored Keychain entry, or it may refuse access, so that the pairing is lost. Which outcome is acceptable? | A **one-time macOS prompt after an update is acceptable** (the parent clicks "Always Allow"); after that the app connects without a new pairing code. Having to pair again after every update is **not** acceptable (AC-5). If ARC finds that only re-pairing is possible, the question comes back to Michael. | |
-| OQ-4 | **Test scope for US-006.** All 39 ACs of US-006 were never tested manually (closed without a test run). The Mac test run will exercise the Rules and Settings pages and the samples of AC-34 against the service, but not the full US-006 enforcement (grace periods, midnight, break-start closes, time-zone detection). | **Not part of US-007.** US-007 tests the Mac app and the samples of AC-34. A full manual verification of US-006 is planned separately when Michael wants it. | |
+| OQ-1 | **Closing the window.** On the Mac, closing the last window can either quit the app (as on Windows) or keep it running in the Dock until Command + Q. The app has no background function. | **Closing the window quits the app** (AC-8), like the Windows app and like single-window Mac apps such as System Settings. | Answer (Michael, 2026-10-20): proposed default accepted |
+| OQ-2 | **Removing the app.** macOS has no uninstaller: dragging the app to the Trash leaves its data (pairing, appearance) and its Keychain entry on the Mac. On Windows, uninstalling removes all data (US-002 AC-5). | **No uninstaller.** The install instructions list the remaining items (data folder, Keychain entry) and how to delete them by hand (AC-6). Before removing the app, the parent can use "Remove pairing" so that the service forgets the device. | Answer (Michael, 2026-10-20): **changed**. No uninstaller app, but the `.dmg` also delivers a **removal script** that deletes the leftover data: the data folder, the Keychain entry and any other app leftovers such as preferences or caches. The install instructions explain how to run it and recommend "Remove pairing" first so that the service forgets the device. → AC-2, AC-6, UI notes |
+| OQ-3 | **Updates and the Keychain.** The app is only ad-hoc signed, and each build has a new signature. macOS may then ask once after an update whether the new version may use the stored Keychain entry, or it may refuse access, so that the pairing is lost. Which outcome is acceptable? | A **one-time macOS prompt after an update is acceptable** (the parent clicks "Always Allow"); after that the app connects without a new pairing code. Having to pair again after every update is **not** acceptable (AC-5). If ARC finds that only re-pairing is possible, the question comes back to Michael. | Answer (Michael, 2026-10-20): proposed default accepted |
+| OQ-4 | **Test scope for US-006.** All 39 ACs of US-006 were never tested manually (closed without a test run). The Mac test run will exercise the Rules and Settings pages and the samples of AC-34 against the service, but not the full US-006 enforcement (grace periods, midnight, break-start closes, time-zone detection). | **Not part of US-007.** US-007 tests the Mac app and the samples of AC-34. A full manual verification of US-006 is planned separately when Michael wants it. | Answer (Michael, 2026-10-20): proposed default accepted; US-006 verification is skipped for now |
 
 ---
 
