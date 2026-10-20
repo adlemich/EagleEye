@@ -667,6 +667,14 @@ Everything the kid's programs control is **untrusted input** for the SYSTEM serv
 
 ### 13.1 Mac Catalyst Considerations
 
+> **Amendment (US-007, ADR-020) — proposed with the US-007 implementation plan, 2026-10-20**:
+> - **Secure storage**: `Platforms/MacCatalyst/MacKeychainSecretStore` (Security framework, generic password, service `com.adlemich.eagleeye`), not MAUI `SecureStorage`. "Not found" returns `null`; any refusal throws `SecretStoreUnavailableException`, never "no secret".
+> - **TLS**: `UseNativeHttpHandler=false` for the maccatalyst TFM, so the trust callback runs on the managed handler. No other TLS code on the Mac.
+> - **No App Sandbox**, no restricted entitlements (ad-hoc signing). Data in `~/Library/Application Support/EagleEye/`, resolved via `NSFileManager` (Application Support, user domain).
+> - **Culture**: set once at start by `MacCultureSetup` (rule in Core `UiCulturePolicy`): UI language from the first preferred language (en → English, else German), formats from UI language + region.
+> - **Fixes for the Mac look** go into `OnPlatform` values or `#if MACCATALYST` handler mappings in `MauiProgram`, never into a Mac-only copy of a view, and never in a way that changes what Windows shows. No `MenuBarItems` (they would appear on Windows too).
+> - **Window**: closing the window quits the app (flush pending edits first).
+
 - The ParentApp runs on macOS via **Mac Catalyst** (MAUI's macOS deployment target). This is a UIKit app running in AppKit compatibility mode.
 - **Role**: production platform, with the same features as the Windows parent app (FR-APP-082, FR-APP-110, ADR-019). Built and verified on the MacBook (ADR-007). Keep macOS-specific code in `Platforms/MacCatalyst` minimal; shared logic belongs in `EagleEye.ParentApp.Core` (ADR-009).
 - **Window sizing**: desktop layout as on Windows (§16.1), resizable window. Set a sensible minimum window size (e.g., 800x600) and support resizing.
