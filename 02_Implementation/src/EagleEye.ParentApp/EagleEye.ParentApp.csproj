@@ -52,6 +52,10 @@
   -->
   <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
     <ValidateXcodeVersion>false</ValidateXcodeVersion>
+    <!-- ADR-020 §3: managed HttpClientHandler, so the trust callback of ParentHubClient runs as on Windows (no ATS). -->
+    <UseNativeHttpHandler>false</UseNativeHttpHandler>
+    <!-- Apple Silicon only (requirements §9.4, US-007 G-18): no universal build, no .pkg. -->
+    <RuntimeIdentifier>maccatalyst-arm64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>

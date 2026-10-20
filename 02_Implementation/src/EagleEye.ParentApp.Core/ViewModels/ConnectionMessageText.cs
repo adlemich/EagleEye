@@ -21,6 +21,8 @@ internal static class ConnectionMessageText
             ConnectionMessage.CertificateChanged => AppTexts.Format(AppTexts.ErrorCertificateChangedFormat, state.Host),
             ConnectionMessage.PairingLost => AppTexts.Format(AppTexts.InfoPairingLostFormat, state.Host),
             ConnectionMessage.PairingForgotten => AppTexts.Format(AppTexts.InfoPairingForgottenFormat, state.Host),
+            ConnectionMessage.PairingSaveFailed => AppTexts.ConnectionPairingSaveFailed,
+            ConnectionMessage.KeychainSaveFailed => AppTexts.ConnectionKeychainSaveFailed,
             _ => AppTexts.ErrorRemoveFailed,
         };
     }

@@ -175,3 +175,16 @@ Prompt text (German macOS, Michael's screenshot): title „EagleEye möchte dein
 6. **Debug OSStatus trace** in `MacKeychainSecretStore` (Debug only, never the value): keep as a diagnosis aid or remove in Step 2.
 
 **Gaps for Steps 2 to 6** (details in §2): Step 2: G-1, G-2, G-5, G-6, G-9, G-18 (and the FL items above). Step 3: G-3. Step 5: G-10 to G-16 (accent colours, button contrast, value fields stretching, editor borders, page width on Regeln/Berichte, picker, navigation contrast). Step 6: G-17 (tooltip check). No gap so far requires a Mac-only copy of a view or makes a page unusable on Catalyst.
+
+## 7. Gap status (implementation, Steps 2 to 7)
+
+| Gap | Status | Where |
+|---|---|---|
+| G-1 | Ignored as decided (R-8); README note in Step 9 | — |
+| G-2 | **Done (Step 2)**: no sandbox (`Entitlements.plist` empty); data in `~/Library/Application Support/EagleEye/`, Mac Debug `EagleEye-Debug/` (`MauiAppDataPaths`) | Step 2 |
+| G-4, G-8 | Done (FL-1, FL-2; ADR-020 Rev. 1). Debug Keychain service `com.adlemich.eagleeye.debug` (R-2) | Step 2 |
+| G-5 | **Done (Step 2)**: `CompletePairingAsync` save-failure handling with revoke and `PairingSaveFailed` / `KeychainSaveFailed` (R-3) | Step 2 |
+| G-6 | **Done (Step 2)**: `NSLocalNetworkUsageDescription` (Info.plist + `de.lproj`/`en.lproj` `InfoPlist.strings`); check by Michael pending | Step 2 |
+| G-7 | **Done (Step 2)**: `UseNativeHttpHandler=false` kept (R-4) | Step 2 |
+| G-9 | **Done (Step 2)**: label "EagleEye Parent App" set at creation (verified: attribute `0x00000007` = "EagleEye Parent App") | Step 2 |
+| G-18 | **Done (Step 2)**: `RuntimeIdentifier=maccatalyst-arm64` | Step 2 |

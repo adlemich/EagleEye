@@ -14,13 +14,22 @@ namespace EagleEye.ParentApp.Platforms.MacCatalyst;
 /// </summary>
 public sealed class MacKeychainSecretStore : ISecretStore
 {
+#if DEBUG
+    /// <summary>Keychain service of Debug builds: kept apart from the installed app (US-007 Step 1 review R-2).</summary>
+    public const string Service = "com.adlemich.eagleeye.debug";
+#else
     /// <summary>Keychain service of all EagleEye items (= bundle ID).</summary>
     public const string Service = "com.adlemich.eagleeye";
+#endif
+
+    /// <summary>Name of the item in Keychain Access (US-007 Step 1 review R-5).</summary>
+    public const string Label = "EagleEye Parent App";
 
     private const string SecurityLibrary = "/System/Library/Frameworks/Security.framework/Security";
     private const string CoreFoundationLibrary = "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation";
     private const int Success = 0;
     private const int ItemNotFound = -25300;
+    private const uint LabelAttributeTag = 0x6C61626C; // kSecLabelItemAttr ('labl')
 
     private static readonly byte[] ServiceBytes = Encoding.UTF8.GetBytes(Service);
 
@@ -70,7 +79,12 @@ public sealed class MacKeychainSecretStore : ISecretStore
         else if (status == ItemNotFound)
         {
             status = SecKeychainAddGenericPassword(
-                IntPtr.Zero, (uint)ServiceBytes.Length, ServiceBytes, (uint)account.Length, account, (uint)secret.Length, secret, IntPtr.Zero);
+                IntPtr.Zero, (uint)ServiceBytes.Length, ServiceBytes, (uint)account.Length, account, (uint)secret.Length, secret, out var added);
+            if (status == Success)
+            {
+                SetLabel(added);
+                CFRelease(added);
+            }
         }
 
         Trace("write", status);
@@ -93,6 +107,26 @@ public sealed class MacKeychainSecretStore : ISecretStore
         return status is Success or ItemNotFound ? Task.CompletedTask : throw new SecretStoreUnavailableException("delete", status);
     }
 
+    /// <summary>Sets the visible name; presentation only, so a failure is traced and ignored (R-5).</summary>
+    private static void SetLabel(IntPtr item)
+    {
+        var label = Encoding.UTF8.GetBytes(Label);
+        var labelData = Marshal.AllocHGlobal(label.Length);
+        var attribute = Marshal.AllocHGlobal(Marshal.SizeOf<KeychainAttribute>());
+        try
+        {
+            Marshal.Copy(label, 0, labelData, label.Length);
+            Marshal.StructureToPtr(new KeychainAttribute(LabelAttributeTag, (uint)label.Length, labelData), attribute, false);
+            var list = new KeychainAttributeList(1, attribute);
+            Trace("label", SecKeychainItemModifyAttributesAndData(item, ref list, 0, null));
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(attribute);
+            Marshal.FreeHGlobal(labelData);
+        }
+    }
+
     private static int Find(byte[] account, out uint length, out IntPtr data, out IntPtr item)
         => SecKeychainFindGenericPassword(
             IntPtr.Zero, (uint)ServiceBytes.Length, ServiceBytes, (uint)account.Length, account, out length, out data, out item);
@@ -103,7 +137,7 @@ public sealed class MacKeychainSecretStore : ISecretStore
 
     [DllImport(SecurityLibrary)]
     private static extern int SecKeychainAddGenericPassword(
-        IntPtr keychain, uint serviceLength, byte[] service, uint accountLength, byte[] account, uint passwordLength, byte[] password, IntPtr itemRef);
+        IntPtr keychain, uint serviceLength, byte[] service, uint accountLength, byte[] account, uint passwordLength, byte[] password, out IntPtr itemRef);
 
     [DllImport(SecurityLibrary)]
     private static extern int SecKeychainFindGenericPassword(
@@ -119,8 +153,17 @@ public sealed class MacKeychainSecretStore : ISecretStore
     [DllImport(SecurityLibrary)]
     private static extern int SecKeychainItemModifyAttributesAndData(IntPtr itemRef, IntPtr attrList, uint length, byte[] data);
 
+    [DllImport(SecurityLibrary, EntryPoint = "SecKeychainItemModifyAttributesAndData")]
+    private static extern int SecKeychainItemModifyAttributesAndData(IntPtr itemRef, ref KeychainAttributeList attrList, uint length, byte[]? data);
+
     [DllImport(SecurityLibrary)]
     private static extern int SecKeychainItemDelete(IntPtr itemRef);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private readonly record struct KeychainAttribute(uint Tag, uint Length, IntPtr Data);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private readonly record struct KeychainAttributeList(uint Count, IntPtr Attributes);
 
     [DllImport(CoreFoundationLibrary)]
     private static extern void CFRelease(IntPtr cf);

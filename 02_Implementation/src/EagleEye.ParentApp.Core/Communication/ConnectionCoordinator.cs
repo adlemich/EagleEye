@@ -1,7 +1,10 @@
+using System.Security.Cryptography;
+using EagleEye.ParentApp.Core.Abstractions;
 using EagleEye.ParentApp.Core.Data;
 using EagleEye.Shared.Communication;
 using EagleEye.Shared.Constants;
 using EagleEye.Shared.Models;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -283,9 +286,64 @@ public sealed class ConnectionCoordinator(
 
         var pairing = new StoredPairing(
             session.Host.Display, result.DeviceId, deviceName, thumbprint, timeProvider.GetUtcNow(), result.Token);
-        await pairingStore.SaveAsync(pairing).ConfigureAwait(false);
+        try
+        {
+            await pairingStore.SaveAsync(pairing).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (IsSaveFailure(ex))
+        {
+            await HandleSaveFailureAsync(session, pairing, ex).ConfigureAwait(false);
+            return;
+        }
+
         await AbortPairingAsync(session, message: null).ConfigureAwait(false);
         StartPairedLoop(pairing, session.Host);
+    }
+
+    /// <summary>Storage failures that end a pairing with a message (US-007 R-3); other exceptions are bugs and propagate.</summary>
+    private static bool IsSaveFailure(Exception ex)
+        => ex is SecretStoreUnavailableException or SqliteException or IOException or UnauthorizedAccessException or CryptographicException;
+
+    /// <summary>
+    /// The service accepted the code but the pairing could not be saved (US-007 R-3): clean up locally, revoke the new
+    /// device on the service with the token still in memory (best effort), and end the session with a message.
+    /// </summary>
+    private async Task HandleSaveFailureAsync(PairingSession session, StoredPairing pairing, Exception failure)
+    {
+        _logger.LogWarning("Pairing with {Host} could not be saved on this device ({Error}); revoking it on the service.", pairing.Host, failure.GetType().Name);
+        try
+        {
+            await pairingStore.DeleteAsync().ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // Best effort: a half-written row or secret is also replaced by the next pairing.
+        }
+
+        await AbortPairingAsync(session, message: null).ConfigureAwait(false);
+        await RevokeDeviceAsync(session.Host, pairing).ConfigureAwait(false);
+        var message = failure is SecretStoreUnavailableException ? ConnectionMessage.KeychainSaveFailed : ConnectionMessage.PairingSaveFailed;
+        SetState(ConnectionState.Initial with { Host = session.Host.Display, LastMessage = message });
+    }
+
+    private async Task RevokeDeviceAsync(HostAddress host, StoredPairing pairing)
+    {
+        var client = clientFactory.Create(host, pairing.Token, CertificateTrustPolicy.Pinned(pairing.CertificateThumbprint));
+        try
+        {
+            using var timeout = CreateTimeout();
+            await client.StartAsync(timeout.Token).ConfigureAwait(false);
+            await client.RemovePairedDeviceAsync(pairing.DeviceId, timeout.Token).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // Best effort: an unrevoked device stays as an orphan on the service (harmless, US-007 R-3).
+            _logger.LogWarning("Revoking the unsaved pairing on {Host} failed; the device entry may remain on the service.", pairing.Host);
+        }
+        finally
+        {
+            await client.DisposeAsync().ConfigureAwait(false);
+        }
     }
 
     private async Task AbortPairingAsync(PairingSession session, ConnectionMessage? message)

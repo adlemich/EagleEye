@@ -19,6 +19,8 @@ public sealed class ConnectionMessageTextTests
     [InlineData(ConnectionMessage.PairingLost, "This PC is no longer paired with kid-pc.")]
     [InlineData(ConnectionMessage.RemoveFailed, "The pairing could not be removed. Please try again.")]
     [InlineData(ConnectionMessage.PairingForgotten, "The pairing with kid-pc was deleted on this device. Pairing again requires a new pairing code.")]
+    [InlineData(ConnectionMessage.PairingSaveFailed, "The pairing could not be saved on this device. Please request a new code and pair again.")]
+    [InlineData(ConnectionMessage.KeychainSaveFailed, "The pairing could not be saved in the macOS Keychain. Please allow the access, request a new code and pair again.")]
     public void Compose_English(ConnectionMessage message, string expected)
     {
         var text = TestSupport.InCulture("en-US", () => ConnectionMessageText.Compose(State(message)));
@@ -30,6 +32,8 @@ public sealed class ConnectionMessageTextTests
     [InlineData(ConnectionMessage.Unreachable, "Verbindungsfehler: Keine Verbindung zum EagleEye-Dienst unter kid-pc möglich.")]
     [InlineData(ConnectionMessage.WrongCode, "Der Kopplungscode ist falsch.")]
     [InlineData(ConnectionMessage.PairingForgotten, "Die Kopplung mit kid-pc wurde auf diesem Gerät gelöscht. Für eine neue Kopplung ist ein neuer Kopplungscode nötig.")]
+    [InlineData(ConnectionMessage.PairingSaveFailed, "Die Kopplung konnte auf diesem Gerät nicht gespeichert werden. Bitte einen neuen Code anfordern und erneut koppeln.")]
+    [InlineData(ConnectionMessage.KeychainSaveFailed, "Die Kopplung konnte nicht im macOS-Schlüsselbund gespeichert werden. Bitte den Zugriff erlauben, einen neuen Code anfordern und erneut koppeln.")]
     [InlineData(ConnectionMessage.CodeExpired, "Der Kopplungscode ist abgelaufen.")]
     [InlineData(ConnectionMessage.DeviceNameRequired, "Bitte einen Gerätenamen eingeben (höchstens 50 Zeichen).")]
     public void Compose_German(ConnectionMessage message, string expected)

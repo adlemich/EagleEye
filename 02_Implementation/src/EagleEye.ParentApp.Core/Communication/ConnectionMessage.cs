@@ -38,4 +38,10 @@ public enum ConnectionMessage
 
     /// <summary>The pairing was forgotten on this device only (ISSUE-009).</summary>
     PairingForgotten,
+
+    /// <summary>The service accepted the code, but the pairing could not be saved on this device (US-007 R-3).</summary>
+    PairingSaveFailed,
+
+    /// <summary>The service accepted the code, but the macOS Keychain refused to store the token (US-007 R-3).</summary>
+    KeychainSaveFailed,
 }

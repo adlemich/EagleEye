@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using EagleEye.ParentApp.Core;
 using EagleEye.ParentApp.Core.ViewModels;
-using Microsoft.Data.Sqlite;
 
 namespace EagleEye.ParentApp.Views;
 
@@ -63,10 +62,10 @@ public partial class MainPage : ContentPage
         {
             await _viewModel.StartAsync();
         }
-        catch (Exception ex) when (ex is SqliteException or InvalidDataException or IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (StartupErrorText.For(ex) is { } message)
         {
             Debug.WriteLine(ex);
-            await DisplayAlertAsync(App.WindowTitle, AppTexts.ErrorStartup, AppTexts.OkButton);
+            await DisplayAlertAsync(App.WindowTitle, message, AppTexts.OkButton);
         }
     }
 }

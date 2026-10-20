@@ -45,6 +45,9 @@
   <data name="ErrorRemoveFailed" xml:space="preserve"><value>The pairing could not be removed. Please try again.</value></data>
   <data name="InfoPairingLostFormat" xml:space="preserve"><value>This PC is no longer paired with {0}.</value></data>
   <data name="ErrorStartup" xml:space="preserve"><value>The data of the EagleEye parent app could not be opened. Please reinstall the app.</value></data>
+  <data name="ErrorKeychainAccess" xml:space="preserve"><value>The pairing could not be read from the macOS Keychain. Please restart the app and confirm the access with “Always Allow”.</value></data>
+  <data name="ConnectionPairingSaveFailed" xml:space="preserve"><value>The pairing could not be saved on this device. Please request a new code and pair again.</value></data>
+  <data name="ConnectionKeychainSaveFailed" xml:space="preserve"><value>The pairing could not be saved in the macOS Keychain. Please allow the access, request a new code and pair again.</value></data>
   <data name="OkButton" xml:space="preserve"><value>OK</value></data>
   <data name="SectionUserAccounts" xml:space="preserve"><value>User accounts on the EagleEye PC</value></data>
   <data name="UserAccountsInstruction" xml:space="preserve"><value>Tick the accounts that are under parental control.</value></data>
