@@ -1,6 +1,6 @@
 # Implementation Plan: US-007 — macOS Parent App Parity
 
-**Status**: Approved by Michael (2026-10-20), with his answers to Q-1 and Q-2 (both as recommended), incl. ADR-020 and the amendments of ADR-019, arc42 and the coding guidelines
+**Status**: Approved by Michael (2026-10-20), with his answers to Q-1 and Q-2 (both as recommended), incl. ADR-020 and the amendments of ADR-019, arc42 and the coding guidelines. **Revision 1 (2026-10-20, Step 1 review) — proposed, pending Michael's approval**: see "Step 1 Review" (ADR-020 §2 Revision 1, arc42 R-3, Steps 2 to 7 adjusted, Q-4 to Q-5).
 **Date**: 2026-10-20
 **Author**: ARC
 **User story**: `02_Implementation/docs/requirements/user-stories/US-007/user-story.md` (approved 2026-10-20, 36 ACs in groups A to I, OQ-1 to OQ-4 answered)
@@ -247,13 +247,82 @@ Never a Mac-only copy of a view. Known candidates to check: `CheckBox` size and 
 | `~/Library/WebKit/com.adlemich.eagleeye/` | `rm -rf` |
 | `~/Library/Containers/com.adlemich.eagleeye/`, `~/Library/Application Scripts/com.adlemich.eagleeye/` (only from sandboxed dev builds before Step 2) | `rm -rf` |
 | Keychain item service `com.adlemich.eagleeye`, account `pairing-token` | `security delete-generic-password -s com.adlemich.eagleeye -a pairing-token` (repeated until none is left) |
-| Keychain items of the MAUI `SecureStorage` dev builds (service name as recorded in Step 1) | `security delete-generic-password -s <name>` |
+| *(Revision 1)* Debug-build leftovers: Keychain item service `com.adlemich.eagleeye.debug`, folder `~/Library/Application Support/EagleEye-Debug/` | `security delete-generic-password -s com.adlemich.eagleeye.debug -a pairing-token`; `rm -rf` (MAUI `SecureStorage` never stored an item, first light §4) |
 | Privacy settings of the app | `tccutil reset All com.adlemich.eagleeye` (best effort; output not an error) |
 
 4. Read-only check: if the Dock still has an entry with the bundle ID (`defaults read com.apple.dock persistent-apps`), print how to remove it (D-3). The script does not edit Dock settings.
 5. Summary: "removed: n items" or "nothing to remove" (de/en); exit code 0. A second run, or a run on a Mac where the app was never started, prints "nothing to remove" and ends with 0.
 
 The script touches nothing outside the paths above. Every path contains `com.adlemich.eagleeye` or is the folder `Application Support/EagleEye`.
+
+---
+
+## Step 1 Review (ARC, 2026-10-20) — Revision 1, proposed, pending Michael's approval
+
+*Input: `US-007/first-light.md` (gap list G-1 to G-18, Keychain and Release probes), `US-007/implementation-report.md` (DV-1, DV-2), `US-007/evidence/`, screenshots in `US-007/input/`. Result of Step 1: the Mac app pairs with `192.168.1.37` and shows Michael's real data in Debug and Release. **No gap changes the plan's structure or needs a story split.** DV-1 (store pulled forward into Step 1) is accepted. DV-2 is accepted through ADR-020 Revision 1.*
+
+### R-1. Keychain (G-4, G-8, DV-2) — ADR-020 §2 Revision 1
+- `SecItem…` cannot write on Mac Catalyst for an ad-hoc build (-34018 for login and data-protection keychain, with and without sandbox; the entitlement prevents launch). **Decision**: the FL-2 implementation (legacy `SecKeychain…` API, login keychain, K-1) **is** the ADR-020 §2 implementation. K-2 and plan Q-3 are void.
+- Deprecation risk recorded in ADR-020 §2 Revision 1 item 4 and arc42 R-3 (no exit without a paid Apple account; check on each macOS major and toolchain update).
+- **What remains of the Step 2 spike** (Decision 2 list, reduced): (a) **deny case**: "Nicht erlauben" in the prompt → `SecretStoreUnavailableException` → `ErrorKeychainAccess`, pairing row kept, next start with "Allow" connects; (b) **deletion by the removal script**: `security delete-generic-password -s com.adlemich.eagleeye -a pairing-token` deletes the item created by the app, without a prompt or with at most a confirmation the parent can give, and with the app gone; (c) the label (R-5). Items 1 to 3 of the old spike list are done (first light §4).
+
+### R-2. Update behaviour (OQ-3, AC-5)
+- Measured: each "Always Allow" by a new ad-hoc build **replaces** the item's partition list with that build's cdhash. Parent view: **one prompt after each update, then silent; the pairing survives.** This matches OQ-3 (one-time prompt acceptable, re-pairing not). A second prompt at the first restart after an update was seen once (Debug); TES checks it in the update test. Tolerance: Q-4.
+- **Dev convenience — decision**: Debug builds on Mac Catalyst use their own Keychain service `com.adlemich.eagleeye.debug` and their own data folder `~/Library/Application Support/EagleEye-Debug/` (`#if MACCATALYST && DEBUG`; `EAGLEEYE_DEV_APP_DATA_DIR` still overrides). Reason: without it, every dev build steals the partition list from Michael's installed Release app (which would then prompt again), and a Debug pairing would overwrite the installed app's pairing. Debug builds still prompt after each rebuild; accepted. **Q-1 is not reopened**: a self-signed identity has no team ID, so the partition list would most likely still be keyed on the cdhash and the prompt would stay; the cost (key, setup) would buy nothing certain.
+
+### R-3. Silent pairing failure and orphan devices (G-5) — Core, affects Windows too
+**Decision** — `ConnectionCoordinator.CompletePairingAsync` handles a failing `pairingStore.SaveAsync`:
+1. Catch `SecretStoreUnavailableException`, `SqliteException`, `IOException`, `UnauthorizedAccessException`, `CryptographicException` (DPAPI on Windows). Other exceptions keep propagating (bugs).
+2. Best-effort local clean-up: `pairingStore.DeleteAsync()` (removes a half-written secret or row), errors swallowed.
+3. Best-effort **revoke on the service** with the token still in memory: a short paired client (`IParentHubClientFactory.Create(host, token, CertificateTrustPolicy.Pinned(thumbprint))`) → `StartAsync` → `RemovePairedDeviceAsync(deviceId)`, bounded by `OperationTimeout` (15 s), then disposed; failures swallowed. The service already allows a paired device to remove itself (`ParentHub.RemovePairedDevice`). No contract change.
+4. End the pairing session with a new `ConnectionMessage`: `KeychainSaveFailed` (for `SecretStoreUnavailableException`) or `PairingSaveFailed` (all other caught types). Both keep the host so the parent can retry with a new code. The UI never stays silent.
+5. Texts (new keys in `AppTexts*.resx`; wording may be adjusted):
+
+| Key | German | English |
+|---|---|---|
+| `ConnectionPairingSaveFailed` | Die Kopplung konnte auf diesem Gerät nicht gespeichert werden. Bitte einen neuen Code anfordern und erneut koppeln. | The pairing could not be saved on this device. Please request a new code and pair again. |
+| `ConnectionKeychainSaveFailed` | Die Kopplung konnte nicht im macOS-Schlüsselbund gespeichert werden. Bitte den Zugriff erlauben, einen neuen Code anfordern und erneut koppeln. | The pairing could not be saved in the macOS Keychain. Please allow the access, request a new code and pair again. |
+
+**Windows impact**: behaviour change only in a failure path that has never been seen on Windows (DPAPI or SQLite failing while saving); no visible change in normal use. Windows unit tests cover it (same Core code); no Windows manual test needed beyond the Step 8 smoke check.
+**Unit tests** (add to the Unit Test Requirements): save throws each caught type → session ended, message set (`KeychainSaveFailed` vs `PairingSaveFailed`), `DeleteAsync` called, revoke attempted with device ID, pinned trust and token; revoke failing or timing out → same message, no exception; `DeleteAsync` throwing → still the message; an uncaught exception type → propagates; state never `PairedConnected`.
+**Orphan devices**: the hub method lets any paired app remove any device ID, but no parent app has a device list or a "remove other device" function (rest of FR-APP-015, out of scope of US-007). The four orphans "Michael's MacBook" left by first light are harmless (no device limit, tokens never stored anywhere). They stay until a later **device-management story** (FR-APP-015: list paired devices, remove others), which PRO should keep on the backlog; it also covers R-8/R-9 of arc42. No clean-up in US-007.
+
+### R-4. TLS handler (G-7)
+**Keep** `UseNativeHttpHandler=false` (ADR-020 §3, revision note). The native handler did run the callback, and the managed fallback build also worked, but keeping the managed handler gives one TLS stack on both platforms, no App Transport Security and no dependence on how Apple's handler orders system trust and the callback. Step 2 sets it; Step 6 checks the pin mismatch case (AC-19, "identity changed") on the Mac.
+
+### R-5. Keychain item label (G-9)
+Set the label "EagleEye Parent App" at creation (attribute list `kSecLabelItemAttr`) in Step 2. If it proves fragile with the legacy API, accept the service name `com.adlemich.eagleeye` as the visible name and update "Data Locations"; this is presentation only (AC-24 is met either way). The macOS prompt shows the service name in any case.
+
+### R-6. Debug-only OSStatus trace
+**Keep** (Debug builds only, stderr, status code only, never the value). It is the only diagnosis aid for Keychain failures; Release builds have no trace (NFR-S-014 holds).
+
+### R-7. Release bundle signature (side finding)
+The per-architecture Release bundle from `dotnet publish` is only linker-signed (no sealed resources). **Step 7**: after the bundle is renamed to `EagleEye Parent App.app`, the package script ad-hoc signs the **final** bundle (`codesign --force --sign -`, nested code first or `--deep`, DEV's choice; entitlements kept empty) and then requires `codesign --verify --deep --strict` to pass and `codesign -dv` to show sealed resources (`Sealed Resources version=2`) and `Signature=adhoc`. Only that bundle goes into the `.dmg`. Note: the update test (AC-5) must use two bundles produced by the package script.
+
+### R-8. Gap assignment (Windows look)
+
+| Gap | Step | Decision |
+|---|---|---|
+| G-1 `performFetch` notice | 2 | Ignore (no `UIBackgroundModes`; adding `fetch` would be wrong). Note in the README. |
+| G-2 data path | 2 | Sandbox off + Decision 4 (as planned). Mac Debug: `EagleEye-Debug` (R-2). |
+| G-3 name | 3 | As planned. |
+| G-4 secret store | done (FL-1/FL-2) | Accepted (R-1). |
+| G-5 silent pairing failure | 2 | R-3 (Core). |
+| G-6 local network | 2 | `NSLocalNetworkUsageDescription` (as planned). The first attempt after a new build may still fail before the parent answers the prompt; the coordinator shows the connection error and the parent retries. Instructions mention it. |
+| G-7 handler | 2 | R-4. |
+| G-8 keychain API | 2 | R-1, ADR-020 Revision 1. |
+| G-9 label | 2 | R-5. |
+| G-10 accent | 5 | Heading bars from the macOS accent (Decision 7). Native controls already follow the accent. |
+| G-11 button contrast | 5 | **Mac only**: buttons use the heading-bar resources (accent background, readable text from `HeadingBarPalette`), so the Mac app has one accent colour. Selected by `OnPlatform`/a Mac-only style. **Windows unchanged.** |
+| G-12 `Entry` width | 5 | Mac-only fix (`OnPlatform` width/`HorizontalOptions` or a `#if MACCATALYST` handler mapping). Windows unchanged. |
+| G-13 `Editor` border | 5 | Mac-only handler mapping (border on the native text view). |
+| G-14 page width on Rules/Reports | 5 | Expected to disappear with G-12; otherwise Mac-only fix. |
+| G-15 picker | 5 | Mac-only handler mapping or style (affordance, theme colours). |
+| G-16 navigation selection | 5 | **Mac only**: selected item in the accent colour with readable text (same resources as G-11), `OnPlatform` visual state. **Windows unchanged.** |
+| G-17 duplicate "EA" rows | 6 | Check only (tooltip with the program path on hover). |
+| G-18 universal build | 2 | `RuntimeIdentifier=maccatalyst-arm64` (as planned). |
+
+**Visible Windows change: none.** All look fixes are Mac-only (Decision 8). If DEV finds a fix that can only be shared, DEV stops and asks; Michael must approve any visible Windows change (Q-5).
 
 ---
 
@@ -361,7 +430,7 @@ Prerequisites: the service PC `192.168.1.37` runs service and tray 0.6.2; Michae
 |---|---|---|
 | `/Applications/EagleEye Parent App.app` | The app | Install |
 | `~/Library/Application Support/EagleEye/EagleEye.ParentApp.db` (+ `-wal`, `-shm`) | Host, device ID, device name, pinned thumbprint, appearance. **No token** (`Secrets` table empty) | First start |
-| Keychain Access → *login* → *Passwords*: name "EagleEye Parent App", where `com.adlemich.eagleeye`, account `pairing-token` | The pairing token (kind "application password") | Pairing |
+| Keychain Access → *login* → *Passwords*: name "EagleEye Parent App" (or `com.adlemich.eagleeye` if the label is not set, Step 1 review R-5), where `com.adlemich.eagleeye`, account `pairing-token`. Debug builds: service `com.adlemich.eagleeye.debug` (dev only) | The pairing token (kind "application password") | Pairing |
 | `~/Library/Preferences/com.adlemich.eagleeye.plist` | UIKit/MAUI window and system preferences | First start (system) |
 | `~/Library/Caches/com.adlemich.eagleeye/` | System caches | Possibly |
 | `~/Library/HTTPStorages/com.adlemich.eagleeye/` | URL session storage | Possibly (unlikely with the managed handler) |
@@ -498,15 +567,17 @@ Not unit-tested (platform code, verified manually): `MacKeychainSecretStore`, `M
 
 ---
 
-## Open Questions for Michael (answered 2026-10-20)
+## Open Questions for Michael
 
-Michael accepted Q-1 and Q-2 as recommended. Q-3 stays conditional on the Step 2 spike.
+Q-1 and Q-2 answered 2026-10-20 (as recommended). Q-3 void after the Step 1 review. Q-4 and Q-5 are new with Revision 1 (open).
 
 | ID | Question | Recommendation (default) | Answer |
 |---|---|---|---|
 | **Q-1** | **Avoid the Keychain prompt after every update?** With ad-hoc signing, each new build may ask once for your login password ("Always Allow", OQ-3). A **local self-signed code-signing certificate** on the MacBook (created once in Keychain Access, private key stays on the MacBook) would give every build the same identity, so the prompt would not come back. Gatekeeper still blocks the first start (not an Apple certificate). Cost: a one-time setup step and a key to keep. | **No, keep ad-hoc signing** as accepted in OQ-3. Revisit if the prompts during the test run bother you; it can be added later without other changes. | **Resolved** (Michael, 2026-10-20): no self-signed certificate; ad-hoc signing stays. |
 | **Q-2** | **Dock entry on removal.** If you kept the app in the Dock, a "?" icon stays after removal. The removal script could delete that Dock entry itself (edit the Dock settings and restart the Dock), or the instructions tell you to remove it first. | **Instructions + reminder** (D-3): the script only checks and tells you. It never edits settings that do not belong to the app. | **Resolved** (Michael, 2026-10-20): the script does not remove the Dock entry; it only checks and reminds. |
-| **Q-3** | *(Only if the Step 2 spike ends with K-2.)* The data-protection keychain item cannot be deleted by a script. The app would need a "delete my data" function to be run before the app is moved to the Trash. | Not asked now. Raised by ARC with the spike result if it happens. | Open (conditional) |
+| **Q-3** | *(Only if the Step 2 spike ends with K-2.)* The data-protection keychain item cannot be deleted by a script. The app would need a "delete my data" function to be run before the app is moved to the Trash. | Not asked now. Raised by ARC with the spike result if it happens. | **Void** (Step 1 review R-1): K-2 is not reachable; the login keychain item is deleted by the script. |
+| **Q-4** *(Revision 1)* | **Up to two Keychain prompts after an update?** Normally one prompt after an update, then silent. Once in development a second prompt came at the first restart after "Always Allow". The pairing is never lost. | **Accept up to two prompts per update** (the first start and possibly the first restart), then silent. TES records the count as a note, not a Fail. More than two, or a prompt at every start of the same build, is a Fail. | Open |
+| **Q-5** *(Revision 1)* | **Button and menu colour on Windows.** On the Mac, buttons and the selected menu item will use the macOS accent colour (G-11, G-16), like the heading bars. Should the Windows app get the same (Windows accent colour), for a consistent look? | **No, Windows unchanged in US-007** (AC-35: no visible change). If you want it, it becomes a small separate change with its own check. | Open |
 
 ---
 
