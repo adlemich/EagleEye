@@ -1,6 +1,6 @@
 # EagleEye — Parental Control for Windows
 
-EagleEye is a parental control solution that lets parents control which applications their children can use on Windows, set time budgets per application, configure usage schedules, and monitor usage statistics, all remotely from a parent app on Windows, macOS or Android.
+EagleEye is a parental control solution that lets parents control which applications their children can use on Windows, set time budgets per application, configure usage schedules, and monitor usage statistics, all remotely from the EagleEye parent app on Windows or macOS.
 
 ---
 
@@ -10,8 +10,10 @@ EagleEye is a parental control solution that lets parents control which applicat
 |-----------|-------------|------------|
 | `EagleEye.Service` | Windows service (SYSTEM): monitors processes, enforces rules, serves the SignalR hub | .NET 10, Windows Service |
 | `EagleEye.TrayClient` | Windows tray application: runs in the kid's user session, shows remaining time | .NET 10, WinForms |
-| `EagleEye.ParentApp` | Parent app: configure rules, view statistics | .NET 10, MAUI (Android + iOS for production; Windows client for testing; macOS) |
+| `EagleEye.ParentApp` | Parent app: configure rules, view statistics | .NET 10, MAUI: Windows parent app (own installer) and Mac app (Mac Catalyst, `.dmg`) |
 | `EagleEye.Shared` | Shared library: SignalR contracts (API-first), domain models | .NET 10 |
+
+There are no iOS or Android parent apps (dropped 2026-10-20, see `02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`).
 
 ---
 
@@ -21,7 +23,7 @@ EagleEye is a parental control solution that lets parents control which applicat
 EagleEye/
 ├── 01_Intend_and_Constraints/   Project input: intent, constraints, Q&A
 ├── 02_Implementation/           Source code, tests, docs, scripts
-└── 03_Delivery/                 Release artifacts: installer, .dmg, .apk
+└── 03_Delivery/                 Release artifacts: installers, .dmg
 ```
 
 ---
@@ -32,7 +34,7 @@ EagleEye is developed on two machines that share this repository (see `02_Implem
 
 | Machine | Develops, builds and tests |
 |---------|---------------------------|
-| **Windows 11 developer machine** | Service, TrayClient, Shared, ParentApp **Windows** + **Android** targets, Windows installer. It is also the **manual test station**. |
+| **Windows 11 developer machine** | Service, TrayClient, Shared, ParentApp **Windows** target, Windows installers. It is also the **manual test station**. |
 | **MacBook** | ParentApp **macOS** target (Mac Catalyst), `.dmg` |
 
 Sync is through git only: pull when you start, commit and push before you switch machines.
@@ -42,13 +44,14 @@ Sync is through git only: pull when you start, commit and push before you switch
 | Tool | Windows machine | MacBook |
 |------|:---:|:---:|
 | .NET SDK 10 | ✔ | ✔ |
-| .NET MAUI workloads | Windows + Android | Mac Catalyst |
+| .NET MAUI workloads | Windows | Mac Catalyst |
 | PowerShell 7.6 | ✔ | ✔ |
 | VSCode (C# Dev Kit, .NET MAUI extension) | ✔ | ✔ |
 | Inno Setup 6 | ✔ | |
-| Android SDK / emulator | ✔ | |
 | Xcode | | ✔ |
 | Docker or Podman (PlantUML server) | optional | optional |
+
+*Transition (CR-001):* until DEV has removed the Android target from the code, run `pwsh 02_Implementation/scripts/build.ps1 -SkipAndroid` on the Windows machine if no Android SDK is installed.
 
 ---
 

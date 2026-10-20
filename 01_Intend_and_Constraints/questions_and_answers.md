@@ -96,6 +96,8 @@ This file records all clarifying questions asked during the project bootstrappin
 
 **A**: Manual sideloading only for now — iOS via Xcode/`ios-deploy`, Android via `adb`. App Store / Play Store distribution deferred to a later stage when the product is mature.
 
+**Superseded (Michael, 2026-10-20)**: there are no iOS and Android apps any more; both are removed from the product (see Group 11 and `02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`).
+
 ---
 
 **Q5.3**: macOS app distribution?
@@ -162,6 +164,8 @@ Recorded by the Orchestrator. These answers supersede the development and test s
 
 **A**: All development, build and test for Windows (the service, the tray app and a new Windows parent client) and for Android happens on the Windows developer machine. All development, build and test for the macOS desktop parent app happens on the MacBook.
 
+**Amended (Michael, 2026-10-20)**: Android is dropped (Group 11). The Windows developer machine builds no Android target.
+
 ---
 
 **Q9.3**: How is testing done?
@@ -188,11 +192,15 @@ Recorded by the Orchestrator. These answers supersede the development and test s
 
 **A**: Yes, and also remotely. It uses the same communication model as the mobile apps.
 
+**Note (2026-10-20)**: the mobile apps are dropped (Group 11). The model is the one shared by the Windows and Mac parent apps.
+
 ---
 
 **Q9.7**: Which parent-app platforms matter most?
 
 **A**: Android and iOS apps are the primary platforms for production. The Windows client is used for initial testing.
+
+**Superseded (Michael, 2026-10-20)**: see Q11.1. Windows and Mac are the production parent-app platforms.
 
 ---
 
@@ -209,3 +217,19 @@ Recorded by PRO from Michael's answers to the open points of `02_Implementation/
 **Q10.2**: Should the tray client run only in standard-user (kid) sessions?
 
 **A**: No change: the tray client keeps running in admin sessions too.
+
+---
+
+## Group 11: Parent App Platforms (2026-10-20)
+
+Recorded by PRO from Michael's decision of 2026-10-20 (change request CR-001, `02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`). These answers supersede Q5.2 and Q9.7, and amend Q9.2 and Q9.6.
+
+**Q11.1**: On which platforms does the EagleEye parent app ship?
+
+**A**: Only as (1) the Windows parent app with its own per-user installer and (2) the Mac app (Mac Catalyst, direct `.dmg`). Both are production platforms; Windows is no longer just a testing vehicle.
+
+---
+
+**Q11.2**: What happens to the iPhone (iOS) and Android apps?
+
+**A**: Both are removed from the product. Michael will not pay 99 EUR/year for an Apple Developer account just to run his own app on his own phone; Android is dropped with it. US-007 (iOS parent app) was aborted and its branch deleted unmerged; US-008 (Rules on the phone) is void. Do not plan mobile apps again unless Michael brings them up.
