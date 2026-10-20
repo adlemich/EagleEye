@@ -44,6 +44,13 @@
 			</array>
 		</dict>
 	</dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>de</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>de</string>
+		<string>en</string>
+	</array>
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2026 Michael Adler</string>
 	<key>NSLocalNetworkUsageDescription</key>

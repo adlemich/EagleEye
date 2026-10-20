@@ -18,6 +18,10 @@ public static class MauiProgram
     /// <summary>Creates the app.</summary>
     public static MauiApp CreateMauiApp()
     {
+#if MACCATALYST
+        // US-007 AC-13, AC-15: language and formats from macOS, before any text is read.
+        Platforms.MacCatalyst.MacCultureSetup.Apply();
+#endif
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>();
 #if WINDOWS

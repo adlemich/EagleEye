@@ -189,3 +189,4 @@ Prompt text (German macOS, Michael's screenshot): title „EagleEye möchte dein
 | G-9 | **Done (Step 2)**: label "EagleEye Parent App" set at creation (verified: attribute `0x00000007` = "EagleEye Parent App") | Step 2 |
 | G-18 | **Done (Step 2)**: `RuntimeIdentifier=maccatalyst-arm64` | Step 2 |
 | G-3 | **Done (Step 3)**: `ApplicationTitle` "EagleEye Parent App" for maccatalyst only (bundle `EagleEye Parent App.app`, `CFBundleName`/`CFBundleDisplayName`), window title "EagleEye" unchanged; copyright in Info.plist and `InfoPlist.strings`; close quits (flush + 500 ms + `Quit()`); check by Michael pending | Step 3 |
+| (AC-12 to AC-15) | **Done (Step 4)**: `UiCulturePolicy` (Core) + `MacCultureSetup` (first preferred language → en/de; formats = UI language + macOS region); `CFBundleDevelopmentRegion` de, `CFBundleLocalizations` de/en; check by Michael pending | Step 4 |
