@@ -1,6 +1,8 @@
+using EagleEye.ParentApp.Core.Abstractions;
 using EagleEye.ParentApp.Core.Data;
 using EagleEye.ParentApp.Tests.Fakes;
 using Microsoft.Data.Sqlite;
+using Moq;
 using Xunit;
 
 namespace EagleEye.ParentApp.Tests.Data;
@@ -79,6 +81,29 @@ public sealed class PairingStoreTests : IAsyncLifetime
         await _store.SaveAsync(Pairing);
         _secrets.Values.Clear();
 
+        Assert.Null(await _store.LoadAsync());
+    }
+
+    [Fact]
+    public async Task LoadAsync_SecretStoreUnavailable_PropagatesAndKeepsRow()
+    {
+        await _store.SaveAsync(Pairing);
+        var refusing = new Mock<ISecretStore>();
+        refusing.Setup(s => s.GetAsync(PairingStore.TokenKey)).ThrowsAsync(new SecretStoreUnavailableException("read", -25293));
+        var store = new PairingStore(_database, refusing.Object);
+
+        await Assert.ThrowsAsync<SecretStoreUnavailableException>(() => store.LoadAsync());
+        Assert.Equal(Pairing, await _store.LoadAsync());
+    }
+
+    [Fact]
+    public async Task SaveAsync_SecretStoreUnavailable_PropagatesAndWritesNoRow()
+    {
+        var refusing = new Mock<ISecretStore>();
+        refusing.Setup(s => s.SetAsync(PairingStore.TokenKey, Pairing.Token)).ThrowsAsync(new SecretStoreUnavailableException("write", -34018));
+        var store = new PairingStore(_database, refusing.Object);
+
+        await Assert.ThrowsAsync<SecretStoreUnavailableException>(() => store.SaveAsync(Pairing));
         Assert.Null(await _store.LoadAsync());
     }
 

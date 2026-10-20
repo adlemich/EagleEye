@@ -36,8 +36,8 @@ public static class MauiProgram
 #if WINDOWS
         services.AddSingleton<ISecretProtector, Platforms.Windows.DpapiSecretProtector>();
         services.AddSingleton<ISecretStore, ProtectedSecretStore>();
-#else
-        services.AddSingleton<ISecretStore, MauiSecureStorageSecretStore>();
+#elif MACCATALYST
+        services.AddSingleton<ISecretStore, Platforms.MacCatalyst.MacKeychainSecretStore>();
 #endif
         services.AddSingleton<IPairingStore, PairingStore>();
         services.AddSingleton<ISettingsStore, SettingsStore>();
