@@ -84,20 +84,22 @@ Found with `git grep -i -E "android|ios|iphone|ipad|mobile|phone|adb|xcode|sidel
 
 ### 6.1 ARC (after Michael approves this CR)
 
+**Status (ARC, 2026-10-20)**: ARC rows done on this branch in `6f23416` (arc42, ADRs, new ADR-019) and `ebba2b1` (coding guidelines, dev-process docs). The new ADR-019 and the arc42/guidelines amendments are marked *Proposed* until Michael approves them. The two testing rows stay with TES.
+
 | File | What must change |
 |---|---|
-| `02_Implementation/docs/architecture/arc42/system-architecture.md` | §1 component table and goals ("mobile or macOS app", "pair their phone"); constraints (MAUI targets, machine roles, "Android and iOS primary"); context/deployment diagrams (Parent Device node, "Android 14+ / sideloaded via adb / Xcode"); building-block diagram `component [Android]`; storage tables (Android rows); distribution table (iOS/Android rows); QS-07 ("pairs their phone"); risk R-1 (iOS/Android TLS); secret-storage notes |
-| `02_Implementation/docs/architecture/decisions/ADR-001-technology-selection.md` | MAUI rationale names iOS, Android, macOS: add a dated note (or superseding ADR) that targets are Windows + macOS |
-| `02_Implementation/docs/architecture/decisions/ADR-002-sqlite-yaml-logging.md` | Platform list and Android storage row |
-| `02_Implementation/docs/architecture/decisions/ADR-004-pairing-based-authentication.md` | Example "Mom's iPhone" (cosmetic, optional) |
-| `02_Implementation/docs/architecture/decisions/ADR-007-dual-machine-development-and-manual-testing.md` | Machine roles: no Android on the Windows machine, no iOS on the MacBook; "Android and iOS primary" role statement; Windows client no longer only the testing vehicle |
-| `02_Implementation/docs/architecture/decisions/ADR-008-parent-connectivity-tls-and-pairing-protocol.md` | "ready for the mobile and macOS apps" |
-| `02_Implementation/docs/architecture/decisions/ADR-009-windows-parent-app-packaging-and-parentapp-core.md` | Multi-target list includes `net10.0-android`; "later Android, iOS and macOS work" |
-| `02_Implementation/docs/architecture/decisions/ADR-010-event-driven-state-propagation.md` | "relevant later for mobile apps" in the alternatives: add a dated note or leave as history |
-| New ADR (or amendment) | Record the platform change and the accepted unsigned, un-notarised Mac `.dmg` (Q-7) |
-| `02_Implementation/docs/architecture/product-coding-guidelines.md` | Remove §14 iOS and §15 Android (and TOC entries), `Platforms/Android` in the folder tree and build-host rules; Windows section "Role: initial testing vehicle … Android and iOS are the production platforms"; "phone layouts" wording in the macOS section |
-| `02_Implementation/docs/dev-process/dev-environments.md` | Windows machine: no Android target, APK, emulator, `maui-android` workload or Android SDK; MacBook: Xcode for Mac Catalyst only; `build.ps1` table; csproj TFM description |
-| `02_Implementation/docs/dev-process/dev-process.md` | §5 component table "Windows, Android, macOS (iOS later)" → Windows, macOS; machine list "Windows + Android targets" |
+| `02_Implementation/docs/architecture/arc42/system-architecture.md` | §1 component table and goals ("mobile or macOS app", "pair their phone"); constraints (MAUI targets, machine roles, "Android and iOS primary"); context/deployment diagrams (Parent Device node, "Android 14+ / sideloaded via adb / Xcode"); building-block diagram `component [Android]`; storage tables (Android rows); distribution table (iOS/Android rows); QS-07 ("pairs their phone"); risk R-1 (iOS/Android TLS); secret-storage notes **Done (6f23416).** |
+| `02_Implementation/docs/architecture/decisions/ADR-001-technology-selection.md` | MAUI rationale names iOS, Android, macOS: add a dated note (or superseding ADR) that targets are Windows + macOS **Done (6f23416).** |
+| `02_Implementation/docs/architecture/decisions/ADR-002-sqlite-yaml-logging.md` | Platform list and Android storage row **Done (6f23416).** |
+| `02_Implementation/docs/architecture/decisions/ADR-004-pairing-based-authentication.md` | Example "Mom's iPhone" (cosmetic, optional) **Done (6f23416).** |
+| `02_Implementation/docs/architecture/decisions/ADR-007-dual-machine-development-and-manual-testing.md` | Machine roles: no Android on the Windows machine, no iOS on the MacBook; "Android and iOS primary" role statement; Windows client no longer only the testing vehicle **Done (6f23416).** |
+| `02_Implementation/docs/architecture/decisions/ADR-008-parent-connectivity-tls-and-pairing-protocol.md` | "ready for the mobile and macOS apps" **Done (6f23416).** |
+| `02_Implementation/docs/architecture/decisions/ADR-009-windows-parent-app-packaging-and-parentapp-core.md` | Multi-target list includes `net10.0-android`; "later Android, iOS and macOS work" **Done (6f23416).** |
+| `02_Implementation/docs/architecture/decisions/ADR-010-event-driven-state-propagation.md` | "relevant later for mobile apps" in the alternatives: add a dated note or leave as history **Done (6f23416).** |
+| New ADR (or amendment) | Record the platform change and the accepted unsigned, un-notarised Mac `.dmg` (Q-7) **Done (6f23416).** `ADR-019-parent-app-platforms-windows-and-macos.md`. |
+| `02_Implementation/docs/architecture/product-coding-guidelines.md` | Remove §14 iOS and §15 Android (and TOC entries), `Platforms/Android` in the folder tree and build-host rules; Windows section "Role: initial testing vehicle … Android and iOS are the production platforms"; "phone layouts" wording in the macOS section **Done (ebba2b1).** |
+| `02_Implementation/docs/dev-process/dev-environments.md` | Windows machine: no Android target, APK, emulator, `maui-android` workload or Android SDK; MacBook: Xcode for Mac Catalyst only; `build.ps1` table; csproj TFM description **Done (ebba2b1).** |
+| `02_Implementation/docs/dev-process/dev-process.md` | §5 component table "Windows, Android, macOS (iOS later)" → Windows, macOS; machine list "Windows + Android targets" **Done (ebba2b1).** |
 | `02_Implementation/docs/testing/README.md` (with TES) | Test-station table: remove "Android parent app (emulator or USB device)" |
 | `02_Implementation/docs/testing/templates/test-plan-template.md` (TES) | Example prerequisite "Android emulator running" |
 
@@ -157,4 +159,4 @@ Both answers are also recorded in `02_Implementation/docs/requirements/general-p
 | CR written, requirements v1.7 drafted | PRO | Done 2026-10-20 |
 | Approve CR-001 and requirements v1.7, answer Q-6 and Q-7 | Michael | Approved 2026-10-20 |
 | Merge `change/CR-001-remove-mobile-platforms` into `main` (`--no-ff`) | Orchestrator | After approval |
-| Follow-ups §6 | ARC, DEV, Orchestrator | Orchestrator CLAUDE.md files done (916abfb); the rest after the merge |
+| Follow-ups §6 | ARC, DEV, Orchestrator | Orchestrator CLAUDE.md files done (916abfb); ARC docs done (6f23416, ebba2b1), ADR-019 proposed; the rest after the merge |
