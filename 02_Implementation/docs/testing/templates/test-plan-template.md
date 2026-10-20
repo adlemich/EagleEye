@@ -18,7 +18,7 @@
 | Test machine(s) | Windows Developer Machine / MacBook |
 | Accounts needed | Admin (Michael), standard test account (`eagleeye-kid`) |
 | Build / installer under test | e.g. `03_Delivery/windows/EagleEye-Setup-0.1.0.exe` |
-| Other prerequisites | [e.g. Android emulator running, MacBook on same LAN] |
+| Other prerequisites | [e.g. macOS parent app installed from the `.dmg` on the MacBook, MacBook on same LAN] |
 
 ## 3. Setup Instructions
 

@@ -1,8 +1,10 @@
 # ADR-008: Parent App Connectivity — Endpoints, TLS Trust and Pairing Protocol
 
-**Status**: Accepted (approved by Michael with the US-002 implementation plan, 2026-10-04)
+**Status**: Accepted (approved by Michael with the US-002 implementation plan, 2026-10-04; wording amended by CR-001, 2026-10-20)
 **Date**: 2026-10-04
 **Deciders**: ARC, Michael
+
+> **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped. The endpoints, TLS trust and pairing protocol apply unchanged to the two parent apps, Windows and macOS (FR-APP-091, FR-APP-111). Only the consequence "ready for the mobile and macOS apps" is reworded.
 
 ---
 
@@ -104,7 +106,7 @@ ADR-004 stays valid. US-002 makes it concrete:
 
 - The LAN surface is one TLS endpoint, and every method on it except pairing requires a paired device.
 - No manual firewall, certificate or URL ACL steps for the parent (US-002 AC-6, AC-7).
-- Contract and auth model are ready for the mobile and macOS apps.
+- Contract and auth model are ready for the ~~mobile and~~ macOS app *(CR-001)*.
 
 ### Negative / Trade-offs
 

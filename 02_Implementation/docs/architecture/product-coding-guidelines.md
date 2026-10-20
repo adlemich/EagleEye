@@ -1,7 +1,7 @@
 # EagleEye — Product Coding Guidelines
 
-*Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07)*
-*Maintainer: ARC Agent | Last Updated: 2026-10-10*
+*Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); CR-001 amendment approved (2026-10-20)*
+*Maintainer: ARC Agent | Last Updated: 2026-10-20*
 
 > **Amendment 2026-10-04 (US-002, ADR-008, ADR-009)**: §10.1, §10.2, §10.4 (`ParentApp.Core`, Shared `Communication/` and `Data/`), §12.2 (pairing code in a topmost window), §16.1 (packaging per ADR-009, token storage via DPAPI `ISecretStore`).
 
@@ -16,6 +16,8 @@
 > **Amendment 2026-10-10 (US-005, ADR-013, ADR-014) — approved by Michael together with the US-005 implementation plan (2026-10-10)**: §12.2 (tray requests with a result, kid-facing acknowledged dialogs), §12.4 (the agent's single `PostMessageW(WM_CLOSE)` exception, terminating kid processes in the service, service → agent commands), §16.1 (editable tables, WinUI `CheckBox` width, typed times, save on blur, `\r` line breaks), §10.1 (folders `Service/Rules`, `Service/Enforcement`, `ParentApp.Core/Rules`).
 
 > **Amendment 2026-10-12 (US-006, ADR-015, ADR-016) — approved by Michael together with the US-006 implementation plan (2026-10-12)**: §10.1 (folders `Shared/Resources` for the default kid texts, de neutral + en satellite, and `ParentApp.Core/Settings`; `Service/Rules` and `Service/Enforcement` also hold the app rules, the warning settings and the time-limit engine). Rule: default texts shown to users are never hard-coded and never stored by the service. They come from `DefaultTexts` in the displaying app's UI culture (ADR-016).
+
+> **Amendment 2026-10-20 (CR-001, ADR-019) — approved by Michael 2026-10-20**: iOS and Android parent apps dropped. §14 (iOS) and §15 (Android) removed (numbers kept), TOC updated; §10.1 and §10.4 without `Platforms/Android` and `Platforms/iOS`; §13 (macOS is a production platform; unsigned `.dmg`; desktop layout only); §16.1 (Windows is a production platform; secure storage and packaging notes without Android).
 
 This document defines the coding standards all EagleEye components must follow. It complements but does not duplicate the system architecture (`arc42/system-architecture.md`) and ADRs — refer to those for architectural decisions, component responsibilities, and design rationale.
 
@@ -38,8 +40,8 @@ This document defines the coding standards all EagleEye components must follow. 
 11. [Unit Testing](#11-unit-testing)
 12. [Platform-Specific: Windows 11 (Service and TrayClient)](#12-platform-specific-windows-11-service-and-trayclient)
 13. [Platform-Specific: macOS (ParentApp via Mac Catalyst)](#13-platform-specific-macos-parentapp-via-mac-catalyst)
-14. [Platform-Specific: iOS (ParentApp)](#14-platform-specific-ios-parentapp)
-15. [Platform-Specific: Android (ParentApp)](#15-platform-specific-android-parentapp)
+14. *(removed by CR-001: iOS)*
+15. *(removed by CR-001: Android)*
 16. [Platform-Specific: Windows (ParentApp via WinUI)](#16-platform-specific-windows-parentapp-via-winui)
 
 > **Amendment 2026-10-03 (ADR-007)**: §10.1 and §11.1 now reflect the actual test project layout (`02_Implementation/tests/`); §16 added for the Windows parent app; build hosts per platform noted in §10.4.
@@ -533,9 +535,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 │   ├── Resources/                # Styles, icons, images
 │   ├── Platforms/
 │   │   ├── Windows/
-│   │   ├── MacCatalyst/
-│   │   ├── Android/
-│   │   └── iOS/
+│   │   └── MacCatalyst/
 │   └── MauiProgram.cs
 
 02_Implementation/tests/          # Unit tests — one project per component
@@ -560,7 +560,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 
 ### 10.4 Build Hosts (ADR-007)
 
-- Code for `EagleEye.Service`, `EagleEye.TrayClient` and the ParentApp `Platforms/Windows` and `Platforms/Android` folders is built and verified on the Windows Developer Machine.
+- Code for `EagleEye.Service`, `EagleEye.TrayClient` and the ParentApp `Platforms/Windows` folder is built and verified on the Windows Developer Machine.
 - Code in ParentApp `Platforms/MacCatalyst` is built and verified on the MacBook.
 - Shared ParentApp code (`EagleEye.ParentApp.Core`, and the Views of the MAUI head) must compile on both hosts. `ParentApp.Core` must not reference MAUI. Do not use platform APIs outside `Platforms/` or behind `#if` guards.
 - Never hard-code absolute paths, path separators or line endings. Use `Path.Combine`, `Environment.GetFolderPath`, and `Environment.NewLine` where output is OS-facing.
@@ -668,10 +668,12 @@ Everything the kid's programs control is **untrusted input** for the SYSTEM serv
 ### 13.1 Mac Catalyst Considerations
 
 - The ParentApp runs on macOS via **Mac Catalyst** (MAUI's macOS deployment target). This is a UIKit app running in AppKit compatibility mode.
-- **Window sizing**: macOS expects resizable desktop windows, not portrait-locked phone layouts. Set a sensible minimum window size (e.g., 800x600) and support resizing.
+- **Role**: production platform, with the same features as the Windows parent app (FR-APP-082, FR-APP-110, ADR-019). Built and verified on the MacBook (ADR-007). Keep macOS-specific code in `Platforms/MacCatalyst` minimal; shared logic belongs in `EagleEye.ParentApp.Core` (ADR-009).
+- **Window sizing**: desktop layout as on Windows (§16.1), resizable window. Set a sensible minimum window size (e.g., 800x600) and support resizing.
 - **Menu bar**: Mac Catalyst apps get a basic menu bar automatically. Customize it for macOS-native feel (File, Edit, View, Help menus).
 - **MVVM**: Use CommunityToolkit.MVVM for view models. Data-bind views to view models — no code-behind logic for data manipulation.
-- **TLS trust**: The self-signed certificate requires a custom `ServerCertificateCustomValidationCallback` on the `HttpClientHandler` used by the SignalR client. Do **not** add the certificate to the system Keychain — handle trust programmatically.
+- **TLS trust**: The self-signed certificate requires a custom `ServerCertificateCustomValidationCallback` on the `HttpClientHandler` used by the SignalR client, and on `ClientWebSocketOptions.RemoteCertificateValidationCallback` (`CertificateTrustPolicy` in Core, ADR-008 §3). Do **not** add the certificate to the system Keychain — handle trust programmatically.
+- **Secure storage**: the pairing token goes through `ISecretStore`, implemented on macOS by `MauiSecureStorageSecretStore` (Keychain). Never store it in plain SQLite.
 
 ### 13.2 macOS File Paths
 
@@ -683,52 +685,22 @@ Everything the kid's programs control is **untrusted input** for the SYSTEM serv
 
 ### 13.3 macOS Distribution
 
-- Distributed as `.dmg` containing the `.app` bundle.
-- The app is **not** code-signed for the Mac App Store. Users may need to bypass Gatekeeper on first launch (`System Settings → Privacy & Security → Open Anyway`).
-- Document this in user-facing installation instructions.
+- Distributed as `.dmg` containing the `.app` bundle, built by `scripts/package-macos.ps1` on the MacBook into `03_Delivery/macos/` (FR-APP-112).
+- **No Developer-ID signature and no notarisation** (Q-7, ADR-019): the `.app` is only ad-hoc signed by the build. No Mac App Store. No Apple account or Apple secrets are needed for the build.
+- Gatekeeper blocks the first launch; the user allows it once (`System Settings → Privacy & Security → Open Anyway`). Document this in user-facing installation instructions.
+- Build the app from a repo **outside iCloud Drive** (dev-environments §5): iCloud's FinderInfo extended attribute makes `codesign` reject the bundle, even for the ad-hoc signature.
 
 ---
 
-## 14. Platform-Specific: iOS (ParentApp)
+## 14. Platform-Specific: iOS (ParentApp) — removed
 
-*Note: iOS is a primary production platform (with Android). It is built on the MacBook (ADR-007). Its user stories follow once the Windows parent app has validated the parent-side features.*
-
-### 14.1 iOS Considerations
-
-- **Portrait only**: Lock orientation to portrait via `Info.plist` (`UISupportedInterfaceOrientations`).
-- **Distribution**: Sideloaded via Xcode or `ios-deploy`. No App Store for v1.
-- **App Transport Security (ATS)**: iOS enforces HTTPS strictly. The self-signed certificate requires an ATS exception in `Info.plist` for the service's hostname/IP, or a custom `NSUrlSessionDelegate` to override certificate validation. Test this early (see system architecture §11, Risk R-1).
-- **Background behavior**: iOS aggressively suspends background apps. The SignalR connection will drop when the app is backgrounded. On foreground resume, reconnect and receive a full state push from the server (per ADR-003, Pattern 3, Rule 3).
-- **Secure storage**: Store the pairing token in the iOS Keychain rather than in plain SQLite, for platform-idiomatic secure storage.
-
-### 14.2 iOS File Paths
-
-- App sandbox `Documents/` for user data (SQLite, YAML, logs).
-- Use `Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)` in MAUI.
+*Removed by CR-001 (2026-10-20, ADR-019): the iOS parent app is dropped. The section number is kept so references to §16 stay valid.*
 
 ---
 
-## 15. Platform-Specific: Android (ParentApp)
+## 15. Platform-Specific: Android (ParentApp) — removed
 
-*Note: Android development is deferred until the macOS ParentApp and Windows Service mature (see product requirements §10). These guidelines apply when Android development begins.*
-
-### 15.1 Android Considerations
-
-- **Portrait only**: Lock orientation to portrait via `AndroidManifest.xml` (`android:screenOrientation="portrait"`).
-- **Distribution**: Sideloaded via `adb install`. No Play Store for v1.
-- **TLS trust**: Android does not trust self-signed certificates by default. Configure a custom `ServerCertificateCustomValidationCallback` on the `HttpClientHandler`. Alternatively, use a network security configuration (`network_security_config.xml`) to trust the EagleEye certificate. Test this early (see system architecture §11, Risk R-1).
-- **Background behavior**: Android may kill background apps under memory pressure. The SignalR connection will drop. On resume, reconnect and receive a full state push from the server (per ADR-003, Pattern 3, Rule 3).
-- **Secure storage**: Store the pairing token in Android's `EncryptedSharedPreferences` or the Android Keystore rather than in plain SQLite, for platform-idiomatic secure storage.
-
-### 15.2 Android File Paths
-
-- Internal storage: `Context.FilesDir` for app data (SQLite, YAML, logs).
-- Use `Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)` in MAUI.
-
-### 15.3 Android Permissions
-
-- **Network access**: `android.permission.INTERNET` (required for SignalR over LAN).
-- **No other special permissions** needed for v1 — EagleEye does not access contacts, camera, location, or other sensitive APIs.
+*Removed by CR-001 (2026-10-20, ADR-019): the Android parent app is dropped. The section number is kept so references to §16 stay valid.*
 
 ---
 
@@ -741,9 +713,9 @@ Everything the kid's programs control is **untrusted input** for the SYSTEM serv
 - **Target**: `net10.0-windows10.0.19041.0`. The csproj minimum (`SupportedOSPlatformVersion` / `TargetPlatformMinVersion`) is `10.0.19041.0`, because the SDK rejects a minimum above the TFM version (`NETSDK1135`); the minimum OS **Windows 11** is enforced by the installer (`MinVersion=10.0.22000`). MAUI renders through WinUI 3.
 - **Desktop UI**: same desktop-style layout as macOS (§13). Resizable window with a sensible minimum size. No portrait lock.
 - **TLS trust**: as on macOS, accept the service's self-signed certificate programmatically (trust on first use, then the pinned thumbprint; `CertificateTrustPolicy` in `ParentApp.Core`, ADR-008 §3). Set the callback on both the HTTP handler and `ClientWebSocketOptions.RemoteCertificateValidationCallback`. Never install the certificate into the Windows certificate store.
-- **Secure storage**: store the pairing token via the Core abstraction `ISecretStore`, never in plain SQLite. On Windows, `ProtectedSecretStore` (Core) keeps the encrypted bytes in the `Secrets` table, and the platform class `Platforms/Windows/DpapiSecretProtector` (`ISecretProtector`) encrypts with DPAPI `DataProtectionScope.CurrentUser`. **Do not use MAUI `SecureStorage` on Windows**: it needs package identity, and the app is unpackaged (ADR-009). Other platforms use `MauiSecureStorageSecretStore` (Keychain / Keystore, §14, §15).
-- **Role**: initial testing vehicle for parent-side features. Android and iOS are the production platforms, so keep Windows-specific code to a minimum and put everything possible in `EagleEye.ParentApp.Core` (ADR-009).
-- **Packaging** (ADR-009, supersedes copy deployment): unpackaged (`WindowsPackageType=None`), self-contained (`SelfContained`, `WindowsAppSDKSelfContained=true`), `win-x64`, no MSIX. Set `RuntimeIdentifier` and the self-contained properties **in the csproj for the Windows TFM only**; do not pass `-r` / `--self-contained` on the command line, which also applies to the Android target and breaks its restore. The publish output is packaged by `installer/windows/parentapp-setup.iss` (Inno Setup, **per user**, `PrivilegesRequired=lowest`, own `AppId`, default folder `%LocalAppData%\Programs\EagleEye Parent App`) into `03_Delivery/windows/EagleEye-ParentApp-Setup-<version>.exe`, built by `scripts/package-windows.ps1 -Target ParentApp`. Uninstall removes the program folder, the Start menu entry and `%LocalAppData%\EagleEye\`; repair/update keeps the app data.
+- **Secure storage**: store the pairing token via the Core abstraction `ISecretStore`, never in plain SQLite. On Windows, `ProtectedSecretStore` (Core) keeps the encrypted bytes in the `Secrets` table, and the platform class `Platforms/Windows/DpapiSecretProtector` (`ISecretProtector`) encrypts with DPAPI `DataProtectionScope.CurrentUser`. **Do not use MAUI `SecureStorage` on Windows**: it needs package identity, and the app is unpackaged (ADR-009). macOS uses `MauiSecureStorageSecretStore` (Keychain, §13.1).
+- **Role**: production platform, together with the macOS app (§13, ADR-019); both have the same features. Keep Windows-specific code to a minimum and put everything possible in `EagleEye.ParentApp.Core` (ADR-009), so the macOS app gets the same behaviour.
+- **Packaging** (ADR-009, supersedes copy deployment): unpackaged (`WindowsPackageType=None`), self-contained (`SelfContained`, `WindowsAppSDKSelfContained=true`), `win-x64`, no MSIX. Set `RuntimeIdentifier` and the self-contained properties **in the csproj for the Windows TFM only**; do not pass `-r` / `--self-contained` on the command line (while the project still had an Android target, this broke its restore; DEV may re-check once the Android target is removed, CR-001 §6.2). The publish output is packaged by `installer/windows/parentapp-setup.iss` (Inno Setup, **per user**, `PrivilegesRequired=lowest`, own `AppId`, default folder `%LocalAppData%\Programs\EagleEye Parent App`) into `03_Delivery/windows/EagleEye-ParentApp-Setup-<version>.exe`, built by `scripts/package-windows.ps1 -Target ParentApp`. Uninstall removes the program folder, the Start menu entry and `%LocalAppData%\EagleEye\`; repair/update keeps the app data.
 - **Same communication model** (FR-APP-091): the Windows app is an ordinary `ParentHub` client (TLS + pairing), whether it runs on the service PC or remotely. Never add a local shortcut such as direct SQLite access, named pipes or skipping pairing on `localhost`.
 - **Same-PC caveat**: if the parent app runs on the PC that hosts the service, it runs under the parent's admin account. Admin accounts are never monitored, so EagleEye does not enforce rules on the parent app itself.
 - *(US-005)* **Editable tables** (Rules page): `Grid` rows in a `BindableLayout` with fixed column widths (ISSUE-006 lesson); row view models are **merged by id**, never replaced on a snapshot (a replaced row loses the focus and the text being typed). WinUI's `CheckBox` has a default `MinWidth` of about 120: remove it for table cells with a handler mapping in `MauiProgram` (`#if WINDOWS`, `CheckBoxHandler.Mapper.AppendToMapping(…, (h, _) => h.PlatformView.MinWidth = 0)`). Times are typed in an `Entry` and parsed in Core (`TimeOfDayText`), not with `TimePicker` (no typing on Windows, 12/24 h by locale). Save on `Unfocused` and `Completed`, and flush explicitly before the page or the account selection changes (`Unfocused` does not fire when a view is removed). WinUI's `TextBox` (MAUI `Editor`) returns line breaks as `\r`: normalize in Core before comparing or sending. Icons that must work in light and dark mode use `AppThemeBinding` with two image variants.

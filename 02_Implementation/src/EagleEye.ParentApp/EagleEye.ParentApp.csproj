@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <!--
-      Target frameworks depend on the build host (ADR-007):
-        Windows Developer Machine -> Windows desktop + Android
-        MacBook                   -> macOS (Mac Catalyst); iOS is added here when iOS work starts
+      Target frameworks depend on the build host (ADR-007, ADR-019):
+        Windows Developer Machine -> Windows desktop
+        MacBook                   -> macOS (Mac Catalyst)
     -->
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net10.0-windows10.0.19041.0;net10.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net10.0-windows10.0.19041.0</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">net10.0-maccatalyst</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
@@ -24,10 +24,6 @@
     <!-- Localization (NFR-L-011): German is the neutral/default language, English is a satellite. -->
     <NeutralLanguage>de</NeutralLanguage>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
-    <!-- iOS -->
-    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">26.0</SupportedOSPlatformVersion>
-    <!-- Android -->
-    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">34.0</SupportedOSPlatformVersion>
     <!-- macOS -->
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">26.0</SupportedOSPlatformVersion>
     <!-- Windows: the SDK requires the API minimum to be at most the TFM version (19041). Windows 11 is
@@ -46,6 +42,16 @@
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <ApplicationIcon>Resources\AppIcon\eagleeye.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <!--
+    Mac Catalyst: the .NET maccatalyst pack (27.0.x) requires exactly Xcode 27.0; the MacBook has
+    Xcode 27.1 (minor update, same SDK major). Skip the exact-version check so the build runs
+    (dev-environments.md §5, CR-001 §6.2). Re-check after each Xcode or workload update and remove
+    this property once the pack matches the installed Xcode.
+  -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+    <ValidateXcodeVersion>false</ValidateXcodeVersion>
   </PropertyGroup>
 
   <ItemGroup>

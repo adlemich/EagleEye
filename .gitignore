@@ -38,14 +38,9 @@ publish/
 **/Properties/launchSettings.json
 
 # -----------------------------------------------------------------------------
-# MAUI / Mobile
+# MAUI (Mac Catalyst app bundles)
 # -----------------------------------------------------------------------------
 **/*.app/
-**/*.ipa
-**/*.apk
-**/*.aab
-**/Platforms/iOS/Entitlements.plist
-**/Platforms/Android/GoogleServicesJson/
 
 # -----------------------------------------------------------------------------
 # macOS
@@ -107,7 +102,6 @@ logs/
 # Machine-local tooling (two-machine setup, ADR-007)
 # -----------------------------------------------------------------------------
 .claude/settings.local.json
-03_Delivery/android/*.apk
 *.keystore
 *.jks
 

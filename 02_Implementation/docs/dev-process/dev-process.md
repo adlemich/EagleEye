@@ -151,7 +151,7 @@ DEV fully completes the current user story before starting the next. No parallel
 |-----------|---------|---------|
 | `EagleEye.Service` | Windows service — process monitoring, app enforcement, SignalR hub | SYSTEM account |
 | `EagleEye.TrayClient` | Windows tray app — remaining time display, notifications | Kid's user session |
-| `EagleEye.ParentApp` | MAUI parent app — remote configuration and statistics | Windows, Android, macOS (iOS later) |
+| `EagleEye.ParentApp` | MAUI parent app — remote configuration and statistics | Windows, macOS (both production; iOS and Android dropped, CR-001) |
 | `EagleEye.Shared` | Shared library — SignalR API contracts, domain models | Referenced by all |
 
 ### 6.2 Dependency Rule
@@ -208,8 +208,8 @@ All automation is via PowerShell 7.6 scripts in `02_Implementation/scripts/`:
 
 Two machines, one repository. See `02_Implementation/docs/dev-process/dev-environments.md`.
 
-- **Windows Developer Machine** (Windows 11): Service, TrayClient, Shared, ParentApp Windows + Android targets, installer. Also the manual test station.
-- **MacBook** (macOS 26+): ParentApp Mac Catalyst target, `.dmg`.
+- **Windows Developer Machine** (Windows 11): Service, TrayClient, Shared, ParentApp Windows target, installers. Also the manual test station.
+- **MacBook** (macOS 26+): Shared, ParentApp Mac Catalyst target, unsigned `.dmg` (ADR-019).
 - **No CI/CD pipeline**. All builds and tests run locally.
 
 ### 8.3 Verification Before Handoff

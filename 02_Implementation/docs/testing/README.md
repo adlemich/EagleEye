@@ -21,7 +21,7 @@ All acceptance and end-to-end testing for EagleEye is **manual**. Michael execut
 
 | Machine | Tested there |
 |---|---|
-| **Windows Developer Machine** (main test station) | Installer, `EagleEye.Service`, `EagleEye.TrayClient`, Windows parent app, Android parent app (emulator or USB device) |
+| **Windows Developer Machine** (main test station) | Installer, `EagleEye.Service`, `EagleEye.TrayClient`, Windows parent app |
 | **MacBook** | macOS parent app only. It connects over the LAN to the service on the Windows machine. |
 
 ### Test accounts on the Windows machine

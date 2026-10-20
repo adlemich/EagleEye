@@ -109,8 +109,8 @@ For each user story, produce `02_Implementation/docs/requirements/user-stories/U
 ## Non-Negotiable Technology Constraints
 
 - .NET 10 for all components
-- MAUI for ParentApp, one codebase: Android + iOS (production), Windows (initial testing, own per-user installer per ADR-009, same ParentHub model as mobile), macOS
-- Windows-side components and the ParentApp Windows + Android targets are built and tested on the Windows Developer Machine; the macOS target on the MacBook (ADR-007)
+- MAUI for ParentApp, one codebase, two production platforms: Windows (own per-user installer per ADR-009) and macOS (Mac Catalyst, unsigned `.dmg`). iOS and Android were dropped (CR-001, 2026-10-20)
+- Windows-side components and the ParentApp Windows target are built and tested on the Windows Developer Machine; the macOS target on the MacBook (ADR-007)
 - Acceptance/E2E testing is manual (ADR-007); design for observability (clear UI states, log entries) so Michael can verify behaviour by hand
 - SignalR for all service-client communication
 - `EagleEye.Shared/Contracts/` is the API contract — always changed first (API-first)

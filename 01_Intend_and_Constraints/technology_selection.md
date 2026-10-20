@@ -81,3 +81,5 @@ We will use claude code v2.1 for this project. The default model to use is claud
 ---
 
 > **Amendment 2026-10-03**: The "Development and Test" section above is superseded by the two-machine setup (Windows developer machine + MacBook) and manual testing. See `questions_and_answers.md` Group 9 and `02_Implementation/docs/architecture/decisions/ADR-007-dual-machine-development-and-manual-testing.md`.
+
+> **Amendment 2026-10-20 (Michael's decision, CR-001)**: the iOS and Android parent apps are dropped from the product. MAUI is used for the parent app on **Windows and macOS** only; wherever this document says "mobile applications" or "iOS, Android and MacOS", read "the Windows and Mac parent apps". The plan in "Development and Test" to create iOS and Android apps at a later stage is cancelled. See `questions_and_answers.md` Group 11 and `02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`.

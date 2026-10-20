@@ -1,8 +1,16 @@
 # ADR-007: Two-Machine Development and Manual Acceptance Testing
 
-**Status**: Accepted (§2 "Distribution" superseded by ADR-009, 2026-10-04)
+**Status**: Accepted (§2 "Distribution" superseded by ADR-009, 2026-10-04; machine roles and §2 "Role" amended by CR-001 / ADR-019, 2026-10-20)
 **Date**: 2026-10-03
 **Deciders**: Michael (project owner)
+
+> **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped (Michael, 2026-10-20). The two-machine setup and manual testing stay as decided. Changed:
+>
+> 1. **Machine roles** (§1): the Windows Developer Machine builds Shared, Service, TrayClient, the ParentApp **Windows** target and the Windows installers; it has no Android target, workload, SDK, emulator or APK. The MacBook builds Shared and the ParentApp **Mac Catalyst** target and packages the `.dmg`; it has no iOS target. Xcode stays on the MacBook for Mac Catalyst only.
+> 2. **Role of the Windows parent app** (§2): it is a **production** platform, together with the macOS app, not only the initial testing vehicle. Both apps have the same features (FR-APP-082); the macOS app catches up in the new US-007 "macOS parent app parity".
+> 3. **Communication** (§2): "same model as the mobile apps" now means the same model as the macOS app (FR-APP-091, FR-APP-111).
+>
+> The original text below is kept as history; superseded statements are struck through.
 
 ---
 
@@ -13,7 +21,7 @@ The original setup (ADR-001, `01_Intend_and_Constraints/technology_selection.md`
 Michael now has a dedicated **Windows 11 developer machine** in addition to the MacBook, and wants to:
 
 1. develop on both machines with the same git repository,
-2. do all Windows work (Service, TrayClient, a Windows parent client) and all Android work on the Windows machine,
+2. do all Windows work (Service, TrayClient, a Windows parent client) ~~and all Android work~~ on the Windows machine *(Android dropped, CR-001)*,
 3. do the macOS desktop parent app on the MacBook,
 4. replace automated acceptance/E2E testing with 100 % manual testing on the Windows machine, supported by checklists and a feedback mechanism.
 
@@ -25,8 +33,8 @@ Michael now has a dedicated **Windows 11 developer machine** in addition to the 
 
 | Machine | Builds, develops and tests |
 |---|---|
-| **Windows Developer Machine** | `EagleEye.Shared`, `EagleEye.Service`, `EagleEye.TrayClient`, `EagleEye.ParentApp` Windows target (new) and Android target, Windows installer |
-| **MacBook** | `EagleEye.ParentApp` Mac Catalyst target, iOS target, `.dmg` packaging |
+| **Windows Developer Machine** | `EagleEye.Shared`, `EagleEye.Service`, `EagleEye.TrayClient`, `EagleEye.ParentApp` Windows target (new) ~~and Android target~~, Windows installer |
+| **MacBook** | `EagleEye.Shared`, `EagleEye.ParentApp` Mac Catalyst target, ~~iOS target,~~ `.dmg` packaging |
 
 - Both machines work on `main` of `https://github.com/adlemich/EagleEye.git`. Git is the only sync mechanism.
 - No absolute paths in any instruction, document or script. Everything is repo-relative.
@@ -43,10 +51,11 @@ The parent app gains a **Windows desktop target** (MAUI on WinUI, `net10.0-windo
 
 Michael's clarifications (2026-10-03):
 
-- **Role**: Android and iOS are the primary production platforms. The Windows client is the **initial testing vehicle** for parent-side features, which can then be tested on the Windows developer machine before the mobile apps exist.
+- ~~**Role**: Android and iOS are the primary production platforms. The Windows client is the **initial testing vehicle** for parent-side features, which can then be tested on the Windows developer machine before the mobile apps exist.~~
+  **Amended by CR-001 (2026-10-20)**: Windows and macOS are the two production platforms; iOS and Android are dropped (ADR-019).
 - ~~**Distribution**: an extra app with no installer, deployed by copying a single `.exe` (FR-APP-092). Feasibility of a true single-file MAUI/WinUI publish must be validated early (coding guidelines §16.1).~~
   **Superseded by ADR-009 (2026-10-04)**: requirements v1.2 (FR-APP-092) replace copy deployment with a separate, self-contained, per-user Inno Setup installer with install, repair and uninstall. The single-file validation is no longer needed.
-- **Communication**: same model as the mobile apps (TLS + pairing via `ParentHub`). This holds both on the service PC and remotely (FR-APP-091).
+- **Communication**: same model as the ~~mobile apps~~ macOS app *(CR-001)* (TLS + pairing via `ParentHub`). This holds both on the service PC and remotely (FR-APP-091).
 
 ### 3. Manual acceptance testing
 
@@ -62,7 +71,7 @@ Process: `02_Implementation/docs/testing/README.md`.
 ## Rationale
 
 - Windows-specific components (SYSTEM service, WinForms tray, WinUI, Inno Setup) build and debug natively on Windows, with no VM hop.
-- The Android toolchain works well on Windows, so the MacBook only has to carry the Apple-only targets.
+- ~~The Android toolchain works well on Windows, so the MacBook only has to carry the Apple-only targets.~~ *(Android dropped, CR-001; the MacBook carries the Mac Catalyst target only.)*
 - The Windows machine is also the real target environment, so testing there is closer to production than a VM.
 - Manual testing by the product owner fits the current stage: a UI-heavy product (tray, notifications, installer, multiple apps on several OSes) where E2E automation would cost more than it returns.
 
@@ -71,7 +80,7 @@ Process: `02_Implementation/docs/testing/README.md`.
 | Option | Reason Rejected |
 |---|---|
 | Keep MacBook + Windows VM | Michael's direction; a native Windows machine is simpler and faster |
-| Build everything on one machine | Mac Catalyst and iOS require macOS/Xcode; Inno Setup and WinUI require Windows |
+| Build everything on one machine | Mac Catalyst (~~and iOS~~, dropped by CR-001) require macOS/Xcode; Inno Setup and WinUI require Windows |
 | Keep automated E2E tests alongside manual tests | Michael's direction: 100 % manual acceptance testing |
 | Drop unit tests too | Unit tests are cheap, run in seconds and protect refactoring; they are not acceptance tests. Can be revisited if Michael decides otherwise. |
 
@@ -95,7 +104,7 @@ Process: `02_Implementation/docs/testing/README.md`.
 ### Neutral
 
 - The previous VMware Fusion and remote-debugging setup is dropped
-- iOS (a primary production platform, together with Android) is built on the MacBook.
+- ~~iOS (a primary production platform, together with Android) is built on the MacBook.~~ *(iOS and Android dropped, CR-001 / ADR-019, 2026-10-20.)*
 
 ---
 
@@ -106,3 +115,4 @@ Process: `02_Implementation/docs/testing/README.md`.
 - `01_Intend_and_Constraints/questions_and_answers.md`, Group 9
 - ADR-001: Technology Selection (development setup superseded in part by this ADR)
 - ADR-009: Windows Parent App Packaging and the ParentApp.Core Library (supersedes §2 "Distribution")
+- ADR-019: Parent App Platforms — Windows and macOS Only (amends §1 and §2, CR-001)

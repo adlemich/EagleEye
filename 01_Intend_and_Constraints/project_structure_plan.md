@@ -2,6 +2,8 @@
 
 This document describes the planned folder structure and initial files to be generated under `02_Implementation`. It is subject to Michael's review and approval before anything is generated.
 
+> **Amendment 2026-10-20 (Michael's decision, CR-001)**: the iOS and Android parent apps are dropped. The parent app targets only **Windows** (added 2026-10-03, ADR-007) and **macOS** (Mac Catalyst). The `Platforms/iOS/` and `Platforms/Android/` folders, `03_Delivery/android/` and the Apple Developer / Android signing sections of the secrets template are marked dropped below; their removal from the repository is a follow-up for DEV (`02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`).
+
 ---
 
 ## Repository Root Layout
@@ -59,10 +61,11 @@ EagleEyeParentalControl/                    ← git repo root
 │   │   ├── Communication/                 ← SignalR client (localhost)
 │   │   └── EagleEye.TrayClient.csproj
 │   │
-│   └── EagleEye.ParentApp/                ← MAUI parent app (iOS, Android, macOS)
+│   └── EagleEye.ParentApp/                ← MAUI parent app (Windows, macOS; iOS/Android dropped 2026-10-20)
 │       ├── Platforms/
-│       │   ├── iOS/                       ← iOS platform specifics
-│       │   ├── Android/                   ← Android platform specifics
+│       │   ├── iOS/                       ← DROPPED 2026-10-20 (CR-001)
+│       │   ├── Android/                   ← DROPPED 2026-10-20 (CR-001)
+│       │   ├── Windows/                   ← Windows platform specifics (added 2026-10-03)
 │       │   └── MacCatalyst/               ← macOS platform specifics
 │       ├── ViewModels/                    ← shared view models (MVVM)
 │       ├── Views/                         ← shared UI views
@@ -130,7 +133,7 @@ The following files will be generated with real, working content during bootstra
 | File | Content |
 |------|---------|
 | `.gitignore` | .NET 10, MAUI, macOS, PowerShell, VSCode, Rider ignore rules — including `secrets/secrets.json` |
-| `secrets/secrets.template.json` | Template pre-populated with GitHub keys (username, personal access token, repo URL for `github.com/adlemich`). Placeholder sections for Apple Developer and Android signing — to be filled when those pipelines are built. |
+| `secrets/secrets.template.json` | Template pre-populated with GitHub keys (username, personal access token, repo URL for `github.com/adlemich`). Placeholder sections for Apple Developer and Android signing — to be filled when those pipelines are built. *(2026-10-20: the Android section is dropped; the Apple Developer section is not needed for iOS any more, Mac signing not needed, requirements Q-7.)* |
 | `.gitattributes` | Line ending normalization, binary file handling |
 | `README.md` | Project overview, component map, setup instructions |
 | `CLAUDE.md` (root) | Dev Process Orchestrator — role, workflow, rules, model config |
@@ -221,7 +224,7 @@ TES writes E2E tests + test report → Michael approves →
 
 6. **Scripts are the CI**: PowerShell scripts are the only automation mechanism. VSCode tasks wrap them for convenience.
 
-7. **Secrets management**: All credentials live in `secrets/secrets.json` at repo root — gitignored, never committed. A `secrets/secrets.template.json` is committed showing the required keys with empty/placeholder values. PowerShell scripts load secrets from `secrets/secrets.json` at runtime. The template covers: GitHub credentials, Apple Developer account, Android signing keystore, and any future credentials. If `secrets.json` is missing, scripts fail with a clear error pointing to the template.
+7. **Secrets management**: All credentials live in `secrets/secrets.json` at repo root — gitignored, never committed. A `secrets/secrets.template.json` is committed showing the required keys with empty/placeholder values. PowerShell scripts load secrets from `secrets/secrets.json` at runtime. The template covers: GitHub credentials, Apple Developer account, Android signing keystore, and any future credentials *(2026-10-20: Android signing dropped; Apple Developer account not needed, requirements Q-7)*. If `secrets.json` is missing, scripts fail with a clear error pointing to the template.
 
 ---
 

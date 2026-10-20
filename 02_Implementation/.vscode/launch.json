@@ -30,7 +30,7 @@
       "console": "internalConsole"
     },
     {
-      "name": "EagleEye.ParentApp (MAUI: Windows / Android on Windows, macOS on MacBook)",
+      "name": "EagleEye.ParentApp (MAUI: Windows on Windows, macOS on MacBook)",
       "type": "maui",
       "request": "launch",
       "preLaunchTask": "maui: Build"

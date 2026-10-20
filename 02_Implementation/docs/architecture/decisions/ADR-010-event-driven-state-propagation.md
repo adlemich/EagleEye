@@ -1,8 +1,10 @@
 # ADR-010: Event-Driven State Propagation — Service Broadcasts with Revisions
 
-**Status**: Accepted (approved by Michael, 2026-10-07)
+**Status**: Accepted (approved by Michael, 2026-10-07; note added by CR-001, 2026-10-20)
 **Date**: 2026-10-07
 **Deciders**: Michael (project owner), ARC
+
+> **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped. The remark "relevant later for mobile apps" in the rationale no longer has a target; fetching only the areas a client shows stays the rule for the Windows and macOS apps. The decision is unchanged.
 
 ---
 
@@ -129,7 +131,7 @@ The **broadcast is the confirmation of the stored state**; the **method result i
 - **The method result is still needed**: it is the only way to report a rejection (`HubException`) to the sender alone, and its revision lets the sender confirm even if another app's write overtook its own.
 - **Correlation id plus revision**: the id identifies the sender's own change exactly; the revision covers the case that a later write by another app arrives first. Neither needs extra round trips.
 - **Revisions per area, in memory**: they are only needed to order messages within one connection. Persisting them would add a table and a write per change for no benefit, because every service restart ends all connections and clients reset anyway.
-- **Client fetches on connect** instead of a server push: the client knows exactly when its state is complete (Loading state), fetches only the areas it shows (relevant later for mobile apps), and the pairing check happens first. The server stays stateless towards connecting clients.
+- **Client fetches on connect** instead of a server push: the client knows exactly when its state is complete (Loading state), fetches only the areas it shows (~~relevant later for mobile apps~~, CR-001), and the pairing check happens first. The server stays stateless towards connecting clients.
 - **Serialized writes per area with the broadcast inside the lock** give a total order of revisions and broadcasts without any distributed-ordering logic. Write rates are tiny (a parent clicking), so the lock costs nothing.
 
 ### Alternatives Considered
