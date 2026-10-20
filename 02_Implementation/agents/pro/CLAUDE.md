@@ -50,7 +50,7 @@ Read all files in `01_Intend_and_Constraints/` and produce a complete `general-p
 6. Multi-user requirements (multiple kid accounts, per-user configuration)
 7. Connection requirements (manual hostname/IP, self-signed TLS, local LAN)
 8. Non-functional requirements (performance, security, usability, reliability)
-9. Platform requirements (Windows 11 x64, iOS 26, Android 14, macOS 26, Apple Silicon)
+9. Platform requirements (Windows 11 x64, macOS 26, Apple Silicon)
 10. Out of scope for version 1
 
 Present the completed document to Michael for review before proceeding.
@@ -84,7 +84,7 @@ Save the story as: `user-story.md`
 - **Describe WHAT, not HOW** — no implementation details, no technology choices
 - **Atomic** — a story must be implementable in a single DEV iteration
 - **Testable** — every acceptance criterion must be verifiable by Michael in a **manual** test following TES's checklist, with observable outcomes and no code inspection
-- **Platform explicit** — name the platform(s) a story targets (Windows service/tray, Windows / Android / macOS parent app) so the work can be routed to the right machine
+- **Platform explicit** — name the platform(s) a story targets (Windows service/tray, Windows / macOS parent app) so the work can be routed to the right machine
 - **Status tracking** — update the `Status` field as the story progresses: `New` → `Analyzed` → `Implemented` → `Verified/Closed`
 
 ## Issue Handling

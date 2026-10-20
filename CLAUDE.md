@@ -15,7 +15,7 @@ EagleEye is a parental control solution consisting of:
 |-----------|-------------|----------|
 | `EagleEye.Service` | Windows service (SYSTEM): process monitoring, app enforcement, SignalR hub | Windows machine |
 | `EagleEye.TrayClient` | Windows tray app (kid's session): remaining time display, notifications | Windows machine |
-| `EagleEye.ParentApp` | MAUI parent app, one codebase. **Android + iOS** = production platforms; **Windows** client (own per-user installer, ADR-009) = initial testing vehicle; **macOS** desktop | Windows: Windows + Android targets · MacBook: macOS + iOS targets |
+| `EagleEye.ParentApp` | MAUI parent app, one codebase. Production platforms: **Windows** parent app (own per-user installer, ADR-009) and **macOS** app (Mac Catalyst, `.dmg`). iOS and Android were dropped (CR-001, 2026-10-20) | Windows: Windows target · MacBook: macOS target |
 | `EagleEye.Shared` | Shared library: SignalR API contracts, domain models (API-first) | both |
 
 **Technology**: .NET 10, MAUI, SignalR, PowerShell 7.6, Inno Setup, VSCode
@@ -29,8 +29,8 @@ Development happens on **two machines sharing this git repo**. The full rules ar
 
 | Host | Detect via | Responsible for |
 |------|-----------|-----------------|
-| **Windows Developer Machine** | `Platform: win32` / `$IsWindows` | Service, TrayClient, Shared, ParentApp **Windows + Android** targets, Windows installer, **all manual testing** |
-| **MacBook** | `Platform: darwin` / `$IsMacOS` | ParentApp **macOS** target (Mac Catalyst), **iOS** target, `.dmg` packaging |
+| **Windows Developer Machine** | `Platform: win32` / `$IsWindows` | Service, TrayClient, Shared, ParentApp **Windows** target, Windows installer, **all manual testing** |
+| **MacBook** | `Platform: darwin` / `$IsMacOS` | ParentApp **macOS** target (Mac Catalyst), `.dmg` packaging |
 
 1. **Know your host before acting.** Check the platform in your environment info, or run `pwsh 02_Implementation/scripts/env-check.ps1`. State the host when you report what you are about to do.
 2. **Do not attempt the other machine's work.** If a task needs the other machine, say so. Make sure the work is committed, and tell Michael exactly what to run there.

@@ -19,7 +19,7 @@ Read `02_Implementation/docs/dev-process/dev-environments.md` at the start of ev
 
 | Host | DEV may implement, build and unit-test |
 |------|----------------------------------------|
-| **Windows Developer Machine** | `EagleEye.Shared`, `EagleEye.Service`, `EagleEye.TrayClient`, `EagleEye.ParentApp` (shared code + Windows and Android targets), installer, Android packaging |
+| **Windows Developer Machine** | `EagleEye.Shared`, `EagleEye.Service`, `EagleEye.TrayClient`, `EagleEye.ParentApp` (shared code + Windows target), installer |
 | **MacBook** | `EagleEye.ParentApp` (shared code + Mac Catalyst target), `.dmg` packaging. Change `EagleEye.Shared` only if the plan explicitly assigns it to the MacBook. |
 
 - Only implement plan steps assigned to your host (see the plan's "Machine Assignment" section). For steps on the other machine: stop, commit, and tell Michael what to run there.
@@ -110,7 +110,7 @@ If there are no deviations, state so explicitly. The report is a required delive
 |------|-----------|
 | Language | C# 14, .NET 10 |
 | Windows service | `Microsoft.Extensions.Hosting.WindowsServices` |
-| MAUI app | .NET MAUI: Windows + Android (built on Windows), Mac Catalyst + iOS (built on MacBook) |
+| MAUI app | .NET MAUI: Windows (built on Windows), Mac Catalyst (built on MacBook). iOS and Android dropped (CR-001) |
 | SignalR server | `Microsoft.AspNetCore.SignalR` |
 | SignalR client | `Microsoft.AspNetCore.SignalR.Client` |
 | TLS certificates | `System.Security.Cryptography.X509Certificates` |
