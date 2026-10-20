@@ -33,7 +33,8 @@ public partial class MainPage : ContentPage
         Loaded += OnLoaded;
     }
 
-    private void ShowSelectedPage()
+    /// <summary>Saves typed values of the visible page (before another page is shown or the app quits, US-007 AC-32).</summary>
+    public void FlushPendingEdits()
     {
         if (ReferenceEquals(ContentRegion.Content, _rules))
         {
@@ -45,7 +46,11 @@ public partial class MainPage : ContentPage
             // US-006 AC-16: typed warning minutes and texts are saved before the Settings page is left.
             _settings.FlushPendingEdits();
         }
+    }
 
+    private void ShowSelectedPage()
+    {
+        FlushPendingEdits();
         ContentRegion.Content = _viewModel.SelectedItem.Key switch
         {
             MainViewModel.ReportsKey => _reports,

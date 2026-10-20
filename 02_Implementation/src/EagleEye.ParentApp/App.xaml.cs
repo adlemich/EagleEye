@@ -13,6 +13,10 @@ public partial class App : Application
     private const double MinimumHeight = 600;
     private const double InitialWidth = 1100;
     private const double InitialHeight = 720;
+#if MACCATALYST
+    // Time for the hub writes started by the flush to leave the app before it ends (US-007 AC-32).
+    private static readonly TimeSpan QuitFlushDelay = TimeSpan.FromMilliseconds(500);
+#endif
 
     private readonly IServiceProvider _services;
 
@@ -36,6 +40,20 @@ public partial class App : Application
             Height = InitialHeight,
         };
         _services.GetRequiredService<HeadingBarColorService>().Attach(window);
+#if MACCATALYST
+        // US-007 OQ-1 / ADR-020 §6: closing the window quits the app (macOS keeps apps running by default).
+        window.Destroying += OnWindowDestroying;
+#endif
         return window;
     }
+
+#if MACCATALYST
+    private async void OnWindowDestroying(object? sender, EventArgs e)
+    {
+        // async void is required for event handlers; nothing here throws.
+        ((sender as Window)?.Page as MainPage)?.FlushPendingEdits();
+        await Task.Delay(QuitFlushDelay);
+        Quit();
+    }
+#endif
 }

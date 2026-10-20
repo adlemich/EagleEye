@@ -56,6 +56,8 @@
     <UseNativeHttpHandler>false</UseNativeHttpHandler>
     <!-- Apple Silicon only (requirements §9.4, US-007 G-18): no universal build, no .pkg. -->
     <RuntimeIdentifier>maccatalyst-arm64</RuntimeIdentifier>
+    <!-- US-007 AC-4: name in Finder, Dock and the app menu; the window title stays "EagleEye" (App.WindowTitle). Windows keeps "EagleEye". -->
+    <ApplicationTitle>EagleEye Parent App</ApplicationTitle>
   </PropertyGroup>
 
   <ItemGroup>

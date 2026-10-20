@@ -44,6 +44,8 @@
 			</array>
 		</dict>
 	</dict>
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2026 Michael Adler</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>EagleEye verbindet sich mit dem EagleEye-PC in deinem Heimnetz, um Regeln und Berichte anzuzeigen.</string>
 	<key>XSAppIconAssets</key>

@@ -1,2 +1,4 @@
 /* US-007: bundle texts (German). */
 "NSLocalNetworkUsageDescription" = "EagleEye verbindet sich mit dem EagleEye-PC in deinem Heimnetz, um Regeln und Berichte anzuzeigen.";
+"CFBundleDisplayName" = "EagleEye Parent App";
+"NSHumanReadableCopyright" = "© 2026 Michael Adler";
