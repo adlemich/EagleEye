@@ -1,15 +1,15 @@
 # Implementation Plan: US-007 — macOS Parent App Parity
 
-**Status**: Draft — awaiting Michael's approval
+**Status**: Approved by Michael (2026-10-20), with his answers to Q-1 and Q-2 (both as recommended), incl. ADR-020 and the amendments of ADR-019, arc42 and the coding guidelines
 **Date**: 2026-10-20
 **Author**: ARC
 **User story**: `02_Implementation/docs/requirements/user-stories/US-007/user-story.md` (approved 2026-10-20, 36 ACs in groups A to I, OQ-1 to OQ-4 answered)
 **Requirements**: `02_Implementation/docs/requirements/general-product-requirements.md` v1.7 (FR-APP-110 to FR-APP-112, §9.4, §11.1 Q-6, Q-7)
 **Branch**: `feature/US-007-macos-parent-app-parity`
-**New ADR** (Proposed, approved together with this plan):
+**New ADR** (Accepted, approved by Michael with this plan, 2026-10-20):
 - ADR-020 — macOS platform layer under ad-hoc signing (`02_Implementation/docs/architecture/decisions/ADR-020-macos-platform-layer-under-ad-hoc-signing.md`)
 
-**Amended** (proposed with this plan): ADR-019 §4 (amendment note), arc42 (header, §5.5, §7, §7.1.1, §7.4, §8.1, §8.13, §9, §11 R-3), coding guidelines §13.
+**Amended** (approved by Michael with this plan, 2026-10-20): ADR-019 §4 (amendment note), arc42 (header, §5.5, §7, §7.1.1, §7.4, §8.1, §8.13, §9, §11 R-3), coding guidelines §13.
 
 ---
 
@@ -72,10 +72,10 @@ Michael wants to **see the Mac app running soon**. The plan therefore starts wit
 
 ## Architecture Changes
 
-- **ADR-020 (new, Proposed)**: no App Sandbox; own Keychain store (login keychain preferred); managed HTTP handler on the Mac; UI language and formats from macOS; accent colour from macOS; close quits; no lifecycle coordinator unless AC-22 needs it.
+- **ADR-020 (new, Accepted 2026-10-20)**: no App Sandbox; own Keychain store (login keychain preferred); managed HTTP handler on the Mac; UI language and formats from macOS; accent colour from macOS; close quits; no lifecycle coordinator unless AC-22 needs it.
 - **ADR-019 §4** (amendment note): macOS secrets via `MacKeychainSecretStore` (ADR-020), not `MauiSecureStorageSecretStore`.
-- **arc42** (marked as proposed with this plan): §5.5 platform services; §7 deployment box (no YAML on the Mac today); §7.1.1 Mac data locations; §7.4 `.dmg` file name and contents; §8.1 managed handler on the Mac; §8.13 Mac language rule; §9 ADR-020; §11 R-3 updated.
-- **Coding guidelines §13** (proposed): secret store, handler, sandbox, data path, culture, `#if MACCATALYST` rule for view fixes.
+- **arc42** (approved with this plan, 2026-10-20): §5.5 platform services; §7 deployment box (no YAML on the Mac today); §7.1.1 Mac data locations; §7.4 `.dmg` file name and contents; §8.1 managed handler on the Mac; §8.13 Mac language rule; §9 ADR-020; §11 R-3 updated.
+- **Coding guidelines §13** (approved with this plan): secret store, handler, sandbox, data path, culture, `#if MACCATALYST` rule for view fixes.
 
 ## New ADRs Required
 
@@ -498,13 +498,15 @@ Not unit-tested (platform code, verified manually): `MacKeychainSecretStore`, `M
 
 ---
 
-## Open Questions for Michael
+## Open Questions for Michael (answered 2026-10-20)
 
-| ID | Question | Recommendation (default) |
-|---|---|---|
-| **Q-1** | **Avoid the Keychain prompt after every update?** With ad-hoc signing, each new build may ask once for your login password ("Always Allow", OQ-3). A **local self-signed code-signing certificate** on the MacBook (created once in Keychain Access, private key stays on the MacBook) would give every build the same identity, so the prompt would not come back. Gatekeeper still blocks the first start (not an Apple certificate). Cost: a one-time setup step and a key to keep. | **No, keep ad-hoc signing** as accepted in OQ-3. Revisit if the prompts during the test run bother you; it can be added later without other changes. |
-| **Q-2** | **Dock entry on removal.** If you kept the app in the Dock, a "?" icon stays after removal. The removal script could delete that Dock entry itself (edit the Dock settings and restart the Dock), or the instructions tell you to remove it first. | **Instructions + reminder** (D-3): the script only checks and tells you. It never edits settings that do not belong to the app. |
-| **Q-3** | *(Only if the Step 2 spike ends with K-2.)* The data-protection keychain item cannot be deleted by a script. The app would need a "delete my data" function to be run before the app is moved to the Trash. | Not asked now. Raised by ARC with the spike result if it happens. |
+Michael accepted Q-1 and Q-2 as recommended. Q-3 stays conditional on the Step 2 spike.
+
+| ID | Question | Recommendation (default) | Answer |
+|---|---|---|---|
+| **Q-1** | **Avoid the Keychain prompt after every update?** With ad-hoc signing, each new build may ask once for your login password ("Always Allow", OQ-3). A **local self-signed code-signing certificate** on the MacBook (created once in Keychain Access, private key stays on the MacBook) would give every build the same identity, so the prompt would not come back. Gatekeeper still blocks the first start (not an Apple certificate). Cost: a one-time setup step and a key to keep. | **No, keep ad-hoc signing** as accepted in OQ-3. Revisit if the prompts during the test run bother you; it can be added later without other changes. | **Resolved** (Michael, 2026-10-20): no self-signed certificate; ad-hoc signing stays. |
+| **Q-2** | **Dock entry on removal.** If you kept the app in the Dock, a "?" icon stays after removal. The removal script could delete that Dock entry itself (edit the Dock settings and restart the Dock), or the instructions tell you to remove it first. | **Instructions + reminder** (D-3): the script only checks and tells you. It never edits settings that do not belong to the app. | **Resolved** (Michael, 2026-10-20): the script does not remove the Dock entry; it only checks and reminds. |
+| **Q-3** | *(Only if the Step 2 spike ends with K-2.)* The data-protection keychain item cannot be deleted by a script. The app would need a "delete my data" function to be run before the app is moved to the Trash. | Not asked now. Raised by ARC with the spike result if it happens. | Open (conditional) |
 
 ---
 

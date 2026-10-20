@@ -4,7 +4,7 @@
 **Date**: 2026-10-20
 **Deciders**: Michael (project owner), ARC
 
-> **Amendment (US-007, ADR-020) — proposed with the US-007 implementation plan, 2026-10-20**: §4 "macOS uses `MauiSecureStorageSecretStore` (Keychain)" is replaced by `MacKeychainSecretStore` (Security framework, login keychain preferred), because MAUI `SecureStorage` needs a `keychain-access-groups` entitlement that an ad-hoc-signed build cannot carry. ADR-020 also turns the App Sandbox off and sets the managed HTTP handler for the Mac.
+> **Amendment (US-007, ADR-020) — approved by Michael with the US-007 implementation plan, 2026-10-20**: §4 "macOS uses `MauiSecureStorageSecretStore` (Keychain)" is replaced by `MacKeychainSecretStore` (Security framework, login keychain preferred), because MAUI `SecureStorage` needs a `keychain-access-groups` entitlement that an ad-hoc-signed build cannot carry. ADR-020 also turns the App Sandbox off and sets the managed HTTP handler for the Mac.
 
 > **Numbering note**: ADR-017 and ADR-018 were drafted on the aborted branch `feature/US-007-ios-parent-app`, which was deleted unmerged. They never reached `main`. Like FR-APP-100 to FR-APP-102 (CR-001 §3), the two numbers stay unused to avoid confusion with those drafts.
 

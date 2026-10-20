@@ -1,6 +1,6 @@
 # EagleEye — System Architecture
 
-*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); US-004 amendment proposed with the US-004 plan; US-005 amendment approved with the US-005 plan (2026-10-10); US-006 amendment approved with the US-006 plan (2026-10-12); CR-001 amendment approved (2026-10-20); US-007 amendment proposed with the US-007 plan (2026-10-20)*
+*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); US-004 amendment proposed with the US-004 plan; US-005 amendment approved with the US-005 plan (2026-10-10); US-006 amendment approved with the US-006 plan (2026-10-12); CR-001 amendment approved (2026-10-20); US-007 amendment approved with the US-007 plan (2026-10-20)*
 *Maintainer: ARC Agent | Last Updated: 2026-10-20*
 
 > **Amendment 2026-10-03 (ADR-007)**: Windows desktop target added to the ParentApp; two-machine development; manual acceptance testing. Affected: §1.1, §2.1, §2.2, §3.2, §4.2, §5.5, §7, §8.10, §9. Amendments approved by Michael on 2026-10-03.
@@ -19,7 +19,7 @@
 >
 > **Amendment 2026-10-20 (CR-001, ADR-019) — approved by Michael 2026-10-20**: the iOS and Android parent apps are dropped (Michael, 2026-10-20, requirements v1.7). The parent app has two production platforms, **Windows** (WinUI, per-user installer, ADR-009) and **macOS** (Mac Catalyst, unsigned and un-notarised `.dmg`). The Windows parent app is no longer only the initial testing vehicle. The Windows machine builds no Android target, the MacBook no iOS target. ADR-001, ADR-002, ADR-004, ADR-007, ADR-008, ADR-009 and ADR-010 amended. Affected: §1.1, §1.2, §2.1, §2.2, §3.1, §3.2, §4.2, §5.5, §7 (incl. §7.1.1, §7.4), §8.2, §8.4, §8.10, §9, §10.2 (QS-07), §11 (R-1 void, R-3).
 >
-> **Amendment 2026-10-20 (US-007, ADR-020) — proposed, approved together with the US-007 implementation plan**: macOS platform layer under ad-hoc signing: no App Sandbox, data in `~/Library/Application Support/EagleEye/`, own Keychain secret store (`MacKeychainSecretStore`, login keychain preferred, decided by a spike), managed HTTP handler on the Mac (`UseNativeHttpHandler=false`), UI language from the first preferred macOS language (English → en, otherwise de), formats from UI language + macOS region, heading bars in the macOS accent colour, `.dmg` with removal script and instructions. Affected: §5.5, §7, §7.1.1, §7.4, §8.1, §8.13, §9, §11 (R-3).
+> **Amendment 2026-10-20 (US-007, ADR-020) — approved by Michael together with the US-007 implementation plan (2026-10-20)**: macOS platform layer under ad-hoc signing: no App Sandbox, data in `~/Library/Application Support/EagleEye/`, own Keychain secret store (`MacKeychainSecretStore`, login keychain preferred, decided by a spike), managed HTTP handler on the Mac (`UseNativeHttpHandler=false`), UI language from the first preferred macOS language (English → en, otherwise de), formats from UI language + macOS region, heading bars in the macOS accent colour, `.dmg` with removal script and instructions. Affected: §5.5, §7, §7.1.1, §7.4, §8.1, §8.13, §9, §11 (R-3).
 
 ---
 
@@ -449,11 +449,11 @@ PA_SVC --> MAC
 | **Abstractions** | Core | Small platform interfaces Core needs: `ISecretStore`, `ISecretProtector`, `IThemeService`, `IDialogService`, `IUiDispatcher`, `IAppDataPaths`. |
 | **AppTexts** | Core | All user-facing parent-app texts (German default, English). |
 | **Views** | MAUI head | MAUI pages/views. Desktop layout (Windows, macOS): navigation menu, content region, status bar. Later: user selection, allow-list, budgets, pause windows, statistics, event feed, paired devices. |
-| **Services / Platform-Specific** | MAUI head | Implementations of the Core abstractions (theme, dialogs, main-thread dispatch, data paths, secret storage: `DpapiSecretProtector` on Windows, `MacKeychainSecretStore` (Keychain via the Security framework, ADR-020; *proposed with US-007*, replaces `MauiSecureStorageSecretStore`) on macOS). macOS (Catalyst) and Windows (WinUI): platform entry points, desktop window sizing. *(US-007, proposed)* macOS also: `MacCultureSetup` (UI language and formats, rule in Core `UiCulturePolicy`), `MacAccentColor` (heading bars), window close quits the app. The Windows target is built on the Windows machine, Mac Catalyst on the MacBook (ADR-007, ADR-019). |
+| **Services / Platform-Specific** | MAUI head | Implementations of the Core abstractions (theme, dialogs, main-thread dispatch, data paths, secret storage: `DpapiSecretProtector` on Windows, `MacKeychainSecretStore` (Keychain via the Security framework, ADR-020; US-007, replaces `MauiSecureStorageSecretStore`) on macOS). macOS (Catalyst) and Windows (WinUI): platform entry points, desktop window sizing. *(US-007)* macOS also: `MacCultureSetup` (UI language and formats, rule in Core `UiCulturePolicy`), `MacAccentColor` (heading bars), window close quits the app. The Windows target is built on the Windows machine, Mac Catalyst on the MacBook (ADR-007, ADR-019). |
 
 **Windows parent app** (product requirements §3.3.9): a production platform, together with the macOS app (ADR-019). It is a normal `ParentHub` client with no special local access path. On the service PC it connects through the same TLS + pairing flow as a remote client (to `localhost` or the machine's own hostname). It is installed with its own per-user installer (ADR-009, §7.4).
 
-**macOS app** (product requirements §3.3.10, FR-APP-110 to FR-APP-112): a production platform with the same features and desktop layout as the Windows parent app, and the same connection model (TLS + pairing). It reuses `EagleEye.ParentApp.Core` unchanged. On `main` it does not yet have the features of US-002 to US-006; the new US-007 "macOS parent app parity" closes the gap (CR-001 Q-6). *(US-007, proposed)* The Mac platform layer follows ADR-020: no App Sandbox, own Keychain store, managed HTTP handler, language and accent colour from macOS.
+**macOS app** (product requirements §3.3.10, FR-APP-110 to FR-APP-112): a production platform with the same features and desktop layout as the Windows parent app, and the same connection model (TLS + pairing). It reuses `EagleEye.ParentApp.Core` unchanged. On `main` it does not yet have the features of US-002 to US-006; the new US-007 "macOS parent app parity" closes the gap (CR-001 Q-6). *(US-007)* The Mac platform layer follows ADR-020: no App Sandbox, own Keychain store, managed HTTP handler, language and accent colour from macOS.
 
 ---
 
@@ -824,7 +824,7 @@ Each parent app instance stores its YAML config and SQLite database in the OS-st
 | Platform | Config File | Database | Location |
 |----------|------------|----------|----------|
 | Windows | `EagleEye.ParentApp.yaml` | `EagleEye.ParentApp.db` | `%LocalAppData%\EagleEye\` (per parent user; removed by the parent app uninstaller) |
-| macOS | `EagleEye.ParentApp.yaml` (not used yet) | `EagleEye.ParentApp.db` | `~/Library/Application Support/EagleEye/` (resolved through `NSFileManager`, no App Sandbox, ADR-020). *(US-007, proposed)* Token in the login keychain (service `com.adlemich.eagleeye`, account `pairing-token`). Further system leftovers under the bundle ID `com.adlemich.eagleeye` (preferences, caches, saved state); all removed by the removal script in the `.dmg` (US-007 plan, "Data Locations"). |
+| macOS | `EagleEye.ParentApp.yaml` (not used yet) | `EagleEye.ParentApp.db` | `~/Library/Application Support/EagleEye/` (resolved through `NSFileManager`, no App Sandbox, ADR-020). *(US-007)* Token in the login keychain (service `com.adlemich.eagleeye`, account `pairing-token`). Further system leftovers under the bundle ID `com.adlemich.eagleeye` (preferences, caches, saved state); all removed by the removal script in the `.dmg` (US-007 plan, "Data Locations"). |
 
 ### 7.2 Windows Service Registration
 
@@ -845,7 +845,7 @@ Each parent app instance stores its YAML config and SQLite database in the OS-st
 | Platform | Distribution | Package |
 |----------|-------------|---------|
 | Windows 11 | Own Inno Setup installer, **per user**, no admin rights (ADR-009, FR-APP-092). Unpackaged, self-contained (`win-x64`, .NET runtime and Windows App SDK included, no MSIX). Installs to `%LocalAppData%\Programs\EagleEye Parent App\`; repair/update keeps the app data; uninstall removes program folder, Start menu entry and `%LocalAppData%\EagleEye\`. Independent of the service installer (own `AppId`). Runs on the service PC or remotely. | `03_Delivery/windows/EagleEye-ParentApp-Setup-<version>.exe` |
-| macOS 26+ | Direct `.dmg`, built on the MacBook by `scripts/package-macos.ps1` (FR-APP-112). No Mac App Store. The `.app` is ad-hoc signed only: no Developer-ID signature, no notarisation (Q-7, ADR-019). The first start needs a one-time allow in *System Settings → Privacy & Security → Open Anyway*. *(US-007, proposed)* Install by dragging to *Applications*; update by dragging again ("Replace"; macOS may ask once per new build for Keychain access, OQ-3); no uninstaller: a removal script in the `.dmg` deletes the app's data, preferences, caches and Keychain item. | `03_Delivery/macos/EagleEye-ParentApp-<version>.dmg` with `EagleEye Parent App.app`, an *Applications* link, `Remove EagleEye Parent App.command` and `Anleitung - Instructions.txt` (US-007 AC-2) |
+| macOS 26+ | Direct `.dmg`, built on the MacBook by `scripts/package-macos.ps1` (FR-APP-112). No Mac App Store. The `.app` is ad-hoc signed only: no Developer-ID signature, no notarisation (Q-7, ADR-019). The first start needs a one-time allow in *System Settings → Privacy & Security → Open Anyway*. *(US-007)* Install by dragging to *Applications*; update by dragging again ("Replace"; macOS may ask once per new build for Keychain access, OQ-3); no uninstaller: a removal script in the `.dmg` deletes the app's data, preferences, caches and Keychain item. | `03_Delivery/macos/EagleEye-ParentApp-<version>.dmg` with `EagleEye Parent App.app`, an *Applications* link, `Remove EagleEye Parent App.command` and `Anleitung - Instructions.txt` (US-007 AC-2) |
 
 ---
 
@@ -863,7 +863,7 @@ The service uses HTTPS for the parent endpoint (port 5443). The tray endpoint is
 
 The certificate is never installed into an OS certificate store, on either side.
 
-**Parent app trust** (ADR-008 §3): the SignalR client sets the validation callback on both the HTTP handler and the WebSocket options (`ClientWebSocketOptions.RemoteCertificateValidationCallback`), otherwise the WebSocket transport ignores it. *(US-007, ADR-020, proposed)* On the Mac, the build uses the managed HTTP handler (`UseNativeHttpHandler=false`): the native `NSUrlSessionHandler` does not call the callback.
+**Parent app trust** (ADR-008 §3): the SignalR client sets the validation callback on both the HTTP handler and the WebSocket options (`ClientWebSocketOptions.RemoteCertificateValidationCallback`), otherwise the WebSocket transport ignores it. *(US-007, ADR-020)* On the Mac, the build uses the managed HTTP handler (`UseNativeHttpHandler=false`): the native `NSUrlSessionHandler` does not call the callback.
 
 - **Unpaired**: trust on first use. The app accepts the certificate the service presents and remembers its SHA-256 thumbprint for the pairing in progress.
 - **On successful pairing**: the thumbprint is stored with the pairing.
@@ -1159,7 +1159,7 @@ Each component depends on interfaces, not concrete types, enabling unit testing 
 - Default language: German (`de`). Secondary: English (`en`)
 - Service log messages are in English (developer audience)
 - Resource files are per-component (`EagleEye.TrayClient/Resources/`, `EagleEye.ParentApp/Resources/`)
-- *(US-007, ADR-020, proposed)* **macOS parent app**: the bundle declares `de` (development region) and `en`. At start the app sets the UI language from the **first** preferred macOS language (also per-app): English → `en`, anything else → `de` (`UiCulturePolicy`); formats use UI language + macOS region. The Windows app keeps the .NET defaults.
+- *(US-007, ADR-020)* **macOS parent app**: the bundle declares `de` (development region) and `en`. At start the app sets the UI language from the **first** preferred macOS language (also per-app): English → `en`, anything else → `de` (`UiCulturePolicy`); formats use UI language + macOS region. The Windows app keeps the .NET defaults.
 - *(US-006, ADR-016)* **Default texts for the kid** (break display text, budget text, early and final warning) live once in `EagleEye.Shared/Resources/DefaultTexts*.resx` (de neutral, en satellite). The service stores only the parent's own texts ("no text" = default). The parent app and the tray client render the default in their own UI language. Parent texts are never translated.
 
 ---
@@ -1186,8 +1186,8 @@ All architectural decisions are recorded as ADRs in `02_Implementation/docs/arch
 | ADR-014 | Session-Bound Tray Connections and the Kid's Message Box | Accepted (approved with the US-005 implementation plan, 2026-10-10) |
 | ADR-015 | Time Limits for Running Apps — End of Allowed Time, Warnings, Grace Periods and Enforced Closes | Accepted (approved with the US-006 implementation plan, 2026-10-12) |
 | ADR-016 | Default Kid Texts Are Rendered in the Language of the Displaying App | Accepted (approved with the US-006 implementation plan, 2026-10-12) |
-| ADR-019 | Parent App Platforms — Windows and macOS Only, Unsigned Mac Distribution | Accepted (2026-10-20, CR-001); §4 amended by ADR-020 (proposed) |
-| ADR-020 | macOS Platform Layer under Ad-hoc Signing — Keychain, TLS Handler, No App Sandbox, Language | Proposed — approved with the US-007 implementation plan |
+| ADR-019 | Parent App Platforms — Windows and macOS Only, Unsigned Mac Distribution | Accepted (2026-10-20, CR-001); §4 amended by ADR-020 (2026-10-20) |
+| ADR-020 | macOS Platform Layer under Ad-hoc Signing — Keychain, TLS Handler, No App Sandbox, Language | Accepted (approved with the US-007 implementation plan, 2026-10-20) |
 
 ADR-017 and ADR-018 are unused: they were drafts on the aborted US-007 iOS branch and never reached `main` (ADR-019 numbering note).
 
@@ -1288,7 +1288,7 @@ maint --> maint3
 |---|------|-------------|--------|------------|
 | R-1 | ~~Self-signed certificate rejected by iOS/Android MAUI clients~~ **Void (CR-001, 2026-10-20)**: iOS and Android are dropped. Trust on first use and pinning work on Windows (US-002); the Mac Catalyst client is validated with the new US-007 (see R-3). | — | — | — |
 | R-2 | Process monitoring causes high CPU under heavy process churn | Low | Medium | Use efficient enumeration (snapshot-based, not per-process polling). Profile during first DEV iteration. Configurable poll interval as safety valve. |
-| R-3 | MAUI limitations on macOS Catalyst (window management, TLS trust callback on the WebSocket transport, Keychain via `SecureStorage`) | Medium | Medium | *(CR-001)* The macOS app is now a production platform: validate on real hardware in the new US-007 "macOS parent app parity". Known toolchain issue: the .NET Mac Catalyst pack may expect an older Xcode than installed (`ValidateXcodeVersion`, dev-environments §5). *(US-007, proposed)* ADR-020: managed HTTP handler, own Keychain store (spike decides login vs. data-protection keychain under ad-hoc signing), no sandbox; "first light" run at the start of US-007 makes UI gaps visible early. |
+| R-3 | MAUI limitations on macOS Catalyst (window management, TLS trust callback on the WebSocket transport, Keychain via `SecureStorage`) | Medium | Medium | *(CR-001)* The macOS app is now a production platform: validate on real hardware in the new US-007 "macOS parent app parity". Known toolchain issue: the .NET Mac Catalyst pack may expect an older Xcode than installed (`ValidateXcodeVersion`, dev-environments §5). *(US-007)* ADR-020: managed HTTP handler, own Keychain store (spike decides login vs. data-protection keychain under ad-hoc signing), no sandbox; "first light" run at the start of US-007 makes UI gaps visible early. |
 | R-4 | WinForms topmost overlay z-order lost in some fullscreen games | Medium | Low | Documented as v1 limitation (no DirectX overlay). Use `WS_EX_TOPMOST` + timer-based re-assertion. |
 | R-5 | SQLite database corruption on service crash | Very Low | High | SQLite WAL mode provides crash resilience out of the box. Regular `PRAGMA integrity_check` on startup. |
 | R-6 | Standard-user child kills TrayClient process | Low | Low | TrayClient is informational only; enforcement continues server-side. TrayClient restarts automatically. Consider process-protection techniques in later iterations. *(US-005)*: then the break-time message is not shown; the app is closed anyway and the log says "message not shown" (US-005 OQ-9, AC-33). |

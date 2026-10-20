@@ -1,6 +1,6 @@
 # ADR-020: macOS Platform Layer under Ad-hoc Signing — Keychain, TLS Handler, No App Sandbox, Language
 
-**Status**: Proposed (with the US-007 implementation plan, 2026-10-20). §2 is decided finally by the Keychain spike of US-007 Step 2, using the decision rule stated there.
+**Status**: Accepted (approved by Michael with the US-007 implementation plan, 2026-10-20; plan Q-1: ad-hoc signing stays, no local signing identity). §2 is decided finally by the Keychain spike of US-007 Step 2, using the decision rule stated there.
 **Date**: 2026-10-20
 **Deciders**: ARC, Michael
 
@@ -110,7 +110,7 @@ The Mac Catalyst target sets the MSBuild property `UseNativeHttpHandler=false` (
 ### Neutral
 
 - ADR-019 §4 ("macOS uses `MauiSecureStorageSecretStore`") is amended: macOS uses `MacKeychainSecretStore`.
-- arc42 §5.5, §7.1.1, §7.4, §8.1, §8.13 and coding guidelines §13 are amended with the US-007 plan (proposed).
+- arc42 §5.5, §7.1.1, §7.4, §8.1, §8.13 and coding guidelines §13 are amended with the US-007 plan (approved 2026-10-20).
 
 ---
 
