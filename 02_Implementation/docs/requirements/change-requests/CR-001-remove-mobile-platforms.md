@@ -1,6 +1,6 @@
 # CR-001: Remove the iOS and Android Parent Apps
 
-**Status**: Proposed, awaiting Michael's approval
+**Status**: Approved by Michael, 2026-10-20
 **Type**: Scope change (not a user story)
 **Decided by**: Michael, 2026-10-20 (final)
 **Written by**: PRO, 2026-10-20
@@ -26,7 +26,7 @@ Running a self-built iOS app on one's own iPhone for longer than 7 days needs a 
 - **US-007 (iOS parent app)** was aborted during implementation (step c). Its branch `feature/US-007-ios-parent-app` was deleted unmerged. None of its changes exist on `main`: the v1.7 requirements draft, FR-APP-100 to FR-APP-102, ADR-017/018, the phone views and spikes are gone.
 - **US-008 (Rules on the phone)** is void.
 - The requirements version number **v1.7** is used again by this CR. The US-007 draft v1.7 never reached `main`. To avoid confusion, **FR-APP-100 to FR-APP-102 stay unused**; the new macOS requirements are FR-APP-110 to FR-APP-112.
-- US-001 to US-006 were built and tested in the **Windows parent app only** (their stories name "ParentApp Windows"). The Mac app has none of these features on `main` yet. See open question Q-6.
+- US-001 to US-006 were built and tested in the **Windows parent app only** (their stories name "ParentApp Windows"). The Mac app has none of these features on `main` yet. Answered by Q-6 (§7): a new US-007 "macOS parent app parity" closes the gap.
 
 ## 4. Scope
 
@@ -60,10 +60,10 @@ No roadmap, backlog or story-list document exists in the repo. The only planning
 | §4.2 step 8 | Install on a Windows PC (installer) or a Mac (`.dmg`) |
 | NFR-L-010 | Parent apps: Windows, macOS |
 | §9.2 iOS, §9.3 Android | **Removed (v1.7, 2026-10-20)**; section numbers kept, old content summarised |
-| §9.4 macOS | Purpose = production; deployment on a Mac on the LAN; signing/notarisation open (Q-7) |
+| §9.4 macOS | Purpose = production; deployment on a Mac on the LAN; unsigned, un-notarised `.dmg` accepted (Q-7) |
 | §9.5 Windows | Purpose = production (was: initial testing vehicle) |
 | §10 Out of scope | "iOS and Android parent apps" replaces "App Store / Play Store distribution"; Microsoft Store made explicit |
-| §11 | Q-1, Q-3 marked superseded; Q-5 (answered, Michael 2026-10-20); Q-6, Q-7 open |
+| §11 | Q-1, Q-3 marked superseded; Q-5 (answered, Michael 2026-10-20); Q-6, Q-7 added and answered by Michael 2026-10-20 |
 
 All other requirement IDs are unchanged. No ID was renumbered.
 
@@ -94,7 +94,7 @@ Found with `git grep -i -E "android|ios|iphone|ipad|mobile|phone|adb|xcode|sidel
 | `02_Implementation/docs/architecture/decisions/ADR-008-parent-connectivity-tls-and-pairing-protocol.md` | "ready for the mobile and macOS apps" |
 | `02_Implementation/docs/architecture/decisions/ADR-009-windows-parent-app-packaging-and-parentapp-core.md` | Multi-target list includes `net10.0-android`; "later Android, iOS and macOS work" |
 | `02_Implementation/docs/architecture/decisions/ADR-010-event-driven-state-propagation.md` | "relevant later for mobile apps" in the alternatives: add a dated note or leave as history |
-| New ADR (or amendment) | Record the platform change and Mac code signing / notarisation without a paid Apple Developer account, once Q-7 is answered |
+| New ADR (or amendment) | Record the platform change and the accepted unsigned, un-notarised Mac `.dmg` (Q-7) |
 | `02_Implementation/docs/architecture/product-coding-guidelines.md` | Remove §14 iOS and §15 Android (and TOC entries), `Platforms/Android` in the folder tree and build-host rules; Windows section "Role: initial testing vehicle … Android and iOS are the production platforms"; "phone layouts" wording in the macOS section |
 | `02_Implementation/docs/dev-process/dev-environments.md` | Windows machine: no Android target, APK, emulator, `maui-android` workload or Android SDK; MacBook: Xcode for Mac Catalyst only; `build.ps1` table; csproj TFM description |
 | `02_Implementation/docs/dev-process/dev-process.md` | §5 component table "Windows, Android, macOS (iOS later)" → Windows, macOS; machine list "Windows + Android targets" |
@@ -116,10 +116,10 @@ Found with `git grep -i -E "android|ios|iphone|ipad|mobile|phone|adb|xcode|sidel
 | `02_Implementation/scripts/build.ps1` | Remove the Android build step, `-SkipAndroid` switch and `Get-AndroidToolchainArgs` |
 | `02_Implementation/scripts/env-check.ps1` | Windows "Responsible for" text; drop the `adb` check and `android`/`ios` workload patterns; keep Xcode for Mac Catalyst |
 | `02_Implementation/scripts/package-windows.ps1` | Comment about the Android target on a multi-targeted project; re-check whether `--runtime` can now be passed |
-| `02_Implementation/scripts/package-macos.ps1` | Check only (Xcode requirement stays for Mac Catalyst); signing per Q-7 |
+| `02_Implementation/scripts/package-macos.ps1` | Check only (Xcode requirement stays for Mac Catalyst); no Developer-ID signing or notarisation (Q-7) |
 | `02_Implementation/.vscode/launch.json` | Launch config name "Windows / Android on Windows" |
 | `.gitignore` | "MAUI / Mobile" section, `Platforms/Android/GoogleServicesJson/`, `03_Delivery/android/*.apk` |
-| `secrets/secrets.template.json` | Remove the `android` section; update the `apple` comment (no iOS; Mac only if Q-7 needs it). Never put values in the template |
+| `secrets/secrets.template.json` | Remove the `android` section; remove or neutralise the `apple` section (no iOS; Mac needs no Developer account, Q-7). Never put values in the template |
 | `03_Delivery/android/` | Delete the folder and its README |
 | Unit tests | Re-run the full suite after removing the Android target; no test references Android today |
 
@@ -129,32 +129,32 @@ Also on the **MacBook** (from the Orchestrator memory): the Mac Catalyst build m
 
 | File | What must change |
 |---|---|
-| `CLAUDE.md` (root) | Project-context table: ParentApp = Windows parent app + Mac app (production), no Android/iOS; "Built on" column; "Where You Run" table: Windows machine without Android target, MacBook without iOS target |
-| `02_Implementation/agents/arc/CLAUDE.md` | Technology constraints: MAUI targets and machine roles (lines on Android + iOS production, Windows + Android targets) |
-| `02_Implementation/agents/dev/CLAUDE.md` | Machine table (Android targets and packaging) and MAUI row (Android, iOS) |
-| `02_Implementation/agents/pro/CLAUDE.md` | Phase 1 item 9 platform list (iOS 26, Android 14); "Platform explicit" rule names "Android" |
+| `CLAUDE.md` (root) | **Done (916abfb).** Project-context table: ParentApp = Windows parent app + Mac app (production), no Android/iOS; "Built on" column; "Where You Run" table: Windows machine without Android target, MacBook without iOS target |
+| `02_Implementation/agents/arc/CLAUDE.md` | **Done (916abfb).** Technology constraints: MAUI targets and machine roles (lines on Android + iOS production, Windows + Android targets) |
+| `02_Implementation/agents/dev/CLAUDE.md` | **Done (916abfb).** Machine table (Android targets and packaging) and MAUI row (Android, iOS) |
+| `02_Implementation/agents/pro/CLAUDE.md` | **Done (916abfb).** Phase 1 item 9 platform list (iOS 26, Android 14); "Platform explicit" rule names "Android" |
 | `02_Implementation/agents/tes/CLAUDE.md` | No hit; check only |
 | `02_Implementation/agents/orchestrator/memory/` | After approval: record CR-001 approved and merged, requirements v1.7, FR-APP-100..102 unused; update `michael-project-owner.md` ("Windows/Android work"); keep the Mac parity decision (Q-6) and signing decision (Q-7) |
-| Process | Decide whether the DEV follow-up is its own change branch (e.g. `change/CR-001-dev-remove-android`) or part of the next story; plan the Mac catch-up per Q-6 |
+| Process | Decide whether the DEV follow-up is its own change branch (e.g. `change/CR-001-dev-remove-android`) or part of the next story; start the new US-007 "macOS parent app parity" after the merge (Q-6) |
 
 ### 6.4 No change (history)
 
 Closed story artifacts mention Android, iOS or phones and stay as they are: `02_Implementation/docs/requirements/user-stories/US-002/` to `US-006/` (user stories, implementation plans and reports, ISSUE-006, ISSUE-007) and `02_Implementation/docs/testing/US-002/` to `US-006/` (test plans, ISSUE-008).
 
-## 7. Open Questions for Michael
+## 7. Questions Answered by Michael (2026-10-20)
 
-| ID | Question | PRO's proposal |
+| ID | Question | Answer (Michael, 2026-10-20) |
 |---|---|---|
-| Q-6 | Is the Mac app now a full-parity production platform, and when does it catch up with the features of US-002 to US-006, which exist only in the Windows parent app? | Full parity (FR-APP-082, FR-APP-110). Keep building and testing each feature on Windows first; one dedicated story brings the Mac app to the US-006 level, after which every parent-app story names both apps. |
-| Q-7 | Without a paid Apple Developer account the `.dmg` cannot be Developer-ID signed or notarised, so macOS asks for confirmation at the first start (Gatekeeper). Acceptable? | Yes for v1: ad-hoc signed, not notarised; the installation instructions explain how to allow the first start. |
+| Q-6 | Is the Mac app now a full-parity production platform, and when does it catch up with the features of US-002 to US-006, which exist only in the Windows parent app? | Yes, full parity with the Windows app. A **new US-007 "macOS parent app parity"** covers it, started after CR-001 is merged (the number is reused; the aborted iOS US-007 never reached `main`). After that story, every parent-app story names both apps. |
+| Q-7 | Without a paid Apple Developer account the `.dmg` cannot be Developer-ID signed or notarised, so macOS asks for confirmation at the first start (Gatekeeper). Acceptable? | Accepted. An unsigned, un-notarised `.dmg` is fine. Michael does not plan to distribute it; a one-time allow in the macOS settings on his MacBook is enough. |
 
-Both are also recorded in `02_Implementation/docs/requirements/general-product-requirements.md` §11.2.
+Both answers are also recorded in `02_Implementation/docs/requirements/general-product-requirements.md` §11.1.
 
 ## 8. Approval
 
 | Step | Who | Status |
 |---|---|---|
 | CR written, requirements v1.7 drafted | PRO | Done 2026-10-20 |
-| Approve CR-001 and requirements v1.7, answer Q-6 and Q-7 | Michael | Open |
+| Approve CR-001 and requirements v1.7, answer Q-6 and Q-7 | Michael | Approved 2026-10-20 |
 | Merge `change/CR-001-remove-mobile-platforms` into `main` (`--no-ff`) | Orchestrator | After approval |
-| Follow-ups §6 | ARC, DEV, Orchestrator | After merge |
+| Follow-ups §6 | ARC, DEV, Orchestrator | Orchestrator CLAUDE.md files done (916abfb); the rest after the merge |

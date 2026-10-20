@@ -133,7 +133,7 @@ The following files will be generated with real, working content during bootstra
 | File | Content |
 |------|---------|
 | `.gitignore` | .NET 10, MAUI, macOS, PowerShell, VSCode, Rider ignore rules — including `secrets/secrets.json` |
-| `secrets/secrets.template.json` | Template pre-populated with GitHub keys (username, personal access token, repo URL for `github.com/adlemich`). Placeholder sections for Apple Developer and Android signing — to be filled when those pipelines are built. *(2026-10-20: the Android section is dropped; the Apple Developer section is not needed for iOS any more, Mac signing is open, see requirements Q-7.)* |
+| `secrets/secrets.template.json` | Template pre-populated with GitHub keys (username, personal access token, repo URL for `github.com/adlemich`). Placeholder sections for Apple Developer and Android signing — to be filled when those pipelines are built. *(2026-10-20: the Android section is dropped; the Apple Developer section is not needed for iOS any more, Mac signing not needed, requirements Q-7.)* |
 | `.gitattributes` | Line ending normalization, binary file handling |
 | `README.md` | Project overview, component map, setup instructions |
 | `CLAUDE.md` (root) | Dev Process Orchestrator — role, workflow, rules, model config |
@@ -224,7 +224,7 @@ TES writes E2E tests + test report → Michael approves →
 
 6. **Scripts are the CI**: PowerShell scripts are the only automation mechanism. VSCode tasks wrap them for convenience.
 
-7. **Secrets management**: All credentials live in `secrets/secrets.json` at repo root — gitignored, never committed. A `secrets/secrets.template.json` is committed showing the required keys with empty/placeholder values. PowerShell scripts load secrets from `secrets/secrets.json` at runtime. The template covers: GitHub credentials, Apple Developer account, Android signing keystore, and any future credentials *(2026-10-20: Android signing dropped; Apple Developer account only if Mac signing needs it, requirements Q-7)*. If `secrets.json` is missing, scripts fail with a clear error pointing to the template.
+7. **Secrets management**: All credentials live in `secrets/secrets.json` at repo root — gitignored, never committed. A `secrets/secrets.template.json` is committed showing the required keys with empty/placeholder values. PowerShell scripts load secrets from `secrets/secrets.json` at runtime. The template covers: GitHub credentials, Apple Developer account, Android signing keystore, and any future credentials *(2026-10-20: Android signing dropped; Apple Developer account not needed, requirements Q-7)*. If `secrets.json` is missing, scripts fail with a clear error pointing to the template.
 
 ---
 
