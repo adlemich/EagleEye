@@ -16,7 +16,7 @@
 | Step | State | Content |
 |---|---|---|
 | 0 | Done | Version 0.7.0 (`Directory.Build.props`). Build and unit tests green on the MacBook. |
-| 1 | In progress | Mac app built and launched on the MacBook. Attempts 1 and 2 failed: the token could not be stored in the Keychain. FL-1 pulled `MacKeychainSecretStore` forward from Step 2 (on `SecItem`, still -34018); FL-2 moved it to the legacy file-keychain API (K-1), verified by DEV with a probe of the real store. Waiting for Michael's third attempt. Gap list in `02_Implementation/docs/requirements/user-stories/US-007/first-light.md`. |
+| 1 | In progress | Mac app built and launched on the MacBook. Attempts 1 and 2 failed: the token could not be stored in the Keychain. FL-1 pulled `MacKeychainSecretStore` forward from Step 2 (on `SecItem`, still -34018); FL-2 moved it to the legacy file-keychain API (K-1), verified by DEV with a probe of the real store. **Attempt 3 paired** (green "Verbunden mit 192.168.1.37", real data loads). Gaps G-1 to G-18 in the gap list. Keychain probe and Release probe partly done; waiting for Michael's answer to the Keychain prompt after a rebuild. Gap list in `02_Implementation/docs/requirements/user-stories/US-007/first-light.md`. |
 
 ## 2. Deviations from the Implementation Plan
 
@@ -32,6 +32,7 @@ Notes (not deviations):
 ## 3. Files
 
 **Step 0** — changed: `02_Implementation/Directory.Build.props` (0.6.2 → 0.7.0).
+**Step 1 (walk-through)** — new: `docs/requirements/user-stories/US-007/input/first-light-settings.png`, `first-light-rules.png`, `first-light-reports.png` (Michael's screenshots, dark mode).
 **Step 1 (FL-2)** — changed: `src/EagleEye.ParentApp/Platforms/MacCatalyst/MacKeychainSecretStore.cs` (legacy keychain API); new: `docs/requirements/user-stories/US-007/evidence/keychain-probe.patch`, `docs/requirements/user-stories/US-007/evidence/keychain-probe-results.txt`.
 **Step 1 (FL-1)** — new: `02_Implementation/docs/requirements/user-stories/US-007/first-light.md`, this report, `src/EagleEye.ParentApp/Platforms/MacCatalyst/MacKeychainSecretStore.cs`, `src/EagleEye.ParentApp.Core/Abstractions/SecretStoreUnavailableException.cs`, `tests/EagleEye.ParentApp.Tests/Abstractions/SecretStoreUnavailableExceptionTests.cs`; changed: `src/EagleEye.ParentApp/MauiProgram.cs` (Mac secret store registration), `src/EagleEye.ParentApp/README.md` (class name), `tests/EagleEye.ParentApp.Tests/Data/PairingStoreTests.cs` (refusing store); deleted: `src/EagleEye.ParentApp/Services/MauiSecureStorageSecretStore.cs`.
 

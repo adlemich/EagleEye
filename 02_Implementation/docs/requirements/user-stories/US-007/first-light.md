@@ -2,7 +2,7 @@
 
 **Author**: DEV
 **Date**: 2026-10-20
-**Status**: In progress. Attempts 1 and 2 failed (token not stored, §3). Root cause found and fixed by DEV without Michael (FL-2, verified by a probe of the real store). Waiting for Michael's third attempt.
+**Status**: In progress. **Paired and connected** on attempt 3 (FL-2 build, 17:15). Walk-through gaps recorded from Michael's screenshots. Keychain probe: restart done; rebuild prompt waiting for Michael. Release probe prepared.
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-007/implementation-plan.md`, Step 1, Decision 1
 **Host**: MacBook (macOS 27.0.1, Apple Silicon), Xcode 27.1, .NET SDK 10.0.401, workload `maui-maccatalyst` 10.0.110
 **Build**: 0.7.0, Debug, Mac Catalyst
@@ -32,7 +32,7 @@ Purpose: run the Mac app as it is, pair it with the service PC `192.168.1.37`, a
 |---|---|---|---|---|
 | G-1 | Info.plist | Console notice at start: `performFetchWithCompletionHandler:` implemented (MAUI default delegate) but no `fetch` background mode. Harmless; noise in the console. | — | 2 (check; likely ignore) |
 | G-2 | Data path | Database in the sandbox container under `Documents/EagleEye`, not `~/Library/Application Support/EagleEye/`. | AC-6, AC-24 | 2 (no sandbox, Decision 4) |
-| G-3 | App shell | Bundle and app name "EagleEye" (not "EagleEye Parent App"). | AC-4 | 3 |
+| G-3 | App shell | Bundle and app name "EagleEye" (not "EagleEye Parent App"). The window title "EagleEye" is as planned (Decision 5). | AC-4 | 3 |
 | G-4 | Secret store | MAUI `SecureStorage` throws when the token is stored after a successful pairing (ad-hoc build, no keychain entitlement; TI-1 confirmed). Pairing impossible. | AC-20, AC-24 | **Fixed in Step 1 (FL-1, then FL-2)**, see §3 |
 | G-8 | Secret store (design, **for ARC**) | **ADR-020 §2 assumption does not hold:** on Mac Catalyst the `SecItem` API always uses the data-protection keychain. `kSecUseDataProtectionKeychain = false` is ignored; every write returns `errSecMissingEntitlement` (-34018), with and without App Sandbox. K-1 *and* K-2 via `SecItem` are impossible for an ad-hoc build; adding `keychain-access-groups` makes macOS refuse to launch the app. What works: the legacy file-keychain API (`SecKeychainAddGenericPassword` etc., deprecated since macOS 10.10 but present in macOS 27), which writes to the login keychain (K-1) with and without sandbox, without a prompt for the creating build. FL-2 uses it. ARC to confirm this as the ADR-020 §2 implementation (risk: Apple may remove the deprecated API; survival across a rebuild still to be probed in step 1.4 and Step 2). Evidence: `US-007/evidence/keychain-probe-results.txt`. | AC-5, AC-24 | ARC review before Step 2 |
 | G-9 | Secret store | The legacy add call sets no label: the item shows in Keychain Access with name = service `com.adlemich.eagleeye`, not "EagleEye Parent App" (plan Data Locations). Setting the label needs an attribute list (`kSecLabelItemAttr`). | AC-24 (presentation only) | 2 |
@@ -40,7 +40,17 @@ Purpose: run the Mac app as it is, pair it with the service PC `192.168.1.37`, a
 | G-6 | Local network | First connection attempt after "Verbinden" failed with "Local network prohibited" (`NSURLErrorDomain -1009`, "Network is down"); the next attempt 1.5 minutes later went through. Michael reported no prompt text; the app has no `NSLocalNetworkUsageDescription` (TI-4), so the prompt, if shown, had no explanation. The UI showed a connection error for the first attempt (to be confirmed). | AC-17, AC-18 | 2 (Info.plist text, TI-4) |
 | G-7 | TLS handler | **Finding for ARC (TI-2 not reproduced):** the native handler (`NSUrlSessionHandler`) *did* call `ServerCertificateCustomValidationCallback` on .NET 10 / Mac Catalyst. Log: "Trust evaluate failure: [leaf AnchorTrusted …]" (system trust), then "auth completion disp=0", "Certificate verification result: OK", negotiate HTTP 200 over h2, and the hub call `SubmitPairingCode` reached the service. The managed handler was therefore not needed in Step 1. ADR-020 §3 can stay (it removes a dependency on Apple's handler behaviour), but it is no longer a blocker. | AC-19 | 2 (keep or drop `UseNativeHttpHandler=false`; ARC) |
 
-*(Walk-through rows follow after the second attempt.)*
+| G-10 | Look: accent | Native controls (switch "Dunkel", checkboxes) are **red**: Catalyst takes the macOS accent colour (MacBook: `AppleAccentColor` = 0, red). The heading bars are the app's fixed green (no Mac accent source, TI-7), and the buttons use the fixed `AccentLight/AccentDark` green. Three colour sources on one page. | AC-10 | 5 (heading bars from the macOS accent; decide whether buttons follow) |
+| G-11 | Look: buttons | "Kopplung aufheben" and "Eintrag hinzufügen": white text on light green (`AccentDark`) in dark mode, poor contrast. Shared `Button` style; check how it looks on Windows before changing (AC-35). | AC-11 | 5 |
+| G-12 | Look: value fields | `Entry` fields ignore their width and stretch to the next cell or beyond: Zeit-Ende Warnungen, "Minuten vor Ende" box runs under the Anzeigetext editor; Ruhezeiten, the Start-Zeit box runs under End-Zeit, and the End-Zeit box runs under the MO–FR checkboxes; Applikations-Regeln, the Stunden and Minuten boxes touch, and the Minuten box runs under MO–FR. Values are readable (no ISSUE-008 equivalent). | AC-11, AC-27, AC-29, AC-30 | 5 |
+| G-13 | Look: editors | `Editor` (Anzeigetext on Settings, Anzeige Text on Rules) has no border, only a slightly lighter background. | AC-11 | 5 |
+| G-14 | Layout | On Regeln and Berichte the heading bars run to the right window edge without the right margin they have on Einstellungen: probably the content is wider than the window (horizontal overflow, possibly caused by G-12). | AC-7 | 5 |
+| G-15 | Look: picker | The Konto picker is a plain black box with no picker affordance (no chevron), black even in the dark theme. | AC-11, AC-29 | 5 |
+| G-16 | Look: navigation | The selected menu item is a light grey bar with white text: weak contrast (DEV, from the screenshots). | AC-11 | 5 |
+| G-17 | Data (no gap) | Applikations-Regeln lists "EA" four times. This is service data by design: one app record per program path, same display name allowed (`AppRuleDto`, OQ-12; EA ships several executables described as "EA"). The Windows app shows the same rows. To check on the Mac: the program-path tooltip that tells them apart (hover). | AC-30 | 6 (check only) |
+| G-18 | Build | `dotnet publish -c Release` builds a universal app (x86_64 + arm64) plus a `.pkg`, because no `RuntimeIdentifier` is set for maccatalyst. | AC-3, §9.4 | 2 (`RuntimeIdentifier=maccatalyst-arm64`, already planned) |
+
+**Seen working (attempt 3, screenshots `US-007/input/first-light-settings.png`, `first-light-rules.png`, `first-light-reports.png`, dark mode)**: green "Verbunden mit 192.168.1.37"; Einstellungen "Gekoppelt", "Gekoppelt mit: 192.168.1.37", "Dieses Gerät: Michael's MacBook"; real accounts Micha and Sebastian with ticks; warning minutes and texts; break times with weekdays; display text with an emoji; app rules with budgets; Reports for today and 17.10.2026 in German date format; dark theme throughout. Michael saw no prompt and no error.
 
 ## 3. Pairing
 
@@ -105,14 +115,23 @@ A temporary Debug-only probe (environment variable `EAGLEEYE_KCPROBE=1`, passed 
 
 **DEV verification of the real store** (probe, sandbox on): write 0, read 0 (value matches), overwrite 0, read 0 (new value), delete 0, read -25300 (null), delete again -25300 (ok). No prompt; no item left.
 
-### Attempt 3
+### Attempt 3 (2026-10-20, 17:15, FL-2 build) — **paired**
 
-*Pending: Michael pairs again with a new code.*
+Paired and connected; real data loads (see the screenshots above). Console trace: `EagleEye keychain write: OSStatus 0`. Keychain item: `login.keychain-db`, class `genp`, service `com.adlemich.eagleeye`, account `pairing-token` (no label, G-9). Database: `ServerConnections` row `192.168.1.37 | Michael's MacBook`; `Secrets` table empty (AC-24).
 
 ## 4. Keychain probe (step 1.4)
 
-*Pending.*
+| Check | Result |
+|---|---|
+| Quit and start the same build (DEV, 17:19) | Silent: `EagleEye keychain read: OSStatus 0`, negotiate 200, no exception, connected without a code. |
+| Rebuild with a new code signature (DEV, 17:19; temporary `-p:ApplicationVersion=2`, Info.plist changes, CDHash `bb335b0e…` → `888faa42…`), then start | The Keychain read blocks; `SecurityAgent` is running, so macOS shows a Keychain prompt. *Michael's answer pending.* |
+| MAUI `SecureStorage` items from the dev builds | None (`SecureStorage` never stored anything). The removal script needs no entry for them (plan, Removal script table). |
+| Data folder actually used | `~/Library/Containers/com.adlemich.eagleeye/Data/Documents/EagleEye/` (G-2). |
 
 ## 5. Release probe (step 1.5)
 
-*Pending.*
+| Check | Result |
+|---|---|
+| `dotnet publish -c Release` | 0 warnings. Universal app + `.pkg` (G-18); the arm64 bundle is `src/EagleEye.ParentApp/bin/Release/net10.0-maccatalyst/maccatalyst-arm64/EagleEye.app` (AOT data, trimmed). |
+| JSON reflection (TI-5) | `System.Text.Json.JsonSerializer.IsReflectionEnabledByDefault` = **true** in the published `runtimeconfig.bin` (MAUI default for Apple targets). Hub calls are therefore expected to work. |
+| Release run with hub calls | *Pending (Michael, after the Keychain prompt).* |
