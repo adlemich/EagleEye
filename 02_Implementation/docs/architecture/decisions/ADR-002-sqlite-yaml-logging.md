@@ -1,14 +1,16 @@
 # ADR-002: SQLite for Data Persistence, YAML for Application Configuration, .NET Logging for Diagnosability
 
-**Status**: Accepted
+**Status**: Accepted (platform list amended by CR-001 / ADR-019, 2026-10-20)
 **Date**: 2026-09-20
 **Deciders**: Michael (project owner), ARC
+
+> **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped. The parent app runs on **Windows** (`%LocalAppData%\EagleEye\`, added with ADR-007/ADR-009, arc42 §7.1.1) and **macOS**. The iOS and Android rows below are void and struck through; the rest of the decision is unchanged.
 
 ---
 
 ## Context
 
-EagleEye consists of four deployable components (Service, TrayClient, ParentApp, Shared library) running on different platforms (Windows, macOS, iOS, Android). Each component needs to persist application data (user configuration, statistics, credentials, caches) and read runtime configuration (ports, timeouts, feature toggles). Additionally, all components need a consistent, configurable logging strategy to support diagnosis of issues in the field.
+EagleEye consists of four deployable components (Service, TrayClient, ParentApp, Shared library) running on different platforms (Windows, macOS; ~~iOS, Android~~ dropped by CR-001, 2026-10-20). Each component needs to persist application data (user configuration, statistics, credentials, caches) and read runtime configuration (ports, timeouts, feature toggles). Additionally, all components need a consistent, configurable logging strategy to support diagnosis of issues in the field.
 
 Three related decisions were made together because they define the complete local data and observability story for every EagleEye component.
 
@@ -25,8 +27,8 @@ We will use **SQLite** (via `Microsoft.Data.Sqlite`) as the single persistence t
 | EagleEye.Service | `EagleEye.Service.db` | `%ProgramData%\EagleEye\` |
 | EagleEye.TrayClient | `EagleEye.TrayClient.db` | `%ProgramData%\EagleEye\` |
 | EagleEye.ParentApp (macOS) | `EagleEye.ParentApp.db` | `~/Library/Application Support/EagleEye/` |
-| EagleEye.ParentApp (iOS) | `EagleEye.ParentApp.db` | App sandbox `Documents/` |
-| EagleEye.ParentApp (Android) | `EagleEye.ParentApp.db` | App internal storage |
+| ~~EagleEye.ParentApp (iOS)~~ | ~~`EagleEye.ParentApp.db`~~ | ~~App sandbox `Documents/`~~ *(dropped, CR-001)* |
+| ~~EagleEye.ParentApp (Android)~~ | ~~`EagleEye.ParentApp.db`~~ | ~~App internal storage~~ *(dropped, CR-001)* |
 
 SQLite databases are accessed with WAL (Write-Ahead Logging) mode enabled for concurrent read performance. All write operations use transactions. Schema migrations are versioned and applied automatically on startup.
 

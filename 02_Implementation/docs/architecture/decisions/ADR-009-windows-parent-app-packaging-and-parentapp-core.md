@@ -1,15 +1,17 @@
 # ADR-009: Windows Parent App Packaging and the ParentApp.Core Library
 
-**Status**: Accepted (approved by Michael with the US-002 implementation plan, 2026-10-04)
+**Status**: Accepted (approved by Michael with the US-002 implementation plan, 2026-10-04; target list amended by CR-001 / ADR-019, 2026-10-20)
 **Date**: 2026-10-04
 **Deciders**: ARC, Michael
+
+> **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped. `EagleEye.ParentApp` targets only `net10.0-windows10.0.19041.0` (Windows machine) and `net10.0-maccatalyst` (MacBook). The Windows parent app is a production platform (not only the testing vehicle); Core is reused unchanged by the macOS app (new US-007). Packaging (§1) and Core (§2) are unchanged. Once DEV has removed the Android target (CR-001 §6.2), the D-4 reason "a command-line `-r` also hits the Android target" no longer applies; keeping the properties in the csproj stays valid.
 
 ---
 
 ## Context
 
 1. **Packaging.** Requirements v1.2 (FR-APP-092, Michael 2026-10-04) replace copy deployment with a separate, self-contained Windows installer with install, repair and uninstall. ADR-007 §2 and coding guidelines §16.1 still describe a single copied `.exe`.
-2. **Testability.** `EagleEye.ParentApp` is a multi-targeted MAUI executable (`net10.0-windows…`, `net10.0-android`, `net10.0-maccatalyst`). The unit test project `EagleEye.ParentApp.Tests` targets plain `net10.0` and cannot reference it. US-002 brings the first real parent-app logic (connection, pairing, state), which must be unit-tested with 100 % branch coverage (dev-process §9).
+2. **Testability.** `EagleEye.ParentApp` is a multi-targeted MAUI executable (`net10.0-windows…`, ~~`net10.0-android`,~~ `net10.0-maccatalyst`; Android dropped by CR-001). The unit test project `EagleEye.ParentApp.Tests` targets plain `net10.0` and cannot reference it. US-002 brings the first real parent-app logic (connection, pairing, state), which must be unit-tested with 100 % branch coverage (dev-process §9).
 3. **Two-machine build.** The MacBook currently has no MAUI workload. Logic that can be built and tested without MAUI is useful on both machines.
 
 ---
@@ -55,7 +57,7 @@ This supersedes ADR-007 §2 "Distribution" and coding guidelines §16.1 "Packagi
 
 - One-click installer without prerequisites; clean uninstall; updates keep the pairing.
 - Parent-app logic is unit-testable on Windows and macOS, with no MAUI workload needed for tests.
-- Later Android, iOS and macOS work reuses Core unchanged and only adds views and platform code.
+- Later ~~Android, iOS and~~ macOS work reuses Core unchanged and only adds views and platform code *(CR-001: macOS only)*.
 
 ### Negative / Trade-offs
 
@@ -73,7 +75,7 @@ This supersedes ADR-007 §2 "Distribution" and coding guidelines §16.1 "Packagi
 
 - Secret storage split (D-2): the table logic is `ParentApp.Core/Data/ProtectedSecretStore` (`ISecretStore`, unit-tested); only the encryption is platform code, `ISecretProtector` implemented on Windows by `Platforms/Windows/DpapiSecretProtector` (DPAPI `CurrentUser`). Other platforms register `MauiSecureStorageSecretStore` as `ISecretStore`.
 - Windows minimum version (D-3): the csproj sets `SupportedOSPlatformVersion` 10.0.19041.0 (the SDK rejects a minimum above the TFM version); Windows 11 is enforced by the installer (`MinVersion=10.0.22000`).
-- Publish (D-4): `RuntimeIdentifier=win-x64`, `SelfContained`, `WindowsAppSDKSelfContained`, `WindowsPackageType=None` are set in the csproj for the Windows TFM only, not on the command line (a command-line `-r` also hits the Android target).
+- Publish (D-4): `RuntimeIdentifier=win-x64`, `SelfContained`, `WindowsAppSDKSelfContained`, `WindowsPackageType=None` are set in the csproj for the Windows TFM only, not on the command line (a command-line `-r` also hits the Android target; void once the Android target is removed, CR-001).
 - Installer (D-14): the uninstaller ends running parent app processes of the current user; the Start menu entry sits directly in *Programs*; an optional "launch now" checkbox. Actual installer size is about 74 MB.
 
 ---

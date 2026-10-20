@@ -1,14 +1,16 @@
 # ADR-001: Technology Selection
 
-**Status**: Accepted
+**Status**: Accepted (parent-app targets amended by CR-001 / ADR-019, 2026-10-20)
 **Date**: 2026-09-15
 **Deciders**: Michael (project owner)
+
+> **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped (Michael, 2026-10-20). MAUI targets only **Windows** (WinUI, per-user installer, ADR-009) and **macOS** (Mac Catalyst, unsigned `.dmg`); both are production platforms. Where this ADR says "iOS, Android, and macOS", read "Windows and macOS". The technology choices themselves are unchanged. The original text below is kept as history.
 
 ---
 
 ## Context
 
-The EagleEye project requires a full technology stack covering a Windows background service, a Windows tray application, a cross-platform parent app (iOS, Android, macOS), inter-component communication, scripting, installer, and IDE tooling. All decisions were made upfront to ensure consistency and minimize integration risk.
+The EagleEye project requires a full technology stack covering a Windows background service, a Windows tray application, a cross-platform parent app (iOS, Android, macOS; *amended by CR-001, 2026-10-20: Windows and macOS*), inter-component communication, scripting, installer, and IDE tooling. All decisions were made upfront to ensure consistency and minimize integration risk.
 
 ---
 
@@ -35,7 +37,7 @@ We will use the following technologies for the EagleEye project:
 
 ### .NET 10 + MAUI
 
-.NET 10 is the current LTS release. MAUI enables a single codebase for iOS, Android, and macOS parent apps, maximizing code reuse as required. Only platform-specific UI code differs across platforms.
+.NET 10 is the current LTS release. MAUI enables a single codebase for iOS, Android, and macOS parent apps, maximizing code reuse as required. *(Amended by CR-001, 2026-10-20: Windows and macOS parent apps only.)* Only platform-specific UI code differs across platforms.
 
 ### SignalR
 
@@ -64,7 +66,7 @@ The parent app connects to the Windows service via the local home network. Remot
 ### Positive
 
 - Single language (.NET / C#) across all components reduces context switching
-- MAUI maximizes shared code between iOS, Android, and macOS parent apps
+- MAUI maximizes shared code between iOS, Android, and macOS parent apps *(amended by CR-001, 2026-10-20: between the Windows and macOS parent apps)*
 - SignalR eliminates the need for separate REST + WebSocket + polling implementations
 - PowerShell 7.6 runs on both macOS and Windows for seamless cross-platform scripting
 

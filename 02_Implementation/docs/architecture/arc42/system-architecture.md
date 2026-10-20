@@ -1,7 +1,7 @@
 # EagleEye — System Architecture
 
-*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); US-004 amendment proposed with the US-004 plan; US-005 amendment approved with the US-005 plan (2026-10-10); US-006 amendment approved with the US-006 plan (2026-10-12)*
-*Maintainer: ARC Agent | Last Updated: 2026-10-12*
+*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); US-004 amendment proposed with the US-004 plan; US-005 amendment approved with the US-005 plan (2026-10-10); US-006 amendment approved with the US-006 plan (2026-10-12); CR-001 amendment proposed (2026-10-20)*
+*Maintainer: ARC Agent | Last Updated: 2026-10-20*
 
 > **Amendment 2026-10-03 (ADR-007)**: Windows desktop target added to the ParentApp; two-machine development; manual acceptance testing. Affected: §1.1, §2.1, §2.2, §3.2, §4.2, §5.5, §7, §8.10, §9. Amendments approved by Michael on 2026-10-03.
 >
@@ -16,6 +16,8 @@
 > **Amendment 2026-10-10 (US-005, ADR-013, ADR-014) — approved by Michael together with the US-005 implementation plan (2026-10-10)**: break times per account (state area `AccountRules:{sid}` with field-level writes) and break-time enforcement **at app start**: blocked starts are decided in the accounting loop before usage accounting; the session agent posts `WM_CLOSE`, the service terminates the kill set after 20 s; history of blocked starts; the service binds tray connections to sessions itself and asks the tray client of the session to show the display text in a topmost dialog. ADR-003, ADR-005, ADR-006, ADR-011 and ADR-012 amended. Affected: §5.2 (Monitoring, Enforcement, Configuration, Communication), §5.4, §6.2 (new part 6.2.2, old 6.2.2 becomes 6.2.3), §8.3, §8.4, §8.6, §8.8, §8.9, §9, §11 (R-6, R-7 corrected, R-13, R-14), §12.
 >
 > **Amendment 2026-10-12 (US-006, ADR-015, ADR-016) — approved by Michael together with the US-006 implementation plan (2026-10-12)**: per-app daily budgets and weekdays (state area `AppRules:{sid}`, deny by default as "no rule row"), two global warning levels (state area `WarningSettings`), a tick-based time-limit engine that warns, grants grace periods after parent changes and closes **running** apps (budget end, midnight, break begin) with the US-005 close sequence, blocked starts that create the app record, one kid dialog per session whose text a newer message replaces, and default kid texts rendered in the language of the displaying app (Shared resources). ADR-006, ADR-012, ADR-013 and ADR-014 amended. Affected: §5.2 (Enforcement, Configuration), §6.3, §8.4, §8.6, §8.7, §8.13, §9, §11 (R-14 updated, R-15, R-16).
+>
+> **Amendment 2026-10-20 (CR-001, ADR-019) — proposed, for Michael's approval of the CR-001 ARC follow-ups**: the iOS and Android parent apps are dropped (Michael, 2026-10-20, requirements v1.7). The parent app has two production platforms, **Windows** (WinUI, per-user installer, ADR-009) and **macOS** (Mac Catalyst, unsigned and un-notarised `.dmg`). The Windows parent app is no longer only the initial testing vehicle. The Windows machine builds no Android target, the MacBook no iOS target. ADR-001, ADR-002, ADR-004, ADR-007, ADR-008, ADR-009 and ADR-010 amended. Affected: §1.1, §1.2, §2.1, §2.2, §3.1, §3.2, §4.2, §5.5, §7 (incl. §7.1.1, §7.4), §8.2, §8.4, §8.10, §9, §10.2 (QS-07), §11 (R-1 void, R-3).
 
 ---
 
@@ -29,7 +31,7 @@ EagleEye is a parental control solution for Windows PCs. It gives parents remote
 |-----------|------|
 | **EagleEye.Service** | Windows service (SYSTEM) — process monitoring, enforcement, SignalR hub, data persistence |
 | **EagleEye.TrayClient** | Windows tray app (kid's session) — remaining-time display, notifications, pairing code display |
-| **EagleEye.ParentApp** | MAUI app (Android + iOS primary for production; Windows client for initial testing; macOS) — remote configuration, statistics, event feed |
+| **EagleEye.ParentApp** | MAUI app with two production platforms: Windows parent app and macOS app (iOS and Android dropped, CR-001) — remote configuration, statistics, event feed |
 | **EagleEye.Shared** | Class library — SignalR contracts, domain models, shared constants |
 
 Core capabilities:
@@ -38,7 +40,7 @@ Core capabilities:
 - **Time budgets**: per-application, per-weekday daily limits in minutes
 - **Pause windows**: per-weekday time-of-day blocks during which all apps are denied
 - **Real-time notifications**: budget warnings, enforcement events, pairing codes
-- **Remote configuration**: parents manage rules from a mobile or macOS app over the LAN
+- **Remote configuration**: parents manage rules from the parent app on a Windows PC or a Mac over the LAN
 - **Multi-user**: independent rules and statistics per Windows standard-user account
 - **Usage statistics**: 90-day daily-granularity usage history per app per user
 
@@ -49,7 +51,7 @@ Core capabilities:
 | 1 | **Reliability** | Service survives reboots, session changes, and parent-app disconnects without losing enforcement state or tracked time |
 | 2 | **Security** | A standard-user child cannot stop, configure, or bypass the service; only authenticated parent apps may change rules |
 | 3 | **Diagnosability** | Every component writes structured log files; debug mode exposes detailed traces with full stack traces and parameter values for rapid root-cause analysis |
-| 4 | **Usability** | A non-technical parent can install EagleEye, pair their phone, and configure rules without CLI or certificate management |
+| 4 | **Usability** | A non-technical parent can install EagleEye, pair their parent app, and configure rules without CLI or certificate management |
 | 5 | **Performance** | Process monitoring adds negligible CPU/memory overhead; tray overlay causes no visible frame drops |
 | 6 | **Maintainability** | Component architecture with clear boundaries; API-first contracts; testable via DI and interfaces |
 
@@ -70,8 +72,8 @@ Core capabilities:
 | Constraint | Source |
 |-----------|--------|
 | .NET 10 for all components | `technology_selection.md` |
-| .NET MAUI for ParentApp (Android, iOS, Windows via WinUI, macOS via Catalyst) | `technology_selection.md`, ADR-007 |
-| Each build target is built on its owning machine: Windows machine (Service, TrayClient, ParentApp Windows + Android), MacBook (ParentApp Mac Catalyst) | ADR-007 |
+| .NET MAUI for ParentApp (Windows via WinUI, macOS via Catalyst; iOS and Android dropped) | `technology_selection.md`, ADR-007, ADR-019 |
+| Each build target is built on its owning machine: Windows machine (Service, TrayClient, ParentApp Windows), MacBook (ParentApp Mac Catalyst) | ADR-007, ADR-019 |
 | SignalR (ASP.NET Core) for all inter-component communication | `technology_selection.md`, ADR-001 |
 | Windows service runs under SYSTEM account | `questions_and_answers.md` Q2.3 |
 | Self-signed TLS certificate, auto-generated, non-expiring | `questions_and_answers.md` Q1.2 |
@@ -93,7 +95,8 @@ Core capabilities:
 | Incremental user-story delivery — one story fully completed before starting the next | `technology_selection.md` |
 | Two dev machines (Windows Developer Machine + MacBook) share one repo; the Windows machine is the manual test station | ADR-007 |
 | Acceptance/E2E testing is manual (Michael), guided by TES; only unit tests are automated | ADR-007 |
-| Android and iOS are the primary production platforms; the Windows parent app is the initial testing vehicle | Product requirements §3.3 (Michael, 2026-10-03) |
+| Windows and macOS are the two production platforms of the parent app, with the same features; iOS and Android are dropped | Product requirements v1.7 §3.3 (Michael, 2026-10-20, CR-001), ADR-019 |
+| The Mac `.dmg` is not Developer-ID signed and not notarised; a one-time Gatekeeper allow is accepted | Product requirements §9.4, Q-7 (Michael, 2026-10-20), ADR-019 |
 
 ### 2.3 Conventions
 
@@ -110,7 +113,7 @@ Core capabilities:
 
 ### 3.1 Business Context
 
-The system operates entirely within a home LAN. The parent interacts through a mobile/desktop app; the child interacts through the Windows PC. There are no external systems, cloud services, or internet dependencies.
+The system operates entirely within a home LAN. The parent interacts through the parent app on a Windows PC or a Mac; the child interacts through the Windows PC. There are no external systems, cloud services, or internet dependencies.
 
 ```plantuml
 @startuml EagleEye Business Context
@@ -141,7 +144,7 @@ end note
 
 | Actor / System | Interaction |
 |---------------|-------------|
-| **Parent** | Connects from mobile/macOS app over LAN. Configures allow-lists, time budgets, pause windows. Views usage statistics. Receives real-time event notifications. |
+| **Parent** | Connects from the Windows or macOS parent app over LAN. Configures allow-lists, time budgets, pause windows. Views usage statistics. Receives real-time event notifications. |
 | **Kid** | Logs into Windows with a standard-user account. Sees tray icon with remaining time. Receives budget/pause warnings. Subject to enforcement. |
 | **Windows 11 OS** | Provides process information, user-account discovery, session events. Target of process termination calls. |
 
@@ -157,7 +160,7 @@ node "Windows 11 PC" as winbox {
   database "SQLite + YAML\n(%ProgramData%)" as store
 }
 
-node "Parent Device\n(Android / iOS / Windows / macOS)" as parentdev {
+node "Parent Device\n(Windows / macOS)" as parentdev {
   component "EagleEye.ParentApp\n(.NET MAUI)" as app
 }
 
@@ -212,7 +215,7 @@ end note
 | SignalR client (TrayClient, ParentApp) | `Microsoft.AspNetCore.SignalR.Client` |
 | Process monitoring | `System.Diagnostics.Process` + Win32 API (via P/Invoke where needed) |
 | TLS certificates | `System.Security.Cryptography.X509Certificates` |
-| Cross-platform UI | .NET MAUI (Android, iOS, WinUI, Mac Catalyst) |
+| Cross-platform UI | .NET MAUI (WinUI, Mac Catalyst) |
 | TrayClient UI | WinForms (`NotifyIcon`, `Form` for overlay) |
 | Data persistence | SQLite via `Microsoft.Data.Sqlite` (all application data) |
 | Application configuration | YAML via `YamlDotNet` (one file per application for runtime parameters) |
@@ -421,8 +424,6 @@ package "EagleEye.ParentApp (MAUI head)" {
   component [Services\n(platform implementations)] as PA_SVC
   component [Windows (WinUI)] as WIN
   component [macOS (Catalyst)] as MAC
-  component [Android] as AND
-  component [iOS] as IOS
 }
 
 PA_VIEWS --> PA_VM : data binding
@@ -434,8 +435,6 @@ PA_DATA --> PA_ABS : ISecretStore / ISecretProtector
 PA_SVC ..|> PA_ABS : implements
 PA_SVC --> WIN
 PA_SVC --> MAC
-PA_SVC --> AND
-PA_SVC --> IOS
 @enduml
 ```
 
@@ -448,9 +447,11 @@ PA_SVC --> IOS
 | **Abstractions** | Core | Small platform interfaces Core needs: `ISecretStore`, `ISecretProtector`, `IThemeService`, `IDialogService`, `IUiDispatcher`, `IAppDataPaths`. |
 | **AppTexts** | Core | All user-facing parent-app texts (German default, English). |
 | **Views** | MAUI head | MAUI pages/views. Desktop layout (Windows, macOS): navigation menu, content region, status bar. Later: user selection, allow-list, budgets, pause windows, statistics, event feed, paired devices. |
-| **Services / Platform-Specific** | MAUI head | Implementations of the Core abstractions (theme, dialogs, main-thread dispatch, data paths, secret storage: `DpapiSecretProtector` on Windows, `MauiSecureStorageSecretStore` elsewhere). Android/iOS (primary production platforms): portrait lock, platform entry points. macOS (Catalyst) and Windows (WinUI): desktop window sizing. Windows + Android targets are built on the Windows machine; Mac Catalyst + iOS on the MacBook (ADR-007). |
+| **Services / Platform-Specific** | MAUI head | Implementations of the Core abstractions (theme, dialogs, main-thread dispatch, data paths, secret storage: `DpapiSecretProtector` on Windows, `MauiSecureStorageSecretStore` (Keychain) on macOS). macOS (Catalyst) and Windows (WinUI): platform entry points, desktop window sizing. The Windows target is built on the Windows machine, Mac Catalyst on the MacBook (ADR-007, ADR-019). |
 
-**Windows parent app** (product requirements §3.3.9): the initial testing vehicle for parent-side features. It is a normal `ParentHub` client with no special local access path. On the service PC it connects through the same TLS + pairing flow as a remote client (to `localhost` or the machine's own hostname). It is installed with its own per-user installer (ADR-009, §7.4).
+**Windows parent app** (product requirements §3.3.9): a production platform, together with the macOS app (ADR-019). It is a normal `ParentHub` client with no special local access path. On the service PC it connects through the same TLS + pairing flow as a remote client (to `localhost` or the machine's own hostname). It is installed with its own per-user installer (ADR-009, §7.4).
+
+**macOS app** (product requirements §3.3.10, FR-APP-110 to FR-APP-112): a production platform with the same features and desktop layout as the Windows parent app, and the same connection model (TLS + pairing). It reuses `EagleEye.ParentApp.Core` unchanged. On `main` it does not yet have the features of US-002 to US-006; the new US-007 "macOS parent app parity" closes the gap (CR-001 Q-6).
 
 ---
 
@@ -779,15 +780,9 @@ node "Parent Device" as parentdev {
     database "%LocalAppData%\\EagleEye\\\nEagleEye.ParentApp.db" as win_db
   }
   node "macOS 26+" {
-    artifact "EagleEye.ParentApp\n(.app bundle via .dmg)"
+    artifact "EagleEye.ParentApp\n(.app bundle via unsigned .dmg)"
     artifact "EagleEye.ParentApp.yaml" as mac_yaml
     database "EagleEye.ParentApp.db\n(SQLite)" as mac_db
-  }
-  node "iOS 26+" {
-    artifact "EagleEye.ParentApp\n(sideloaded via Xcode)"
-  }
-  node "Android 14+" {
-    artifact "EagleEye.ParentApp\n(sideloaded via adb)"
   }
 }
 
@@ -828,8 +823,6 @@ Each parent app instance stores its YAML config and SQLite database in the OS-st
 |----------|------------|----------|----------|
 | Windows | `EagleEye.ParentApp.yaml` | `EagleEye.ParentApp.db` | `%LocalAppData%\EagleEye\` (per parent user; removed by the parent app uninstaller) |
 | macOS | `EagleEye.ParentApp.yaml` | `EagleEye.ParentApp.db` | `~/Library/Application Support/EagleEye/` |
-| iOS | `EagleEye.ParentApp.yaml` | `EagleEye.ParentApp.db` | App sandbox `Documents/` |
-| Android | `EagleEye.ParentApp.yaml` | `EagleEye.ParentApp.db` | App internal storage |
 
 ### 7.2 Windows Service Registration
 
@@ -850,9 +843,7 @@ Each parent app instance stores its YAML config and SQLite database in the OS-st
 | Platform | Distribution | Package |
 |----------|-------------|---------|
 | Windows 11 | Own Inno Setup installer, **per user**, no admin rights (ADR-009, FR-APP-092). Unpackaged, self-contained (`win-x64`, .NET runtime and Windows App SDK included, no MSIX). Installs to `%LocalAppData%\Programs\EagleEye Parent App\`; repair/update keeps the app data; uninstall removes program folder, Start menu entry and `%LocalAppData%\EagleEye\`. Independent of the service installer (own `AppId`). Runs on the service PC or remotely. | `03_Delivery/windows/EagleEye-ParentApp-Setup-<version>.exe` |
-| macOS 26+ | Direct download | `.dmg` with `.app` bundle |
-| iOS 26+ (built on MacBook) | Sideload | Xcode / `ios-deploy` |
-| Android 14+ | Sideload (built on Windows machine) | `adb install` APK |
+| macOS 26+ | Direct `.dmg`, built on the MacBook by `scripts/package-macos.ps1` (FR-APP-112). No Mac App Store. The `.app` is ad-hoc signed only: no Developer-ID signature, no notarisation (Q-7, ADR-019). The first start needs a one-time allow in *System Settings → Privacy & Security → Open Anyway*. | `03_Delivery/macos/EagleEye-<version>.dmg` with the `.app` bundle |
 
 ---
 
@@ -888,7 +879,7 @@ See ADR-004 for the full rationale and pairing flow details.
 
 **Pairing flow** (ADR-004, made concrete by ADR-008 §4): parent app connects unpaired → calls `StartPairing()` → service generates a 6-digit code bound to that connection (5-minute expiry, replaces any pending code) → code displayed in a topmost window by every connected TrayClient (or written to the Windows Event Log, source `EagleEye`, event ID 1000, if no TrayClient is connected) → parent enters code + device name → `SubmitPairingCode` → service validates (any failure invalidates the code: one guess per code) → issues a 256-bit token → both sides store it. The code is requested explicitly, not on connect, so reconnects do not push codes.
 
-**Token security**: Tokens are generated via `System.Security.Cryptography.RandomNumberGenerator`. The service stores only the **SHA-256 hash** of each token in the `PairedDevices` SQLite table, never the plaintext. The parent app stores the token encrypted through its `ISecretStore` (Windows: DPAPI `CurrentUser`, see §8.4; Android/iOS/macOS: MAUI `SecureStorage`). Tokens are transmitted only over TLS and never appear in logs.
+**Token security**: Tokens are generated via `System.Security.Cryptography.RandomNumberGenerator`. The service stores only the **SHA-256 hash** of each token in the `PairedDevices` SQLite table, never the plaintext. The parent app stores the token encrypted through its `ISecretStore` (Windows: DPAPI `CurrentUser`, see §8.4; macOS: MAUI `SecureStorage`, Keychain). Tokens are transmitted only over TLS and never appear in logs.
 
 **Subsequent connections**: The parent app sends its token as `Authorization: Bearer <token>` (SignalR `AccessTokenProvider`). `ParentHub.OnConnectedAsync` hashes it, looks up the hash in `PairedDevices`, and marks the connection as paired if found (and adds it to the `Parents` group). Unmatched tokens leave the client unpaired; the client learns this via `GetPairingStatus()` after every (re)connect and then deletes its local pairing.
 
@@ -964,7 +955,7 @@ All application data is stored in SQLite databases. Each EagleEye component has 
 
 - **ServerConnections** — stored service endpoints (hostname/IP), device ID, device name, pinned certificate thumbprint (SHA-256) and pairing time. At most one row in US-002.
 - **AppSettings** — key/value settings (e.g. `appearance.theme`).
-- **Secrets** — the pairing token, encrypted. On Windows, `ProtectedSecretStore` (Core) stores the bytes returned by `ISecretProtector`, implemented by `DpapiSecretProtector` (DPAPI `CurrentUser`, platform code). MAUI `SecureStorage` is not used on Windows because it needs package identity and the app is unpackaged (ADR-009). Other platforms use `MauiSecureStorageSecretStore` (Keychain/Keystore) and do not use this table.
+- **Secrets** — the pairing token, encrypted. On Windows, `ProtectedSecretStore` (Core) stores the bytes returned by `ISecretProtector`, implemented by `DpapiSecretProtector` (DPAPI `CurrentUser`, platform code). MAUI `SecureStorage` is not used on Windows because it needs package identity and the app is unpackaged (ADR-009). macOS uses `MauiSecureStorageSecretStore` (Keychain) and does not use this table.
 - **CachedState** (planned) — last-known configuration and statistics for offline display.
 
 The service and the parent app derive their databases from the Shared `SqliteDatabase` base (§5.3).
@@ -1116,8 +1107,6 @@ Log file locations per component:
 | EagleEye.TrayClient | `%ProgramData%\EagleEye\` |
 | EagleEye.ParentApp (Windows) | `%LocalAppData%\EagleEye\` |
 | EagleEye.ParentApp (macOS) | `~/Library/Application Support/EagleEye/` |
-| EagleEye.ParentApp (iOS) | App sandbox `Documents/` |
-| EagleEye.ParentApp (Android) | App internal storage |
 
 #### Security Rule
 
@@ -1194,10 +1183,15 @@ All architectural decisions are recorded as ADRs in `02_Implementation/docs/arch
 | ADR-014 | Session-Bound Tray Connections and the Kid's Message Box | Accepted (approved with the US-005 implementation plan, 2026-10-10) |
 | ADR-015 | Time Limits for Running Apps — End of Allowed Time, Warnings, Grace Periods and Enforced Closes | Accepted (approved with the US-006 implementation plan, 2026-10-12) |
 | ADR-016 | Default Kid Texts Are Rendered in the Language of the Displaying App | Accepted (approved with the US-006 implementation plan, 2026-10-12) |
+| ADR-019 | Parent App Platforms — Windows and macOS Only, Unsigned Mac Distribution | Proposed (records CR-001, approved by Michael 2026-10-20) |
+
+ADR-017 and ADR-018 are unused: they were drafts on the aborted US-007 iOS branch and never reached `main` (ADR-019 numbering note).
 
 *(US-005)* Amendments marked in ADR-003 (tray groups replaced by ADR-014), ADR-005 (ignore list by path), ADR-006 (agent closes, service terminates the kill set, 20 s), ADR-011 (command channel, `PostMessageW(WM_CLOSE)`), ADR-012 (blocked processes not counted, time-zone refresh).
 
 *(US-006)* Amendments marked in ADR-006 (two global warning levels, closes of running apps), ADR-012 (app record on blocked starts, ledger, tick order), ADR-013 (gate checks app rules, close requests, break begin closes running apps, history columns), ADR-014 (`ShowKidMessage`, newer message replaces, info line).
+
+*(CR-001, 2026-10-20)* Amendments marked in ADR-001 (MAUI targets Windows + macOS), ADR-002 (no iOS/Android storage rows), ADR-004 (example device name), ADR-007 (machine roles, Windows parent app is a production platform), ADR-008 (wording), ADR-009 (TFM list without Android), ADR-010 (note on "mobile apps").
 
 ---
 
@@ -1277,7 +1271,7 @@ maint --> maint3
 | QS-04 | Security | An unauthenticated network client sends a configuration change. | Service rejects the request; no configuration modified |
 | QS-05 | Diagnosability | A bug is reported. The developer enables debug mode in the YAML config and reproduces the issue. Log files contain full stack traces with parameter values for every method in the call chain. | Root cause identifiable from log files alone without attaching a debugger |
 | QS-06 | Diagnosability | A credential-related flow is logged in debug mode. | No passwords, tokens, pairing codes, or private keys appear in any log file — all replaced with `***` |
-| QS-07 | Usability | A parent installs EagleEye, pairs their phone, and configures one app rule. | Achievable in under 10 minutes with no CLI or certificate steps |
+| QS-07 | Usability | A parent installs EagleEye, pairs their parent app (Windows or macOS), and configures one app rule. | Achievable in under 10 minutes with no CLI or certificate steps |
 | QS-08 | Performance | The service monitors processes while the child plays a game. | CPU usage from EagleEye ≤ 2% average; no perceptible impact on game FPS |
 | QS-09 | Performance | The tray overlay is visible during a borderless-windowed game. | No frame drops caused by the overlay |
 | QS-10 | Maintainability | A developer adds a new SignalR method. | Change touches `EagleEye.Shared/Contracts/` first, then implementations — no shotgun surgery |
@@ -1288,9 +1282,9 @@ maint --> maint3
 
 | # | Risk | Probability | Impact | Mitigation |
 |---|------|-------------|--------|------------|
-| R-1 | Self-signed certificate rejected by iOS/Android MAUI clients | Medium | High | Validate `ServerCertificateCustomValidationCallback` on each platform early in development. Pin thumbprint after pairing. iOS/Android development is deferred — validate when those platforms are addressed. |
+| R-1 | ~~Self-signed certificate rejected by iOS/Android MAUI clients~~ **Void (CR-001, 2026-10-20)**: iOS and Android are dropped. Trust on first use and pinning work on Windows (US-002); the Mac Catalyst client is validated with the new US-007 (see R-3). | — | — | — |
 | R-2 | Process monitoring causes high CPU under heavy process churn | Low | Medium | Use efficient enumeration (snapshot-based, not per-process polling). Profile during first DEV iteration. Configurable poll interval as safety valve. |
-| R-3 | MAUI limitations on macOS Catalyst | Medium | Medium | Validate tray-like features and window management on real hardware in the first user story. Fall back to menu-bar app pattern if needed. |
+| R-3 | MAUI limitations on macOS Catalyst (window management, TLS trust callback on the WebSocket transport, Keychain via `SecureStorage`) | Medium | Medium | *(CR-001)* The macOS app is now a production platform: validate on real hardware in the new US-007 "macOS parent app parity". Known toolchain issue: the .NET Mac Catalyst pack may expect an older Xcode than installed (`ValidateXcodeVersion`, dev-environments §5). |
 | R-4 | WinForms topmost overlay z-order lost in some fullscreen games | Medium | Low | Documented as v1 limitation (no DirectX overlay). Use `WS_EX_TOPMOST` + timer-based re-assertion. |
 | R-5 | SQLite database corruption on service crash | Very Low | High | SQLite WAL mode provides crash resilience out of the box. Regular `PRAGMA integrity_check` on startup. |
 | R-6 | Standard-user child kills TrayClient process | Low | Low | TrayClient is informational only; enforcement continues server-side. TrayClient restarts automatically. Consider process-protection techniques in later iterations. *(US-005)*: then the break-time message is not shown; the app is closed anyway and the log says "message not shown" (US-005 OQ-9, AC-33). |

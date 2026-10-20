@@ -1,8 +1,10 @@
 # ADR-004: Pairing-Based Authentication for Parent Apps
 
-**Status**: Accepted
+**Status**: Accepted (example amended by CR-001, 2026-10-20)
 **Date**: 2026-09-20
 **Deciders**: Michael (project owner), ARC
+
+> **Amended by CR-001 (2026-10-20, ADR-019)**: cosmetic only. The iOS and Android parent apps are dropped; parent apps run on Windows and macOS. The device-name example in the pairing flow now reads "Mom's MacBook" (as FR-SVC-094 in requirements v1.7). The decision is unchanged.
 
 ---
 
@@ -33,7 +35,7 @@ We will use a **pairing-code-based authentication** model, inspired by Bluetooth
 4. Service pushes the code to the connected TrayClient for display as a popup notification
    - If no TrayClient is connected: service writes the code to the Windows Event Log (Information level)
 5. Parent (person) reads the code from the Windows PC screen and enters it in the parent app
-6. Parent app submits: code + user-chosen device name (e.g., "Mom's iPhone")
+6. Parent app submits: code + user-chosen device name (e.g., "Mom's MacBook"; was "Mom's iPhone" before CR-001)
 7. Service validates:
    a. Code matches the pending code
    b. Code has not expired (< 5 minutes since generation)
