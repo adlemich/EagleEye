@@ -5,8 +5,8 @@ namespace EagleEye.ParentApp.Services;
 /// <summary>
 /// Keeps the heading bar colours (US-004 ISSUE-007) in the app resources
 /// <see cref="BackgroundKey"/> and <see cref="TextKey"/>, which the style <c>SectionHeader</c> uses as
-/// dynamic resources. Background: the platform accent colour (Windows: the user's accent colour,
-/// Android: the system accent colour), otherwise the app's primary colour; text: white or black,
+/// dynamic resources. Background: the platform accent colour (Windows: the user's accent colour),
+/// otherwise the app's primary colour; text: white or black,
 /// whichever stays readable (<see cref="HeadingBarPalette"/>). Refreshed when the accent colour
 /// changes (Windows) and whenever the window is activated.
 /// </summary>
@@ -49,10 +49,8 @@ public sealed class HeadingBarColorService
     {
 #if WINDOWS
         return _accent.Read();
-#elif ANDROID
-        return Platforms.Android.AndroidAccentColor.Read();
 #else
-        // iOS and macOS (Mac Catalyst): the app's primary colour.
+        // macOS (Mac Catalyst): the app's primary colour.
         return null;
 #endif
     }

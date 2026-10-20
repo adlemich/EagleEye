@@ -51,8 +51,6 @@ Sync is through git only: pull when you start, commit and push before you switch
 | Xcode | | ✔ |
 | Docker or Podman (PlantUML server) | optional | optional |
 
-*Transition (CR-001):* until DEV has removed the Android target from the code, run `pwsh 02_Implementation/scripts/build.ps1 -SkipAndroid` on the Windows machine if no Android SDK is installed.
-
 ---
 
 ## Getting Started

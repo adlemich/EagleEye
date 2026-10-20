@@ -1,8 +1,8 @@
 # EagleEye.ParentApp
 
-Cross-platform parent application built with .NET MAUI. One codebase targets Android and iOS (primary production platforms), Windows (initial testing vehicle, own per-user installer) and macOS.
+Cross-platform parent application built with .NET MAUI. One codebase targets two production platforms (ADR-019): Windows (own per-user installer) and macOS (Mac Catalyst, `.dmg`). iOS and Android were dropped by CR-001.
 
-**Build hosts (ADR-007)**: Windows and Android targets are built on the Windows developer machine; the macOS (Mac Catalyst) and iOS targets on the MacBook. The `.csproj` selects target frameworks by host OS.
+**Build hosts (ADR-007)**: the Windows target is built on the Windows developer machine; the macOS (Mac Catalyst) target on the MacBook. The `.csproj` selects target frameworks by host OS.
 
 **Logic lives in `EagleEye.ParentApp.Core` (ADR-009).** This project is the MAUI head only: views, `MauiProgram`, platform code and the implementations of the small abstractions Core needs (theme, dialogs, UI dispatcher, app data paths, secret storage). See `src/EagleEye.ParentApp.Core/README.md`.
 
@@ -37,7 +37,6 @@ EagleEye.ParentApp/
 │   │                        program path as tooltip, hours/minutes saved on leaving the field or Enter, days at the
 │   │                        click) and the budget text
 │   ├── ReportsView          Reports: account selection, one table per day (App | Nutzung (HH:MM)), US-004
-| Nutzung (HH:MM)), US-004
 │   └── StatusBarView        Green/red indicator + status text
 ├── Services/                MauiThemeService, MauiDialogService, MauiUiDispatcher,
 │                            MauiAppDataPaths, MauiSecureStorageSecretStore (non-Windows),
@@ -48,8 +47,6 @@ EagleEye.ParentApp/
 └── Platforms/
     ├── Windows/             WinUI App, app.manifest, DpapiSecretProtector (token: DPAPI CurrentUser),
     │                        WindowsAccentColor (user accent colour + changes, UISettings)
-    ├── Android/             MainActivity, MainApplication, AndroidManifest (INTERNET),
-    │                        AndroidAccentColor (system accent colour, Material You)
     └── MacCatalyst/         AppDelegate, SceneDelegate, Program, Info.plist, Entitlements (not built yet)
 ```
 
@@ -60,15 +57,13 @@ All UI texts come from `EagleEye.ParentApp.Core/Resources/AppTexts*.resx` (Germa
 | Platform | Min Version | Built on | Distribution |
 |----------|-------------|----------|--------------|
 | Windows | Windows 11 | Windows machine | Per-user installer `03_Delivery/windows/EagleEye-ParentApp-Setup-<version>.exe` (unpackaged, self-contained, no admin rights, ADR-009) |
-| Android | Android 14 (API 34) | Windows machine | Sideloading (adb) |
-| macOS | macOS 26 | MacBook | Direct .dmg download |
-| iOS | iOS 26 | MacBook | Sideloading (Xcode / ios-deploy) |
+| macOS | macOS 26 | MacBook | `.dmg` in `03_Delivery/macos/`, ad-hoc signed only (no Developer ID, no notarisation, ADR-019); allow once via *System Settings → Privacy & Security → Open Anyway* |
 
 ## Build, Run, Package (Windows machine)
 
 | Task | Command |
 |---|---|
-| Build Windows + Android | `pwsh 02_Implementation/scripts/build.ps1` (finds the JDK / Android SDK via `JAVA_HOME` / `ANDROID_HOME` or `%LOCALAPPDATA%\Android`) |
+| Build | `pwsh 02_Implementation/scripts/build.ps1` |
 | Run (Debug) | `02_Implementation/src/EagleEye.ParentApp/bin/Debug/net10.0-windows10.0.19041.0/win-x64/EagleEye.ParentApp.exe` |
 | Installer | `pwsh 02_Implementation/scripts/package-windows.ps1 -Target ParentApp` |
 

@@ -39,7 +39,7 @@ Write-Host ""
 Write-Host "Host" -ForegroundColor Cyan
 if ($IsWindows) {
     Write-Item "Machine role" "Windows Developer Machine" "Green"
-    Write-Item "Responsible for" "Shared, Service, TrayClient, ParentApp (Windows + Android), installer, manual testing"
+    Write-Item "Responsible for" "Shared, Service, TrayClient, ParentApp (Windows), installers, manual testing"
 }
 elseif ($IsMacOS) {
     Write-Item "Machine role" "MacBook" "Green"
@@ -82,7 +82,7 @@ Write-Host "Toolchain" -ForegroundColor Cyan
 Write-Item "PowerShell" $PSVersionTable.PSVersion.ToString() "Green"
 Test-Tool ".NET SDK" "dotnet" { dotnet --version }
 if (Get-Command dotnet -ErrorAction SilentlyContinue) {
-    $workloads = dotnet workload list 2>$null | Select-String -Pattern "^\s*(maui\S*|android|maccatalyst|ios)\s" | ForEach-Object { ($_.Line.Trim() -split "\s+")[0] }
+    $workloads = dotnet workload list 2>$null | Select-String -Pattern "^\s*(maui|maui-windows|maui-maccatalyst|maccatalyst)\s" | ForEach-Object { ($_.Line.Trim() -split "\s+")[0] }
     Write-Item ".NET workloads" ($(if ($workloads) { ($workloads -join ", ") } else { "none relevant installed" })) ($(if ($workloads) { "Green" } else { "Yellow" }))
 }
 Test-Tool "git" "git" { git --version }
@@ -93,7 +93,6 @@ if ($IsWindows) {
         (Join-Path $env:ProgramFiles "Inno Setup 6\ISCC.exe")
     ) | Where-Object { Test-Path $_ } | Select-Object -First 1
     Write-Item "Inno Setup (ISCC)" ($(if ($iscc) { $iscc } else { "not found" })) ($(if ($iscc) { "Green" } else { "Yellow" }))
-    Test-Tool "adb (Android)" "adb" { (adb version)[0] }
 }
 if ($IsMacOS) {
     Test-Tool "Xcode" "xcodebuild" { (xcodebuild -version)[0] }

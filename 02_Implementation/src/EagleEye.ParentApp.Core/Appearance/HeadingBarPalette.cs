@@ -20,7 +20,7 @@ public static class HeadingBarPalette
     private const double BlueWeight = 0.0722;
     private const double ContrastFlare = 0.05;
 
-    /// <summary>The app's primary colour (Colors.xaml <c>AccentLight</c>, Android <c>colorPrimary</c>).</summary>
+    /// <summary>The app's primary colour (Colors.xaml <c>AccentLight</c>).</summary>
     public static RgbColor FallbackBackground { get; } = new(0x1E, 0x7B, 0x3A);
 
     /// <summary>Background and text colour of the bar for the given platform accent colour.</summary>

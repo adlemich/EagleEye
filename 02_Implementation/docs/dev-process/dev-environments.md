@@ -4,7 +4,7 @@
 *Audience: Michael, Orchestrator, PRO, ARC, DEV, TES*
 *Owner: Orchestrator*
 
-> **Amendment 2026-10-20 (CR-001, ADR-019; written by ARC)**: the iOS and Android parent apps are dropped. The Windows machine has no Android target, APK, emulator, `maui-android` workload or Android SDK; the MacBook has no iOS target and needs Xcode for Mac Catalyst only. Both parent apps (Windows, macOS) are production platforms. Until DEV removes the Android target from the code and scripts (CR-001 §6.2), `build.ps1` on Windows still builds it; use `build.ps1 -SkipAndroid` on a machine without the Android toolchain. Added: MacBook lessons (repo outside iCloud Drive, Xcode version check).
+> **Amendment 2026-10-20 (CR-001, ADR-019; written by ARC)**: the iOS and Android parent apps are dropped. The Windows machine has no Android target, APK, emulator, `maui-android` workload or Android SDK; the MacBook has no iOS target and needs Xcode for Mac Catalyst only. Both parent apps (Windows, macOS) are production platforms. DEV removed the Android target and the `-SkipAndroid` switch from the code and scripts (CR-001 §6.2). Added: MacBook lessons (repo outside iCloud Drive, Xcode version check).
 
 EagleEye is developed on **two machines that share one git repository** (`https://github.com/adlemich/EagleEye.git`, branch `main`). Every agent must know which machine it is running on and only do work that belongs to that machine.
 
@@ -97,7 +97,7 @@ Git is the only sync mechanism.
 **MacBook lessons (known issues)**:
 
 - **Keep the repo outside iCloud Drive**, e.g. `~/EagleEye`, not in `~/Documents` or `~/Desktop` when these sync with iCloud. iCloud sets the `com.apple.FinderInfo` extended attribute on files, and `codesign` then rejects every `.app` bundle ("resource fork, Finder information, or similar detritus not allowed"), including the ad-hoc signature of the Mac Catalyst build.
-- **Xcode newer than the .NET Mac Catalyst pack expects**: with Xcode 27.1 installed, the .NET `maccatalyst` workload pack expected Xcode 27.0 and the build stopped at the Xcode version check. Setting the MSBuild property `ValidateXcodeVersion=false` worked around it. This is a known toolchain issue; whether and where the property is set (csproj, `build.ps1`, or command line) is DEV's decision. Re-check after each Xcode or workload update.
+- **Xcode newer than the .NET Mac Catalyst pack expects**: with Xcode 27.1 installed, the .NET `maccatalyst` workload pack expected Xcode 27.0 and the build stopped at the Xcode version check. Setting the MSBuild property `ValidateXcodeVersion=false` worked around it. This is a known toolchain issue. **DEV decision (2026-10-20, CR-001 §6.2)**: the property is set in `EagleEye.ParentApp.csproj`, scoped to the `maccatalyst` TFM only, with a comment, so `build.ps1`, `package-macos.ps1` and the IDE all build the same way. Re-check after each Xcode or workload update and remove the property once the pack matches the installed Xcode.
 - The Mac `.dmg` needs no Apple Developer account and no Apple secrets: it is not Developer-ID signed or notarised (ADR-019). Allow the app once in *System Settings → Privacy & Security → Open Anyway*.
 
 ---
@@ -115,7 +115,7 @@ All scripts in `02_Implementation/scripts/` detect the host and only touch the c
 | `package-macos.ps1` | refuses to run | `.dmg` |
 | `plantuml.ps1` | Start/stop the PlantUML server | Start/stop the PlantUML server |
 
-The `EagleEye.ParentApp.csproj` selects its target frameworks by host OS (Windows: `net10.0-windows10.0.19041.0`; macOS: `net10.0-maccatalyst`). Until DEV removes it (CR-001 §6.2), the Windows host still also has `net10.0-android`. `Directory.Build.props` sets `EnableWindowsTargeting` so the full solution still loads in the IDE on macOS.
+The `EagleEye.ParentApp.csproj` selects its target frameworks by host OS (Windows: `net10.0-windows10.0.19041.0`; macOS: `net10.0-maccatalyst`). `Directory.Build.props` sets `EnableWindowsTargeting` so the full solution still loads in the IDE on macOS.
 
 ---
 

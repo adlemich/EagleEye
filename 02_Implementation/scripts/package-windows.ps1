@@ -105,10 +105,11 @@ if ($Target -in "All", "Service") {
 }
 
 if ($Target -in "All", "ParentApp") {
-    # No --runtime here: on a multi-targeted project it would also apply to the Android target
-    # during restore. The csproj sets win-x64 and self-contained for the Windows target.
+    # The project has a single target on Windows (CR-001 removed Android), so --runtime is safe here.
+    # It matches the RuntimeIdentifier and self-contained settings in the csproj (ADR-009).
     Invoke-Publish "ParentApp" $parentAppProject @(
         "--framework", $parentAppFramework,
+        "--runtime", "win-x64",
         "-p:WindowsPackageType=None",
         "-p:WindowsAppSDKSelfContained=true")
 
