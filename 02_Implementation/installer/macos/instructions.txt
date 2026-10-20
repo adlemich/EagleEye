@@ -1,0 +1,82 @@
+EagleEye Parent App {VERSION} für macOS - Anleitung
+====================================================
+
+Voraussetzungen: ein Mac mit Apple-Chip (M1 oder neuer) und macOS 26 oder neuer, im selben Heimnetz wie der
+EagleEye-PC.
+
+INSTALLIEREN
+1. Die .dmg-Datei öffnen (Doppelklick).
+2. "EagleEye Parent App" auf das Symbol "Applications" (Programme) ziehen.
+3. Das Fenster der .dmg schließen und die .dmg im Finder auswerfen.
+
+ERSTER START
+1. "EagleEye Parent App" im Ordner Programme oder im Launchpad öffnen.
+2. macOS blockiert den ersten Start, weil die App nicht von Apple geprüft ist ("nicht verifiziert").
+   Dann: Systemeinstellungen > Datenschutz & Sicherheit > ganz unten bei "EagleEye Parent App" auf
+   "Dennoch öffnen" klicken und bestätigen. Das ist nur einmal nötig.
+3. Beim ersten Verbinden fragt macOS, ob die App Geräte im lokalen Netzwerk finden und sich mit ihnen verbinden
+   darf. Bitte "Erlauben" wählen. Ohne diese Erlaubnis kann die App den EagleEye-PC nicht erreichen.
+   Falls die App beim allerersten Versuch einen Verbindungsfehler zeigt, einfach noch einmal "Verbinden" klicken.
+   Später ändern: Systemeinstellungen > Datenschutz & Sicherheit > Lokales Netzwerk.
+4. Hostname oder IP-Adresse des EagleEye-PCs eingeben, den Kopplungscode vom EagleEye-PC und einen Gerätenamen.
+
+SCHLÜSSELBUND (nach einem Update)
+Die Kopplung wird im macOS-Schlüsselbund gespeichert. Nach einem Update fragt macOS einmal (manchmal zweimal),
+ob "EagleEye" den Eintrag "com.adlemich.eagleeye" im Schlüsselbund verwenden darf. Das Passwort des Mac-Benutzers
+eingeben und "Immer erlauben" klicken. Danach startet die App wieder ohne Nachfrage. Bei "Nicht erlauben" zeigt
+die App einen Hinweis; die Kopplung bleibt erhalten, und beim nächsten Start kann der Zugriff erlaubt werden.
+
+UPDATE
+1. Die App beenden (EagleEye Parent App > Beenden, oder ⌘Q).
+2. Die neue .dmg öffnen und "EagleEye Parent App" wieder auf "Applications" ziehen, dann "Ersetzen" wählen.
+3. Die App starten (siehe "Schlüsselbund"). Kopplung und Darstellung bleiben erhalten.
+
+ENTFERNEN
+1. In der App unter Einstellungen "Kopplung aufheben" klicken (solange die App mit dem EagleEye-PC verbunden ist).
+2. Falls die App im Dock behalten wurde: Rechtsklick auf das Symbol > Optionen > Aus dem Dock entfernen.
+3. Die App beenden (⌘Q).
+4. "EagleEye Parent App" aus dem Ordner Programme in den Papierkorb legen.
+5. In der .dmg das Skript "Remove EagleEye Parent App.command" doppelklicken. Es zeigt, was es entfernt hat.
+   Falls macOS das Skript blockiert: Rechtsklick > Öffnen > Öffnen. Ein zweiter Lauf meldet "Nichts zu entfernen".
+
+
+EagleEye Parent App {VERSION} for macOS - Instructions
+======================================================
+
+Requirements: a Mac with Apple silicon (M1 or later) and macOS 26 or later, in the same home network as the
+EagleEye PC.
+
+INSTALL
+1. Open the .dmg file (double-click).
+2. Drag "EagleEye Parent App" onto the "Applications" icon.
+3. Close the .dmg window and eject the .dmg in Finder.
+
+FIRST START
+1. Open "EagleEye Parent App" from the Applications folder or from Launchpad.
+2. macOS blocks the first start because the app is not checked by Apple ("not verified").
+   Then: System Settings > Privacy & Security > at the bottom, next to "EagleEye Parent App", click "Open Anyway"
+   and confirm. This is needed only once.
+3. At the first connection, macOS asks whether the app may find and connect to devices on your local network.
+   Choose "Allow". Without this permission the app cannot reach the EagleEye PC.
+   If the app shows a connection error at the very first attempt, simply click "Connect" again.
+   To change it later: System Settings > Privacy & Security > Local Network.
+4. Enter the host name or IP address of the EagleEye PC, the pairing code shown on the EagleEye PC and a device name.
+
+KEYCHAIN (after an update)
+The pairing is stored in the macOS Keychain. After an update, macOS asks once (sometimes twice) whether "EagleEye"
+may use the item "com.adlemich.eagleeye" in your keychain. Enter your Mac user password and click "Always Allow".
+After that, the app starts without asking. With "Deny", the app shows a notice; the pairing is kept, and you can
+allow the access at the next start.
+
+UPDATE
+1. Quit the app (EagleEye Parent App > Quit, or ⌘Q).
+2. Open the new .dmg, drag "EagleEye Parent App" onto "Applications" again and choose "Replace".
+3. Start the app (see "Keychain"). Pairing and appearance are kept.
+
+REMOVE
+1. In the app, under Settings, click "Remove pairing" (while the app is connected to the EagleEye PC).
+2. If you kept the app in the Dock: right-click its icon > Options > Remove from Dock.
+3. Quit the app (⌘Q).
+4. Move "EagleEye Parent App" from the Applications folder to the Trash.
+5. In the .dmg, double-click the script "Remove EagleEye Parent App.command". It lists what it removed.
+   If macOS blocks the script: right-click > Open > Open. A second run reports "Nothing to remove".
