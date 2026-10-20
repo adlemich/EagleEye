@@ -84,7 +84,7 @@ Found with `git grep -i -E "android|ios|iphone|ipad|mobile|phone|adb|xcode|sidel
 
 ### 6.1 ARC (after Michael approves this CR)
 
-**Status (ARC, 2026-10-20)**: ARC rows done on this branch in `6f23416` (arc42, ADRs, new ADR-019) and `ebba2b1` (coding guidelines, dev-process docs). The new ADR-019 and the arc42/guidelines amendments are marked *Proposed* until Michael approves them. The two testing rows stay with TES.
+**Status (ARC, 2026-10-20)**: ARC rows done on this branch in `6f23416` (arc42, ADRs, new ADR-019) and `ebba2b1` (coding guidelines, dev-process docs). The new ADR-019 and the arc42/guidelines amendments are marked *Proposed* until Michael approves them. The two testing rows stay with TES. **TES (2026-10-20)**: testing rows done in `ae4ecb2`.
 
 | File | What must change |
 |---|---|
@@ -100,8 +100,8 @@ Found with `git grep -i -E "android|ios|iphone|ipad|mobile|phone|adb|xcode|sidel
 | `02_Implementation/docs/architecture/product-coding-guidelines.md` | Remove §14 iOS and §15 Android (and TOC entries), `Platforms/Android` in the folder tree and build-host rules; Windows section "Role: initial testing vehicle … Android and iOS are the production platforms"; "phone layouts" wording in the macOS section **Done (ebba2b1).** |
 | `02_Implementation/docs/dev-process/dev-environments.md` | Windows machine: no Android target, APK, emulator, `maui-android` workload or Android SDK; MacBook: Xcode for Mac Catalyst only; `build.ps1` table; csproj TFM description **Done (ebba2b1).** |
 | `02_Implementation/docs/dev-process/dev-process.md` | §5 component table "Windows, Android, macOS (iOS later)" → Windows, macOS; machine list "Windows + Android targets" **Done (ebba2b1).** |
-| `02_Implementation/docs/testing/README.md` (with TES) | Test-station table: remove "Android parent app (emulator or USB device)" |
-| `02_Implementation/docs/testing/templates/test-plan-template.md` (TES) | Example prerequisite "Android emulator running" |
+| `02_Implementation/docs/testing/README.md` (with TES) | Test-station table: remove "Android parent app (emulator or USB device)" **Done (ae4ecb2).** |
+| `02_Implementation/docs/testing/templates/test-plan-template.md` (TES) | Example prerequisite "Android emulator running" **Done (ae4ecb2).** (now: macOS parent app from the `.dmg`) |
 
 ### 6.2 DEV (after the ARC updates, on its own branch or story as the Orchestrator decides)
 
