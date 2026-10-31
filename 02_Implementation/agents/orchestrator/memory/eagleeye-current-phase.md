@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-10-31 US-008 app groups: story approved, ARC plan awaiting approval; US-009 Win10 + Windows parity later
+description: EagleEye workflow status — 2026-10-31 US-008 app groups step c: Step 1 done, Steps 2–7 on Windows next; US-009 Win10 + Windows parity (all 0.9.0)
 metadata:
   type: project
 ---
+
+**Update 2026-10-31 (US-008 step c): plan APPROVED (3792b63; story Analyzed, ADR-021 Accepted). Michael's simplification: NO mixed versions/compat (AC-44 removed, 43 ACs), 0.8.0 = service+tray+Mac; US-009 = Win10 parent app + Windows parity, ALL FOUR assets 0.9.0. Guidance: prefer less code where requirements allow either way. Step 1 (Mac DnD spike) DONE, Michael checked by hand: all OK → MAUI drag/drop + "≡ Move to…" + right-click menu (8bd5919, pushed = H1). NEXT: Michael on Windows, DEV session in agents/dev for Steps 2–7, then H2 → MacBook Steps 8–10, H3 → Windows Step 11.**
 
 **Update 2026-10-31 (US-008 step b): US-008 "App groups" (service + Mac app; branch `feature/US-008-app-groups`) story APPROVED by Michael (44 ACs A–K, OQ-1..5 as proposed, req. v1.8 groups part; 793509e, 43e5296). US-009 = Windows 10 (parent app only, 22H2 build 19045 x64; service/tray stay Win11) + Windows parent app parity with groups. Groups per PC, rules per kid. ARC plan + ADR-021 (Proposed) committed 90b923a, awaiting Michael's approval; plan Q-1..Q-5 open. Plan: Step 1 Mac DnD spike, Step 2 Windows 0.7.0 regression (US-007 F-1), Steps 3–8 Windows service, 9–11 Mac app (+US-007 F-2 docs), 12 Windows final. Agents run as subagents from the orchestrator session (PRO/ARC), relayed to Michael.**
 
