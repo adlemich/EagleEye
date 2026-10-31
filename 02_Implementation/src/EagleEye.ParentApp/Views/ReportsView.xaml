@@ -6,7 +6,7 @@
              x:Class="EagleEye.ParentApp.Views.ReportsView"
              x:DataType="vm:ReportsViewModel">
 
-    <!-- Reports (US-004 AC-17 to AC-23). Tables with fixed column widths so header and rows line up and scale
+    <!-- Reports (US-004 AC-17 to AC-23, US-008 AC-35). Tables with fixed column widths so header and rows line up and scale
          with the display (lesson of US-003 ISSUE-006). -->
     <ScrollView>
         <!-- Fills the content area, so the heading bars (ISSUE-007) span its full width. -->
@@ -44,6 +44,25 @@
                                         </Grid>
                                     </DataTemplate>
                                 </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                            <!-- US-008 AC-35: the group lines of the day below the app table, only when a group has used time. -->
+                            <VerticalStackLayout Spacing="2" Margin="0,8,0,0" IsVisible="{Binding HasGroupRows}">
+                                <Label Text="{x:Static core:AppTexts.ReportsGroupsHeading}" FontAttributes="Bold" FontSize="15" Margin="0,0,0,2" />
+                                <Grid ColumnDefinitions="360,160" ColumnSpacing="16">
+                                    <Label Grid.Column="0" Text="{x:Static core:AppTexts.ReportsColumnGroup}" FontAttributes="Bold" />
+                                    <Label Grid.Column="1" Text="{x:Static core:AppTexts.ReportsColumnUsage}" FontAttributes="Bold"
+                                           HorizontalTextAlignment="End" />
+                                </Grid>
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding GroupRows}" Spacing="2">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:AppUsageRowViewModel">
+                                            <Grid ColumnDefinitions="360,160" ColumnSpacing="16">
+                                                <Label Grid.Column="0" Text="{Binding DisplayName}" LineBreakMode="WordWrap" />
+                                                <Label Grid.Column="1" Text="{Binding UsageText}" HorizontalTextAlignment="End" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
                             </VerticalStackLayout>
                         </VerticalStackLayout>
                     </DataTemplate>

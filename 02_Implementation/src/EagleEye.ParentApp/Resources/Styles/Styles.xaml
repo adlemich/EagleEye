@@ -80,4 +80,65 @@
         <Setter Property="HorizontalOptions" Value="Start" />
     </Style>
 
+    <!-- US-008: buttons on a heading bar ("Rename", "Delete"): no fill, border and text in the heading-bar text colour, so
+         they stay readable on every accent colour (TI-11). "Normal" sets every property that another state changes:
+         Mac Catalyst does not repaint a property that becomes unset (TI-10). -->
+    <Style x:Key="HeadingBarButton" TargetType="Button">
+        <Setter Property="TextColor" Value="{DynamicResource HeadingBarTextColor}" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="BorderColor" Value="{DynamicResource HeadingBarTextColor}" />
+        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="10,2" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="Transparent" />
+                            <Setter Property="Opacity" Value="1" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="Transparent" />
+                            <Setter Property="Opacity" Value="0.5" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+
+    <!-- US-008: the "≡" ("Move to …") button of an entry on the App Groups page: no fill, the text colour, a larger glyph
+         (the spike found it barely legible on the small accent button). -->
+    <Style x:Key="EntryMenuButton" TargetType="Button">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="Transparent" />
+                            <Setter Property="Opacity" Value="1" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="Transparent" />
+                            <Setter Property="Opacity" Value="0.5" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>

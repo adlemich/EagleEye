@@ -95,6 +95,7 @@ public static class MauiProgram
         services.AddSingleton<SettingsView>();
         services.AddSingleton<ReportsView>();
         services.AddSingleton<RulesView>();
+        services.AddSingleton<AppGroupsView>();
         services.AddSingleton<StatusBarView>();
         services.AddSingleton<MainPage>();
 

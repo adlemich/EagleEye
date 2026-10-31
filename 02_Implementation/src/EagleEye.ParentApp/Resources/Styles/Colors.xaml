@@ -26,6 +26,10 @@
     <Color x:Key="HeadingBarBackgroundColor">#1E7B3A</Color>
     <Color x:Key="HeadingBarTextColor">#FFFFFF</Color>
 
+    <!-- Drop target highlight of the App Groups page (US-008 AC-11): a light accent tint, readable text on top. -->
+    <Color x:Key="DropHighlightLight">#CDEBD6</Color>
+    <Color x:Key="DropHighlightDark">#2B5A3A</Color>
+
     <!-- Connection indicator (like the tray client): readable on both themes. -->
     <SolidColorBrush x:Key="StatusConnectedBrushLight" Color="#1E9E46" />
     <SolidColorBrush x:Key="StatusConnectedBrushDark" Color="#3DDC6E" />

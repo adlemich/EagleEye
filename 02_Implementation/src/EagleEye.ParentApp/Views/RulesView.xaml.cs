@@ -3,8 +3,8 @@ using EagleEye.ParentApp.Core.ViewModels;
 namespace EagleEye.ParentApp.Views;
 
 /// <summary>
-/// The Rules page: break times and display text (US-005), application rules and budget text (US-006) per account under
-/// parental control. Times and budgets are saved when the parent leaves the field or presses Enter, texts when the parent
+/// The Rules page: break times and display text (US-005), app group rules (US-008), application rules and budget text
+/// (US-006) per account under parental control. The group rows are app rule rows, so they share the handlers below. Times and budgets are saved when the parent leaves the field or presses Enter, texts when the parent
 /// leaves the box; <see cref="FlushPendingEdits"/> saves typed values before the page changes (Unfocused does not fire then).
 /// </summary>
 public partial class RulesView : ContentView
