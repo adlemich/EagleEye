@@ -2,6 +2,7 @@
 
 **Status**: New
 **Created**: 2026-10-31
+**Approved**: by Michael, 2026-10-31, with OQ-1 to OQ-5 answered as proposed
 **Component(s)**: EagleEye.Service, EagleEye.TrayClient, EagleEye.Shared, EagleEye.ParentApp
 **Platform(s)**: Windows (service and tray client) · ParentApp macOS. The Windows parent app gets the group UI in US-009; in this story it only has to stay safe (group K).
 
@@ -47,7 +48,7 @@ References: FR-SVC-011, FR-SVC-012, FR-SVC-020, FR-SVC-022, FR-SVC-025, FR-SVC-0
 
 ## Product requirement amendment (v1.8, approved with this story)
 
-`02_Implementation/docs/requirements/general-product-requirements.md` gets a v1.8 amendment for app groups, written into the file on this branch. It takes effect when Michael approves this story. The **Windows 10** part (§2.1 Devices, §9.4, §9.5, FR-APP-092) is written with **US-009**, because it belongs to that story's scope.
+`02_Implementation/docs/requirements/general-product-requirements.md` gets a v1.8 amendment for app groups, written into the file on this branch. It took effect with Michael's approval of this story on 2026-10-31. The **Windows 10** part (§2.1 Devices, §9.4, §9.5, FR-APP-092) is written with **US-009**, because it belongs to that story's scope.
 
 - **FR-APP-042** (new): app groups, defined once per service PC on the "App Groups" page; create, rename, delete; every app in at most one group; new apps are not in a group; deleting a group returns its apps to "Not in any group".
 - **FR-APP-043** (new): moving apps between groups and "Not in any group" by drag-and-drop and by a menu.
@@ -342,17 +343,17 @@ Launcher alone 2 minutes, then both 10 minutes: the group counts 12 minutes, eac
 
 ---
 
-## Open Questions
+## Open Questions (resolved, answered by Michael, 2026-10-31)
 
-Michael answered the scoping questions on 2026-10-31 (see the Change Log). These points remain. Each has a recommendation; "agreed" is enough.
+All five questions are **resolved**. Michael: "All 5 question proposals are ok with me." The ACs already follow the recommendations and are unchanged.
 
 | ID | Question | Recommendation | Answer |
 |---|---|---|---|
-| OQ-1 | **Where does "App Groups" go in the menu?** | "Settings", "App Groups", "Rules", "Reports": groups are set up before their rules (AC-1). | |
-| OQ-2 | **Windows parent app 0.7.x between US-008 and US-009.** The service enforces groups, but the Windows app cannot show them. Options: (A) do not use the Windows app 0.7.x with the 0.8 service at all; (B) the 0.8 service stays compatible with 0.7.x, which keeps working but ignores groups, and edits of grouped apps' own rules have no effect while they are grouped (AC-44); (C) a minimal Windows app update in US-008 that hides grouped apps. | **B, plus a usage note**: give the pilot no Windows parent app until US-009 (the pilot's Windows 10 PC cannot install it anyway), and Michael uses the Windows app only for the regression in AC-44. B keeps US-008 Mac-only for the UI; C would bring Windows UI work into this story. If ARC finds that B cannot be done without changing the Windows app, ARC raises it in the plan. | |
-| OQ-3 | **Group lines for past days on Reports.** Computed with the **current** members (simple, consistent with today's budget, AC-22) or with the members **on that day** (needs a history of memberships). | **Current members** (AC-36). Moving an app changes the group lines of past days; per-app lines never change. | |
-| OQ-4 | **Members shown on the Rules page.** All apps of the group, or only those the selected kid has used? | **All members** of the group (one group definition for the PC), comma-separated under the group name (AC-15). | |
-| OQ-5 | **Limits.** | No fixed limit on groups or apps per group. Performance is checked with **20 groups and 100 apps** (AC-41). Group sections sorted alphabetically (AC-2). | |
+| OQ-1 | **Where does "App Groups" go in the menu?** | "Settings", "App Groups", "Rules", "Reports": groups are set up before their rules (AC-1). || Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted (AC-1 unchanged). |
+| OQ-2 | **Windows parent app 0.7.x between US-008 and US-009.** The service enforces groups, but the Windows app cannot show them. Options: (A) do not use the Windows app 0.7.x with the 0.8 service at all; (B) the 0.8 service stays compatible with 0.7.x, which keeps working but ignores groups, and edits of grouped apps' own rules have no effect while they are grouped (AC-44); (C) a minimal Windows app update in US-008 that hides grouped apps. | **B, plus a usage note**: give the pilot no Windows parent app until US-009 (the pilot's Windows 10 PC cannot install it anyway), and Michael uses the Windows app only for the regression in AC-44. B keeps US-008 Mac-only for the UI; C would bring Windows UI work into this story. If ARC finds that B cannot be done without changing the Windows app, ARC raises it in the plan. || Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted (AC-44 unchanged). |
+| OQ-3 | **Group lines for past days on Reports.** Computed with the **current** members (simple, consistent with today's budget, AC-22) or with the members **on that day** (needs a history of memberships). | **Current members** (AC-36). Moving an app changes the group lines of past days; per-app lines never change. || Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted (AC-22, AC-36 unchanged). |
+| OQ-4 | **Members shown on the Rules page.** All apps of the group, or only those the selected kid has used? | **All members** of the group (one group definition for the PC), comma-separated under the group name (AC-15). || Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted (AC-15 unchanged). |
+| OQ-5 | **Limits.** | No fixed limit on groups or apps per group. Performance is checked with **20 groups and 100 apps** (AC-41). Group sections sorted alphabetically (AC-2). || Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted (AC-2, AC-41 unchanged). |
 
 ---
 
@@ -375,3 +376,4 @@ Michael answered the scoping questions on 2026-10-31 (see the Change Log). These
 | 2026-10-31 | Pilot feedback items 1 (Windows 10) and 2 (app groups) received; scoping questions answered: Windows 10 only for the Windows parent app (service and tray stay Windows 11; the Windows 10 PC is a parent PC on the LAN), minimum Windows 10 22H2 (build 19045) x64; groups defined per service PC, rules per account; answers 4 to 13 agreed as PRO recommended (app list, own rule kept and reused, default 0:00 no days, group rules table on Rules, pre-join time counts, grace period for group changes, warnings once per group and day with the group named, name 1..40 unique, "Move to …" menu, Reports group lines with current members) | Michael (via the Orchestrator) |
 | 2026-10-31 | Story split decided: US-008 = app groups in the service and the Mac app; US-009 = Windows 10 support plus Windows parent app parity | Michael (via the Orchestrator) |
 | 2026-10-31 | Story created (status `New`), v1.8 amendment (groups) written; OQ-1 to OQ-5 open | PRO |
+| 2026-10-31 | Story approved; OQ-1 to OQ-5 answered as proposed, ACs unchanged; v1.8 amendment (groups) in effect. Status stays `New` until the implementation plan is approved | Michael (via the Orchestrator), recorded by PRO |
