@@ -7,7 +7,7 @@
 **Machine(s) used**: MacBook so far (see §7)
 **Story status**: Analyzed (in implementation)
 
-> This report grows with each plan step. Step 1: automatic part done, Michael's manual check pending. Steps 2 to 11 not started. H1 not done yet: it waits for the spike result.
+> This report grows with each plan step. Step 1 done (2026-10-31), H1 done (branch pushed). Steps 2 to 11 not started.
 
 ---
 
@@ -15,7 +15,7 @@
 
 | Step | State | Content |
 |---|---|---|
-| 1 | Automatic part done; **Michael's mouse/trackpad check pending** | Throwaway spike page (MAUI `DragGestureRecognizer`/`DropGestureRecognizer`, `ContextFlyout`, "≡" action sheet, name re-prompt loop), env-var gated, Debug build, 0 warnings. DEV checked by probe: the highlight paints and clears (explicit "Normal"), the move re-renders (also into an empty section), the "Move to …" sheet and the re-prompt with message and text appear. **No real drag or right-click has been performed** (no Accessibility permission in the DEV session). Result and checklist: `US-008/spike-drag-drop.md`. Spike source kept only as `evidence/spike-drag-drop.patch`; production code unchanged. |
+| 1 | Done | Throwaway spike page (MAUI `DragGestureRecognizer`/`DropGestureRecognizer`, `ContextFlyout`, "≡" action sheet, name re-prompt loop), env-var gated, Debug build, 0 warnings. DEV checked by probe: the highlight paints and clears (explicit "Normal"), the move re-renders (also into an empty section), the "Move to …" sheet and the re-prompt with message and text appear. DEV cannot click or drag by script (no Accessibility permission), so Michael did the real checks: **steps 1 to 10 OK, mouse and trackpad** ("Done. All seems to work fine!", 2026-10-31). **Chosen approach**: MAUI drag/drop recognizers in shared XAML + the "≡" button with "Move to …" + the right-click `ContextFlyout`. Details: `US-008/spike-drag-drop.md` §5, §6. Spike source kept only as `evidence/spike-drag-drop.patch`; production code unchanged. |
 
 ## 2. Deviations from the Implementation Plan
 
@@ -35,12 +35,12 @@ Step 1: none (throwaway spike, no production code).
 
 ## 5. Open Questions and Risks
 
-- R-1 (drag-and-drop unusable on Catalyst) is still open until Michael's check (`spike-drag-drop.md` §4).
+- R-1 (drag-and-drop unusable on Catalyst) is resolved by the spike (`spike-drag-drop.md` §5). It is still untested on WinUI, where known breakage is accepted until US-009 (TI-13).
 - Step 9 note: the "≡" glyph is hard to read on the small Mac accent button; Step 9 should give it a larger font or a transparent style.
 
 ## 6. How to Test
 
-Not yet (story in progress). Spike check: `spike-drag-drop.md` §4.
+Not yet (story in progress). Spike check (done): `spike-drag-drop.md` §4, §5.
 
 ## 7. Machine(s) Used
 
