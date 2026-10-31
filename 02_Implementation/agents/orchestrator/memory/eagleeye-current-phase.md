@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-10-31 US-008 closed + merged; US-009 step a: story updated (a1c0098, 38 ACs, req. v1.9 proposed), awaits Michael's approval + OQ-5 confirmation
+description: EagleEye workflow status — 2026-10-31 US-009 step b: story approved (a4f2d5d, req. v1.9 in effect); ARC plan ce255d4 (6 steps, ADR-009/019/007 Proposed, Q-1..Q-4) awaits Michael's approval
 metadata:
   type: project
 ---
+
+**Update 2026-10-31 (US-009 step b): story APPROVED by Michael (a4f2d5d; OQ-5 confirmed: Windows app on Win11 updates from 0.6.2; larger test run accepted; requirements v1.9 in effect). ARC plan `US-009/implementation-plan.md` ce255d4 (Draft): almost no new code (parentapp-setup.iss MinVersion 10.0.19045, version 0.9.0, F-2 warnings); Steps 1–3 Windows (Step 2 = DEV debug-run Windows app vs installed 0.8.0 service, DnD first), Step 4 Michael on the physical Win10 PC (~15 min pre-check), Step 5 MacBook (.dmg 0.9.0, story → Implemented), Step 6 Windows final. Handovers H1–H4. No installs on service PC/MacBook by DEV (keeps test starting points). Proposed ADR-009/019/007 amendments; after approval Orchestrator adds the Win10 test PC row to dev-environments.md §1, ARC updates arc42 §7 + guidelines §16.1. Q-1 touchpad text (Windows-only text pair), Q-2 Win10 pre-check yes, Q-3 native menu highlight, Q-4 keep 0.6.2 button style. NEXT: Michael approves plan → DEV Step 1.**
 
 **Update 2026-10-31 (US-009 step a): main merged into the US-009 branch (2941688). Michael answered OQ-1..7: physical 3rd Windows 10 PC for [W10]; OQ-2/3/6/7 as proposed; OQ-4 = Mac D-19 design; OQ-5 "all on 0.8.0" — but the Windows parent app on Win11 is 0.6.2 (never built 0.7/0.8), awaiting his confirmation. PRO (subagent) updated story a1c0098: 38 ACs, new group K (AC-37 required US-008 retest AC-19..34, 38..40; AC-38 optional AC-41 perf + live smoke), AC-35 full US-008 Mac checks, F-2 warning cleanup as DEV delivery note; requirements v1.9 written as proposed (takes effect on story approval). NEXT: Michael approves story → ARC plan.**
 
