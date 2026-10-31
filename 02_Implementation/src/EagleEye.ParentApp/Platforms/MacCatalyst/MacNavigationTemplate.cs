@@ -10,9 +10,9 @@ namespace EagleEye.ParentApp.Platforms.MacCatalyst;
 /// state also replaces the native selection background. Windows keeps the XAML template (AC-35).
 /// </summary>
 /// <remarks>
-/// The Catalyst CollectionView puts a newly selected item into "Selected" but never returns the previous one to
-/// "Normal", so every item clicked once stayed coloured (US-006 test run 01, general feedback). Each item therefore
-/// follows <see cref="MainViewModel.SelectedItem"/> itself.
+/// Every item clicked once stayed coloured (US-006 test run 01, general feedback): "Normal" needs an explicit
+/// background (see below). Each item also follows <see cref="MainViewModel.SelectedItem"/> itself, so its state does
+/// not depend on the Catalyst list's cell selection.
 /// </remarks>
 public static class MacNavigationTemplate
 {
@@ -28,8 +28,12 @@ public static class MacNavigationTemplate
         var selected = new VisualState { Name = VisualStateManager.CommonStates.Selected };
         selected.Setters.Add(new Setter { Property = VisualElement.BackgroundColorProperty, Value = new DynamicResource(HeadingBarColorService.BackgroundKey) });
         selected.Setters.Add(new Setter { Property = Label.TextColorProperty, Value = new DynamicResource(HeadingBarColorService.TextKey) });
+        // Explicit transparent background: when the Selected setter is removed, the background becomes unset, and an
+        // unset background does not repaint the native view on Mac Catalyst, so the accent colour stayed.
+        var normal = new VisualState { Name = VisualStateManager.CommonStates.Normal };
+        normal.Setters.Add(new Setter { Property = VisualElement.BackgroundColorProperty, Value = Colors.Transparent });
         var group = new VisualStateGroup { Name = nameof(VisualStateManager.CommonStates) };
-        group.States.Add(new VisualState { Name = VisualStateManager.CommonStates.Normal });
+        group.States.Add(normal);
         group.States.Add(selected);
         VisualStateManager.SetVisualStateGroups(label, [group]);
 

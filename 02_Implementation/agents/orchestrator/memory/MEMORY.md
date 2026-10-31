@@ -12,3 +12,4 @@ One line per memory. Content lives in the linked files, never here.
 - [Git setup](eagleeye-git-setup.md) — repo on GitHub, MIT licensed; Windows pushes via Git Credential Manager (no secrets.json there); PAT pushes need username `x-access-token`.
 - [Secrets handling](eagleeye-secrets-handling.md) — credentials in secrets/secrets.json (one per machine), never logged or committed.
 - [Michael closes with partial runs](michael-closes-with-partial-runs.md) — honour quick closes, but record untested ACs in the test report before merging.
+- [Catalyst unset background](maui-catalyst-unset-background.md) — Mac Catalyst keeps the old colour when a background goes back to unset; verify visual Mac fixes with a probe + screencapture first.
