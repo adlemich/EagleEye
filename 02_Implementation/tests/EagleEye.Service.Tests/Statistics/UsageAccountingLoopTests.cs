@@ -242,6 +242,7 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
         Assert.Same(steps[usageTick].Credits, steps[enforcement].Credits);
         Assert.Equal(5, steps[enforcement].Credits.Sum(c => c.Seconds));
         _enforcement.Verify(e => e.OnTickAsync(It.Is<EnforcementTick>(t => t.IsOpen(Kid, Notepad)), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+        _enforcement.Verify(e => e.OnTickAsync(It.Is<EnforcementTick>(t => t.Spans.Count == 1 && t.Spans[0].ProgramPath == Notepad), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
     [Fact]

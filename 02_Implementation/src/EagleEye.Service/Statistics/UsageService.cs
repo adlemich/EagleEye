@@ -1,5 +1,6 @@
 using System.Globalization;
 using EagleEye.Service.Data;
+using EagleEye.Service.Groups;
 using EagleEye.Service.Rules;
 using EagleEye.Service.UserAccounts;
 using EagleEye.Shared.Models;
@@ -17,7 +18,8 @@ public sealed class UsageService(
     IUsageRepository repository,
     IUsageBroadcaster broadcaster,
     IUserAccountService userAccounts,
-    IAppRecordObserver appRecords,
+    IEnumerable<IAppRecordObserver> appRecordObservers,
+    IAppGroupsView groups,
     TimeProvider timeProvider,
     ILogger<UsageService> logger) : IUsageService, IAppInventory, IAccountDataPurger, IDisposable
 {
@@ -33,6 +35,8 @@ public sealed class UsageService(
     private readonly HashSet<(string Sid, DateOnly Day)> _dirtyDays = [];
     private readonly Dictionary<string, long> _revisions = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<AppRecordSeen> _seenRecords = [];
+    private readonly Dictionary<(long AppId, DateTimeOffset Start), ActivitySpanWrite> _pendingSpans = [];
+    private readonly IReadOnlyList<IAppRecordObserver> _observers = [.. appRecordObservers];
 
     /// <inheritdoc />
     public async Task InitializeAsync(CancellationToken ct = default)
@@ -71,6 +75,14 @@ public sealed class UsageService(
                 {
                     AddPending(appId, credit.Day, credit.Seconds);
                     _dirtyDays.Add((credit.AccountSid, credit.Day));
+                }
+            }
+
+            foreach (var span in output.Spans)
+            {
+                if (_appIds.TryGetValue(AppKey(span.AccountSid, span.ProgramPath), out var appId))
+                {
+                    _pendingSpans[(appId, span.StartUtc)] = new ActivitySpanWrite(appId, span.Day, span.StartUtc, span.EndUtc);
                 }
             }
 
@@ -123,13 +135,17 @@ public sealed class UsageService(
         {
             var today = Today();
             var rows = await repository.GetUsageAsync(accountSid, today.AddDays(1 - RetentionDays), today, ct).ConfigureAwait(false);
+            var spans = (await repository.GetSpansAsync(accountSid, today.AddDays(1 - RetentionDays), today, ct).ConfigureAwait(false))
+                .ToLookup(s => s.Day);
             var revision = _revisions.GetValueOrDefault(accountSid, 1);
             var days = rows.GroupBy(r => r.Day).ToDictionary(g => g.Key, g => Apps(g));
             days.TryAdd(today, []);
+            var current = groups.Current;
             return new AccountUsageDto(
                 accountSid,
                 today,
-                [.. days.OrderByDescending(d => d.Key).Select(d => new DayUsageDto(revision, null, accountSid, d.Key, today, d.Value, []))]);
+                [.. days.OrderByDescending(d => d.Key).Select(d => new DayUsageDto(
+                    revision, null, accountSid, d.Key, today, d.Value, GroupUsageCalculator.ForDay(spans[d.Key], current)))]);
         }, ct).ConfigureAwait(false);
     }
 
@@ -205,19 +221,19 @@ public sealed class UsageService(
         return seen;
     }
 
-    /// <summary>Tells the app-rules owner about new or renamed records, outside the lock (no lock cycle, US-006 Decision 3).</summary>
+    /// <summary>Tells the app-rules and app-groups owners about new or renamed records, outside the lock (no lock cycle, US-006 Decision 3).</summary>
     private async Task NotifyAsync(List<AppRecordSeen> seen, CancellationToken ct)
     {
-        foreach (var record in seen)
+        foreach (var (record, observer) in seen.SelectMany(r => _observers.Select(o => (r, o))))
         {
             try
             {
-                await appRecords.OnAppRecordAsync(record.AccountSid, record.AppId, record.ProgramPath, record.DisplayName, ct).ConfigureAwait(false);
+                await observer.OnAppRecordAsync(record.AccountSid, record.AppId, record.ProgramPath, record.DisplayName, ct).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 // Observer boundary: usage recording never depends on the rules area; the parent app recovers on its next fetch.
-                logger.LogWarning(ex, "The app rules could not be updated for app record {AppId}.", record.AppId);
+                logger.LogWarning(ex, "An app record observer could not be updated for app record {AppId}.", record.AppId);
             }
         }
     }
@@ -243,7 +259,7 @@ public sealed class UsageService(
             await repository.ApplyAsync(
                 [.. _pendingSeconds.Select(p => new UsageIncrement(p.Key.AppId, p.Key.Day, p.Value))],
                 [.. _pendingSeen.Select(p => new InstanceSeenRecord(p.Key, p.Value))],
-                [],
+                [.. _pendingSpans.Values],
                 ct).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -255,6 +271,7 @@ public sealed class UsageService(
 
         _pendingSeconds.Clear();
         _pendingSeen.Clear();
+        _pendingSpans.Clear();
         var today = Today();
         foreach (var (sid, day) in _dirtyDays.ToList())
         {
@@ -267,11 +284,12 @@ public sealed class UsageService(
     private async Task PublishDayAsync(string sid, DateOnly day, DateOnly today, CancellationToken ct)
     {
         var apps = Apps(await repository.GetUsageAsync(sid, day, day, ct).ConfigureAwait(false));
+        var groupLines = GroupUsageCalculator.ForDay(await repository.GetSpansAsync(sid, day, day, ct).ConfigureAwait(false), groups.Current);
         var revision = _revisions.GetValueOrDefault(sid, 1) + 1;
         _revisions[sid] = revision;
         try
         {
-            await broadcaster.BroadcastAsync(new DayUsageDto(revision, null, sid, day, today, apps, [])).ConfigureAwait(false);
+            await broadcaster.BroadcastAsync(new DayUsageDto(revision, null, sid, day, today, apps, groupLines)).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

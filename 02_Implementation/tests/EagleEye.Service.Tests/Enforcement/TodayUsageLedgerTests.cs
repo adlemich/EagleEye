@@ -29,6 +29,7 @@ public sealed class TodayUsageLedgerTests
         _time.SetLocalTimeZone(TestZones.Berlin);
         _appRules.SetupGet(a => a.Current).Returns(AppRulesSnapshot.Empty.With(Kid, AccountAppRules.Empty.WithApp(new AppRuleEntry(7, Notepad, "Editor", 60, BreakTimeDays.All))));
         _repository.Setup(r => r.GetUsageAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _repository.Setup(r => r.GetSpansAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         _repository.Setup(r => r.GetUsageAsync(Kid, Today, Today, It.IsAny<CancellationToken>()))
             .ReturnsAsync([new DayAppUsage(Today, 7, "Editor", 605), new DayAppUsage(Today, 99, "Unknown", 50)]);
         _ledger = new TodayUsageLedger(_repository.Object, _appRules.Object, _time, _logger);
@@ -117,7 +118,56 @@ public sealed class TodayUsageLedgerTests
         await Assert.ThrowsAsync<ArgumentNullException>(() => _ledger.EnsureLoadedAsync(null!, CancellationToken.None));
         Assert.Throws<ArgumentNullException>(() => _ledger.UsedSeconds(null!, Notepad, Today));
         Assert.Throws<ArgumentNullException>(() => _ledger.UsedSeconds(Kid, null!, Today));
+        Assert.Throws<ArgumentNullException>(() => _ledger.ApplySpans(null!));
+        Assert.Throws<ArgumentNullException>(() => _ledger.GroupUsedSeconds(null!, [], Today));
+        Assert.Throws<ArgumentNullException>(() => _ledger.GroupUsedSeconds(Kid, null!, Today));
     }
+
+    private const string Paint = @"C:\Windows\System32\mspaint.exe";
+    private static readonly DateTimeOffset T0 = new(2026, 10, 12, 8, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public async Task GroupUsedSeconds_LoadedSpansPlusApplied_Union()
+    {
+        _repository.Setup(r => r.GetSpansAsync(Kid, Today, Today, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new StoredSpan(Today, Notepad, T0, T0.AddMinutes(2))]);
+        await _ledger.EnsureLoadedAsync([Kid], CancellationToken.None);
+
+        // The loaded span continues (same start) and Paint runs alongside: Notepad 2 min alone, then both 10 min → 12 min.
+        _ledger.ApplySpans([Span(Kid, Notepad, 0, 12), Span(Kid, Paint.ToLowerInvariant(), 2, 12), Span(Kid2, Paint, 0, 30)]);
+
+        Assert.Equal(720, _ledger.GroupUsedSeconds(Kid.ToLowerInvariant(), [Notepad, Paint], Today));
+        Assert.Equal(600, _ledger.GroupUsedSeconds(Kid, [Paint], Today));
+        Assert.Equal(0, _ledger.GroupUsedSeconds(Kid2, [Paint], Today));
+    }
+
+    [Fact]
+    public async Task ApplySpans_OlderEndAndOtherDays_Handled()
+    {
+        await _ledger.EnsureLoadedAsync([Kid], CancellationToken.None);
+
+        _ledger.ApplySpans([Span(Kid, Notepad, 0, 5)]);
+        _ledger.ApplySpans([Span(Kid, Notepad, 0, 3), Span(Kid, Notepad, 0, 9) with { Day = Today.AddDays(-1) }]);
+
+        Assert.Equal(300, _ledger.GroupUsedSeconds(Kid, [Notepad], Today));
+    }
+
+    [Fact]
+    public async Task Spans_ForgottenWhenAccountLeavesControlAndOnNewDay()
+    {
+        await _ledger.EnsureLoadedAsync([Kid, Kid2], CancellationToken.None);
+        _ledger.ApplySpans([Span(Kid, Notepad, 0, 5), Span(Kid2, Notepad, 0, 5)]);
+
+        await _ledger.EnsureLoadedAsync([Kid2], CancellationToken.None);
+        Assert.Equal(0, _ledger.GroupUsedSeconds(Kid, [Notepad], Today));
+
+        _time.Advance(TimeSpan.FromDays(1));
+        _ledger.Apply([]);
+        Assert.Equal(0, _ledger.GroupUsedSeconds(Kid2, [Notepad], Today));
+    }
+
+    private static SpanUpdate Span(string sid, string path, int fromMinute, int toMinute) =>
+        new(sid, path, Today, T0.AddMinutes(fromMinute), T0.AddMinutes(toMinute));
 }
 
 public sealed class CloseRegistryTests

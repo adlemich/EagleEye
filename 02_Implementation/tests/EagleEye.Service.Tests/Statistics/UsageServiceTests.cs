@@ -1,4 +1,5 @@
 using EagleEye.Service.Data;
+using EagleEye.Service.Groups;
 using EagleEye.Service.Rules;
 using EagleEye.Service.Statistics;
 using EagleEye.Service.UserAccounts;
@@ -28,12 +29,14 @@ public sealed class UsageServiceTests : IAsyncLifetime
     private readonly FakeTimeProvider _time = new(Start);
     private readonly TestLogger<UsageService> _logger = new();
     private readonly Mock<IAppRecordObserver> _observer = new();
+    private readonly Mock<IAppGroupsView> _groups = new();
     private readonly List<(string Sid, long AppId, string Path, string Name)> _seen = [];
     private UsageService _service;
 
     public UsageServiceTests()
     {
         _time.SetLocalTimeZone(TestZones.Berlin);
+        _groups.Setup(g => g.Current).Returns(AppGroupsSnapshot.Empty);
         _repository = new UsageRepository(_database);
         _broadcaster.Setup(b => b.BroadcastAsync(It.IsAny<DayUsageDto>())).Callback<DayUsageDto>(_broadcasts.Add).Returns(Task.CompletedTask);
         _accounts.Setup(a => a.GetSnapshotAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new UserAccountListDto(1, null,
@@ -300,6 +303,7 @@ public sealed class UsageServiceTests : IAsyncLifetime
         repository.Setup(r => r.GetOrCreateAppAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AppRecordResult(7, true));
         repository.Setup(r => r.GetUsageAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        repository.Setup(r => r.GetSpansAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         var applied = new List<IReadOnlyCollection<UsageIncrement>>();
         var failure = new IOException("disk full");
         repository.SetupSequence(r => r.ApplyAsync(It.IsAny<IReadOnlyCollection<UsageIncrement>>(), It.IsAny<IReadOnlyCollection<InstanceSeenRecord>>(), It.IsAny<IReadOnlyCollection<ActivitySpanWrite>>(), It.IsAny<CancellationToken>()))
@@ -391,7 +395,100 @@ public sealed class UsageServiceTests : IAsyncLifetime
         await Assert.ThrowsAsync<ArgumentNullException>(() => _service.PurgeMissingAccountsAsync(null!));
     }
 
-    private UsageService Create(IUsageRepository repository) => new(repository, _broadcaster.Object, _accounts.Object, _observer.Object, _time, _logger);
+    [Fact]
+    public async Task ApplyAsync_Tick_PersistsSpansOfKnownApps()
+    {
+        await ApplyAsync(Started(1));
+
+        await _service.ApplyAsync(Spans(Span(Notepad, 0, 5), Span(@"C:\unknown.exe", 0, 5)), Names, isTick: true);
+        await _service.ApplyAsync(Spans(Span(Notepad, 0, 10)), Names, isTick: true);
+
+        var span = Assert.Single(await _repository.GetSpansAsync(Kid, Today, Today));
+        Assert.Equal((Start, Start.AddSeconds(10)), (span.StartUtc, span.EndUtc));
+    }
+
+    [Fact]
+    public async Task ApplyAsync_NoTick_SpansWaitForTheTick()
+    {
+        await ApplyAsync(Started(1));
+
+        await _service.ApplyAsync(Spans(Span(Notepad, 0, 5)), Names, isTick: false);
+        Assert.Empty(await _repository.GetSpansAsync(Kid, Today, Today));
+
+        await _service.ApplyAsync(TrackerOutput.Empty, Names, isTick: true);
+        Assert.Single(await _repository.GetSpansAsync(Kid, Today, Today));
+    }
+
+    [Fact]
+    public async Task PersistFails_SpansKeptAndRetried()
+    {
+        var repository = new Mock<IUsageRepository>();
+        repository.Setup(r => r.GetOrCreateAppAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AppRecordResult(7, true));
+        repository.Setup(r => r.GetUsageAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        repository.Setup(r => r.GetSpansAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        repository.Setup(r => r.GetSpansAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        var spans = new List<int>();
+        repository.Setup(r => r.ApplyAsync(It.IsAny<IReadOnlyCollection<UsageIncrement>>(), It.IsAny<IReadOnlyCollection<InstanceSeenRecord>>(), It.IsAny<IReadOnlyCollection<ActivitySpanWrite>>(), It.IsAny<CancellationToken>()))
+            .Callback<IReadOnlyCollection<UsageIncrement>, IReadOnlyCollection<InstanceSeenRecord>, IReadOnlyCollection<ActivitySpanWrite>, CancellationToken>((_, _, s, _) => spans.Add(s.Count))
+            .Returns(() => spans.Count == 1 ? Task.FromException(new IOException("disk full")) : Task.CompletedTask);
+        _service = Create(repository.Object);
+        await ApplyAsync(Started(1));
+
+        await _service.ApplyAsync(Spans(Span(Notepad, 0, 5)), Names, isTick: true);
+        await _service.ApplyAsync(TrackerOutput.Empty, Names, isTick: true);
+        await _service.ApplyAsync(TrackerOutput.Empty, Names, isTick: true);
+
+        Assert.Equal([1, 1, 0], spans);
+    }
+
+    [Fact]
+    public async Task GetAccountUsage_GroupLinesWithCurrentMembers()
+    {
+        _groups.Setup(g => g.Current).Returns(AppGroupsSnapshot.Empty.WithGroup(7, "Test").WithMember(Notepad, 7));
+        var app = await _repository.GetOrCreateAppAsync(Kid, Notepad, "notepad.exe", "Editor", Start);
+        await _repository.ApplyAsync(
+            [new UsageIncrement(app.AppId, Today, 300), new UsageIncrement(app.AppId, Today.AddDays(-1), 60)], [],
+            [new ActivitySpanWrite(app.AppId, Today, Start, Start.AddMinutes(5))]);
+
+        var usage = await _service.GetAccountUsageAsync(Kid);
+
+        Assert.Equal(new GroupUsageDto(7, "Test", 300), usage.Days[0].Groups.Single());
+        Assert.Empty(usage.Days[1].Groups);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_Tick_BroadcastCarriesGroupLines()
+    {
+        _groups.Setup(g => g.Current).Returns(AppGroupsSnapshot.Empty.WithGroup(7, "Test").WithMember(Notepad, 7));
+        await ApplyAsync(Started(1));
+
+        await _service.ApplyAsync(Spans(Span(Notepad, 0, 120)) with { Credits = [Credit(120)] }, Names, isTick: true);
+
+        Assert.Equal(new GroupUsageDto(7, "Test", 120), _broadcasts.Last().Groups.Single());
+    }
+
+    [Fact]
+    public async Task ApplyAsync_SeveralObservers_AllCalledAndOneFailureDoesNotStopTheOthers()
+    {
+        var failing = new Mock<IAppRecordObserver>();
+        failing.Setup(o => o.OnAppRecordAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("groups"));
+        _service = Create(_repository, failing.Object, _observer.Object);
+
+        await ApplyAsync(Started(1));
+
+        Assert.Single(_seen);
+        Assert.Contains("An app record observer could not be updated for app record 1.", _logger.Messages(LogLevel.Warning));
+    }
+
+    private static TrackerOutput Spans(params SpanUpdate[] spans) => new([], [], []) { Spans = spans };
+
+    private static SpanUpdate Span(string path, int fromSecond, int toSecond) =>
+        new(Kid, path, Today, Start.AddSeconds(fromSecond), Start.AddSeconds(toSecond));
+
+    private UsageService Create(IUsageRepository repository, params IAppRecordObserver[] observers) =>
+        new(repository, _broadcaster.Object, _accounts.Object, observers.Length == 0 ? [_observer.Object] : observers, _groups.Object, _time, _logger);
 
     private Task ApplyAsync(InstanceEvent instance, bool isTick = false) =>
         _service.ApplyAsync(new TrackerOutput([instance], [], []), Names, isTick);

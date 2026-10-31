@@ -49,6 +49,7 @@ public sealed class TimeLimitEngineTests
         _appRules.SetupGet(a => a.Current).Returns(() => _apps);
         _warnings.SetupGet(w => w.Current).Returns(() => _settings);
         _usage.Setup(u => u.GetUsageAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _usage.Setup(u => u.GetSpansAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         _messenger.Setup(m => m.ShowAsync(It.IsAny<int>(), It.IsAny<KidMessageDto>(), It.IsAny<CancellationToken>()))
             .Callback<int, KidMessageDto, CancellationToken>((s, m, _) => _messages.Add((s, m)))
             .ReturnsAsync(KidMessageStates.Shown);

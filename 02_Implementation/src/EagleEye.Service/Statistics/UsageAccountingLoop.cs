@@ -153,7 +153,7 @@ public sealed class UsageAccountingLoop(
         var output = tracker.TakeOutput(includeUsage: true);
         await usage.ApplyAsync(output, _controlled, isTick: true, ct).ConfigureAwait(false);
         enforcement.PublishOpenApps(tracker.OpenPaths());
-        await enforcement.OnTickAsync(new EnforcementTick(_controlled, SessionsInUse(), output.Credits, tracker.IsOpen), ct).ConfigureAwait(false);
+        await enforcement.OnTickAsync(new EnforcementTick(_controlled, SessionsInUse(), output.Credits, tracker.IsOpen) { Spans = output.Spans }, ct).ConfigureAwait(false);
         if (Today() is var today && today != _today)
         {
             // First tick of a new local day (ADR-012 §5, §6): purge, then the new (empty) today for every account.

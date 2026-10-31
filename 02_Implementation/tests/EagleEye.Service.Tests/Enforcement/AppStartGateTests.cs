@@ -54,6 +54,7 @@ public sealed class AppStartGateTests
         });
         _appRules.SetupGet(r => r.Current).Returns(() => _apps);
         _usage.Setup(u => u.GetUsageAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _usage.Setup(u => u.GetSpansAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         _ledger = new TodayUsageLedger(_usage.Object, _appRules.Object, _time, new TestLogger<TodayUsageLedger>());
 
         // US-005 cases: Notepad and Paint are allowed all day by their app rules, so only break times decide.
