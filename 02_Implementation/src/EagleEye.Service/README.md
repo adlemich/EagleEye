@@ -39,9 +39,16 @@ EagleEye.Service/
 │                     evaluation (start inclusive, end exclusive, 23:59 = midnight; NextBegin within a horizon),
 │                     change-log texts. US-006: AppRuleService (state owner of "AppRules:{sid}", AppRulesSnapshot,
 │                     no rule row = 0:00, no day), WarningSettingsService (state owner of "WarningSettings")
+├── Groups/           US-008 (ADR-021): AppGroupService (state owner of "AppGroups" and "AppGroupRules:{sid}", one
+│                     revision counter; catalog of listed apps from AppRecords and the controlled set of the loop),
+│                     AppGroupsSnapshot (IAppGroupsView: members, group rules; no rule row = 0:00, no day),
+│                     AppGroupCatalog, AppGroupChangeLog (log texts), SpanUnion and GroupUsageCalculator (group used
+│                     time = union of the current members' activity spans, TC-026)
 ├── Configuration/    Per-user configuration management — rules, budgets, schedules
 ├── Statistics/       Usage accounting (ADR-012): event queue, UsageTracker (monotonic credit, midnight
-│                     split), UsageService (state owner of the usage areas), 5 s accounting loop
+│                     split), UsageService (state owner of the usage areas), 5 s accounting loop. US-008:
+│                     ActivitySpanAccumulator (spans of credited time per account and app, persisted with the tick;
+│                     group lines on Reports with the current members and names)
 ├── Communication/    SignalR hubs (parent apps, tray client). US-005: TrayHub binds each tray connection to its
 │                     session (Win32TrayClientIdentifier: TCP owner PID + installed path, ADR-014);
 │                     KidMessenger sends ShowKidMessage (KidMessageDto) as a client result (3 s; Shown/Replaced)
@@ -53,7 +60,8 @@ EagleEye.Service/
 ├── Data/             ServiceDatabase (migrations: 1 PairedDevices, 2 AccountSelections,
 │                     3 AppRecords/AppInstances/DailyUsage, 4 BreakTimeEntries/AccountDisplayTexts/
 │                     BlockedStarts/TimeChangeFindings, 5 AppRules/AccountBudgetTexts/WarningSettings and the
-│                     rebuilt BlockedStarts with kind/reason/app-rule columns), repositories
+│                     rebuilt BlockedStarts with kind/reason/app-rule columns, 6 AppGroups/AppGroupMembers/
+│                     AppGroupRules/ActivitySpans and BlockedStarts.GroupId/GroupName), repositories
 └── Diagnostics/      Event Log pairing code, admin-only ACL of the logs\ folder
 ```
 
@@ -65,6 +73,8 @@ EagleEye.Service/
 | `UsageDay:{sid}:{day}` | `Statistics/UsageService` | `GetAccountUsage` (today + days with usage, 90 days) / none / `OnDayUsageChanged` (at most once per account every 5 s) |
 | `AccountRules:{sid}` | `Rules/BreakTimeService` | `GetAccountRules` / `AddBreakTimeEntry`, `DeleteBreakTimeEntry`, `SetBreakTimeEntryActive`, `SetBreakTimeEntryTime`, `SetBreakTimeEntryDay`, `SetDisplayText` (field-level, validated against the stored entry) / `OnAccountRulesChanged` |
 | `AppRules:{sid}` | `Rules/AppRuleService` | `GetAppRules` / `SetAppBudget` (hours or minutes, combined with the stored other part), `SetAppDay`, `SetBudgetText` / `OnAppRulesChanged` (also for new and renamed app records) |
+| `AppGroups` | `Groups/AppGroupService` | `GetAppGroups` / `CreateAppGroup`, `RenameAppGroup`, `DeleteAppGroup`, `MoveAppToGroup` / `OnAppGroupsChanged` (also when a new app is listed) |
+| `AppGroupRules:{sid}` | `Groups/AppGroupService` | `GetAppGroupRules` / `SetAppGroupBudget`, `SetAppGroupDay` / `OnAppGroupRulesChanged` (also for every account when a group is created or deleted) |
 | `WarningSettings` | `Rules/WarningSettingsService` | `GetWarningSettings` / `SetWarningMinutes` (early > final against the stored other level), `SetWarningText` / `OnWarningSettingsChanged` |
 
 Every accepted write and every change of the Windows accounts produces one revision and one broadcast to the group `Parents` (including the sender). Revisions are in memory and start at 1 on every service start.
@@ -76,6 +86,7 @@ Every accepted write and every change of the Windows accounts produces one revis
 | Database | `%ProgramData%\EagleEye\EagleEye.Service.db` (`PairedDevices`, `AccountSelections`) |
 | Certificate | `%ProgramData%\EagleEye\certs\` (SYSTEM + Administrators only) |
 | Log files | `%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log` (SYSTEM + Administrators only; 50 MB per file, at most 3 files, older than 5 days deleted except the current one). The service re-applies the folder ACL on every start; if that fails it writes no log file in that run. |
+| US-008 log entries | `App groups loaded: …` at start; `App groups changed by <device>: app group created / renamed / deleted, app moved …`; `Group rules of account … changed …`; warnings, grace periods, blocked starts and closes name the group (`group Games`) |
 | Event Log | *Application*, source `EagleEye` (Information and above of `EagleEye.*`) |
 
 ## Runtime

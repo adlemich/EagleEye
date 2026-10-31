@@ -4,10 +4,10 @@
 **Date**: 2026-10-31 (started)
 **Branch**: `feature/US-008-app-groups`
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-008/implementation-plan.md` (approved 2026-10-31, revision 1), ADR-021
-**Machine(s) used**: MacBook (Step 1), Windows Developer Machine (Steps 2 to 7, see §7)
+**Machine(s) used**: MacBook (Step 1, Steps 8 to 10), Windows Developer Machine (Steps 2 to 7, see §7)
 **Story status**: Analyzed (in implementation)
 
-> This report grows with each plan step. Steps 1 to 6 done; Step 7 done except the parts that need Michael (§6.2). Steps 8 to 11 not started.
+> This report grows with each plan step. Steps 1 to 10 done (Step 7 and Step 10 except the parts that need Michael: §6.2, §8.6). Step 11 (Windows close-out) not started.
 
 ---
 
@@ -22,6 +22,9 @@
 | 5 | Done | `Groups/AppGroupService` (state owner of both areas, one revision counter, catalog via `Groups/AppGroupCatalog`, controlled set from the loop, purger), `Groups/AppGroupChangeLog`, broadcaster overloads, 8 `ParentHub` methods with safe texts, DI, start order (… app rules → **app groups** → warning settings …). |
 | 6 | Done | `LimitRule`, `LimitSubject`, `LimitSubjectResolver`; `AppEndCalculator` takes `LimitRule?`. `AppStartGate` and `TimeLimitEngine` per subject (group warnings once, grace per subject incl. previous members, one shared close message for a group). `WarningLedger.SubjectKey`; `EnforcementLog` names the group; history columns. All US-006 engine/gate tests green with only constructor/signature edits (AC-30). |
 | 7 | Partly done | TrayClient tests for group names (de/en). `EagleEye-Setup-0.8.0.exe` built. Non-elevated console smoke on a copy of a real v5 database. **Open (Michael)**: install on the service PC + REG-001, live group smoke, performance (§6.2). |
+| 8 | Done (MacBook) | ParentApp.Core: `AppGroupsModel`, `AppGroupRulesModel`, `AppGroupNameRules`, App Groups view models, App group rules section, grouped apps hidden from Application rules, Reports group lines + refetch on a group change, menu, dialogs, texts de/en, unit tests (§8). |
+| 9 | Done (MacBook) | Mac views: `AppGroupsView`, Rules section, Reports group lines, styles; on-screen check with a probe and screenshots (§8.3). |
+| 10 | Done except install (MacBook) | `EagleEye-ParentApp-0.8.0.dmg` built (§8.5); READMEs incl. US-007 F-2; this section. **Open (Michael)**: install over 0.7.0, pairing, live checks (§8.6). |
 
 ## 2. Deviations from the Implementation Plan
 
@@ -93,3 +96,100 @@ Console output: `02_Implementation/artifacts/smoke-us008-console*.txt` (git-igno
 |---|---|
 | 1 | MacBook |
 | 2–7 | Windows Developer Machine (= service PC) |
+| 8–10 | MacBook (Debug probe with sample data; no live connection, see D-17) |
+| 11 | Windows Developer Machine (pending) |
+
+---
+
+## 8. macOS Part (Steps 8 to 10, MacBook, 2026-10-31)
+
+Host: MacBook (macOS 27, Apple Silicon), branch `feature/US-008-app-groups`, started in sync with `origin` at `0dcee76`.
+
+### 8.1 What was done
+
+**Step 8, `EagleEye.ParentApp.Core`** (commit `ae0486f`):
+- `Groups/AppGroupsModel` (area "AppGroups": fetch on connect, revision rule, create/rename/delete/move with confirmation and the 4 s timeout; one fixed key of `SelectedAccountModel`, like the warning settings). `Groups/AppGroupNameRules` (shared `AppGroupNames` + no duplicate ignoring case; the renamed group itself is ignored, so its own or re-cased name is valid).
+- `Rules/AppGroupRulesModel` (area "AppGroupRules:{sid}"). `Rules/IRuleTableWrites`: the budget-part and weekday writes of a row id, implemented by `AppRulesModel` and `AppGroupRulesModel` (D-11).
+- `ViewModels/AppGroupsViewModel` (states NoData / NoControlledAccounts / Loading / Ready; sections sorted by name in the current culture ignoring case, then id, "Not in any group" last; name dialog loop; delete confirmation; `MoveTargets`; `MoveAsync` (own section → nothing); drag methods `BeginDrag`, `DragOver`, `DragLeave`, `DropAsync`, `EndDrag`; error line), `AppGroupSectionViewModel`, `GroupableAppViewModel` (tooltip path, "Move to …" command), `OrderedMerge` (in-place merge used by the new lists and `DayUsageViewModel`), `LoadStates`.
+- `AppGroupRulesSectionViewModel` (rows = `AppRuleRowViewModel`: id = group, name, members line "a, b" or "(keine Apps)", no stored rule = 0:00 and no day; "Noch keine App-Gruppen …"; same validation and messages as the app rules).
+- Changed: `AppRulesSectionViewModel` (grouped apps hidden by program path, case-insensitive; a returning app shows its stored own rule; ready when both areas are), `RulesViewModel` (hosts `GroupRules`, selection and flush), `DayUsageViewModel` (`GroupRows`, `HasGroupRows`, sorted like the app rows), `ReportsViewModel` (passes the group lines), `AccountUsageModel` (fetches again on an "AppGroups" broadcast, D-12), `MainViewModel` (menu "Einstellungen", "App Gruppen", "Regeln", "Berichte"; start page unchanged), `IDialogService` (+`PromptTextAsync`, +`ChooseAsync`, D-10), `AppTexts` + resx (24 new keys de/en, AC-17 sentence added).
+- MAUI head (needed to build): `MauiDialogService` (prompt with `Keyboard.Text` and max. 160 code units, so 41 characters still reach the validation; action sheet → index), DI.
+
+**Step 9, Mac views** (commit `94e82a7`):
+- `Views/AppGroupsView` (+ code-behind forwarding the drag events): explanation, "Gruppe hinzufügen", error line, one section per group with a heading bar ("Umbenennen"/"Löschen", style `HeadingBarButton`), entry area as drop target (min. 40 pt high, so empty groups are targets), entries with name (tooltip = path), "≡" (style `EntryMenuButton`, larger glyph, no fill) and the right-click menu item "Verschieben nach …". Highlight: `DataTrigger` on `IsDropTarget` over an explicit `Transparent` base background.
+- `RulesView`: section "App-Gruppen-Regeln" between the display text and "Applikations-Regeln", same columns (220 | 64 | 64 | 7 × 48) and handlers; members in small secondary text below the name.
+- `ReportsView`: "App-Gruppen" heading and table (App-Gruppe | Nutzung (HH:MM)) below each day's app table, only when a group has used time.
+- `MainPage` (fourth page), `MauiProgram` (models, view models, view).
+- Styles: `Colors.xaml` `DropHighlightLight/Dark`; `Styles.xaml` `HeadingBarButton`, `EntryMenuButton` (both with explicit "Normal"); `MacStyles.xaml`: the Mac `Button` style now sets "Normal" explicitly (TI-10; buttons are disabled while their command runs, e.g. during a dialog).
+
+**Step 10** (commit see the report's git history): `.dmg` 0.8.0 (§8.5); READMEs: `src/EagleEye.ParentApp/README.md` (US-007 F-2: Mac platform layer, Mac build/package, data locations, Keychain, removal script; the Catalyst "Normal" rule; App Groups view and drag-and-drop technique), `src/EagleEye.ParentApp.Core/README.md` (US-007 localization, US-008 classes), `src/EagleEye.Service/README.md` (Groups folder, spans, migration 6, state areas, log entries), `src/EagleEye.Shared/README.md` (DTOs, `AppGroupNames`).
+
+### 8.2 Unit tests (MacBook, `pwsh 02_Implementation/scripts/test.ps1`)
+
+**Shared 305, ParentApp 1 109, all green** (branch start on the Mac: 305 / 996). `build.ps1`: 0 warnings, 0 errors (Shared, ParentApp.Core, ParentApp `net10.0-maccatalyst`).
+
+New test classes (`02_Implementation/tests/EagleEye.ParentApp.Tests/`): `Groups/AppGroupsModelTests` (fetch, broadcast, all five writes + confirmation, rejection, guards; group rules model: selection, other account ignored, writes), `Groups/AppGroupNameRulesTests` (empty, spaces, 41 characters, "games"/"Games", " äpfel "/"Äpfel", 40 emojis valid, own re-cased name on rename, de/en messages), `ViewModels/AppGroupsViewModelTests` (all states de/en, sort with culture and case, unknown group → ungrouped, empty texts de/en, in-place merge, dialog loop with message and typed text, cancel, rename pre-filled, delete confirm text de, move/own section, move targets, "Move to …" sheet options de, drag highlight sequence, drop outside, error line and clearing, guards), `ViewModels/AppGroupRulesSectionViewModelTests` (states, sort, members line, default rule, no-groups text de/en, follow "AppGroups", writes go to the group rules, error and validation messages, flush, guards).
+Extended: `AppRulesSectionViewModelTests` (grouped app hidden, returns with own rule; groups not ready), `RulesViewModelTests` (group section selection and flush), `DayUsageViewModelTests` (group rows sort, "00:00", hidden), `ReportsViewModelTests` (group lines per day), `AccountUsageModelTests` (refetch replaces the days, failure keeps them, no fetch when not ready, account change during refetch), `MainViewModelTests` (menu order).
+Coverage (coverlet, ParentApp.Tests): every new or changed Core class has 100 % line and branch coverage.
+
+### 8.3 On-screen check (Step 9.2)
+
+The Debug build has its own data folder and Keychain entry and is not paired; pairing needs the code shown on the service PC. DEV therefore checked the views with a **temporary probe** (not committed; source kept as `US-008/evidence/step9-ui-probe.cs.txt`): fake models with sample data (Games with five apps, empty School, four ungrouped apps, a group rule, usage with group lines) and scripted steps, captured with `screencapture`. Evidence in `US-008/evidence/`:
+
+| Screenshot | Shows | Result |
+|---|---|---|
+| `step9-1-highlight-dark.png` | drag over "School" (empty group) | highlighted green |
+| `step9-2-highlight-moves-dark.png` | pointer moves to "In keiner Gruppe" | School cleared, new section highlighted |
+| `step9-3-dropped-cleared-dark.png` | Paint dropped on School | moved, no highlight left |
+| `step9-4-move-to-sheet.png` | "≡" on Epic Games Launcher | sheet "Verschieben nach …": School, In keiner Gruppe, Abbrechen |
+| `step9-5/6-…-light.png` | same in light mode | highlight on, then cleared |
+| `step9-7-rename-yellow-accent.png` | "Umbenennen", yellow accent | prompt "App-Gruppe umbenennen", "Games" pre-filled; heading-bar buttons readable (black on yellow) |
+| `step9-8-delete-confirm-blue-accent.png` | "Löschen", blue accent | „Gruppe „Games“ löschen? …“ with Abbrechen / Löschen |
+| `step9-9-rules-group-rules.png` | Rules, light, yellow | "App-Gruppen-Regeln" with members line and "(keine Apps)"; Fortnite and Paint (grouped in the sample) not under "Applikations-Regeln"; AC-17 sentence |
+| `step9-10-reports-group-lines.png` | Reports, dark | "App-Gruppen" table under today (Games 00:57, School 00:00); none for a day without group lines |
+
+The probe also confirmed that the right-click menu item gets the entry's view model and command (`step9-probe-log.txt`). The heading-bar buttons show dimmed while their dialog is open (command running) and repaint normally afterwards. Not checked by DEV: real mouse/trackpad drags, the right-click itself, "Larger Text" (needs System Settings) — Michael's list §8.6.
+
+### 8.4 Deviations (macOS part)
+
+| # | Plan | Done instead | Why |
+|---|---|---|---|
+| D-9 | Right-click menu "with the same targets as `MoveTargets(app)`" (spike decision §6) | One menu item "Verschieben nach …" that opens the same action sheet as "≡". | A `MenuFlyout` cannot bind a list in XAML; per-entry menus would have to be rebuilt in code-behind on every group change. One static item stays in the XAML template and reuses the command (less code). Cost: one more click via right-click. AC-12 allows either. |
+| D-10 | `IDialogService.PromptAsync` gets a kind parameter | Two new methods `PromptTextAsync` (max length, text keyboard) and `ChooseAsync` (action sheet → index). | An added optional parameter breaks the Moq expression trees of the existing host-dialog tests (CS0854); a separate method leaves the US-002 host dialog untouched. |
+| D-11 | `AppGroupRuleRowViewModel` (or a shared row base) | The group rows are `AppRuleRowViewModel` instances (id = group id, `DisplayName` = group name, `ProgramPath` = members line); the row host writes through `IRuleTableWrites`, which both rule models implement. | Plan allowed a shared base; reusing the row as is gives identical editing behaviour (AC-16) without a second 240-line class. Only the row host's write type changed (one test host line). |
+| D-12 | `ReportsViewModel` refetches on an `AppGroups` change | `AccountUsageModel` refetches on the gateway's `AppGroupsChanged` and **replaces** the held days (no "Loading"). | `GetAccountUsage` returns the days with their unchanged revisions, so the revision rule would drop them; the model owns the replicas. A failed refetch keeps the shown days. |
+| D-13 | — | "Applikations-Regeln" and "App-Gruppen-Regeln" show "Wird geladen …" until both their areas ("AppRules"/"AppGroupRules" and "AppGroups") are loaded. | Otherwise grouped apps would flash in "Applikations-Regeln" right after a connect. |
+| D-14 | AC-2 explanation text (English example) | One sentence added: "Apps verschiebst du mit der Maus oder dem Trackpad, mit ≡ oder mit einem Rechtsklick." / "Move apps by dragging them with the mouse or trackpad, with ≡ or with a right click." | Discoverability of "≡" and the right-click menu. Wording note; TES should use the text as implemented. |
+| D-15 | AC-5 "no controlled account ("No data available")" | As on the Rules page (US-005 AC-6): "Keine Konten unter Elternkontrolle. Konten unter Einstellungen auswählen." | AC-5 refers to the US-005 AC-6 states; same page states as Rules and Reports. |
+| D-16 | Delete dialog (AC-10) gives only the question | Title "App-Gruppe löschen" / "Delete app group" (new key `GroupsDeleteTitle`). | The macOS alert needs a title; the question is the message. |
+| D-17 | Step 10.1: DEV installs the `.dmg` over 0.7.0 and spot-checks AC-43; Step 9.2 against the service 0.8.0 | Not done by DEV. Views checked with the probe (§8.3); install, pairing and live checks are on Michael's list (§8.6). | Installing into `/Applications` changes Michael's paired 0.7.0 installation (outside the repo), and pairing a Debug build needs the code shown on the service PC. |
+
+Proposal for the Orchestrator (plan Step 10.2, not applied by DEV): add to `02_Implementation/docs/dev-process/dev-environments.md` §5 *MacBook lessons*: (1) "Mac Catalyst does not repaint a property that becomes unset: every visual state, trigger or style that sets a colour also sets it explicitly in 'Normal' or as the base value (e.g. `Transparent`); check visual fixes with a probe and `screencapture`." (2) "MAUI `DragGestureRecognizer`/`DropGestureRecognizer` work on Mac Catalyst with mouse and trackpad inside a `ScrollView` (US-008 spike); pass the dragged item in-app."
+
+### 8.5 Artifact
+
+| | |
+|---|---|
+| File | `03_Delivery/macos/EagleEye-ParentApp-0.8.0.dmg` (git-ignored; stays on the MacBook) |
+| Version | 0.8.0 (`CFBundleShortVersionString` checked by `package-macos.ps1`) |
+| SHA-256 | `9e5e2bc4f265ccbc40df68e347109fefdccf56a78e1d3ba64faf0ff031dfd48c` |
+| Built with | `pwsh 02_Implementation/scripts/package-macos.ps1` (Release, maccatalyst-arm64, ad-hoc signed, verified) |
+
+### 8.6 What Michael checks by hand on the MacBook
+
+Preconditions: service and tray 0.8.0 on the service PC (`192.168.1.37`, done), `kid1` (and `kid2`) under parental control with app records (Editor, Paint, Rechner).
+
+1. **Install over 0.7.0** (AC-42, US-007 F-3): open the `.dmg`, drag the app to Programme, replace. Start it: still paired ("Verbunden mit …"), appearance kept, at most two Keychain prompts ("Immer erlauben"). Finder → Informationen on the app shows version 0.8.0.
+2. **Menu** (AC-1): Einstellungen, App Gruppen, Regeln, Berichte; the app still starts on Berichte.
+3. **App Gruppen page** (AC-2 to AC-6): explanation, "Gruppe hinzufügen", no groups yet, all apps once under "In keiner Gruppe", sorted; tooltip shows the program path; Windows Explorer not listed.
+4. **Create / rename / delete** (AC-7 to AC-10): add "Games"; try "games", empty, spaces, 41 characters (dialog comes back with the message and the typed text; Escape cancels); rename "Games" → "Gaming" (also the unchanged name with OK); delete a group (confirmation text, apps back under "In keiner Gruppe").
+5. **Drag-and-drop with the mouse and with the trackpad** (AC-11): drag an app onto a group, onto an empty group, back onto "In keiner Gruppe"; drop onto the own section and outside any section (nothing changes); the section under the pointer is highlighted and the highlight always clears; make the window short so the page scrolls and drag again.
+6. **"≡" and right-click** (AC-12): "≡" → "Verschieben nach …" with every other section; right-click / two-finger click → "Verschieben nach …" opens the same list; Abbrechen moves nothing.
+7. **Error path** (AC-14): optional — stop the service briefly, move an app → "Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen." and the page returns to the stored state after reconnecting.
+8. **Rules, group rules per kid** (AC-15 to AC-18): "App-Gruppen-Regeln" between Ruhezeiten and Applikations-Regeln; members below the name; new group 0:00, no day; set "Games" 1:00 Sa So for `kid1` and leave `kid2` at 0:00; grouped apps are gone from "Applikations-Regeln" and come back with their old rule after leaving the group; with the Rules page open, a change on App Gruppen shows within 5 s.
+9. **Reports group lines** (AC-35 to AC-37): after `kid1` used a group's apps, today shows "App-Gruppen" with the group time (overlap counted once); after a rename or move the lines follow within 5 s; days before the 0.8.0 install show no group lines (Q-2).
+10. **Look** (AC-5): light and dark, "Larger Text" (System Settings → Accessibility → Display), another accent colour (heading-bar buttons readable).
+11. **Language**: switch the Mac to English (System Settings → General → Language & Region), restart the app: all new texts in English ("App Groups", "Add group", "Not in any group", "Move to …", "App group rules", "App groups" on Reports).
+12. **AC-43 spot check**: one break-time change, one app-rule change, Reports of today for `kid1`.
+
+Known limitations: the Windows parent app 0.7.x must not be used against the 0.8 service; the Windows parent app compiles the new views but is untested until US-009 (TI-13). Step 11 (Windows build and all four test projects) is still open.
