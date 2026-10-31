@@ -23,6 +23,7 @@
 | 5 | Done (code); Michael's visual checks pending | `AppleAccentPalette` (Core) + `MacAccentColor` (AppKit `controlAccentColor`, verified) → heading bars; Mac-only: `MacStyles.xaml` (buttons, G-11), `MacNavigationTemplate` (G-16), `MacControlMappings` (G-12 entries in cells, G-13 editor border, G-15 picker). Light/dark and Larger Text: check only. |
 | 6 | Checks pending (Michael) | No code change needed so far; the checks (sync with the Windows app, sleep/Wi-Fi, Local Network deny, emojis, flush timing, pin mismatch, tooltip) run with the packaged app in Michael's session. Fixes follow from his findings. |
 | 7 | Done (package built and checked by DEV); install/update/removal checks pending (Michael) | `scripts/package-macos.ps1` (clean Release publish, staging, final ad-hoc signature + `codesign --verify --deep --strict`, bundle checks, `.dmg`), `installer/macos/remove-eagleeye-parent-app.command` (with `--dry-run` test option), `installer/macos/instructions.txt`. Output `03_Delivery/macos/EagleEye-ParentApp-0.7.0.dmg` (27 MB). DEV smoke check: the packaged app starts, window shown, no exception; removal script refuses while the app runs, dry runs list exactly the planned items (real Keychain item detected, nothing deleted). |
+| 5 (fix, 2026-10-31) | Done (code, `.dmg` rebuilt); Michael's visual check pending | **Menu selection stuck** (Michael, on the 0.7.0 `.dmg`, recorded in the US-006 test run 01 general feedback; screenshots `02_Implementation/docs/testing/US-006/evidence/Bildschirmfoto 2026-10-31 um 10.02.00.png` and `… 10.02.05.png`): every menu item clicked once stayed in the accent colour. Cause: the Catalyst CollectionView puts the new item into the "Selected" visual state but never returns the previous one to "Normal". A probe with MAUI 10.0.110 showed that the visual state manager itself reverts the `DynamicResource` setters correctly on "Normal", so an explicit "Normal" setter would not help. Fix: `MacNavigationTemplate.Create(viewModel)`, where each item follows `MainViewModel.SelectedItem` and sets its own state. Windows is unchanged (AC-35). Version stays 0.7.0 (not released yet); new `.dmg` SHA-256 `c6406b0d6a5c5f08aa789b344faa1bc75408af80ddd5a234ede2666b0d55c623`. |
 
 ## 2. Deviations from the Implementation Plan
 
@@ -41,6 +42,7 @@ Notes (not deviations):
 ## 3. Files
 
 **Step 0** — changed: `02_Implementation/Directory.Build.props` (0.6.2 → 0.7.0).
+**Step 5 (fix, 2026-10-31)** — changed: `src/EagleEye.ParentApp/Platforms/MacCatalyst/MacNavigationTemplate.cs`, `Views/MainPage.xaml.cs` (passes the view model).
 **Step 7** — new: `02_Implementation/installer/macos/{remove-eagleeye-parent-app.command, instructions.txt}`; changed: `02_Implementation/scripts/package-macos.ps1` (stub → full).
 **Step 5** — new: `src/EagleEye.ParentApp.Core/Appearance/AppleAccentPalette.cs`, `src/EagleEye.ParentApp/Platforms/MacCatalyst/{MacAccentColor, MacControlMappings, MacNavigationTemplate}.cs`, `Resources/Styles/MacStyles.xaml(.cs)`, `tests/EagleEye.ParentApp.Tests/Appearance/AppleAccentPaletteTests.cs`; changed: `Services/HeadingBarColorService.cs`, `App.xaml.cs`, `MauiProgram.cs`, `Views/MainPage.xaml` (`x:Name="MenuList"` only), `Views/MainPage.xaml.cs`.
 **Step 4** — new: `src/EagleEye.ParentApp.Core/Localization/UiCulturePolicy.cs`, `src/EagleEye.ParentApp/Platforms/MacCatalyst/MacCultureSetup.cs`, `tests/EagleEye.ParentApp.Tests/Localization/UiCulturePolicyTests.cs`; changed: `MauiProgram.cs`, `Platforms/MacCatalyst/Info.plist`.
@@ -53,6 +55,8 @@ Notes (not deviations):
 ## 4. Unit Tests
 
 `scripts/test.ps1` on the MacBook: Step 0 **1 197 passed** (Shared 282, ParentApp 915); after FL-1 **1 202 passed, 0 failed** (Shared 282, ParentApp 920); unchanged after FL-2 (platform code only).
+
+Step 5 fix (2026-10-31): build 0 warnings, ParentApp tests **994 passed, 0 failed** (platform code only, no new tests: the template needs the Catalyst list).
 
 Step 2: **1 231 passed** (Shared 282, ParentApp 949). New: `ConnectionCoordinatorTests` save-failure cases (each caught type → message, local delete, revoke with token and pinned thumbprint, revoke unreachable or failing, delete failing, never connected, unexpected exception propagates), `StartupErrorTextTests`, `ConnectionMessageTextTests` (new messages de/en). Coverage (coverlet): 100 % line and branch for `ConnectionCoordinator`, `StartupErrorText`, `ConnectionMessageText`, `PairingStore`, `SecretStoreUnavailableException`, `AppTexts`.
 

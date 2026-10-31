@@ -110,7 +110,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - *App Infos* **EagleEye_v0.6**; **EagleEye 0.6.0** once; service running. App A green within 60 s without a code.
 - Log "App rules loaded: **0 rules** of N apps of M accounts, 0 changed budget texts." and "Warning levels loaded: early 5 min, final 1 min."; "Break times loaded: …" with the US-005 entries; no Error.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: N apps = ____ · M accounts = ____
 
@@ -131,9 +131,9 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - One row per app kid1 ever used (as on *Berichte*), **all 0 / 0, no day ticked**; alphabetical, case ignored; **no** Windows-Explorer.
 - `ee-kid2`: **Noch keine Applikationen aufgezeichnet.** and the default text; back: kid1's table.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
-- **Notes**: tooltip with path: yes / no
+- **Notes**: tooltip with path: yes
 
 ---
 
@@ -148,7 +148,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - Bar **Zeit-Ende Warnungen**; explanation "Hier kannst du 2 Zeitpunkte einstellen, …"; table **Zeitpunkt · Minuten vor Ende · Anzeigetext**; two rows: **Frühe Warnung · 5 ·** "Achtung, du hast nur noch 5 Minuten! Speichere deinen Fortschritt." and **Finale Warnung · 1 ·** "Achtung!!! Nur noch 1 Minute – jetzt aber schnell speichern!".
 - Labels not editable; no add/delete; no account selection.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -168,7 +168,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - One log line per change within 5 s: "App rules of account eagleeye-kid (S-1-5-21-…) changed by Papas PC: app rule changed: Editor, 0:03, no day" … "Editor, 0:03, Mo Tu We Th Fr Sa Su"; "Paint, 0:30, no day", "Paint, 0:30, Sa", "Paint, 0:30, Mo Sa", "Paint, 0:30, Sa" (or Su). No Save button.
 - Step 5: "Warning settings changed by Papas PC: warning levels changed: early 2 min, final 1 min".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -188,7 +188,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - Step 2: back to **30**, **Bitte Minuten zwischen 0 und 59 eingeben.**, no log line.
 - Step 3: saved ("Paint, 23:30, Sa", "Paint, 23:59, Sa"). Step 4: back to 0:30.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -206,7 +206,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - Step 1: back to **2**, **Bitte Minuten zwischen 1 und 59 eingeben.**, no log line.
 - Steps 2, 3: back to the stored value, **Die finale Warnung muss weniger Minuten vor dem Ende liegen als die frühe Warnung.**, no log line. Still early 2 / final 1.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -231,7 +231,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - Step 5: "budget text changed". Step 6: "… final warning text changed", then "… final warning text reset to the default"; German default shown.
 - Step 7 (optional): stops at about 500 characters.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -251,7 +251,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - Steps 2, 3: green ≤ 60 s; Editor 0:03 all days, Paint 0:30 SA/SO, kid1's two-line budget text; Settings 2 / 1 with defaults.
 - Step 4: ≤ 60 s **Keine Konten unter Elternkontrolle. Konten unter Einstellungen auswählen.**; after ticking: unchanged rules and text.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: "Wird geladen …" seen: yes / no
 
@@ -266,7 +266,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: in both modes all texts, fields, the seven checkbox columns and both bars clearly visible; app colours only; at 150 % nothing cut off, headers above their columns, checkboxes not overlapping, explanations wrapped.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -285,7 +285,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: every change shows in the other app **≤ 5 s** without action there; step 4: both show the **same** minutes; at the end Paint 0:30 SA (or SO), early text default in both.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: step 4 winner: 20 / 40
 
@@ -302,7 +302,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: step 2 **Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen.** and the field back to **30**; step 3 green, Paint = the value of the last Paint log line (30 or 31: both Pass).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**: value after resume: ____
 
@@ -333,7 +333,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - Step 3: blocked again (0:00 blocks whatever days are ticked).
 - Log "Blocked start: … Rechner …, not allowed today (rule 0:00, no day, used 0:00:00); closing the app.", step 3 "(rule 0:00, Mo Tu We Th Fr Sa Su, …)"; "Blocked start ended: … closed gracefully | terminated by force after 20 s …; message shown" (both OK for this Store app).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Lap 1 ____ s · Lap 2 ____ s · outcome ________ · blocked autostart apps: ____________
 
@@ -348,7 +348,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: dialog ≤ 10 s with kid1's budget text and **"Paint: heute nicht erlaubt."**; gone ≤ 30 s; log "Blocked start: … Paint (mspaint.exe, …), … not allowed today (rule 0:30, Sa, used 0:00:00) …" and "… closed gracefully …".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Lap 1 ____ s · Lap 2 ____ s
 
@@ -364,7 +364,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: blocked ("Systeminformationen: heute nicht erlaubt."); within **15 s** a row **Systeminformationen** in its alphabetical place, **0 / 0, no day**; log "New app for account eagleeye-kid: Systeminformationen (msinfo32.exe, …)." and "Blocked start: … not allowed today (rule 0:00, no day, …)".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: row appeared at ____ s · app used: msinfo32 / dxdiag
 
@@ -388,7 +388,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - Log: "Warning: … Editor (notepad.exe), early warning, 2 min left (budget); message shown.", "… final warning, 1 min left (budget); message shown (replaced the open message).", "Closing app: … Editor …, budget used up.", "App closed: … budget used up: **closed gracefully** after 0.x s; message …".
 - **Q-4**: "terminated by force after 20 s" for Notepad = **Fail**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Lap 1 ____ · Lap 2 ____ · Lap 3 ____ · Lap 4 ____ · outcome "closed gracefully after ____ s" · start speed OK: yes / no
 
@@ -404,7 +404,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: blocked (dialog ≤ 10 s, budget text, **"Editor: Zeit-Budget aufgebraucht."**, gone ≤ 30 s); Reports Editor ≈ **3:00 to 3:35** (+ P-2 usage), unchanged a minute later; log "… budget used up (rule 0:03, Mo Tu We Th Fr Sa Su, used 0:03:xx); closing the app."
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Reports Editor ____
 
@@ -419,7 +419,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: lap 1 **≤ 0:15**: **final** warning + **"Zeichentabelle: noch 1 Minute."**, no early warning at all; lap 2 **1:00–1:15**: budget text + "Zeichentabelle: Zeit-Budget aufgebraucht."; lap 3 ≤ **1:35**; log "Warning: … Zeichentabelle (charmap.exe), final warning, 1 min left (budget) …", "App closed: … closed gracefully …".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: Lap 1 ____ · Lap 2 ____ · Lap 3 ____
 
@@ -445,7 +445,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - Step 4: budget text between **C + 60 s and C + 75 s**; gone ≤ **C + 95 s**. **Closed at about 1:00 on the stopwatch (C + 20 s) = Fail.**
 - Log "Grace period: … Systeminformationen (msinfo32.exe): the rules changed (…); closes in 1 min at HH:MM:SS; message shown.", "Closing app: … budget used up, after grace period.", "App closed: …".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: early at ____ · C at ____ · final at ____ · close at ____ · gone at ____
 
@@ -465,7 +465,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - Step 4: ≤ **C + 15 s** final warning + **"Zeichentabelle: Deine Eltern haben die Regeln geändert. Zeichentabelle wird in 1 Minute geschlossen."**; budget text between **C + 60 s and C + 75 s**; gone ≤ **C + 95 s**.
 - Log "Grace period: … Zeichentabelle (charmap.exe): the rules changed …", "Closing app: …, after grace period."
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: C at ____ · final at ____ · close at ____ · gone at ____
 
@@ -488,7 +488,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - Step 5: prompt and budget text at **2:00–2:15** (not C + 60 s); Paint gone **20 s (±2) after lap P**, ≤ **2:35**.
 - Step 6: no `mspaint`; log "Warning: … Paint …, early warning, 2 min left (budget) …", "Closing app: … Paint …, budget used up." (no "after grace period"), "App closed: … **terminated by force after 20 s** (…)"; no "Grace period" for Paint; no "could not be terminated".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: C ____ · early ____ · final ____ · P ____ · gone ____
 
@@ -505,7 +505,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: step 2 ≤ C + 15 s final warning + "… Deine Eltern haben die Regeln geändert. … in 1 Minute geschlossen."; step 4 **not** closed, no new warning; log one "Grace period", no "Closing app" for Zeichentabelle.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -521,7 +521,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: final at about **2:00** (not 1:00); closed at about **3:00** (± 15 s).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**: final ____ · gone ____
 
@@ -554,7 +554,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - **No** budget warning ("noch 2 Minuten") for Paint or Zeichentabelle.
 - Log "Warning: account eagleeye-kid, break time T–23:59 (Mo Tu We Th Fr Sa Su) begins at T, early warning, 2 min left; message shown.", same with "final warning, 1 min left", "App closed: … Zeichentabelle …, break time …: closed gracefully …", "App closed: … Paint …, break time …: terminated by force after 20 s (…)".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**: early ____ · final ____ · break text ____ · Zeichentabelle gone ____ · Paint gone ____
 
@@ -570,7 +570,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: both blocked (≤ 10 s / ≤ 30 s) with kid1's **break display text** (not the budget text) + break info line; log "Blocked start: … Editor …, break time T–23:59 (…); closing the app." and the same for Rechner.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -586,7 +586,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: step 2 ≤ 10 s: **early** warning + "Die Ruhezeit beginnt um T2."; final at **T2 − 1:00…T2 − 0:50**; break text at T2; gone ≤ **T2 + 0:30**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -608,7 +608,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - Step 4: break text between **C + 60 s and C + 75 s**; both closed, gone ≤ **C + 95 s**.
 - Log "Grace period: account eagleeye-kid, break time … ; 2 app(s) close in 1 min at HH:MM:SS; message shown.", "Blocked start: … Editor …, break time …", "Closing app: …, after grace period." (twice), "App closed: …".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**: C ____ · final ____ · close ____ · gone ____
 
@@ -623,7 +623,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: ≤ C + 15 s **early** warning + "Die Ruhezeit beginnt um …" (no "Deine Eltern haben eine Ruhezeit eingestellt …"); final 1 min before; closed at the start with the break text.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -638,7 +638,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: "Rechner: noch 2 Minuten." at start, final at 1:00, closed at 2:00 with the **budget** text; **no** "Die Ruhezeit beginnt um …" while Rechner runs.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -658,7 +658,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: all apps open and stay open; no EagleEye dialog for ee-kid3 or you; no "Blocked start", "Warning: account", "Grace period" or "App closed" line for them.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -684,7 +684,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - Step 7: App B shows the **German** defaults (by design).
 - **German** default texts in ee-kid2's dialog = **Fail** (missing `en` satellite).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**: app name shown to ee-kid2: ________ · time format in the break line: ________
 
@@ -701,7 +701,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: steps 1 to 3 work, nothing closed, no dialog, tray icon stays; step 4 Rechner blocked and sign-out works with the dialog open.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -719,7 +719,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: step 2 Rechner closed (≤ 30 s), **no** dialog, also not later; step 3 icon back; step 4 dialog again; log "Blocked start ended: … Rechner …; **not shown (tray client not connected)**", "Tray client connected: … (session N, verified).", "… message shown".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -738,7 +738,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: "App rules loaded: N rules of … apps of 2 accounts, **1 changed budget texts**." and "Warning levels loaded: early **2** min, final **1** min."; both apps blocked without a parent app, Systeminformationen with "Zeit-Budget aufgebraucht" (not refilled); rules, text and levels as in the screenshots.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**: N rules = ____
 
@@ -754,7 +754,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - "Session agent started in session N (process P)." and "Session agent in session N: diagnostics: user NT-AUTORITÄT\SYSTEM (S-1-5-18), integrity System, privileges SeChangeNotifyPrivilege, write-restricted yes|no".
 - SYSTEM, integrity System, **only** `SeChangeNotifyPrivilege`; write-restricted **yes**, or the accepted fallback Warning plus `no`. Both Pass. **Write the variant in Notes.**
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**: write-restricted: yes / no (fallback)
 
@@ -775,7 +775,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - Step 4: Systeminformationen **starts** (new day's budget; by design). Notepad stayed open.
 - Step 5: second Warning (date back to 10/17/2026); Systeminformationen blocked ("Zeit-Budget aufgebraucht").
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**: zone used: ________ · zone reset: yes / no
 
@@ -793,7 +793,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: all ten open, no dialog; sum of both processes on average **below 2 %**; no visible stutter.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**: CPU values: ____________ · starts as fast: yes / no
 
@@ -816,7 +816,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: step 2 Notepad opens normally (not applied); step 3 ee-kid2 back with Notepad 0:02 all days and its break entry; step 4 blocked; step 6 ≤ **60 s** ee-kid2 gone from **Konto**, log "Purged the budget text of deleted account S-1-5-21-…" and "Purged the break times of deleted account …"; no Error.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -832,7 +832,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: Systeminformationen blocked "Zeit-Budget aufgebraucht" (used time kept); rules, text, levels unchanged.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -848,7 +848,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: Zeichentabelle early at **23:58**, final at **23:59** (≤ +10 s); at **00:00** (≤ +10 s) closed with the budget text + "Zeichentabelle: heute nicht erlaubt."; gone ≤ 00:00:30; Editor keeps running, no warning for it; step 3 blocked.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**: early ____ · final ____ · close ____
 
@@ -863,7 +863,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: a **Warning** "The clock of the PC changed from … to …; the local date stays 10/17/2026; break times now use the new local time." ≤ 5 s after each change; nothing undone by the service.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -882,7 +882,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: rows with `Kind` `blocked start` / `running app`, `Reason` `not allowed today` / `budget used up` / `break time`, `AfterGrace` 1 for TC-006-18, -19, -26, `Trigger` e.g. `app start`, `budget ran out`, `grace period ended`, `break began`; no row of ee-kid2; `WarningSettings` early 2, final 1, no texts.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -896,7 +896,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 **Expected**: English labels; unchanged defaults in English ("Attention, you only have 5 minutes left! …", "Attention!!! Only 1 minute left – …"); kid1's budget text exactly as entered; "Enter hours between 0 and 23.".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**: Windows language of that PC: ________
 
@@ -923,7 +923,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 ## General Feedback
 
 <!-- Anything that does not fit a test case: usability remarks, ideas, surprises. -->
-
+On my Mac, there is a minor visual issue, the menue on the left is not colored correct. Intended: Only the menu entry that currently is selected, is colored. Actual, once selected a menu item stays colored and does not go back to unselected. See screenshots in "evidence" folder. 
 ---
 
 ## Summary (filled in by TES after evaluation)
