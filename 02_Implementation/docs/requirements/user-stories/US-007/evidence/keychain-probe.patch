@@ -1,0 +1,51 @@
+diff --git a/02_Implementation/src/EagleEye.ParentApp/MauiProgram.cs b/02_Implementation/src/EagleEye.ParentApp/MauiProgram.cs
+index c1b40b9..f7b9bfd 100644
+--- a/02_Implementation/src/EagleEye.ParentApp/MauiProgram.cs
++++ b/02_Implementation/src/EagleEye.ParentApp/MauiProgram.cs
+@@ -18,6 +18,13 @@ public static class MauiProgram
+     /// <summary>Creates the app.</summary>
+     public static MauiApp CreateMauiApp()
+     {
++#if MACCATALYST && DEBUG
++        if (Environment.GetEnvironmentVariable("EAGLEEYE_KCPROBE") == "1")
++        {
++            Platforms.MacCatalyst.KeychainProbe.Run();
++            Environment.Exit(0);
++        }
++#endif
+         var builder = MauiApp.CreateBuilder();
+         builder.UseMauiApp<App>();
+ #if WINDOWS
+diff --git a/02_Implementation/src/EagleEye.ParentApp/Platforms/MacCatalyst/KeychainProbe.cs b/02_Implementation/src/EagleEye.ParentApp/Platforms/MacCatalyst/KeychainProbe.cs
+new file mode 100644
+index 0000000..dcffd00
+--- /dev/null
++++ b/02_Implementation/src/EagleEye.ParentApp/Platforms/MacCatalyst/KeychainProbe.cs
+@@ -0,0 +1,27 @@
++namespace EagleEye.ParentApp.Platforms.MacCatalyst;
++
++// TEMPORARY first-light probe (US-007): exercises the real MacKeychainSecretStore. Not committed to src/.
++internal static class KeychainProbe
++{
++    public static void Run()
++    {
++        var store = new MacKeychainSecretStore();
++        try
++        {
++            store.SetAsync("probe-store", "value-1").GetAwaiter().GetResult();
++            var r1 = store.GetAsync("probe-store").GetAwaiter().GetResult();
++            store.SetAsync("probe-store", "value-2").GetAwaiter().GetResult();
++            var r2 = store.GetAsync("probe-store").GetAwaiter().GetResult();
++            store.RemoveAsync("probe-store").GetAwaiter().GetResult();
++            var r3 = store.GetAsync("probe-store").GetAwaiter().GetResult();
++            store.RemoveAsync("probe-store").GetAwaiter().GetResult();
++            Console.WriteLine($"KCPROBE store: first={r1 == "value-1"} overwrite={r2 == "value-2"} afterRemove={r3 is null}");
++        }
++        catch (Exception ex)
++        {
++            Console.WriteLine("KCPROBE store exception " + ex.GetType().Name + ": " + ex.Message);
++        }
++
++        Console.Out.Flush();
++    }
++}

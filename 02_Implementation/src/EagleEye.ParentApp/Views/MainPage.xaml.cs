@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using EagleEye.ParentApp.Core;
 using EagleEye.ParentApp.Core.ViewModels;
-using Microsoft.Data.Sqlite;
 
 namespace EagleEye.ParentApp.Views;
 
@@ -31,10 +30,14 @@ public partial class MainPage : ContentPage
             }
         };
         StatusBarRegion.Content = statusBar;
+#if MACCATALYST
+        MenuList.ItemTemplate = Platforms.MacCatalyst.MacNavigationTemplate.Create(viewModel);
+#endif
         Loaded += OnLoaded;
     }
 
-    private void ShowSelectedPage()
+    /// <summary>Saves typed values of the visible page (before another page is shown or the app quits, US-007 AC-32).</summary>
+    public void FlushPendingEdits()
     {
         if (ReferenceEquals(ContentRegion.Content, _rules))
         {
@@ -46,7 +49,11 @@ public partial class MainPage : ContentPage
             // US-006 AC-16: typed warning minutes and texts are saved before the Settings page is left.
             _settings.FlushPendingEdits();
         }
+    }
 
+    private void ShowSelectedPage()
+    {
+        FlushPendingEdits();
         ContentRegion.Content = _viewModel.SelectedItem.Key switch
         {
             MainViewModel.ReportsKey => _reports,
@@ -63,10 +70,10 @@ public partial class MainPage : ContentPage
         {
             await _viewModel.StartAsync();
         }
-        catch (Exception ex) when (ex is SqliteException or InvalidDataException or IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (StartupErrorText.For(ex) is { } message)
         {
             Debug.WriteLine(ex);
-            await DisplayAlertAsync(App.WindowTitle, AppTexts.ErrorStartup, AppTexts.OkButton);
+            await DisplayAlertAsync(App.WindowTitle, message, AppTexts.OkButton);
         }
     }
 }

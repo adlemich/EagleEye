@@ -3,7 +3,7 @@
 **Status**: Final — story closed by Michael, 2026-10-17 ("Close as tested, then merge"), without recorded test results
 **Date**: 2026-10-17
 **Author**: TES
-**Test runs evaluated**: `docs/testing/US-006/test-run-01.md`. **Not executed**: no result was recorded.
+**Test runs evaluated**: `docs/testing/US-006/test-run-01.md`. **Not executed**: no result was recorded. **Addendum 2026-10-31**: Michael ran run 01 after the merge: 22 Pass, 0 Fail, 20 Skipped (§7).
 **Builds in use during the story's live use**: 0.6.0 → 0.6.1 (ISSUE-008, SignalR 10.0.13) → **0.6.2** (ISSUE-009). The final build is `03_Delivery/windows/EagleEye-Setup-0.6.2.exe` (SHA-256 `9D1942E7…11D776`) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.6.2.exe` (SHA-256 `F1E8179F…44E0FC`). Full hashes are in `docs/requirements/user-stories/US-006/implementation-report.md` §11.
 
 ---
@@ -93,3 +93,33 @@ DEV verified both fixes with Debug builds and screenshots (in the same folder). 
 | F-8 | **Deny by default**: before Michael's kids use the PC on 0.6.2, set the rules of every controlled account. | Michael | before real use |
 
 The story status is not changed here. PRO sets it on Michael's closure.
+
+---
+
+## 7. Addendum 2026-10-31: Run 01 executed after the merge
+
+Written by the Orchestrator. Michael recorded results in `docs/testing/US-006/test-run-01.md` on 2026-10-31, two weeks after the close and merge. The story stays `Verified/Closed`. §1 to §6 above are left unchanged as the record at closure. This section updates them.
+
+**Build**: not recorded in the run file. The run file header still names 0.6.0. The Windows build installed since 2026-10-17 is 0.6.2. The Mac remark below was made with the US-007 Mac app 0.7.0.
+
+| Result | Cases |
+|---|---|
+| Pass | **22**: TC-006-01 to -10, -12 to -20, -25, -26, -31 |
+| Fail | 0 |
+| Blocked | 0 |
+| Skipped | **20**: TC-006-11, -21 to -24, -27 to -30, -32 to -42 |
+
+**Now verified manually** (from the passed cases): the Rules section and its editing (groups A, B), the warnings section (C), two parent apps in sync (part of D), the start check (E) and running apps (F) on Michael's PC, the grace period after a change (H, TC-006-18 to -20, -26), the app started just before a break (TC-006-25), and the exemptions for Start menu, Explorer, tray, lock and sign-out (TC-006-31). Together these cover the core of D-15: the enforcement paths now ran live for the first time.
+
+**Still not verified manually** (skipped cases):
+
+- Break start closes every running app and blocks starts with the break text (TC-006-23, -24; AC-28, AC-29, US-005 AC-25 replacement).
+- Uncontrolled and admin accounts never limited (TC-006-29), English kid texts (TC-006-30, risk 4).
+- Tray client not running (TC-006-32), re-install and storage across restarts (TC-006-33, -37, -38).
+- Time zone and clock change (TC-006-35, -40; AC-39), CPU with 10 apps (TC-006-36), midnight (TC-006-39).
+- All optional cases (TC-006-11, -21, -22, -27, -28, -41, -42).
+- **TC-006-34 agent-token check: skipped a fourth time** (F-1 stays open).
+
+**Follow-ups updated**: F-2 is partly done (the remaining cases are listed above). F-3 is partly done: TC-006-09 (150 %) and TC-006-10 (LEOSERV) passed. F-4: TC-006-04 to -06 passed with visible numeric fields, which confirms the ISSUE-008 fix in practice. ISSUE-009 (forget pairing) was not exercised. Issue statuses are left as they are until Michael confirms. F-1 and F-5 to F-8 are unchanged.
+
+**General feedback (Mac)**: "the menu on the left is not colored correctly: once selected, a menu item stays colored". Screenshots: `docs/testing/US-006/evidence/Bildschirmfoto 2026-10-31 um 10.02.00.png`, `… 10.02.05.png`. This is **not a US-006 defect**: the Mac menu template comes from US-007 Step 5 and was never part of 0.6.x. It was fixed on `feature/US-007-macos-parent-app-parity` (0.7.0 `.dmg` rebuilt 2026-10-31). See `docs/requirements/user-stories/US-007/implementation-report.md` §1, row "5 (fix, 2026-10-31)".

@@ -39,7 +39,7 @@ EagleEye.ParentApp/
 │   ├── ReportsView          Reports: account selection, one table per day (App | Nutzung (HH:MM)), US-004
 │   └── StatusBarView        Green/red indicator + status text
 ├── Services/                MauiThemeService, MauiDialogService, MauiUiDispatcher,
-│                            MauiAppDataPaths, MauiSecureStorageSecretStore (non-Windows),
+│                            MauiAppDataPaths, Platforms/MacCatalyst/MacKeychainSecretStore (macOS),
 │                            HeadingBarColorService (accent colour → resources HeadingBarBackgroundColor/TextColor)
 ├── Resources/
 │   ├── Styles/              Colors (light/dark via AppThemeBinding) and styles; SectionHeader = heading bar

@@ -44,6 +44,17 @@
 			</array>
 		</dict>
 	</dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>de</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>de</string>
+		<string>en</string>
+	</array>
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2026 Michael Adler</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>EagleEye verbindet sich mit dem EagleEye-PC in deinem Heimnetz, um Regeln und Berichte anzuzeigen.</string>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
 </dict>

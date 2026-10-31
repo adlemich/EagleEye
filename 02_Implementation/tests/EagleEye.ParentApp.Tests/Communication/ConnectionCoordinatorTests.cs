@@ -1,7 +1,10 @@
+using System.Security.Cryptography;
+using EagleEye.ParentApp.Core.Abstractions;
 using EagleEye.ParentApp.Core.Communication;
 using EagleEye.ParentApp.Core.Data;
 using EagleEye.ParentApp.Tests.Fakes;
 using EagleEye.Shared.Models;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Time.Testing;
 using Moq;
 using Xunit;
@@ -466,6 +469,104 @@ public sealed class ConnectionCoordinatorTests : IAsyncLifetime
         Assert.Equal(ConnectionState.Initial with { Host = Host, LastMessage = ConnectionMessage.Unreachable }, _coordinator.State);
     }
 
+    // ---------- Save failure after a successful code (US-007 R-3) ----------
+
+    public static TheoryData<Exception, ConnectionMessage> SaveFailures => new()
+    {
+        { new SecretStoreUnavailableException("write", -34018), ConnectionMessage.KeychainSaveFailed },
+        { new SqliteException("disk I/O error", 10), ConnectionMessage.PairingSaveFailed },
+        { new IOException(), ConnectionMessage.PairingSaveFailed },
+        { new UnauthorizedAccessException(), ConnectionMessage.PairingSaveFailed },
+        { new CryptographicException(), ConnectionMessage.PairingSaveFailed },
+    };
+
+    [Theory]
+    [MemberData(nameof(SaveFailures))]
+    public async Task SubmitCodeAsync_SaveFails_IsNotPairedWithMessage(Exception failure, ConnectionMessage expected)
+    {
+        await BeginPairingWithFailingSaveAsync(failure);
+
+        await _coordinator.SubmitCodeAsync(Code, DeviceName);
+
+        Assert.Equal(ConnectionState.Initial with { Host = Host, LastMessage = expected }, _coordinator.State);
+    }
+
+    [Fact]
+    public async Task SubmitCodeAsync_SaveFails_DeletesLocalPairing()
+    {
+        await BeginPairingWithFailingSaveAsync(new IOException());
+
+        await _coordinator.SubmitCodeAsync(Code, DeviceName);
+
+        _store.Verify(s => s.DeleteAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task SubmitCodeAsync_SaveFails_RevokesDeviceWithTokenAndPinnedThumbprint()
+    {
+        var (pairingClient, revokeClient) = await BeginPairingWithFailingSaveAsync(new IOException());
+
+        await _coordinator.SubmitCodeAsync(Code, DeviceName);
+
+        revokeClient.Verify(c => c.RemovePairedDeviceAsync(DeviceId, It.IsAny<CancellationToken>()), Times.Once);
+        revokeClient.Verify(c => c.DisposeAsync(), Times.Once);
+        pairingClient.Verify(c => c.DisposeAsync(), Times.Once);
+        Assert.Equal((Token, TestSupport.Thumbprint), (_created[1].Token, _created[1].Trust.PinnedThumbprint));
+    }
+
+    [Fact]
+    public async Task SubmitCodeAsync_SaveFailsAndRevokeUnreachable_StillShowsMessage()
+    {
+        var (_, revokeClient) = await BeginPairingWithFailingSaveAsync(new IOException());
+        revokeClient.Setup(c => c.StartAsync(It.IsAny<CancellationToken>())).ThrowsAsync(new OperationCanceledException());
+
+        await _coordinator.SubmitCodeAsync(Code, DeviceName);
+
+        revokeClient.Verify(c => c.DisposeAsync(), Times.Once);
+        Assert.Equal(ConnectionMessage.PairingSaveFailed, _coordinator.State.LastMessage);
+    }
+
+    [Fact]
+    public async Task SubmitCodeAsync_SaveFailsAndRevokeCallFails_StillShowsMessage()
+    {
+        var (_, revokeClient) = await BeginPairingWithFailingSaveAsync(new SecretStoreUnavailableException("write", -25308));
+        revokeClient.Setup(c => c.RemovePairedDeviceAsync(DeviceId, It.IsAny<CancellationToken>())).ThrowsAsync(new IOException());
+
+        await _coordinator.SubmitCodeAsync(Code, DeviceName);
+
+        Assert.Equal(ConnectionMessage.KeychainSaveFailed, _coordinator.State.LastMessage);
+    }
+
+    [Fact]
+    public async Task SubmitCodeAsync_SaveFailsAndDeleteFails_StillShowsMessage()
+    {
+        await BeginPairingWithFailingSaveAsync(new IOException());
+        _store.Setup(s => s.DeleteAsync()).ThrowsAsync(new IOException());
+
+        await _coordinator.SubmitCodeAsync(Code, DeviceName);
+
+        Assert.Equal(ConnectionMessage.PairingSaveFailed, _coordinator.State.LastMessage);
+    }
+
+    [Fact]
+    public async Task SubmitCodeAsync_SaveFails_NeverReportsPairedConnected()
+    {
+        await BeginPairingWithFailingSaveAsync(new IOException());
+        var states = RecordStates();
+
+        await _coordinator.SubmitCodeAsync(Code, DeviceName);
+
+        Assert.DoesNotContain(states, s => s.Status is ConnectionStatus.PairedConnected or ConnectionStatus.PairedConnecting);
+    }
+
+    [Fact]
+    public async Task SubmitCodeAsync_SaveFailsWithUnexpectedException_Propagates()
+    {
+        await BeginPairingWithFailingSaveAsync(new InvalidOperationException("bug"));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _coordinator.SubmitCodeAsync(Code, DeviceName));
+    }
+
     [Theory]
     [InlineData(null, Token)]
     [InlineData(DeviceId, null)]
@@ -854,6 +955,15 @@ public sealed class ConnectionCoordinatorTests : IAsyncLifetime
         var client = EnqueueClient();
         await _coordinator.BeginPairingAsync(Host);
         return client;
+    }
+
+    private async Task<(Mock<IParentHubClient> Pairing, Mock<IParentHubClient> Revoke)> BeginPairingWithFailingSaveAsync(Exception failure)
+    {
+        var pairingClient = await BeginPairingAsync();
+        SetupSuccess(pairingClient);
+        _store.Setup(s => s.SaveAsync(It.IsAny<StoredPairing>())).ThrowsAsync(failure);
+        var revokeClient = EnqueueClient();
+        return (pairingClient, revokeClient);
     }
 
     private static void SetupSuccess(Mock<IParentHubClient> client)

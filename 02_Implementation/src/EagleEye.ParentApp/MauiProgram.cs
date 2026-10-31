@@ -18,12 +18,19 @@ public static class MauiProgram
     /// <summary>Creates the app.</summary>
     public static MauiApp CreateMauiApp()
     {
+#if MACCATALYST
+        // US-007 AC-13, AC-15: language and formats from macOS, before any text is read.
+        Platforms.MacCatalyst.MacCultureSetup.Apply();
+#endif
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>();
 #if WINDOWS
         // US-005 (coding guidelines §16.1): WinUI gives a CheckBox a minimum width of about 120; the Rules table needs
         // narrow checkbox columns (AC-4, 150 % scaling).
         Microsoft.Maui.Handlers.CheckBoxHandler.Mapper.AppendToMapping("EagleEyeNoMinWidth", (handler, _) => handler.PlatformView.MinWidth = 0);
+#elif MACCATALYST
+        // US-007 G-12, G-13, G-15: Mac-only control fixes.
+        Platforms.MacCatalyst.MacControlMappings.Register();
 #endif
 
         var services = builder.Services;
@@ -36,8 +43,8 @@ public static class MauiProgram
 #if WINDOWS
         services.AddSingleton<ISecretProtector, Platforms.Windows.DpapiSecretProtector>();
         services.AddSingleton<ISecretStore, ProtectedSecretStore>();
-#else
-        services.AddSingleton<ISecretStore, MauiSecureStorageSecretStore>();
+#elif MACCATALYST
+        services.AddSingleton<ISecretStore, Platforms.MacCatalyst.MacKeychainSecretStore>();
 #endif
         services.AddSingleton<IPairingStore, PairingStore>();
         services.AddSingleton<ISettingsStore, SettingsStore>();

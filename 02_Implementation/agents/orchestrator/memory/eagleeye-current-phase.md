@@ -1,9 +1,17 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — iOS + Android dropped 2026-10-20 (US-007 aborted, branch deleted); PRO rewriting requirements for Windows + Mac parent apps only
+description: EagleEye workflow status — 2026-10-31 US-007 (macOS parity) closed + merged; US-008 pilot feedback (Mac first) starts with PRO
 metadata:
   type: project
 ---
+
+**Update 2026-10-31 (later, MacBook): Menu fix 2 confirmed by Michael. US-007 CLOSED by Michael without test run ("Close US-007 now, merge"; Mac app 0.7.0 in pilot use with service PC 192.168.1.85) and merged into main. Gaps in `docs/testing/US-007/test-report.md`: no AC verified in a run; Step 8 Windows regression NOT done (main has 0.7.0 Core/Shared code never built on Windows, follow-up F-1), Step 9 docs open. NEXT: US-008 "pilot feedback", Mac app first, Windows parity in a later step; PRO session in `02_Implementation/agents/pro/` creates `feature/US-008-…` from main and discusses the features with Michael.**
+
+**Update 2026-10-31 (US-007 step c, MacBook): Michael ran US-006 run 01 late (22 Pass, 20 Skipped, 0 Fail; recorded as addendum §7 in `docs/testing/US-006/test-report.md`, US-006 stays closed, TC-006-34 skipped 4th time). His Mac remark (menu items stay coloured) was a US-007 Step 5 bug (Catalyst CollectionView never sends "Normal"); first fix (follow SelectedItem) failed; real cause: VSM "Normal" without setters leaves the background unset and Catalyst does not repaint → explicit Transparent in "Normal" (verified by probe + control run). `.dmg` 0.7.0 rebuilt (SHA-256 f10e55a7…0a519). Michael agreed: fix inside US-007, no merge of US-007 yet. NEXT unchanged: Michael checks the menu + session A/B on MacBook, then Step 8 Windows, Step 9, step-c approval.**
+
+**Update 2026-10-20 (US-007 step c): first light DONE (Mac app paired with service, real data; Keychain fix = legacy SecKeychain API on login keychain, ADR-020 Rev 1 approved; Q-4 up to 2 prompts/update OK; Q-5 Windows unchanged). DEV Steps 2–7 committed (6c23568..a356b19), 1276 tests, `.dmg` 0.7.0 in 03_Delivery/macos. DV-3..DV-5 recorded. NEXT: Michael session A at MacBook (install from .dmg, pair, shell/look/language/parity/connection checks), then session B (update + removal), then Step 8 on Windows (build/test/package + smoke), Step 9 docs, then step-c approval. Orphan devices (~5) on service, device mgmt backlog in story Out of Scope.**
+
+**Update 2026-10-20 (US-007): new US-007 "macOS parent app parity" on branch `feature/US-007-macos-parent-app-parity`; story (36 ACs, A–I) APPROVED by Michael 2026-10-20 (6348d51). OQ-1 window close quits; OQ-2 `.dmg` ships a removal script for leftovers (AC-6); OQ-3 one-time Keychain prompt after update OK, re-pairing not; OQ-4 US-006 verification skipped. Step b: ARC writing plan with an early "first light" step — Michael wants to see the app on his MacBook soon. Windows check on main still pending.**
 
 **Update 2026-10-20 (merge): CR-001 cleanup done by PRO/ARC/TES/DEV; ADR-019 (number kept, 017/018 left unused) and the arc42/guidelines amendments approved by Michael; branch merged into main --no-ff and deleted. OPEN: Michael's Windows check on main is still pending (env-check, build, test, package-windows; `--runtime win-x64` in package-windows.ps1 is new: if the ParentApp publish fails, remove that line; if it passes, ARC updates the `-r` sentence in coding guidelines §16.1 / ADR-009 D-4). Mac build needs ValidateXcodeVersion=false (now in the csproj). NEXT: PRO creates feature/US-007-macos-parity and writes the new US-007 "macOS parent app parity".**
 

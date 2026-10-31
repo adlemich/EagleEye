@@ -56,6 +56,9 @@ public static class AppTexts
     public static string ErrorRemoveFailed => Get(nameof(ErrorRemoveFailed));
     public static string InfoPairingLostFormat => Get(nameof(InfoPairingLostFormat));
     public static string ErrorStartup => Get(nameof(ErrorStartup));
+    public static string ErrorKeychainAccess => Get(nameof(ErrorKeychainAccess));
+    public static string ConnectionPairingSaveFailed => Get(nameof(ConnectionPairingSaveFailed));
+    public static string ConnectionKeychainSaveFailed => Get(nameof(ConnectionKeychainSaveFailed));
     public static string OkButton => Get(nameof(OkButton));
     public static string SectionUserAccounts => Get(nameof(SectionUserAccounts));
     public static string UserAccountsInstruction => Get(nameof(UserAccountsInstruction));
