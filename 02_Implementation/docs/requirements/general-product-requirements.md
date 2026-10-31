@@ -1,11 +1,11 @@
 # EagleEye -- General Product Requirements
 
-*Status: Approved v1.8 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07; v1.4 approved by Michael 2026-10-07; v1.5 approved by Michael 2026-10-10; v1.6 approved by Michael 2026-10-12; v1.7 approved by Michael 2026-10-20; v1.8 (app groups) approved by Michael with US-008 on 2026-10-31; v1.9 (Windows 10 for the Windows parent app) proposed with US-009 on 2026-10-31, takes effect when Michael approves US-009)*
+*Status: Approved v1.9 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07; v1.4 approved by Michael 2026-10-07; v1.5 approved by Michael 2026-10-10; v1.6 approved by Michael 2026-10-12; v1.7 approved by Michael 2026-10-20; v1.8 (app groups) approved by Michael with US-008 on 2026-10-31; v1.9 (Windows 10 for the Windows parent app) approved by Michael with US-009 on 2026-10-31)*
 *Approved: v1.0 by Michael*
 *Maintainer: PRO Agent*
 *Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07, 2026-10-10, 2026-10-12, 2026-10-20, 2026-10-31*
 
-> **v1.9 amendment (2026-10-31, decided by Michael from pilot feedback item 1, with US-009; takes effect when Michael approves US-009)**: the **Windows parent app** also runs on **Windows 10 22H2 (build 19045 or newer), x64**. Its installer refuses older Windows versions with a message. The **service and the tray client stay Windows 11 only**, so on Windows 10 the parent app is always a remote parent app on the LAN (FR-APP-091). Changed: §2.1 (Devices), FR-APP-092, §9.1 (note only), §9.5 (OS), §11.1 Q-8 (new).
+> **v1.9 amendment (2026-10-31, decided by Michael from pilot feedback item 1, with US-009; approved by Michael 2026-10-31)**: the **Windows parent app** also runs on **Windows 10 22H2 (build 19045 or newer), x64**. Its installer refuses older Windows versions with a message. The **service and the tray client stay Windows 11 only**, so on Windows 10 the parent app is always a remote parent app on the LAN (FR-APP-091). Changed: §2.1 (Devices), FR-APP-092, §9.1 (note only), §9.5 (OS), §11.1 Q-8 (new).
 
 > **v1.8 amendment (2026-10-31, directed by Michael from pilot feedback, with US-008; approved by Michael 2026-10-31)**: **app groups** with a shared daily budget. The parent groups apps that belong together (e.g. a game, its launcher, anti-cheat and store app) on a new "App Groups" page. Groups are defined once per service PC; every app is in at most one group; new apps are in no group; deleting a group returns its apps to "not in any group". Per group and account, the Rules page holds a **group rule** (daily budget and weekdays, default 0:00 and no day ticked). A grouped app is limited only by its group rule; its own app rule is kept and applies again when it leaves the group. The group's used time is the time during which **at least one** member app is active, computed with the current members. Warnings, blocks, closes and grace periods work for groups as for apps. Reports also show the used time per group. The Windows 10 support for the Windows parent app (pilot feedback item 1) is amended with US-009. Changed: FR-SVC-011, FR-SVC-020, FR-SVC-022, FR-SVC-032, FR-SVC-047, FR-APP-042 to FR-APP-044 (new), FR-APP-062 (new), §4.3 step 12a (new), TC-020, TC-026 (new), TC-033.
 
@@ -625,4 +625,4 @@ No open questions.
 
 ---
 
-*End of General Product Requirements — Approved v1.8; v1.9 proposed with US-009*
+*End of General Product Requirements — Approved v1.9*
