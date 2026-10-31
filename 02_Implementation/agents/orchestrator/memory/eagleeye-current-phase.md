@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-10-31 US-007 (macOS parity) closed + merged; US-008 pilot feedback (Mac first) starts with PRO
+description: EagleEye workflow status — 2026-10-31 US-008 app groups: story approved, ARC plan awaiting approval; US-009 Win10 + Windows parity later
 metadata:
   type: project
 ---
+
+**Update 2026-10-31 (US-008 step b): US-008 "App groups" (service + Mac app; branch `feature/US-008-app-groups`) story APPROVED by Michael (44 ACs A–K, OQ-1..5 as proposed, req. v1.8 groups part; 793509e, 43e5296). US-009 = Windows 10 (parent app only, 22H2 build 19045 x64; service/tray stay Win11) + Windows parent app parity with groups. Groups per PC, rules per kid. ARC plan + ADR-021 (Proposed) committed 90b923a, awaiting Michael's approval; plan Q-1..Q-5 open. Plan: Step 1 Mac DnD spike, Step 2 Windows 0.7.0 regression (US-007 F-1), Steps 3–8 Windows service, 9–11 Mac app (+US-007 F-2 docs), 12 Windows final. Agents run as subagents from the orchestrator session (PRO/ARC), relayed to Michael.**
 
 **Update 2026-10-31 (later, MacBook): Menu fix 2 confirmed by Michael. US-007 CLOSED by Michael without test run ("Close US-007 now, merge"; Mac app 0.7.0 in pilot use with service PC 192.168.1.85) and merged into main. Gaps in `docs/testing/US-007/test-report.md`: no AC verified in a run; Step 8 Windows regression NOT done (main has 0.7.0 Core/Shared code never built on Windows, follow-up F-1), Step 9 docs open. NEXT: US-008 "pilot feedback", Mac app first, Windows parity in a later step; PRO session in `02_Implementation/agents/pro/` creates `feature/US-008-…` from main and discusses the features with Michael.**
 
