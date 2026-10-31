@@ -1,0 +1,10 @@
+12:07:48.729 Spike page ready.
+12:07:48.738 Probe mode: sheet
+12:07:51.752 ≡ pressed on Minecraft
+12:06:48.381 Spike page ready.
+12:06:48.390 Probe mode: highlight
+12:06:51.400 Probe: highlight School on
+12:06:55.405 Probe: highlight School off
+12:06:56.410 Moved Discord: Not in any group → School (empty) (via probe)
+12:07:58.163 Spike page ready.
+12:07:58.172 Probe mode: prompt
