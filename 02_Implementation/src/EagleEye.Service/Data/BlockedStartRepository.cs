@@ -13,10 +13,10 @@ public sealed class BlockedStartRepository(ServiceDatabase database) : IBlockedS
             command.CommandText = """
                 INSERT INTO BlockedStarts (Kind, Reason, AfterGrace, AccountSid, UserName, StartedUtc, StartedLocal, DetectedUtc,
                     DisplayName, ProcessName, ProgramPath, ProcessId, Trigger, EntryId, EntryStartMinute, EntryEndMinute, EntryDays,
-                    BudgetMinutes, BudgetDays, UsedSeconds, Weekday)
+                    BudgetMinutes, BudgetDays, UsedSeconds, Weekday, GroupId, GroupName)
                 VALUES (@kind, @reason, @afterGrace, @sid, @user, @started, @startedLocal, @detected,
                     @display, @process, @path, @pid, @trigger, @entry, @entryStart, @entryEnd, @entryDays,
-                    @budget, @budgetDays, @used, @weekday)
+                    @budget, @budgetDays, @used, @weekday, @group, @groupName)
                 RETURNING BlockedStartId;
                 """;
             command.Parameters.AddWithValue("@kind", record.Kind);
@@ -40,6 +40,8 @@ public sealed class BlockedStartRepository(ServiceDatabase database) : IBlockedS
             command.Parameters.AddWithValue("@budgetDays", record.Rule is null ? DBNull.Value : (object)(int)record.Rule.Days);
             command.Parameters.AddWithValue("@used", (object?)record.Rule?.UsedSeconds ?? DBNull.Value);
             command.Parameters.AddWithValue("@weekday", record.Weekday);
+            command.Parameters.AddWithValue("@group", (object?)record.Rule?.GroupId ?? DBNull.Value);
+            command.Parameters.AddWithValue("@groupName", (object?)record.Rule?.GroupName ?? DBNull.Value);
             return (long)(await command.ExecuteScalarAsync(token).ConfigureAwait(false))!; // RETURNING always yields the id.
         }, ct);
     }

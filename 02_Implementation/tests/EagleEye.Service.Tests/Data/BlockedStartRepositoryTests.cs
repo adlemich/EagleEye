@@ -41,7 +41,7 @@ public sealed class BlockedStartRepositoryTests : IAsyncLifetime
     {
         var id = await _repository.InsertAsync(Record(Kid, Now));
 
-        Assert.Equal(["blocked start", "break time", "0", null, null, null], await NewColumnsAsync(id));
+        Assert.Equal(["blocked start", "break time", "0", null, null, null, null, null], await NewColumnsAsync(id));
     }
 
     [Fact]
@@ -59,8 +59,24 @@ public sealed class BlockedStartRepositoryTests : IAsyncLifetime
 
         var id = await _repository.InsertAsync(record);
 
-        Assert.Equal(["running app", "budget used up", "1", "45", "127", "2705"], await NewColumnsAsync(id));
+        Assert.Equal(["running app", "budget used up", "1", "45", "127", "2705", null, null], await NewColumnsAsync(id));
         Assert.Equal(["grace period ended", null, null, null, null], (await RowAsync(id))[9..14]);
+    }
+
+    [Fact]
+    public async Task Insert_GroupRuleRecord_StoresGroupColumns()
+    {
+        var record = Record(Kid, Now) with
+        {
+            Entry = null,
+            Kind = CloseKinds.BlockedStart,
+            Reason = CloseReasons.BudgetUsedUp,
+            Rule = new AppRuleAtClose(60, BreakTimeDays.Saturday, 3600, 7, "Games"),
+        };
+
+        var id = await _repository.InsertAsync(record);
+
+        Assert.Equal(["blocked start", "budget used up", "0", "60", "32", "3600", "7", "Games"], await NewColumnsAsync(id));
     }
 
     [Fact]
@@ -145,7 +161,7 @@ public sealed class BlockedStartRepositoryTests : IAsyncLifetime
         return _database.ExecuteAsync(async (connection, token) =>
         {
             using var command = connection.CreateCommand();
-            command.CommandText = "SELECT Kind, Reason, AfterGrace, BudgetMinutes, BudgetDays, UsedSeconds FROM BlockedStarts WHERE BlockedStartId = @id;";
+            command.CommandText = "SELECT Kind, Reason, AfterGrace, BudgetMinutes, BudgetDays, UsedSeconds, GroupId, GroupName FROM BlockedStarts WHERE BlockedStartId = @id;";
             command.Parameters.AddWithValue("@id", id);
             using var reader = await command.ExecuteReaderAsync(token);
             await reader.ReadAsync(token);

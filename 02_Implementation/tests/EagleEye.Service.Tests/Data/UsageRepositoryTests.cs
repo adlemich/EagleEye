@@ -48,7 +48,7 @@ public sealed class UsageRepositoryTests : IAsyncLifetime
     {
         var app = await App(Kid, Notepad);
         await App(Kid, Notepad, "Editor (neu)");
-        await _repository.ApplyAsync([new UsageIncrement(app.AppId, Today, 1)], []);
+        await _repository.ApplyAsync([new UsageIncrement(app.AppId, Today, 1)], [], []);
 
         Assert.Equal("Editor (neu)", (await _repository.GetUsageAsync(Kid, Today, Today)).Single().DisplayName);
     }
@@ -59,9 +59,9 @@ public sealed class UsageRepositoryTests : IAsyncLifetime
         var app = await App(Kid, Notepad);
         var first = await _repository.StartInstanceAsync(app.AppId, Now);
         var second = await _repository.StartInstanceAsync(app.AppId, Now.AddMinutes(1));
-        await _repository.ApplyAsync([], [new InstanceSeenRecord(first, Now.AddMinutes(5)), new InstanceSeenRecord(second, Now.AddMinutes(5))]);
+        await _repository.ApplyAsync([], [new InstanceSeenRecord(first, Now.AddMinutes(5)), new InstanceSeenRecord(second, Now.AddMinutes(5))], []);
         await _repository.EndInstanceAsync(second, Now.AddMinutes(6), "closed");
-        await _repository.ApplyAsync([], [new InstanceSeenRecord(second, Now.AddMinutes(9))]);
+        await _repository.ApplyAsync([], [new InstanceSeenRecord(second, Now.AddMinutes(9))], []);
         await _repository.EndInstanceAsync(second, Now.AddMinutes(20), "again");
 
         var open = Assert.Single(await _repository.GetOpenInstancesAsync());
@@ -76,8 +76,8 @@ public sealed class UsageRepositoryTests : IAsyncLifetime
     public async Task Apply_UpsertAddsSeconds()
     {
         var app = await App(Kid, Notepad);
-        await _repository.ApplyAsync([new UsageIncrement(app.AppId, Today, 5)], []);
-        await _repository.ApplyAsync([new UsageIncrement(app.AppId, Today, 7), new UsageIncrement(app.AppId, Today.AddDays(-1), 0)], []);
+        await _repository.ApplyAsync([new UsageIncrement(app.AppId, Today, 5)], [], []);
+        await _repository.ApplyAsync([new UsageIncrement(app.AppId, Today, 7), new UsageIncrement(app.AppId, Today.AddDays(-1), 0)], [], []);
 
         var usage = await _repository.GetUsageAsync(Kid, Today.AddDays(-1), Today);
 
@@ -90,7 +90,7 @@ public sealed class UsageRepositoryTests : IAsyncLifetime
         var app = await App(Kid, Notepad);
 
         await Assert.ThrowsAsync<SqliteException>(() =>
-            _repository.ApplyAsync([new UsageIncrement(app.AppId, Today, 5), new UsageIncrement(999, Today, 5)], []));
+            _repository.ApplyAsync([new UsageIncrement(app.AppId, Today, 5), new UsageIncrement(999, Today, 5)], [], []));
 
         Assert.Empty(await _repository.GetUsageAsync(Kid, Today, Today));
     }
@@ -103,7 +103,7 @@ public sealed class UsageRepositoryTests : IAsyncLifetime
         await _repository.ApplyAsync(
             [new UsageIncrement(mine.AppId, Today, 1), new UsageIncrement(mine.AppId, Today.AddDays(-90), 1),
              new UsageIncrement(mine.AppId, Today.AddDays(1), 1), new UsageIncrement(other.AppId, Today, 1)],
-            []);
+            [], []);
 
         var usage = await _repository.GetUsageAsync(Kid.ToLowerInvariant(), Today.AddDays(-89), Today);
 
@@ -115,7 +115,7 @@ public sealed class UsageRepositoryTests : IAsyncLifetime
     {
         var app = await App(Kid, Notepad);
         await _repository.ApplyAsync(
-            [new UsageIncrement(app.AppId, Today.AddDays(-90), 1), new UsageIncrement(app.AppId, Today.AddDays(-89), 1)], []);
+            [new UsageIncrement(app.AppId, Today.AddDays(-90), 1), new UsageIncrement(app.AppId, Today.AddDays(-89), 1)], [], []);
         var oldEnded = await _repository.StartInstanceAsync(app.AppId, Now.AddDays(-91));
         await _repository.EndInstanceAsync(oldEnded, Now.AddDays(-91), "closed");
         await _repository.StartInstanceAsync(app.AppId, Now.AddDays(-91));
@@ -124,7 +124,7 @@ public sealed class UsageRepositoryTests : IAsyncLifetime
 
         var purged = await _repository.PurgeOlderThanAsync(Today.AddDays(-89), Now.AddDays(-90));
 
-        Assert.Equal((1, 1), purged);
+        Assert.Equal((1, 1, 0), purged);
         Assert.Single(await _repository.GetUsageAsync(Kid, Today.AddDays(-100), Today));
         Assert.Single(await _repository.GetOpenInstancesAsync());
     }
@@ -135,7 +135,7 @@ public sealed class UsageRepositoryTests : IAsyncLifetime
         var mine = await App(Kid, Notepad);
         await App(Kid, @"C:\x\game.exe");
         var other = await App(Kid2, Notepad);
-        await _repository.ApplyAsync([new UsageIncrement(mine.AppId, Today, 1), new UsageIncrement(other.AppId, Today, 1)], []);
+        await _repository.ApplyAsync([new UsageIncrement(mine.AppId, Today, 1), new UsageIncrement(other.AppId, Today, 1)], [], []);
         await _repository.StartInstanceAsync(mine.AppId, Now);
 
         var purged = await _repository.PurgeAccountsNotInAsync([Kid2.ToLowerInvariant(), "S-1-5-21-9"]);
@@ -179,7 +179,7 @@ public sealed class UsageRepositoryTests : IAsyncLifetime
             await using var database = new ServiceDatabase(ServiceDatabase.BuildConnectionString(file));
             await database.InitializeAsync();
 
-            Assert.Equal(5, await database.GetSchemaVersionAsync());
+            Assert.Equal(6, await database.GetSchemaVersionAsync());
             Assert.NotNull(await new PairedDeviceRepository(database).FindByTokenHashAsync(new byte[32]));
             Assert.True((await new AccountSelectionRepository(database).LoadAllAsync())["S-1-5-21-1-2-3-1003"]);
         }
@@ -197,10 +197,92 @@ public sealed class UsageRepositoryTests : IAsyncLifetime
         await Assert.ThrowsAnyAsync<ArgumentException>(() => _repository.GetOrCreateAppAsync(Kid, Notepad, " ", "d", Now));
         await Assert.ThrowsAnyAsync<ArgumentException>(() => _repository.GetOrCreateAppAsync(Kid, Notepad, "n", " ", Now));
         await Assert.ThrowsAnyAsync<ArgumentException>(() => _repository.EndInstanceAsync(1, Now, " "));
-        await Assert.ThrowsAsync<ArgumentNullException>(() => _repository.ApplyAsync(null!, []));
-        await Assert.ThrowsAsync<ArgumentNullException>(() => _repository.ApplyAsync([], null!));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _repository.ApplyAsync(null!, [], []));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _repository.ApplyAsync([], null!, []));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _repository.ApplyAsync([], [], null!));
         await Assert.ThrowsAnyAsync<ArgumentException>(() => _repository.GetUsageAsync(" ", Today, Today));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => _repository.GetSpansAsync(" ", Today, Today));
         await Assert.ThrowsAsync<ArgumentNullException>(() => _repository.PurgeAccountsNotInAsync(null!));
+    }
+
+    [Fact]
+    public async Task ApplySpans_InsertsThenExtendsBySameStart()
+    {
+        var app = await App(Kid, Notepad);
+
+        await _repository.ApplyAsync([], [], [new ActivitySpanWrite(app.AppId, Today, Now, Now.AddSeconds(5))]);
+        await _repository.ApplyAsync([], [], [new ActivitySpanWrite(app.AppId, Today, Now, Now.AddSeconds(10))]);
+
+        var span = Assert.Single(await _repository.GetSpansAsync(Kid.ToLowerInvariant(), Today, Today));
+        Assert.Equal(new StoredSpan(Today, Notepad, Now, Now.AddSeconds(10)), span);
+    }
+
+    [Fact]
+    public async Task ApplySpans_OlderEnd_KeepsTheLaterEnd()
+    {
+        var app = await App(Kid, Notepad);
+        await _repository.ApplyAsync([], [], [new ActivitySpanWrite(app.AppId, Today, Now, Now.AddSeconds(10))]);
+
+        await _repository.ApplyAsync([], [], [new ActivitySpanWrite(app.AppId, Today, Now, Now.AddSeconds(5))]);
+
+        Assert.Equal(Now.AddSeconds(10), (await _repository.GetSpansAsync(Kid, Today, Today)).Single().EndUtc);
+    }
+
+    [Fact]
+    public async Task GetSpans_OnlyAccountAndRange_InStartOrder()
+    {
+        var mine = await App(Kid, Notepad);
+        var paint = await App(Kid, @"C:\Windows\mspaint.exe");
+        var other = await App(Kid2, Notepad);
+        await _repository.ApplyAsync([], [],
+        [
+            new ActivitySpanWrite(paint.AppId, Today, Now.AddMinutes(5), Now.AddMinutes(6)),
+            new ActivitySpanWrite(mine.AppId, Today, Now, Now.AddMinutes(1)),
+            new ActivitySpanWrite(mine.AppId, Today.AddDays(-1), Now.AddDays(-1), Now.AddDays(-1).AddMinutes(1)),
+            new ActivitySpanWrite(other.AppId, Today, Now, Now.AddMinutes(1)),
+        ]);
+
+        var spans = await _repository.GetSpansAsync(Kid, Today, Today);
+
+        Assert.Equal([Notepad, @"C:\Windows\mspaint.exe"], spans.Select(s => s.ProgramPath));
+    }
+
+    [Fact]
+    public async Task PurgeOlderThan_DeletesOldSpans()
+    {
+        var app = await App(Kid, Notepad);
+        await _repository.ApplyAsync([], [],
+        [
+            new ActivitySpanWrite(app.AppId, Today.AddDays(-90), Now.AddDays(-90), Now.AddDays(-90).AddSeconds(5)),
+            new ActivitySpanWrite(app.AppId, Today.AddDays(-89), Now.AddDays(-89), Now.AddDays(-89).AddSeconds(5)),
+        ]);
+
+        var purged = await _repository.PurgeOlderThanAsync(Today.AddDays(-89), Now.AddDays(-90));
+
+        Assert.Equal(1, purged.Spans);
+        Assert.Single(await _repository.GetSpansAsync(Kid, Today.AddDays(-100), Today));
+    }
+
+    [Fact]
+    public async Task PurgeAccountsNotIn_DeletesTheAccountsSpans()
+    {
+        var app = await App(Kid, Notepad);
+        await _repository.ApplyAsync([], [], [new ActivitySpanWrite(app.AppId, Today, Now, Now.AddSeconds(5))]);
+
+        await _repository.PurgeAccountsNotInAsync([Kid2]);
+
+        Assert.Empty(await _repository.GetSpansAsync(Kid, Today, Today));
+    }
+
+    [Fact]
+    public async Task ApplySpans_UnknownApp_RollsBackEverything()
+    {
+        var app = await App(Kid, Notepad);
+
+        await Assert.ThrowsAsync<SqliteException>(() => _repository.ApplyAsync(
+            [new UsageIncrement(app.AppId, Today, 5)], [], [new ActivitySpanWrite(999, Today, Now, Now.AddSeconds(5))]));
+
+        Assert.Empty(await _repository.GetUsageAsync(Kid, Today, Today));
     }
 
     private Task<AppRecordResult> App(string sid, string path, string display = "Editor") =>

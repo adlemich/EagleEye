@@ -129,7 +129,7 @@ public sealed class UsageServiceTests : IAsyncLifetime
     {
         var app = await _repository.GetOrCreateAppAsync(Kid, Notepad, "notepad.exe", "Editor", Start);
         var instance = await _repository.StartInstanceAsync(app.AppId, Start);
-        await _repository.ApplyAsync([], [new InstanceSeenRecord(instance, Start.AddMinutes(10).AddSeconds(3))]);
+        await _repository.ApplyAsync([], [new InstanceSeenRecord(instance, Start.AddMinutes(10).AddSeconds(3))], []);
 
         await _service.InitializeAsync();
 
@@ -155,18 +155,18 @@ public sealed class UsageServiceTests : IAsyncLifetime
     public async Task Initialize_PurgesOldDataAndLogs()
     {
         var app = await _repository.GetOrCreateAppAsync(Kid, Notepad, "notepad.exe", "Editor", Start);
-        await _repository.ApplyAsync([new UsageIncrement(app.AppId, Today.AddDays(-90), 5)], []);
+        await _repository.ApplyAsync([new UsageIncrement(app.AppId, Today.AddDays(-90), 5)], [], []);
 
         await _service.InitializeAsync();
 
-        Assert.Contains("Purged usage data older than 2026-07-10: 1 daily entries, 0 history entries.", _logger.Messages(LogLevel.Information));
+        Assert.Contains("Purged usage data older than 2026-07-10: 1 daily entries, 0 history entries, 0 activity spans.", _logger.Messages(LogLevel.Information));
     }
 
     [Fact]
     public async Task PurgeOldData_AfterMidnight_DeletesDay90()
     {
         var app = await _repository.GetOrCreateAppAsync(Kid, Notepad, "notepad.exe", "Editor", Start);
-        await _repository.ApplyAsync([new UsageIncrement(app.AppId, Today.AddDays(-89), 5)], []);
+        await _repository.ApplyAsync([new UsageIncrement(app.AppId, Today.AddDays(-89), 5)], [], []);
         _time.Advance(TimeSpan.FromDays(1));
 
         await _service.PurgeOldDataAsync();
@@ -302,11 +302,11 @@ public sealed class UsageServiceTests : IAsyncLifetime
         repository.Setup(r => r.GetUsageAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         var applied = new List<IReadOnlyCollection<UsageIncrement>>();
         var failure = new IOException("disk full");
-        repository.SetupSequence(r => r.ApplyAsync(It.IsAny<IReadOnlyCollection<UsageIncrement>>(), It.IsAny<IReadOnlyCollection<InstanceSeenRecord>>(), It.IsAny<CancellationToken>()))
+        repository.SetupSequence(r => r.ApplyAsync(It.IsAny<IReadOnlyCollection<UsageIncrement>>(), It.IsAny<IReadOnlyCollection<InstanceSeenRecord>>(), It.IsAny<IReadOnlyCollection<ActivitySpanWrite>>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(failure)
             .Returns(Task.CompletedTask);
-        repository.Setup(r => r.ApplyAsync(It.IsAny<IReadOnlyCollection<UsageIncrement>>(), It.IsAny<IReadOnlyCollection<InstanceSeenRecord>>(), It.IsAny<CancellationToken>()))
-            .Callback<IReadOnlyCollection<UsageIncrement>, IReadOnlyCollection<InstanceSeenRecord>, CancellationToken>((i, _, _) => applied.Add([.. i]))
+        repository.Setup(r => r.ApplyAsync(It.IsAny<IReadOnlyCollection<UsageIncrement>>(), It.IsAny<IReadOnlyCollection<InstanceSeenRecord>>(), It.IsAny<IReadOnlyCollection<ActivitySpanWrite>>(), It.IsAny<CancellationToken>()))
+            .Callback<IReadOnlyCollection<UsageIncrement>, IReadOnlyCollection<InstanceSeenRecord>, IReadOnlyCollection<ActivitySpanWrite>, CancellationToken>((i, _, _, _) => applied.Add([.. i]))
             .Returns(() => applied.Count == 1 ? Task.FromException(failure) : Task.CompletedTask);
         _service = Create(repository.Object);
 
@@ -340,7 +340,7 @@ public sealed class UsageServiceTests : IAsyncLifetime
         await _repository.ApplyAsync(
             [new UsageIncrement(app.AppId, Today.AddDays(-3), 1), new UsageIncrement(app.AppId, Today.AddDays(-1), 2),
              new UsageIncrement(app.AppId, Today.AddDays(-89), 3), new UsageIncrement(app.AppId, Today.AddDays(-90), 4)],
-            []);
+            [], []);
 
         var usage = await _service.GetAccountUsageAsync(Kid);
 

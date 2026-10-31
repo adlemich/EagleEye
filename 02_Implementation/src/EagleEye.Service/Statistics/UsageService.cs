@@ -243,6 +243,7 @@ public sealed class UsageService(
             await repository.ApplyAsync(
                 [.. _pendingSeconds.Select(p => new UsageIncrement(p.Key.AppId, p.Key.Day, p.Value))],
                 [.. _pendingSeen.Select(p => new InstanceSeenRecord(p.Key, p.Value))],
+                [],
                 ct).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -282,13 +283,13 @@ public sealed class UsageService(
     private async Task PurgeOldCoreAsync(CancellationToken ct)
     {
         var cutoffDay = Today().AddDays(1 - RetentionDays);
-        var (dayRows, instances) = await repository.PurgeOlderThanAsync(
+        var (dayRows, instances, spans) = await repository.PurgeOlderThanAsync(
             cutoffDay, timeProvider.GetUtcNow().AddDays(-RetentionDays), ct).ConfigureAwait(false);
-        if (dayRows + instances > 0)
+        if (dayRows + instances + spans > 0)
         {
             logger.LogInformation(
-                "Purged usage data older than {CutoffDay}: {DayRows} daily entries, {Instances} history entries.",
-                cutoffDay.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), dayRows, instances);
+                "Purged usage data older than {CutoffDay}: {DayRows} daily entries, {Instances} history entries, {Spans} activity spans.",
+                cutoffDay.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), dayRows, instances, spans);
         }
     }
 
