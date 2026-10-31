@@ -129,7 +129,7 @@ public sealed class UsageService(
             return new AccountUsageDto(
                 accountSid,
                 today,
-                [.. days.OrderByDescending(d => d.Key).Select(d => new DayUsageDto(revision, null, accountSid, d.Key, today, d.Value))]);
+                [.. days.OrderByDescending(d => d.Key).Select(d => new DayUsageDto(revision, null, accountSid, d.Key, today, d.Value, []))]);
         }, ct).ConfigureAwait(false);
     }
 
@@ -270,7 +270,7 @@ public sealed class UsageService(
         _revisions[sid] = revision;
         try
         {
-            await broadcaster.BroadcastAsync(new DayUsageDto(revision, null, sid, day, today, apps)).ConfigureAwait(false);
+            await broadcaster.BroadcastAsync(new DayUsageDto(revision, null, sid, day, today, apps, [])).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

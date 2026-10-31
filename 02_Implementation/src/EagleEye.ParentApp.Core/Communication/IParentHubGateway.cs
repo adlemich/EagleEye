@@ -33,6 +33,12 @@ public interface IParentHubGateway
     /// <summary>Broadcast of the area "WarningSettings" (US-006), forwarded only from the current client while connected.</summary>
     event Action<WarningSettingsDto>? WarningSettingsChanged;
 
+    /// <summary>Broadcast of the area "AppGroups" (US-008), forwarded only from the current client while connected.</summary>
+    event Action<AppGroupsDto>? AppGroupsChanged;
+
+    /// <summary>Broadcast of an area "AppGroupRules:{sid}" (US-008), forwarded only from the current client while connected.</summary>
+    event Action<AppGroupRulesDto>? AppGroupRulesChanged;
+
     /// <summary>Runs a hub call on the current connection with a timeout.</summary>
     /// <exception cref="ParentHubNotConnectedException">There is no confirmed connection.</exception>
     Task<T> InvokeAsync<T>(Func<IParentHubClient, CancellationToken, Task<T>> call, TimeSpan timeout);

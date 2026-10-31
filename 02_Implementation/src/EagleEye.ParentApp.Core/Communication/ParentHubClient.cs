@@ -47,7 +47,37 @@ internal sealed class ParentHubClient : IParentHubClient
         _connection.On<AccountRulesDto>(nameof(IParentClientCallback.OnAccountRulesChanged), snapshot => AccountRulesChanged?.Invoke(snapshot));
         _connection.On<AppRulesDto>(nameof(IParentClientCallback.OnAppRulesChanged), snapshot => AppRulesChanged?.Invoke(snapshot));
         _connection.On<WarningSettingsDto>(nameof(IParentClientCallback.OnWarningSettingsChanged), snapshot => WarningSettingsChanged?.Invoke(snapshot));
+        _connection.On<AppGroupsDto>(nameof(IParentClientCallback.OnAppGroupsChanged), snapshot => AppGroupsChanged?.Invoke(snapshot));
+        _connection.On<AppGroupRulesDto>(nameof(IParentClientCallback.OnAppGroupRulesChanged), snapshot => AppGroupRulesChanged?.Invoke(snapshot));
     }
+
+    public event Action<AppGroupsDto>? AppGroupsChanged;
+
+    public event Action<AppGroupRulesDto>? AppGroupRulesChanged;
+
+    public Task<AppGroupsDto> GetAppGroupsAsync(CancellationToken ct)
+        => _connection.InvokeAsync<AppGroupsDto>(nameof(IParentHub.GetAppGroups), ct);
+
+    public Task<StateWriteAckDto> CreateAppGroupAsync(Guid requestId, string name, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.CreateAppGroup), requestId, name, ct);
+
+    public Task<StateWriteAckDto> RenameAppGroupAsync(Guid requestId, long groupId, string name, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.RenameAppGroup), requestId, groupId, name, ct);
+
+    public Task<StateWriteAckDto> DeleteAppGroupAsync(Guid requestId, long groupId, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.DeleteAppGroup), requestId, groupId, ct);
+
+    public Task<StateWriteAckDto> MoveAppToGroupAsync(Guid requestId, string programPath, long? groupId, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.MoveAppToGroup), requestId, programPath, groupId, ct);
+
+    public Task<AppGroupRulesDto> GetAppGroupRulesAsync(string accountSid, CancellationToken ct)
+        => _connection.InvokeAsync<AppGroupRulesDto>(nameof(IParentHub.GetAppGroupRules), accountSid, ct);
+
+    public Task<StateWriteAckDto> SetAppGroupBudgetAsync(Guid requestId, string accountSid, long groupId, AppBudgetPart part, int value, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.SetAppGroupBudget), requestId, accountSid, groupId, part, value, ct);
+
+    public Task<StateWriteAckDto> SetAppGroupDayAsync(Guid requestId, string accountSid, long groupId, DayOfWeek day, bool isAllowed, CancellationToken ct)
+        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.SetAppGroupDay), requestId, accountSid, groupId, day, isAllowed, ct);
 
     public event Action<AppRulesDto>? AppRulesChanged;
 

@@ -169,4 +169,64 @@ public interface IParentHub
     /// <param name="level">The level.</param>
     /// <param name="text">The new text.</param>
     Task<StateWriteAckDto> SetWarningText(Guid requestId, WarningLevel level, string text);
+
+    /// <summary>
+    /// Returns the groups and the listed apps (state area "AppGroups", FR-APP-042, US-008). Listed: every program path with an
+    /// app record in at least one controlled account, once, without the enforcement ignore list (AC-3). Called after every (re)connect.
+    /// </summary>
+    Task<AppGroupsDto> GetAppGroups();
+
+    /// <summary>
+    /// Creates an empty group (AC-7); name rules of <see cref="AppGroupNames"/> (AC-8). Throws <c>HubException</c>
+    /// ("A group with this name already exists.") for a duplicate name.
+    /// </summary>
+    /// <param name="requestId">Client-generated correlation id, echoed in <see cref="AppGroupsDto.LastChangeRequestId"/>.</param>
+    /// <param name="name">The new name.</param>
+    Task<StateWriteAckDto> CreateAppGroup(Guid requestId, string name);
+
+    /// <summary>
+    /// Renames a group (AC-9); the own name, also re-cased, is valid. Throws <c>HubException</c> ("The group no longer exists.")
+    /// if the group is gone.
+    /// </summary>
+    /// <param name="requestId">Client-generated correlation id.</param>
+    /// <param name="groupId">The group.</param>
+    /// <param name="name">The new name.</param>
+    Task<StateWriteAckDto> RenameAppGroup(Guid requestId, long groupId, string name);
+
+    /// <summary>Deletes a group with its members and the group rules of all accounts (AC-10).</summary>
+    /// <param name="requestId">Client-generated correlation id.</param>
+    /// <param name="groupId">The group.</param>
+    Task<StateWriteAckDto> DeleteAppGroup(Guid requestId, long groupId);
+
+    /// <summary>
+    /// Moves a listed app into a group, or out of every group with <paramref name="groupId"/> = null (AC-11 to AC-13).
+    /// Throws <c>HubException</c> ("The app no longer exists.") if the app is not listed.
+    /// </summary>
+    /// <param name="requestId">Client-generated correlation id.</param>
+    /// <param name="programPath">The app's program path (<see cref="GroupableAppDto.ProgramPath"/>).</param>
+    /// <param name="groupId">The target group, or null for "Not in any group".</param>
+    Task<StateWriteAckDto> MoveAppToGroup(Guid requestId, string programPath, long? groupId);
+
+    /// <summary>
+    /// Returns the group rules of one account (state area "AppGroupRules:{sid}"): a row for every group, 0:00 and no day when
+    /// nothing is stored (AC-7, AC-15, AC-39).
+    /// </summary>
+    /// <param name="accountSid">SID of a standard account of the inventory (US-003), controlled or not.</param>
+    Task<AppGroupRulesDto> GetAppGroupRules(string accountSid);
+
+    /// <summary>Sets the hours or the minutes of a group's budget, combined with the stored other part (as <see cref="SetAppBudget"/>).</summary>
+    /// <param name="requestId">Client-generated correlation id, echoed in <see cref="AppGroupRulesDto.LastChangeRequestId"/>.</param>
+    /// <param name="accountSid">The account.</param>
+    /// <param name="groupId">The group.</param>
+    /// <param name="part">Which part of the budget is changed.</param>
+    /// <param name="value">The new hours or minutes.</param>
+    Task<StateWriteAckDto> SetAppGroupBudget(Guid requestId, string accountSid, long groupId, AppBudgetPart part, int value);
+
+    /// <summary>Ticks or unticks one weekday of a group rule; every combination is valid.</summary>
+    /// <param name="requestId">Client-generated correlation id.</param>
+    /// <param name="accountSid">The account.</param>
+    /// <param name="groupId">The group.</param>
+    /// <param name="day">The weekday.</param>
+    /// <param name="isAllowed">Whether the day is ticked.</param>
+    Task<StateWriteAckDto> SetAppGroupDay(Guid requestId, string accountSid, long groupId, DayOfWeek day, bool isAllowed);
 }

@@ -168,6 +168,32 @@ public sealed class ParentHub(
             device => warnings.SetTextAsync(requestId, level, text, device));
 
     /// <inheritdoc />
+    public Task<AppGroupsDto> GetAppGroups() => throw new HubException(SaveFailedMessage);
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> CreateAppGroup(Guid requestId, string name) => throw new HubException(SaveFailedMessage);
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> RenameAppGroup(Guid requestId, long groupId, string name) => throw new HubException(SaveFailedMessage);
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> DeleteAppGroup(Guid requestId, long groupId) => throw new HubException(SaveFailedMessage);
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> MoveAppToGroup(Guid requestId, string programPath, long? groupId) => throw new HubException(SaveFailedMessage);
+
+    /// <inheritdoc />
+    public Task<AppGroupRulesDto> GetAppGroupRules(string accountSid) => throw new HubException(SaveFailedMessage);
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetAppGroupBudget(Guid requestId, string accountSid, long groupId, AppBudgetPart part, int value) =>
+        throw new HubException(SaveFailedMessage);
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetAppGroupDay(Guid requestId, string accountSid, long groupId, DayOfWeek day, bool isAllowed) =>
+        throw new HubException(SaveFailedMessage);
+
+    /// <inheritdoc />
     public async Task<AccountUsageDto> GetAccountUsage(string accountSid)
     {
         if (!IsValidSid(accountSid))

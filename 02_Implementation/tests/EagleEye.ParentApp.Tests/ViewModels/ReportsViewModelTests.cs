@@ -218,7 +218,7 @@ public sealed class ReportsViewModelTests
 
     private static UserAccountListDto Accounts(params UserAccountDto[] accounts) => new(1, null, accounts);
 
-    private static DayUsageDto Day(DateOnly day, long seconds) => new(1, null, Anna, day, Today, [new AppUsageDto(1, "Editor", seconds)]);
+    private static DayUsageDto Day(DateOnly day, long seconds) => new(1, null, Anna, day, Today, [new AppUsageDto(1, "Editor", seconds)], []);
 
     private sealed class FakeAccountsModel : IUserAccountsModel
     {

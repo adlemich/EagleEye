@@ -208,10 +208,10 @@ public sealed class AccountUsageModelTests
     [Fact]
     public async Task Broadcast_Midnight_NewTodayAndEmptyPastDaysDropped()
     {
-        _client.Setup(c => c.GetAccountUsageAsync(Kid, It.IsAny<CancellationToken>())).ReturnsAsync(Usage(Kid, new DayUsageDto(1, null, Kid, Today, Today, [])));
+        _client.Setup(c => c.GetAccountUsageAsync(Kid, It.IsAny<CancellationToken>())).ReturnsAsync(Usage(Kid, new DayUsageDto(1, null, Kid, Today, Today, [], [])));
         await ConnectAndSelectAsync(Kid);
 
-        Broadcast(new DayUsageDto(2, null, Kid, Today.AddDays(1), Today.AddDays(1), []));
+        Broadcast(new DayUsageDto(2, null, Kid, Today.AddDays(1), Today.AddDays(1), [], []));
 
         Assert.Equal(Today.AddDays(1), _model.ServiceToday);
         Assert.Equal([Today.AddDays(1)], _model.Days.Select(d => d.Day));
@@ -222,7 +222,7 @@ public sealed class AccountUsageModelTests
     {
         await ConnectAndSelectAsync(Kid);
 
-        Broadcast(new DayUsageDto(5, null, Kid, Today.AddDays(-1), Today.AddDays(-1), [new AppUsageDto(1, "Editor", 9)]));
+        Broadcast(new DayUsageDto(5, null, Kid, Today.AddDays(-1), Today.AddDays(-1), [new AppUsageDto(1, "Editor", 9)], []));
 
         Assert.Equal(Today, _model.ServiceToday);
     }
@@ -243,7 +243,7 @@ public sealed class AccountUsageModelTests
     {
         await ConnectAndSelectAsync(Kid);
 
-        Broadcast(new DayUsageDto(0, null, Kid, Today.AddDays(-3), Today, [new AppUsageDto(1, "Editor", 9)]));
+        Broadcast(new DayUsageDto(0, null, Kid, Today.AddDays(-3), Today, [new AppUsageDto(1, "Editor", 9)], []));
 
         Assert.DoesNotContain(_model.Days, d => d.Day == Today.AddDays(-3));
     }
@@ -291,7 +291,7 @@ public sealed class AccountUsageModelTests
     private void Broadcast(DayUsageDto day) => _client.Raise(c => c.DayUsageChanged += null, day);
 
     private static DayUsageDto Day(DateOnly day, long revision, long seconds, string sid = Kid) =>
-        new(revision, null, sid, day, Today, [new AppUsageDto(1, "Editor", seconds)]);
+        new(revision, null, sid, day, Today, [new AppUsageDto(1, "Editor", seconds)], []);
 
     private static AccountUsageDto Usage(string sid, params DayUsageDto[] days) => new(sid, Today, days);
 }

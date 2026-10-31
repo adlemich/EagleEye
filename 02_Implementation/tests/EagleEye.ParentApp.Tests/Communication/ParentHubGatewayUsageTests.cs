@@ -8,7 +8,7 @@ namespace EagleEye.ParentApp.Tests.Communication;
 
 public sealed class ParentHubGatewayUsageTests
 {
-    private static readonly DayUsageDto Day = new(2, null, "S-1-5-21-1", new DateOnly(2026, 10, 7), new DateOnly(2026, 10, 7), []);
+    private static readonly DayUsageDto Day = new(2, null, "S-1-5-21-1", new DateOnly(2026, 10, 7), new DateOnly(2026, 10, 7), [], []);
 
     [Fact]
     public void DayUsageChanged_ForwardedOnlyFromCurrentClientWhileConnected()
