@@ -120,3 +120,5 @@ Uninstalling removes all three.
 | Token | login Keychain, generic password of service `com.adlemich.eagleeye` (Debug: `com.adlemich.eagleeye.debug`). After an update macOS may ask once to allow access ("Always Allow"). |
 
 The `.dmg` contains "Remove EagleEye Parent App.command", which removes the data folders and the Keychain entry; the app itself is moved to the Trash by hand. First start of an unsigned build: *System Settings → Privacy & Security → Open Anyway* (ADR-019).
+
+**No connection after an update?** After installing a rebuilt `.dmg`, the app may not connect: macOS treats every ad-hoc signed build as a new app. *System Settings → Datenschutz & Sicherheit → Lokales Netzwerk* then lists one EagleEye entry per build; all show as on, but the current build is not allowed. Fix: quit the app (Cmd+Q), switch the EagleEye entries off and on again, start the app, and answer the Keychain prompt with "Immer erlauben". A failed ping to the service PC proves nothing (Windows blocks ICMP by default); test TCP port 5443 instead: `nc -z -G 3 <ip> 5443`. (dev-environments.md §5)
