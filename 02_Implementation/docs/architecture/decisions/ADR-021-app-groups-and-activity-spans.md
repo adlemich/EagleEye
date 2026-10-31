@@ -1,6 +1,6 @@
 # ADR-021: App Groups — Shared Budgets Computed from Activity Spans, Enforced per Limit Subject
 
-**Status**: Proposed (with the US-008 implementation plan, 2026-10-31)
+**Status**: Accepted (approved by Michael with the US-008 implementation plan, 2026-10-31)
 **Date**: 2026-10-31
 **Deciders**: ARC, Michael
 
@@ -113,4 +113,4 @@ Client-side joins keep each state area with one owner and avoid fan-out re-broad
 - `02_Implementation/docs/requirements/user-stories/US-008/user-story.md` (AC-19 to AC-34, OQ-3; scope change f23da5a)
 - `02_Implementation/docs/requirements/user-stories/US-008/implementation-plan.md`
 - ADR-010 (event-driven state propagation), ADR-012 (usage accounting), ADR-015 (time limits for running apps), ADR-016 (default texts)
-- Amendments to apply on approval: ADR-012 (spans), ADR-015 (§2 group used time, §4 warning keys per subject, §5 grace per subject, §7 group close batch), arc42 §5.2, §5.5, §8.4, §8.6, §9
+- Amendments applied with the approval: ADR-012 (spans), ADR-015 (§2 group used time, §4 warning keys per subject, §5 grace per subject, §7 group close batch), arc42 §5.2, §5.5, §8.4, §8.6, §9

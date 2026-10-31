@@ -1,20 +1,22 @@
 # Implementation Plan: US-008 — App Groups with a Shared Daily Budget (service and Mac app)
 
-**Status**: Draft, revision 1 (for Michael's approval)
+**Status**: Approved by Michael (2026-10-31), revision 1, with Q-2 answered (no group times before 0.8.0), incl. ADR-021 and the amendments of ADR-010, ADR-012, ADR-015, arc42 and the coding guidelines
 **Date**: 2026-10-31
 **Author**: ARC
 **User story**: `02_Implementation/docs/requirements/user-stories/US-008/user-story.md` (approved 2026-10-31; scope change of commit f23da5a: AC-44 removed, 43 active ACs, no mixed versions, Windows parent app only compiles and passes its unit tests)
 **Requirements**: `02_Implementation/docs/requirements/general-product-requirements.md` v1.8 amendment (FR-APP-042 to FR-APP-044, FR-APP-062, TC-026; TC-020, TC-033, FR-SVC-011/020/022/032/047 changed)
 **Branch**: `feature/US-008-app-groups`
-**New ADR** (Proposed, for approval with this plan): ADR-021 — App groups: shared budgets computed from activity spans, enforced per limit subject (`02_Implementation/docs/architecture/decisions/ADR-021-app-groups-and-activity-spans.md`)
+**New ADR** (Accepted, approved by Michael with this plan, 2026-10-31): ADR-021 — App groups: shared budgets computed from activity spans, enforced per limit subject (`02_Implementation/docs/architecture/decisions/ADR-021-app-groups-and-activity-spans.md`)
 
-**Amendments to apply after approval** (ARC, on the branch, before Step 2): ADR-010 (two new state areas; refetch of usage on a group change), ADR-012 (activity spans), ADR-015 (§2 group used time, §4 warning keys per subject, §5 grace per subject, §7 group close batch), arc42 (header, §5.2, §5.5, §8.4, §8.6, §9, §11), coding guidelines §10.1 (folders `Service/Groups`, `ParentApp.Core/Groups`).
+**Amended** (approved by Michael with this plan, 2026-10-31; applied by ARC on the branch): ADR-010 (two new state areas; refetch of usage on a group change), ADR-012 (activity spans), ADR-015 (§2 group used time, §4 warning keys per subject, §5 grace per subject, §7 group close batch), arc42 (header, §5.2, §5.5, §8.4, §8.6, §9, §11), coding guidelines §10.1 (folders `Service/Groups`, `ParentApp.Core/Groups`).
 
 **Revision 1 (2026-10-31, Michael: "Keep it simple", no version mixing)**:
 - Removed: all old/new version compatibility (additive-only contracts, wire tests with frozen 0.7 records, the AC-44 check, the Windows feature switch, the log note for own rules of grouped apps, handling of a missing `Groups` list).
 - Removed: the 0.7.0 Windows regression step (old Step 2) and old Q-3 and Q-5.
 - Removed: estimated activity spans for days before the update (backfill, `Estimated` column, `PendingBackfills` table). Group lines start with 0.8.0 (Q-2).
-- Q-1 and Q-4 resolved (Michael accepted; story updated in f23da5a).
+- Q-1 and Q-4 resolved (Michael accepted; story updated in f23da5a). Q-2 resolved at approval (2026-10-31).
+
+**Guidance for DEV (Michael, 2026-10-31)**: where the requirements allow either way, **prefer the option with less code**. In his words: "My guidance would be to minimize the code here, when it is easier to group it from a code-complexity perspective, then why not. User-requirements have no opinion here, it just is ok either way."
 
 ---
 
@@ -616,7 +618,7 @@ Reused: OK/cancel, `AccountsNoData`, `AccountsLoading`, `AccountSaveFailed` (AC-
 | After the update (AC-6) | No groups; own rules unchanged; log shows migration 6 and "App groups loaded: 0 groups". |
 | New group = blocked | A new group has 0:00, no day for every kid: its apps are blocked at once (running ones get the grace period). |
 | Timing | Ticks every 5 s (US-006): warnings and closes about 1 to 6 s after the level or end. |
-| Group time | Counts while at least one member is active in the kid's unlocked session; overlap once. Starts with the 0.8.0 update: the update day counts from the install, earlier days show no group lines (Q-2). Moves change past days' lines (OQ-3). |
+| Group time | Counts while at least one member is active in the kid's unlocked session; overlap once. Starts with the 0.8.0 update: the update day counts from the install, earlier days show no group lines (Q-2, resolved). Moves change past days' lines (OQ-3). |
 | Kid dialog | The info line names the group; two running members → one dialog. |
 | Database | `AppGroups`, `AppGroupMembers` (path → group), `AppGroupRules` (no row = 0:00, no day), `ActivitySpans`; `BlockedStarts.GroupId`, `GroupName`. |
 | Drag-and-drop | Mouse and trackpad; target highlighted; outside → nothing; "≡" → "Move to …". |
@@ -642,7 +644,7 @@ Reused: OK/cancel, `AccountsNoData`, `AccountsLoading`, `AccountSaveFailed` (AC-
 | ID | Question | Recommendation | Answer |
 |---|---|---|---|
 | Q-1 | Moving a not-running app into a group whose apps are running, when its earlier time uses up their time. | Treat it as a rule change: grace period for the running apps. | **Resolved** (Michael, 2026-10-31): accepted; AC-22, AC-32, AC-34 updated by PRO (f23da5a). |
-| **Q-2** | **Group times before the update.** 0.7 only stored totals per app, so overlaps are unknown. | **No group times before 0.8.0**: the service records activity from the update on. Group lines on Reports start with 0.8.0 (the update day counts from the install); earlier days show only per-app lines. For the budget on the update day, the group's time before the install is not counted. | open |
+| Q-2 | Group times before the update. 0.7 only stored totals per app, so overlaps are unknown. | No group times before 0.8.0: the service records activity from the update on. Group lines on Reports start with 0.8.0 (the update day counts from the install); earlier days show only per-app lines. For the budget on the update day, the group's time before the install is not counted. | **Resolved** (Michael, 2026-10-31): "No, not required. My guidance would be to minimize the code here, when it is easier to group it from a code-complexity perspective, then why not. User-requirements have no opinion here, it just is ok either way. Otherwise ok." → no group times before 0.8.0; DEV picks the variant with the least code. |
 | Q-4 | "Move to …" control (AC-12). | "≡" button with a menu on every entry; right-click menu only if the spike shows it works. | **Resolved** (Michael, 2026-10-31): accepted. |
 
 (Q-3 and Q-5 of the first draft are void with the scope change.)
