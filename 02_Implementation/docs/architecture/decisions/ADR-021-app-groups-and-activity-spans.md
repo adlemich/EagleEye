@@ -14,7 +14,7 @@ Today the service stores usage only as **whole seconds per app and local day** (
 
 The enforcement of US-006 (ADR-015) evaluates one **app** at a time: its own rule, its used time, its warnings (keyed per app and day), its grace period and its close. With groups, all running members of a group share one budget, one set of warnings (AC-26: once per group and day), one close message (AC-27) and one grace period per change (AC-32).
 
-The parent app for Windows (0.7.0) is not updated in this story (US-009). It must keep working against the 0.8 service (AC-44, story OQ-2 option B).
+Michael updates service, tray client and Mac app together; no mixed versions are supported (story scope change, 2026-10-31). The Windows parent app shares Core and Shared code but gets its group UI in US-009; in US-008 it only has to compile and pass its unit tests.
 
 ---
 
@@ -28,7 +28,7 @@ We will store groups in `AppGroups` (id, name, a unique case-insensitive name ke
 
 We will persist **activity spans**: for each app record, the intervals (UTC, millisecond precision, split at local midnight like `DaySplitter`) during which the tracker credited it. The tracker builds them from the same crediting it already does (`UsageTracker.Credit`): a new credited part that starts at most 1 s after the end of the app's open span extends it; otherwise a new span starts. `UsageService` writes new spans and extends open ones in the same per-tick transaction as `DailyUsage` (crash loss ≤ 5 s, as ADR-012). Spans are purged with `DailyUsage` (90 days) and with their app record (cascade). Per-app usage (`DailyUsage`, Reports per app, own-rule budgets) is **unchanged** (AC-23).
 
-**Upgrade**: days before the update have no spans. At the first start of 0.8 the service adds, once, one *estimated* span per `DailyUsage` row of the last 90 days, starting at that local day's first instant and lasting its seconds. For those days a group's time is then the time of its **largest member** (overlap assumed). From the update on, all spans are real.
+**Upgrade**: days before the update have no spans, so they have no group time; group lines on Reports start with 0.8.0, and on the update day a group's time counts from the install (plan Q-2).
 
 ### 3. Group used time = union of the current members' spans
 
@@ -55,15 +55,11 @@ A grouped app's own rule is ignored while it is in a group and kept for when it 
 
 The kid message reuses the US-006 reasons (`AppEarlyWarning`, `AppFinalWarning`, `AppGracePeriod`, `AppNotAllowedToday`, `AppBudgetUsedUp`) with the **subject's name** in `KidMessageDto.AppName`. The tray client renders "Games: 5 minutes left." without a change.
 
-### 5. Contract changes are additive; the parent app joins the areas
+### 5. Contracts and the Windows parent app
 
-We will add two state areas (ADR-010): **`AppGroups`** (global: groups and the listed apps with their group) and **`AppGroupRules:{sid}`** (the group rules of one account, a row for every group), with their own queries, field-level writes, callbacks and revisions. `DayUsageDto` gets an additional, trailing list of group lines. No existing hub method, callback or DTO field changes meaning:
+We will add two state areas (ADR-010): **`AppGroups`** (global: groups and the listed apps with their group) and **`AppGroupRules:{sid}`** (the group rules of one account, a row for every group), with their own queries, field-level writes, callbacks and revisions, and a list of group lines in `DayUsageDto`. Contracts are changed in the simplest clean way; no compatibility with older apps or services is kept. `AppRulesDto` keeps listing all app records; the Mac app hides grouped apps by joining with `AppGroups`, so a move needs no re-broadcast of every account's app rules. A group change does not re-broadcast past days: a parent app showing Reports fetches the account's usage again when an `AppGroups` change arrives (a fetch triggered by a broadcast, not polling).
 
-- `AppRulesDto` still lists **all** app records, grouped or not. The parent app with group UI hides grouped apps itself (client-side join with `AppGroups`). An older parent app shows and edits own rules of grouped apps; they are stored and have no effect while the app is grouped (AC-44).
-- An older parent app ignores the new callbacks (SignalR logs "no handler" on the client) and the new JSON property (System.Text.Json ignores unknown members).
-- A group change does not re-broadcast past days. A parent app showing Reports fetches the account's usage again when it receives an `AppGroups` change. This is a fetch triggered by a broadcast, not polling (ADR-010 holds).
-
-The group UI of the parent app is behind a platform feature switch (`ParentAppFeatures.AppGroups`): on in the Mac app (US-008), off in the Windows app until US-009, so a Windows build of the shared code keeps the 0.7 behaviour.
+The Windows parent app compiles the shared code and passes its unit tests; it is not run against the 0.8 service or packaged until US-009.
 
 ---
 
@@ -73,7 +69,7 @@ The union over **any** member set needs the activity on the time line; spans are
 
 Limit subjects keep ADR-015 intact for ungrouped apps (AC-30): an app subject behaves as today. The group case reuses the break-batch pattern for closes and the existing reasons for messages, so the tray client does not change.
 
-Additive contracts and client-side joins are the only way to keep the unchanged Windows app 0.7.0 working (AC-44) without shipping it again.
+Client-side joins keep each state area with one owner and avoid fan-out re-broadcasts.
 
 ### Alternatives Considered
 
@@ -84,7 +80,7 @@ Additive contracts and client-side joins are the only way to keep the unchanged 
 | Reconstructing activity from `AppInstances` | Instances include locked, switched-away and sleep times (US-004 AC-12 excludes them). |
 | Sum of the members' daily seconds | Double counts overlap; contradicts AC-19. |
 | Groups per account | Michael's answer 3: groups are defined once per service PC. |
-| Filtering grouped apps out of `AppRulesDto` on the service | Changes what the Windows app 0.7.0 sees and edits; a membership change would need re-broadcasts of every account's app rules. |
+| Filtering grouped apps out of `AppRulesDto` on the service | A membership change would need re-broadcasts of every account's app rules. |
 | A new kid-message reason for groups | Needs a tray client change for the same visible result. |
 | Re-broadcasting all 90 days of every account on a group change | Large pushes for a rare event; the fetch on change is simpler and bounded to the page that is open. |
 
@@ -95,13 +91,13 @@ Additive contracts and client-side joins are the only way to keep the unchanged 
 ### Positive
 
 - Exact group times for any member set, today and on the 90 days of Reports.
-- Ungrouped apps and the Windows app 0.7.0 behave as before.
+- Ungrouped apps behave as before (AC-30).
 - No tray client change; no Windows right change.
 
 ### Negative / Trade-offs
 
 - A new table with one row per activity span (typically tens per app and day, purged after 90 days) and one more write per active app per tick.
-- Group times of days before the update are estimates (largest member).
+- No group times for days before the update.
 - Group lines of past days change when members change (OQ-3, accepted).
 - The engine is reorganized around subjects; every US-006 behaviour must stay covered by its existing tests.
 
@@ -114,7 +110,7 @@ Additive contracts and client-side joins are the only way to keep the unchanged 
 
 ## References
 
-- `02_Implementation/docs/requirements/user-stories/US-008/user-story.md` (AC-19 to AC-34, AC-44, OQ-2, OQ-3)
+- `02_Implementation/docs/requirements/user-stories/US-008/user-story.md` (AC-19 to AC-34, OQ-3; scope change f23da5a)
 - `02_Implementation/docs/requirements/user-stories/US-008/implementation-plan.md`
 - ADR-010 (event-driven state propagation), ADR-012 (usage accounting), ADR-015 (time limits for running apps), ADR-016 (default texts)
-- Amendments to apply on approval: ADR-012 (spans, backfill), ADR-015 (§2 group used time, §4 warning keys per subject, §5 grace per subject, §7 group close batch), arc42 §5.2, §5.5, §8.4, §8.6, §9
+- Amendments to apply on approval: ADR-012 (spans), ADR-015 (§2 group used time, §4 warning keys per subject, §5 grace per subject, §7 group close batch), arc42 §5.2, §5.5, §8.4, §8.6, §9
