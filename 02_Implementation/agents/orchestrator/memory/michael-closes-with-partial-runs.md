@@ -14,3 +14,4 @@ Michael closed US-002 (2026-10-07) and US-003 (2026-10-07) right after the test 
 US-004 (2026-10-10): same pattern. Michael skipped 11 optional/late cases ("skipped tests are ok to skip, do not repeat them"), raised a visual change request, re-tested only that, and closed with "All good". A re-test reported verbally is recorded in the test report and the issue without a run file.
 
 - US-006 (2026-10-17): closed with run 01 entirely unexecuted, after two in-run patches (0.6.1, 0.6.2). Handled as above: TES test report listing every AC as not verified plus follow-ups, then PRO close, then merge.
+- US-007 (2026-10-31): closed during step c, with no TES test plan and the Windows regression step undone, because the Mac app was already in pilot use and new feedback had priority. Orchestrator wrote `docs/testing/US-007/test-report.md` with the gaps.

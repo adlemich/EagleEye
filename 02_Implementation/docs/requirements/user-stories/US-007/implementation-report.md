@@ -5,7 +5,7 @@
 **Branch**: `feature/US-007-macos-parent-app-parity`
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-007/implementation-plan.md` (approved 2026-10-20 with Q-1 and Q-2), ADR-020, the US-007 amendments of ADR-019, arc42 and coding guidelines §13
 **Machine(s) used**: MacBook so far (see §7)
-**Story status**: Analyzed (in progress: Step 1 "first light" done; Step 2 waits for ARC's review)
+**Story status**: Verified/Closed (2026-10-31, closed by Michael after Steps 0–7; Steps 8–9 not done, see `02_Implementation/docs/testing/US-007/test-report.md`)
 
 > This report grows with each plan step. Steps done: 0 and 1. Steps 2 to 9 not started (Step 2 waits for ARC's review of `US-007/first-light.md` §6).
 

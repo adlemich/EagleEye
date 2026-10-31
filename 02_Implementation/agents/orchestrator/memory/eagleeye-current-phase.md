@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — iOS + Android dropped 2026-10-20 (US-007 aborted, branch deleted); PRO rewriting requirements for Windows + Mac parent apps only
+description: EagleEye workflow status — 2026-10-31 US-007 (macOS parity) closed + merged; US-008 pilot feedback (Mac first) starts with PRO
 metadata:
   type: project
 ---
+
+**Update 2026-10-31 (later, MacBook): Menu fix 2 confirmed by Michael. US-007 CLOSED by Michael without test run ("Close US-007 now, merge"; Mac app 0.7.0 in pilot use with service PC 192.168.1.85) and merged into main. Gaps in `docs/testing/US-007/test-report.md`: no AC verified in a run; Step 8 Windows regression NOT done (main has 0.7.0 Core/Shared code never built on Windows, follow-up F-1), Step 9 docs open. NEXT: US-008 "pilot feedback", Mac app first, Windows parity in a later step; PRO session in `02_Implementation/agents/pro/` creates `feature/US-008-…` from main and discusses the features with Michael.**
 
 **Update 2026-10-31 (US-007 step c, MacBook): Michael ran US-006 run 01 late (22 Pass, 20 Skipped, 0 Fail; recorded as addendum §7 in `docs/testing/US-006/test-report.md`, US-006 stays closed, TC-006-34 skipped 4th time). His Mac remark (menu items stay coloured) was a US-007 Step 5 bug (Catalyst CollectionView never sends "Normal"); first fix (follow SelectedItem) failed; real cause: VSM "Normal" without setters leaves the background unset and Catalyst does not repaint → explicit Transparent in "Normal" (verified by probe + control run). `.dmg` 0.7.0 rebuilt (SHA-256 f10e55a7…0a519). Michael agreed: fix inside US-007, no merge of US-007 yet. NEXT unchanged: Michael checks the menu + session A/B on MacBook, then Step 8 Windows, Step 9, step-c approval.**
 

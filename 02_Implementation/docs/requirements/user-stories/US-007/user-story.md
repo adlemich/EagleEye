@@ -1,6 +1,6 @@
 # US-007: macOS Parent App Parity
 
-**Status**: Analyzed
+**Status**: Verified/Closed
 **Created**: 2026-10-20
 **Approved**: by Michael, 2026-10-20, with his answers to OQ-1 to OQ-4 (change in OQ-2); implementation plan approved 2026-10-20 (status `Analyzed`)
 **Component(s)**: EagleEye.ParentApp (incl. EagleEye.ParentApp.Core). EagleEye.Service, EagleEye.TrayClient and EagleEye.Shared: no behaviour change expected (regression only, group I)
@@ -158,6 +158,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-015 (own device only, as in US-002)
 | 2026-10-20 | Story created (status `New`) | Michael's scope (CR-001 Q-6, Orchestrator brief 2026-10-20), written by PRO |
 | 2026-10-20 | Story approved; OQ-1, OQ-3, OQ-4 answered as proposed; OQ-2 changed: the `.dmg` also delivers a removal script for the leftover data (data folder, Keychain entry, preferences, caches), explained in the install instructions with "Remove pairing" first. Changed: AC-2, AC-6, UI notes (install flow). Status stays `New` until ARC's plan is approved (then `Analyzed`) | Michael (via the Orchestrator), written by PRO |
 | 2026-10-20 | Implementation plan and ADR-020 approved (plan Q-1, Q-2 as recommended); status → `Analyzed` | Michael (via the Orchestrator), recorded by ARC |
+| 2026-10-31 | Story closed by Michael without a test run (Mac app in pilot use); gaps and follow-ups in `02_Implementation/docs/testing/US-007/test-report.md`; status → `Verified/Closed` | Michael (via the Orchestrator), recorded by the Orchestrator |
 
 ---
 
