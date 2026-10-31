@@ -1,6 +1,6 @@
 # US-009: Windows Parent App on Windows 10, and Windows Parent App Parity (0.9.0)
 
-**Status**: New
+**Status**: Analyzed
 **Created**: 2026-10-31
 **Approved**: by Michael, 2026-10-31, with OQ-1 to OQ-7 as resolved (OQ-5 wording confirmed) and the larger test run accepted
 **Component(s)**: EagleEye.ParentApp (incl. EagleEye.ParentApp.Core). EagleEye.Service, EagleEye.TrayClient, EagleEye.Shared: no behaviour change expected, new version 0.9.0 and regression only (group J)
@@ -298,3 +298,4 @@ All seven questions are **resolved**. OQ-2, OQ-3, OQ-6 and OQ-7 as proposed; OQ-
 | 2026-10-31 | Story created (status `New`), v1.9 requirement change described for after the US-008 merge; OQ-1 to OQ-7 open | PRO |
 | 2026-10-31 | OQ-1 to OQ-7 resolved (OQ-1: physical Windows 10 test PC; OQ-4: pencil and trash-can icon buttons of D-19, AC-14 made concrete; OQ-5: starting points unchanged, wording to be confirmed). US-008 close-out taken over: AC-35 now checks the US-008 Mac-app ACs in full; new group K with AC-37 (US-008 AC-19 to AC-34, AC-38 to AC-40) and AC-38 (optional pilot checks: US-008 AC-41, live group smoke); delivery note F-2 (0 test-code warnings). v1.9 amendment written into the product requirements (proposed, takes effect with this story's approval). 38 ACs. Status stays `New`, awaiting Michael's approval | Michael (answers, via the Orchestrator), PRO |
 | 2026-10-31 | Story approved: "approved. your 3 points are ok as suggested." OQ-5 confirmed (service, tray client and Mac app start from 0.8.0; the Windows app on Windows 11 updates from 0.6.2; Windows 10 is a fresh installation), clarification note removed; the larger test run (full US-008 retest in group K, AC-35 full Mac checks) accepted; v1.9 amendment (Windows 10 for the Windows parent app) in effect. ACs unchanged. Status stays `New` until the implementation plan is approved | Michael (via the Orchestrator), recorded by PRO |
+| 2026-10-31 | Implementation plan (`US-009/implementation-plan.md`) and the amendments of ADR-009, ADR-019 and ADR-007 approved by Michael; plan Q-1 to Q-4 resolved (Q-1: "trackpad" stays on both platforms, no new text pair, TES records no wording issue for AC-13; Q-2: Michael does the Windows 10 pre-check before TES; Q-3: native Windows menu highlight; Q-4: Windows button style of 0.6.2 kept); status → `Analyzed` | Michael (via the Orchestrator), recorded by ARC |

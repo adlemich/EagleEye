@@ -1,12 +1,12 @@
 # ADR-009: Windows Parent App Packaging and the ParentApp.Core Library
 
-**Status**: Accepted (approved by Michael with the US-002 implementation plan, 2026-10-04; target list amended by CR-001 / ADR-019, 2026-10-20)
+**Status**: Accepted (approved by Michael with the US-002 implementation plan, 2026-10-04; target list amended by CR-001 / ADR-019, 2026-10-20; minimum Windows 10 22H2 for the parent app installer, US-009 amendment accepted 2026-10-31)
 **Date**: 2026-10-04
 **Deciders**: ARC, Michael
 
 > **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped. `EagleEye.ParentApp` targets only `net10.0-windows10.0.19041.0` (Windows machine) and `net10.0-maccatalyst` (MacBook). The Windows parent app is a production platform (not only the testing vehicle); Core is reused unchanged by the macOS app (new US-007). Packaging (§1) and Core (§2) are unchanged. Once DEV has removed the Android target (CR-001 §6.2), the D-4 reason "a command-line `-r` also hits the Android target" no longer applies; keeping the properties in the csproj stays valid.
 
-> **Proposed amendment — US-009 (2026-10-31, ARC; awaiting Michael's approval with the US-009 implementation plan)**: requirements v1.9 (§9.5, FR-APP-092) support the Windows parent app on **Windows 10 22H2 (build 19045) or newer, and Windows 11, x64**. §1 and note D-3 change: the parent app installer sets `MinVersion=10.0.19045` (was `10.0.22000`) and keeps `ArchitecturesAllowed=x64compatible`. Older Windows versions and 32-bit Windows get Inno Setup's built-in refusal message and nothing is installed (OQ-2). The csproj minimum (`10.0.19041.0`) and the TFM are unchanged; there is no Windows-10-specific code. On Windows 10 the parent app runs only as a remote parent app; the **service installer stays Windows 11 only** (`setup.iss`, `MinVersion=10.0.22000`).
+> **Amendment 2026-10-31 (US-009) — accepted, approved by Michael together with the US-009 implementation plan (2026-10-31)**: requirements v1.9 (§9.5, FR-APP-092) support the Windows parent app on **Windows 10 22H2 (build 19045) or newer, and Windows 11, x64**. §1 and note D-3 change: the parent app installer sets `MinVersion=10.0.19045` (was `10.0.22000`) and keeps `ArchitecturesAllowed=x64compatible`. Older Windows versions and 32-bit Windows get Inno Setup's built-in refusal message and nothing is installed (OQ-2). The csproj minimum (`10.0.19041.0`) and the TFM are unchanged; there is no Windows-10-specific code. On Windows 10 the parent app runs only as a remote parent app; the **service installer stays Windows 11 only** (`setup.iss`, `MinVersion=10.0.22000`).
 
 ---
 

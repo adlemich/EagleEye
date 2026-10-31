@@ -1,6 +1,6 @@
 # Implementation Plan: US-009 — Windows Parent App on Windows 10, and Windows Parent App Parity (0.9.0)
 
-**Status**: Draft (awaiting Michael's approval)
+**Status**: Approved by Michael (2026-10-31), with Q-1 to Q-4 answered (Q-1: "trackpad" on both platforms, no new text pair; Q-2 to Q-4 as recommended), incl. the amendments of ADR-009, ADR-019, ADR-007, arc42 §7 and coding guidelines §16.1
 **Date**: 2026-10-31
 **Author**: ARC
 **User story**: `02_Implementation/docs/requirements/user-stories/US-009/user-story.md` (approved 2026-10-31, 38 ACs, OQ-1 to OQ-7 resolved)
@@ -8,7 +8,7 @@
 **Branch**: `feature/US-009-windows-parent-app-parity`
 **Inputs checked**: US-008 plan, implementation report and test report (`02_Implementation/docs/testing/US-008/test-report.md`, F-1, F-2), US-007 test report F-1, ADR-007, ADR-009, ADR-019, ADR-021, and the code on this branch (= `main` 0.8.0 + story docs).
 
-**Proposed ADR amendments** (for Michael's approval with this plan; applied as "Proposed" blocks on the branch): ADR-009 (installer minimum Windows 10 22H2), ADR-019 (Windows row of the platform table), ADR-007 (third, test-only machine). No new ADR.
+**Amended** (Accepted, approved by Michael with this plan, 2026-10-31; applied by ARC on the branch): ADR-009 (installer minimum Windows 10 22H2), ADR-019 (Windows row of the platform table), ADR-007 (third, test-only machine), arc42 (header, §7, §7.4), coding guidelines §16.1. The Windows 10 test PC row in `02_Implementation/docs/dev-process/dev-environments.md` §1 is added by the Orchestrator. No new ADR.
 
 **Guidance for DEV (Michael, 2026-10-31)**: where the requirements allow either way, choose the option with **less code**. No mixed-version or compatibility handling: only the four 0.9.0 assets together are supported.
 
@@ -41,7 +41,7 @@ The service, the tray client and the Mac app change their **version number only*
 | **TI-5** | **Drag-and-drop on WinUI.** The US-008 spike proved the MAUI recognizers on Mac Catalyst only. On WinUI they map to `CanDrag`/`AllowDrop`; known quirks: the drag shows a "Copy" caption, `DragLeave` order between neighbouring targets, drags started on a `Label` inside a `ScrollView`. | AC-16 | Checked first in Step 2 with a decision rule (Decision 4). "≡" and the right-click menu are the fallback that always exists (AC-17). |
 | **TI-6** | **Dialogs on WinUI** are `ContentDialog`s. WinUI allows only one open `ContentDialog`; the name-dialog loop (US-008 D-5) opens the next prompt right after the previous one closes. | AC-15, AC-17 | Check the loop, the delete confirmation and "Move to …" in Step 2. If WinUI throws "only a single ContentDialog", DEV yields once (`await Task.Yield()`) before re-prompting in `MauiDialogService` (Windows path only). |
 | **TI-7** | **`ImageButton` on WinUI** (pencil, trash can, D-19) may draw its own hover/pressed background or ignore `Padding`. | AC-14 | Check on screen in both themes; if needed, Windows-only setters in the `IconButton` style (`OnPlatform`) or a handler mapping in `MauiProgram` (`#if WINDOWS`), like the existing `CheckBox` mapping. |
-| **TI-8** | **Text "mouse or trackpad"** in the App Groups explanation (US-008 D-14). AC-13 wants "touchpad" in the Windows wording. Core is platform-neutral. | AC-13, AC-28 | Q-1: one Windows key pair `GroupsExplanationWindows` (de/en), chosen in `AppGroupsView.xaml` with `OnPlatform`; the Mac text stays as in 0.8.0. |
+| **TI-8** | **Text "mouse or trackpad"** in the App Groups explanation (US-008 D-14). AC-13 wants "touchpad" in the Windows wording. Core is platform-neutral. | AC-13, AC-28 | **Q-1 resolved** (Michael, 2026-10-31): keep "trackpad" on both platforms. No new text pair, no code; Windows shows the 0.8.0 explanation text. TES records no wording issue for it. |
 | **TI-9** | **Windows 10 rendering differences**: no Segoe UI Variable (WinUI falls back to Segoe UI, slightly different widths); the Windows 10 emoji font lacks the newest emojis (shown as boxes or split); no rounded corners or Mica (out of scope). | AC-8 | No code. DEV's Step 2 check uses 150 % scaling and the 900 × 600 minimum; the Windows 10 pre-check (Step 4) covers the rest. TES should use common emojis (e.g. 🎮 😀) for AC-8 and AC-15. |
 | **TI-10** | **TLS from Windows 10.** Windows 10 SChannel has TLS 1.3 off by default; the service certificate is ECDSA P-256/SHA-256 and Kestrel uses the OS defaults. | AC-6 | No code: Windows 10 negotiates TLS 1.2 with ECDHE-ECDSA, which Windows 11 offers. Proven by Step 4. |
 | **TI-11** | **Update 0.6.2 → 0.9.0 of the Windows app.** | AC-33 | The parent database has no schema change since 0.6.2 (`ParentApp.Core/Data` unchanged), the Inno Setup `AppId` and data folder are unchanged, so the update keeps pairing and appearance. DEV must **not** install 0.9.0 over Michael's 0.6.2 (it is the AC-33 starting point). |
@@ -81,8 +81,8 @@ There is no `EagleEye.Shared/Contracts/` change, so the API-first ordering rule 
 | **EagleEye.Shared** | No change (version only). |
 | **EagleEye.Service** | No change (version only). |
 | **EagleEye.TrayClient** | No change (version only). |
-| **EagleEye.ParentApp.Core** | Expected: one resx key pair (`GroupsExplanationWindows`, Q-1). Possibly small, platform-neutral fixes found in Step 2 (with unit tests). |
-| **EagleEye.ParentApp** (MAUI head) | `AppGroupsView.xaml` (Windows explanation text). Windows-only fixes from Step 2: `#if WINDOWS` in `MauiProgram`/`MauiDialogService`, `OnPlatform` setters in `Styles.xaml`, or code under `Platforms/Windows/`. csproj comment. |
+| **EagleEye.ParentApp.Core** | No change expected (Q-1: no new text pair). Possibly small, platform-neutral fixes found in Step 2 (with unit tests). |
+| **EagleEye.ParentApp** (MAUI head) | Windows-only fixes from Step 2 (no explanation-text change, Q-1): `#if WINDOWS` in `MauiProgram`/`MauiDialogService`, `OnPlatform` setters in `Styles.xaml`, or code under `Platforms/Windows/`. csproj comment. |
 | **Installers** | `installer/windows/parentapp-setup.iss`: `MinVersion=10.0.19045` + comment. `setup.iss` unchanged. Outputs: `03_Delivery/windows/EagleEye-Setup-0.9.0.exe`, `03_Delivery/windows/EagleEye-ParentApp-Setup-0.9.0.exe`, `03_Delivery/macos/EagleEye-ParentApp-0.9.0.dmg`. |
 | **Version** | `Directory.Build.props` → `0.9.0` (all four assets; tray *App Infos*, Mac `CFBundleShortVersionString` and the installers follow automatically). |
 | **Tests** | F-2: `EagleEye.Service.Tests/Data/BlockedStartRepositoryTests.cs`, `AppRuleRepositoryTests.cs`, `AppGroupRepositoryTests.cs`; `EagleEye.ParentApp.Tests/ViewModels/RulesViewModelTests.cs`. |
@@ -137,7 +137,7 @@ Check list (screenshots in `US-009/evidence/`, light and dark, 100 % and 150 %, 
 | 1 | Start paired → Reports; unpaired → Settings with host dialog; host that cannot be reached → error naming the host; "Forget pairing on this device" when unreachable | AC-6, AC-10, AC-34 |
 | 2 | Menu: four entries in order; only the selected one highlighted after clicking through all four twice | AC-10 |
 | 3 | Every section heading outlined in the Windows accent colour, text in normal colour; change the accent colour while running → frames follow at the latest on window activation; buttons distinct from headings | AC-11 |
-| 4 | App Groups: explanation (Windows wording), "Add group", sections sorted, "Not in any group" last, tooltips with program path, empty texts, states "Not connected", "no controlled account", "Loading …" | AC-13 |
+| 4 | App Groups: explanation (same text as on the Mac, "trackpad", Q-1), "Add group", sections sorted, "Not in any group" last, tooltips with program path, empty texts, states "Not connected", "no controlled account", "Loading …" | AC-13 |
 | 5 | Pencil and trash-can icon buttons: size, no stray background, tooltips, both themes | AC-14 |
 | 6 | Name dialog loop (empty, 41 characters, duplicate, emoji via Windows key + .), Escape/Cancel, rename pre-filled, delete confirmation with title | AC-15, TI-6 |
 | 7 | Drag-and-drop with mouse and touchpad (Decision 4), highlight follows and clears, small window with scrolling | AC-16, TI-5 |
@@ -214,7 +214,7 @@ All steps on `feature/US-009-windows-parent-app-parity`. Commit after each step 
 | Step | Content | Machine |
 |---|---|---|
 | 1 | Version 0.9.0, test-code warnings (F-2), installer minimum Windows 10 22H2, comments and READMEs | **Windows** |
-| 2 | Windows app on screen (Decisions 2 to 4), Windows fixes, Q-1 text | Windows |
+| 2 | Windows app on screen (Decisions 2 to 4), Windows fixes | Windows |
 | 3 | `package-windows.ps1 -Target All` → both installers 0.9.0; report §Windows | Windows |
 | — | **H1**: push; Michael copies the installers to the Windows 10 PC | |
 | 4 | Pre-check on the Windows 10 PC (Michael, DEV's check list) | **Windows 10 PC** |
@@ -237,8 +237,9 @@ All steps on `feature/US-009-windows-parent-app-parity`. Commit after each step 
 
 1. Drag-and-drop check first (Decision 4); stop and report if the rule says so.
 2. Check list of Decision 2; fixes per Decision 3. Unit tests for any Core change.
-3. Q-1: `GroupsExplanationWindows` de/en and `OnPlatform` in `AppGroupsView.xaml` (if Michael accepts Q-1).
-4. Screenshots in `US-009/evidence/`; list of fixes, each marked "Windows-only" or "shared (Mac check in Step 5)".
+3. Q-1 (resolved): no Windows text; the App Groups explanation keeps "trackpad" on both platforms. Nothing to implement.
+4. Q-3: keep the native WinUI menu selection; use the Mac template on Windows only if check item 2 shows more than one entry highlighted (Windows-only fix). Q-4: keep the 0.6.2 Windows button style.
+5. Screenshots in `US-009/evidence/`; list of fixes, each marked "Windows-only" or "shared (Mac check in Step 5)".
 
 **Michael sees**: the Windows app (Debug window) with "App Gruppen" in the menu, outlined headings in his Windows accent colour, groups dragged with the mouse, group rules and group lines on Reports.
 
@@ -269,7 +270,7 @@ The pairing of step 4 is removed again in step 6, so it leaves no orphan device 
 1. `git pull`; `build.ps1` and `test.ps1` (Shared, ParentApp): 0 warnings, green.
 2. For each change marked "shared" in Step 2: Mac probe and `screencapture` as in US-008 §8.3, compared with the US-008 evidence; Mac must look and behave as 0.8.0 (AC-35). No shared change → nothing to check.
 3. `pwsh 02_Implementation/scripts/package-macos.ps1` → `03_Delivery/macos/EagleEye-ParentApp-0.9.0.dmg`; SHA-256 in the report. DEV does **not** install it over Michael's 0.8.0 (AC-32 starting point, US-008 D-17).
-4. Report §Mac, "How to test" for TES (artifacts, starting points, install order, UI texts as implemented incl. the Windows explanation text); story → `Implemented` if Step 6 is not needed. Commit, push (**H4**).
+4. Report §Mac, "How to test" for TES (artifacts, starting points, install order, UI texts as implemented); story → `Implemented` if Step 6 is not needed. Commit, push (**H4**).
 
 **Michael sees**: the `.dmg` 0.9.0 on the MacBook; everything ready for TES.
 
@@ -295,7 +296,7 @@ The pairing of step 4 is removed again in step 6, so it leaves no orphan device 
 | AC-10 menu | 2 | `MainViewModel` (existing) | W11, W10 |
 | AC-11 outlined headings, accent | 2 | `HeadingBarPalette` (existing) | W11, W10 |
 | AC-12 light/dark, 150 % | 2 | — | W11 |
-| AC-13 App Groups content | 2 | existing; new key de/en (Q-1) | W11 |
+| AC-13 App Groups content | 2 | existing (no new key, Q-1) | W11 |
 | AC-14 icon buttons | 2 | — | W11 |
 | AC-15 dialogs | 2 | existing dialog-loop tests | W11 |
 | AC-16 drag-and-drop | 2 | existing | W11, W10 |
@@ -305,7 +306,7 @@ The pairing of step 4 is removed again in step 6, so it leaves no orphan device 
 | AC-22, AC-23 Reports | 2 | existing | W11 |
 | AC-24 to AC-26 two parent apps | — | existing (revision rule) | W10/W11 + Mac |
 | AC-27 group rule from Windows takes effect | — | existing (service) | W11, SVC |
-| AC-28 texts de/en | 2 | `AppTexts` key tests (+ Q-1 key) | W11, W10 |
+| AC-28 texts de/en | 2 | `AppTexts` key tests (existing) | W11, W10 |
 | AC-29 kid texts | — | existing | SVC |
 | AC-30 versions | 1, 3, 5 | — | all |
 | AC-31 service update | 3 | — | SVC |
@@ -324,18 +325,16 @@ The pairing of step 4 is removed again in step 6, so it leaves no orphan device 
 
 - All existing tests stay green on both machines: Windows 3 002 (baseline at US-008 Step 11) or more; Mac Shared + ParentApp.
 - **0 compiler warnings** in `build.ps1` and `test.ps1` (F-2).
-- New or changed Core code from Step 2: 100 % line and branch coverage (dev-process §9). New resx keys: covered by the existing `AppTexts` de/en key test pattern.
+- New or changed Core code from Step 2: 100 % line and branch coverage (dev-process §9). New resx keys (none planned): covered by the existing `AppTexts` de/en key test pattern.
 - Not unit-tested (manual): MAUI views, styles, handler mappings, `MauiDialogService`, `Platforms/Windows/*`, installers.
 
 ---
 
 ## Localization Impact
 
-| Key | German | English | AC |
-|---|---|---|---|
-| `GroupsExplanationWindows` (new, Q-1) | as `GroupsExplanation`, last sentence: „Apps verschiebst du mit der Maus oder dem Touchpad, mit ≡ oder mit einem Rechtsklick." | as `GroupsExplanation`, last sentence: "Move apps by dragging them with the mouse or touchpad, with ≡ or with a right click." | AC-13, AC-28 |
+No new or changed texts (Q-1: the App Groups explanation keeps "mouse or trackpad" / „Maus oder Trackpad“ on Windows too).
 
-All other texts are those of the Mac app 0.8.0 (US-008 implementation report §9), unchanged. Installer texts: Inno Setup's built-in German/English messages for the version refusal (AC-4, AC-5).
+All texts are those of the Mac app 0.8.0 (US-008 implementation report §9), unchanged. Installer texts: Inno Setup's built-in German/English messages for the version refusal (AC-4, AC-5).
 
 ---
 
@@ -371,18 +370,18 @@ No change. Service log entries for group changes made in the Windows app are the
 |---|---|---|
 | D-1 | AC-4 "shows a message that this Windows version is not supported" | Inno Setup's built-in `MinVersion` / architecture message (German or English). No own text (less code). |
 | D-2 | Windows 11 on ARM | Not blocked by the installer (`x64compatible`), not supported, not tested. |
-| D-3 | AC-13 "touchpad" | Q-1. |
+| D-3 | AC-13 "touchpad" | Q-1 resolved: "trackpad" stays on both platforms (Michael, 2026-10-31). TES records no wording issue. |
 
 ---
 
-## Open Questions for Michael
+## Open Questions for Michael (all resolved 2026-10-31)
 
-| ID | Question | Recommendation |
-|---|---|---|
-| **Q-1** | **"Trackpad" in the App Groups explanation on Windows** (AC-13). The Mac text says "mouse or trackpad". The story allows "touchpad" on Windows. Same text on both (no code), or a Windows wording (one new text pair, one `OnPlatform` line)? | **Windows wording** with "touchpad"; the Mac text stays as in 0.8.0. Small and matches AC-13's intent. If you prefer zero code, both keep "trackpad" and TES records a wording note. |
-| **Q-2** | **Pre-check on the Windows 10 PC before TES** (Step 4: install, connect, pair, short tour, remove pairing, uninstall; about 15 minutes). | **Yes.** It is the only Windows 10 check before the test run; finding a Windows 10 blocker in the test run would cost a whole loop. It leaves the PC clean for AC-2 and no orphan device. |
-| **Q-3** | **Menu selection look on Windows** (AC-10). The Mac uses its own template (accent fill, US-007 fix for Catalyst). WinUI has a native selection highlight that already marks only one entry. | **Keep the native WinUI selection** (less code). Use the Mac template on Windows too only if Step 2 shows more than one entry highlighted. |
-| **Q-4** | **Button look on Windows.** The Mac buttons use the accent colour (Mac-only style). Windows buttons keep their current style (app primary colour). AC-11 only requires buttons to be clearly distinct from the outlined headings. | **Keep the Windows button style** as in 0.6.2 (less code, no Mac change). |
+| ID | Question | Recommendation | Answer |
+|---|---|---|---|
+| Q-1 | "Trackpad" in the App Groups explanation on Windows (AC-13). The Mac text says "mouse or trackpad". The story allows "touchpad" on Windows. Same text on both (no code), or a Windows wording (one new text pair, one `OnPlatform` line)? | **Windows wording** with "touchpad"; the Mac text stays as in 0.8.0. Small and matches AC-13's intent. If you prefer zero code, both keep "trackpad" and TES records a wording note. | **Resolved** (Michael, 2026-10-31): keep "trackpad" on both platforms. No new text pair, no code; TES records no wording issue. |
+| Q-2 | Pre-check on the Windows 10 PC before TES (Step 4: install, connect, pair, short tour, remove pairing, uninstall; about 15 minutes). | **Yes.** It is the only Windows 10 check before the test run; finding a Windows 10 blocker in the test run would cost a whole loop. It leaves the PC clean for AC-2 and no orphan device. | **Resolved** (Michael, 2026-10-31): yes, Michael does the Windows 10 pre-check (Step 4) before TES. |
+| Q-3 | Menu selection look on Windows (AC-10). The Mac uses its own template (accent fill, US-007 fix for Catalyst). WinUI has a native selection highlight that already marks only one entry. | **Keep the native WinUI selection** (less code). Use the Mac template on Windows too only if Step 2 shows more than one entry highlighted. | **Resolved** (Michael, 2026-10-31): as proposed: native Windows menu highlight; the Mac template only if Step 2 shows a problem. |
+| Q-4 | Button look on Windows. The Mac buttons use the accent colour (Mac-only style). Windows buttons keep their current style (app primary colour). AC-11 only requires buttons to be clearly distinct from the outlined headings. | **Keep the Windows button style** as in 0.6.2 (less code, no Mac change). | **Resolved** (Michael, 2026-10-31): yes, keep the 0.6.2 Windows button style. |
 
 ---
 

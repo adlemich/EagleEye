@@ -1,12 +1,12 @@
 # ADR-019: Parent App Platforms — Windows and macOS Only, Unsigned Mac Distribution
 
-**Status**: Accepted (Michael, 2026-10-20; records CR-001)
+**Status**: Accepted (Michael, 2026-10-20; records CR-001; Windows row amended by US-009, accepted 2026-10-31)
 **Date**: 2026-10-20
 **Deciders**: Michael (project owner), ARC
 
 > **Amendment (US-007, ADR-020) — approved by Michael with the US-007 implementation plan, 2026-10-20**: §4 "macOS uses `MauiSecureStorageSecretStore` (Keychain)" is replaced by `MacKeychainSecretStore` (Security framework, login keychain preferred), because MAUI `SecureStorage` needs a `keychain-access-groups` entitlement that an ad-hoc-signed build cannot carry. ADR-020 also turns the App Sandbox off and sets the managed HTTP handler for the Mac.
 
-> **Proposed amendment — US-009 (2026-10-31, ARC; awaiting Michael's approval with the US-009 implementation plan)**: §1, platform table: the Windows row reads **"Windows 10 22H2 (build 19045+) or Windows 11, x64"** instead of "Windows 11" (requirements v1.9 §9.5, ADR-009 amendment). On Windows 10 the parent app is always a remote parent app, because the service and tray client stay Windows 11 only (§9.1).
+> **Amendment 2026-10-31 (US-009) — accepted, approved by Michael together with the US-009 implementation plan (2026-10-31)**: §1, platform table: the Windows row reads **"Windows 10 22H2 (build 19045+) or Windows 11, x64"** instead of "Windows 11" (requirements v1.9 §9.5, ADR-009 amendment). On Windows 10 the parent app is always a remote parent app, because the service and tray client stay Windows 11 only (§9.1).
 
 > **Numbering note**: ADR-017 and ADR-018 were drafted on the aborted branch `feature/US-007-ios-parent-app`, which was deleted unmerged. They never reached `main`. Like FR-APP-100 to FR-APP-102 (CR-001 §3), the two numbers stay unused to avoid confusion with those drafts.
 

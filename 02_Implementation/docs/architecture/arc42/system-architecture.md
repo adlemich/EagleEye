@@ -1,6 +1,6 @@
 # EagleEye — System Architecture
 
-*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); US-004 amendment proposed with the US-004 plan; US-005 amendment approved with the US-005 plan (2026-10-10); US-006 amendment approved with the US-006 plan (2026-10-12); CR-001 amendment approved (2026-10-20); US-007 amendment approved with the US-007 plan (2026-10-20; Revision 1 after first light approved 2026-10-20); US-008 amendment approved with the US-008 plan (2026-10-31)*
+*Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); US-004 amendment proposed with the US-004 plan; US-005 amendment approved with the US-005 plan (2026-10-10); US-006 amendment approved with the US-006 plan (2026-10-12); CR-001 amendment approved (2026-10-20); US-007 amendment approved with the US-007 plan (2026-10-20; Revision 1 after first light approved 2026-10-20); US-008 amendment approved with the US-008 plan (2026-10-31); US-009 amendment approved with the US-009 plan (2026-10-31)*
 *Maintainer: ARC Agent | Last Updated: 2026-10-31*
 
 > **Amendment 2026-10-03 (ADR-007)**: Windows desktop target added to the ParentApp; two-machine development; manual acceptance testing. Affected: §1.1, §2.1, §2.2, §3.2, §4.2, §5.5, §7, §8.10, §9. Amendments approved by Michael on 2026-10-03.
@@ -22,6 +22,8 @@
 > **Amendment 2026-10-20 (US-007, ADR-020) — approved by Michael together with the US-007 implementation plan (2026-10-20)**: macOS platform layer under ad-hoc signing: no App Sandbox, data in `~/Library/Application Support/EagleEye/`, own Keychain secret store (`MacKeychainSecretStore`, login keychain preferred, decided by a spike), managed HTTP handler on the Mac (`UseNativeHttpHandler=false`), UI language from the first preferred macOS language (English → en, otherwise de), formats from UI language + macOS region, heading bars in the macOS accent colour, `.dmg` with removal script and instructions. Affected: §5.5, §7, §7.1.1, §7.4, §8.1, §8.13, §9, §11 (R-3). *Revision 1 (after first light, approved by Michael 2026-10-20)*: legacy `SecKeychain…` API on the login keychain, deprecation risk in R-3, ADR table note.
 >
 > **Amendment 2026-10-31 (US-008, ADR-021) — approved by Michael together with the US-008 implementation plan (2026-10-31)**: **app groups**, defined once per service PC (members keyed by program path, one group per app), with one rule per group and account (state areas `AppGroups` and `AppGroupRules:{sid}`, owned by the new `AppGroupService` in `Service/Groups`). The tracker records **activity spans**; a group's used time is the union of its current members' spans. The time-limit engine and the start gate evaluate **limit subjects** (group or app). Reports show group lines per day. The tray client is unchanged (kid messages name the group). Mac app: App Groups page (drag-and-drop, "Move to …"), App group rules on Rules, group lines on Reports; the Windows parent app only compiles the shared code until US-009. No mixed versions are supported. ADR-010, ADR-012 and ADR-015 amended. Affected: §5.2, §5.5, §8.4, §8.6, §9, §11 (R-17, R-18).
+>
+> **Amendment 2026-10-31 (US-009) — approved by Michael together with the US-009 implementation plan (2026-10-31)**: the **Windows parent app** runs on **Windows 10 22H2 (build 19045) or newer, and Windows 11, x64** (requirements v1.9 §9.5, FR-APP-092); the parent app installer enforces it (`MinVersion=10.0.19045`). On Windows 10 it is always a remote parent app: the service and the tray client stay Windows 11 only (§9.1). No Windows-10-specific code. The Windows parent app reaches parity with the Mac app 0.8.0 (app groups); all four assets are 0.9.0. ADR-007 (third, test-only Windows 10 PC), ADR-009 and ADR-019 amended. Affected: §7, §7.4.
 
 ---
 
@@ -780,8 +782,8 @@ tray_exe --> ep_tray : loopback
 svc_exe --> agent_exe : starts; anonymous\nstdin/stdout pipes
 
 node "Parent Device" as parentdev {
-  node "Windows 11 (per-user install)" {
-    artifact "EagleEye.ParentApp.exe\n(WinUI, unpackaged, self-contained)\n%LocalAppData%\\Programs\\EagleEye Parent App\\\nsame PC as service or remote"
+  node "Windows 10 22H2+ / Windows 11, x64 (per-user install)" {
+    artifact "EagleEye.ParentApp.exe\n(WinUI, unpackaged, self-contained)\n%LocalAppData%\\Programs\\EagleEye Parent App\\\nsame PC as service or remote;\non Windows 10 always remote"
     database "%LocalAppData%\\EagleEye\\\nEagleEye.ParentApp.db" as win_db
   }
   node "macOS 26+" {
@@ -847,7 +849,7 @@ Each parent app instance stores its YAML config and SQLite database in the OS-st
 
 | Platform | Distribution | Package |
 |----------|-------------|---------|
-| Windows 11 | Own Inno Setup installer, **per user**, no admin rights (ADR-009, FR-APP-092). Unpackaged, self-contained (`win-x64`, .NET runtime and Windows App SDK included, no MSIX). Installs to `%LocalAppData%\Programs\EagleEye Parent App\`; repair/update keeps the app data; uninstall removes program folder, Start menu entry and `%LocalAppData%\EagleEye\`. Independent of the service installer (own `AppId`). Runs on the service PC or remotely. | `03_Delivery/windows/EagleEye-ParentApp-Setup-<version>.exe` |
+| Windows 10 22H2 (19045+) / Windows 11, x64 | Own Inno Setup installer, **per user**, no admin rights (ADR-009, FR-APP-092). Minimum OS enforced by the installer (`MinVersion=10.0.19045`, `ArchitecturesAllowed=x64compatible`); older or 32-bit Windows get Inno Setup's built-in refusal message *(US-009)*. Unpackaged, self-contained (`win-x64`, .NET runtime and Windows App SDK included, no MSIX). Installs to `%LocalAppData%\Programs\EagleEye Parent App\`; repair/update keeps the app data; uninstall removes program folder, Start menu entry and `%LocalAppData%\EagleEye\`. Independent of the service installer (own `AppId`). Runs on the service PC or remotely; on Windows 10 only remotely, because the service needs Windows 11 (§9.1). | `03_Delivery/windows/EagleEye-ParentApp-Setup-<version>.exe` |
 | macOS 26+ | Direct `.dmg`, built on the MacBook by `scripts/package-macos.ps1` (FR-APP-112). No Mac App Store. The `.app` is ad-hoc signed only: no Developer-ID signature, no notarisation (Q-7, ADR-019). The first start needs a one-time allow in *System Settings → Privacy & Security → Open Anyway*. *(US-007)* Install by dragging to *Applications*; update by dragging again ("Replace"; macOS may ask once per new build for Keychain access, OQ-3); no uninstaller: a removal script in the `.dmg` deletes the app's data, preferences, caches and Keychain item. | `03_Delivery/macos/EagleEye-ParentApp-<version>.dmg` with `EagleEye Parent App.app`, an *Applications* link, `Remove EagleEye Parent App.command` and `Anleitung - Instructions.txt` (US-007 AC-2) |
 
 ---
