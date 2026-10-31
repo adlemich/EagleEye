@@ -4,7 +4,7 @@
 **Created**: 2026-10-31
 **Approved**: by Michael, 2026-10-31, with OQ-1 to OQ-5 answered as proposed
 **Component(s)**: EagleEye.Service, EagleEye.TrayClient, EagleEye.Shared, EagleEye.ParentApp
-**Platform(s)**: Windows (service and tray client) · ParentApp macOS. The Windows parent app gets the group UI in US-009; in this story it only has to stay safe (group K).
+**Platform(s)**: Windows (service and tray client) · ParentApp macOS. The Windows parent app gets the group UI in US-009; it is not used against this story's service (Out of Scope).
 
 ---
 
@@ -66,11 +66,11 @@ References: FR-SVC-011, FR-SVC-012, FR-SVC-020, FR-SVC-022, FR-SVC-025, FR-SVC-0
 
 > **Language of UI texts** (NFR-L-010 to NFR-L-012): all UI texts are **English examples**; the German wording is in brackets. The Mac app and the tray client show every text of their own in German or English, following the language of the Mac (US-007 AC-12) or the kid's Windows display language.
 
-> **Test setup**: the service PC at `192.168.1.37` (Windows 11, EagleEye service and tray client of this story's build, installed over 0.7.0) with the parent's admin account, the standard accounts `kid1` and `kid2` (under parental control) and `kid3` (not under parental control). The Mac app of this story's build on Michael's MacBook, paired with the service. For group K only: the Windows parent app 0.7.0 on a Windows 11 PC, paired with the same service. `kid1` and `kid2` have used Notepad ("Editor"), Paint and Calculator ("Rechner") before, so that they have app records. Short budgets and warning levels (e.g. early 3, final 1) keep the tests short, as in US-006. The service and tray client are built and installed on the **Windows Developer Machine**; the Mac app is built and installed from its `.dmg` on the **MacBook**. Michael runs all tests.
+> **Test setup**: the service PC at `192.168.1.37` (Windows 11, EagleEye service and tray client of this story's build, installed over 0.7.0) with the parent's admin account, the standard accounts `kid1` and `kid2` (under parental control) and `kid3` (not under parental control). The Mac app of this story's build on Michael's MacBook, paired with the service. `kid1` and `kid2` have used Notepad ("Editor"), Paint and Calculator ("Rechner") before, so that they have app records. Short budgets and warning levels (e.g. early 3, final 1) keep the tests short, as in US-006. The service and tray client are built and installed on the **Windows Developer Machine**; the Mac app is built and installed from its `.dmg` on the **MacBook**. Michael runs all tests.
 
 > **Service log**: entries are checked in the admin-only log folder `%ProgramData%\EagleEye\logs\` on the service PC (US-003 AC-14).
 
-> **Precondition**: the open Windows regression of 0.7.0 (US-007 test report F-1) is done before any Windows build of this story is installed on the service PC.
+> **Windows build**: the Windows parent app shares code with the Mac app (ParentApp Core, Shared). In this story it only has to **compile and pass its unit tests**; all Windows build and test projects stay green. It does not have to work against this story's service.
 
 ### A. App Groups page
 
@@ -122,7 +122,7 @@ References: FR-SVC-011, FR-SVC-012, FR-SVC-020, FR-SVC-022, FR-SVC-025, FR-SVC-0
   Tolerance as in US-004 AC-24: ± 1 minute on Reports.
 - [ ] **AC-20**: The group used time follows the US-004 rules: it does not count while the session is locked, switched away or asleep; it resets at local midnight (TC-024), and time across midnight is split between the days (US-004 AC-14); it is kept across service restarts (NFR-R-013).
 - [ ] **AC-21**: Group used time is counted per account. Use by `kid1` never counts for `kid2`'s group time. Apps of `kid3` and of admin accounts never count.
-- [ ] **AC-22**: The group used time is always computed with the **current** members of the group (Michael, answer 8; OQ-3). Moving an app into a group adds that app's active time of the day, also from before the move, without counting overlaps twice. Moving it out removes it. Example: Paint ran 50 minutes today, then the parent puts Paint into "Test" (1:00, nothing else used today) → "Test" has 10 minutes left.
+- [ ] **AC-22**: The group used time is always computed with the **current** members of the group (Michael, answer 8; OQ-3). Moving an app into a group adds that app's active time of the day, also from before the move, without counting overlaps twice. Moving it out removes it. Example: Paint ran 50 minutes today, then the parent puts Paint into "Test" (1:00, nothing else used today) → "Test" has 10 minutes left. A move that shortens the time of running member apps is a rule change and follows AC-32 (grace period).
 - [ ] **AC-23**: The used time of each app (its US-004 usage, shown per app on Reports) is counted as before, whether the app is grouped or not.
 
 ### F. Enforcement of group rules
@@ -141,13 +141,14 @@ References: FR-SVC-011, FR-SVC-012, FR-SVC-020, FR-SVC-022, FR-SVC-025, FR-SVC-0
 - [ ] **AC-32**: These changes take effect for running apps within 5 seconds after the Mac app shows the confirmed change:
   - a group rule is changed (budget, today's tick);
   - a running app is moved into a group, out of a group, or to another group;
+  - an app that is **not running** is moved into a group whose member apps are running, so that its earlier time today (AC-22) shortens their time (plan Q-1);
   - a group with running apps is deleted (its apps fall back to their own rules).
 
   The grace rule of US-006 AC-32 applies (Michael, answer 9): if the change ends the allowed time of a running app, or leaves it less than the final-warning minutes, the app gets a grace period of the full final-warning minutes. The kid dialog shows the final warning at once, **once per change** (not once per app), with a line such as "Games: your parents changed the rules. Games closes in 1 minute." ("Games: Deine Eltern haben die Regeln geändert. Games wird in 1 Minute beendet."), naming the group, or the app when the app now uses its own rule. When the grace period ends, the affected apps are closed with the budget text. Examples with final 1:
   - Paint is running with its own rule and enough time; the parent moves it into "Test", which is exhausted → final warning at once, Paint closed about 1 minute later;
   - "Test" is deleted while Paint runs; Paint's own rule is 0:00 → final warning at once, Paint closed about 1 minute later.
 - [ ] **AC-33**: If the change leaves at least the final-warning minutes but no more than the early level, the early warning is shown at once (if not yet shown today for that group or app), as in US-006 AC-32. A change that gives more time lets the kid start the apps again; it does not bring back warnings already shown. If no member app is running, the change applies to the next start, without a grace period.
-- [ ] **AC-34**: Renaming a group, and moving an app that is not running, never starts a grace period and never shows a kid dialog.
+- [ ] **AC-34**: Renaming a group never starts a grace period and never shows a kid dialog. Moving an app that is not running never starts a grace period **for that app**; it starts one only for running member apps whose time it shortens (AC-32, plan Q-1). Example with final 1: Paint is running in "Test" (1:00, 30 minutes used); Notepad, not running, used 40 minutes today alone; the parent moves Notepad into "Test" → "Test" is exhausted, the final warning is shown at once and Paint is closed about 1 minute later. A move that leaves running member apps more than the early-warning minutes shows no kid dialog.
 
 ### H. Reports
 
@@ -167,9 +168,9 @@ References: FR-SVC-011, FR-SVC-012, FR-SVC-020, FR-SVC-022, FR-SVC-025, FR-SVC-0
 - [ ] **AC-42**: The service and tray client are delivered by the Windows installer of the new version **0.8.0**, installed over 0.7.0 as earlier updates, keeping all configuration, usage and pairings. The Mac app is delivered as `03_Delivery/macos/EagleEye-ParentApp-0.8.0.dmg` and can be installed over 0.7.0 as in US-007, keeping the pairing and the appearance (US-007 test report F-3).
 - [ ] **AC-43**: All other parent-app behaviour of the Mac app 0.7.0 (US-007 AC-1) is unchanged. Spot check: one break time change, one app rule change, Reports of today for `kid1`.
 
-### K. Windows parent app until US-009 (OQ-2)
+### K. (removed)
 
-- [ ] **AC-44**: The Windows parent app 0.7.0, connected to the service 0.8.0, keeps working without error messages: it connects, keeps its pairing, and shows and edits Settings, break times, app rules and Reports as before. It shows no groups. On its Rules page it may still list grouped apps with their own rules; changing such an own rule is stored and confirmed, but has **no effect** on enforcement while the app is in a group (AC-24), and is used again when the app leaves the group (AC-17). Its Reports show the per-app usage only.
+- **AC-44**: *Removed (Michael, 2026-10-31): no mixed versions; see Out of Scope.*
 
 ---
 
@@ -329,9 +330,9 @@ Launcher alone 2 minutes, then both 10 minutes: the group counts 12 minutes, eac
 
 ## Out of Scope
 
-- **Windows parent app features**: App Groups page, App group rules and group lines on Reports in the Windows parent app, and **Windows 10 support** for the Windows parent app. Both are **US-009**, written after this story is closed. Until then, group K applies.
+- **Windows parent app features**: App Groups page, App group rules and group lines on Reports in the Windows parent app, and **Windows 10 support** for the Windows parent app. Both are **US-009**, written after this story is closed. US-009 delivers **all four assets** (service, tray client, Mac app, Windows parent app) as **0.9.0**, which Michael distributes to all machines together.
 - **Two parent apps showing groups at the same time** (US-006 AC-17 for groups). There is only one Mac in the test setup and the Windows app has no group UI yet. The service broadcasts every group change as for other configuration (ADR-010); the sync test between two apps with group UI is part of US-009.
-- A Mac app 0.8.0 connected to a service older than 0.8.0. The service PC is updated first.
+- **Mixed versions** (Michael, 2026-10-31: "No need to cater for any version-mixing."). Michael updates the service, the tray client and the Mac app of this story together. No compatibility between old and new versions is built or tested: not the Windows parent app 0.7.x with the 0.8 service, not the Mac app 0.8 with an older service. The Windows parent app is not used against this story's service; it gets groups in US-009.
 - Groups per account (Michael, answer 3: per service PC). An app in several groups at once. Nested groups.
 - Different budgets per weekday for groups (as for apps).
 - A total daily screen-time budget across all apps, unless the parent builds it as one group.
@@ -349,11 +350,11 @@ All five questions are **resolved**. Michael: "All 5 question proposals are ok w
 
 | ID | Question | Recommendation | Answer |
 |---|---|---|---|
-| OQ-1 | **Where does "App Groups" go in the menu?** | "Settings", "App Groups", "Rules", "Reports": groups are set up before their rules (AC-1). || Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted (AC-1 unchanged). |
-| OQ-2 | **Windows parent app 0.7.x between US-008 and US-009.** The service enforces groups, but the Windows app cannot show them. Options: (A) do not use the Windows app 0.7.x with the 0.8 service at all; (B) the 0.8 service stays compatible with 0.7.x, which keeps working but ignores groups, and edits of grouped apps' own rules have no effect while they are grouped (AC-44); (C) a minimal Windows app update in US-008 that hides grouped apps. | **B, plus a usage note**: give the pilot no Windows parent app until US-009 (the pilot's Windows 10 PC cannot install it anyway), and Michael uses the Windows app only for the regression in AC-44. B keeps US-008 Mac-only for the UI; C would bring Windows UI work into this story. If ARC finds that B cannot be done without changing the Windows app, ARC raises it in the plan. || Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted (AC-44 unchanged). |
-| OQ-3 | **Group lines for past days on Reports.** Computed with the **current** members (simple, consistent with today's budget, AC-22) or with the members **on that day** (needs a history of memberships). | **Current members** (AC-36). Moving an app changes the group lines of past days; per-app lines never change. || Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted (AC-22, AC-36 unchanged). |
-| OQ-4 | **Members shown on the Rules page.** All apps of the group, or only those the selected kid has used? | **All members** of the group (one group definition for the PC), comma-separated under the group name (AC-15). || Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted (AC-15 unchanged). |
-| OQ-5 | **Limits.** | No fixed limit on groups or apps per group. Performance is checked with **20 groups and 100 apps** (AC-41). Group sections sorted alphabetically (AC-2). || Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted (AC-2, AC-41 unchanged). |
+| OQ-1 | **Where does "App Groups" go in the menu?** | "Settings", "App Groups", "Rules", "Reports": groups are set up before their rules (AC-1). | Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted (AC-1 unchanged). |
+| OQ-2 | **Windows parent app 0.7.x between US-008 and US-009.** The service enforces groups, but the Windows app cannot show them. Options: (A) do not use the Windows app 0.7.x with the 0.8 service at all; (B) the 0.8 service stays compatible with 0.7.x, which keeps working but ignores groups, and edits of grouped apps' own rules have no effect while they are grouped (AC-44); (C) a minimal Windows app update in US-008 that hides grouped apps. | **B, plus a usage note**: give the pilot no Windows parent app until US-009 (the pilot's Windows 10 PC cannot install it anyway), and Michael uses the Windows app only for the regression in AC-44. B keeps US-008 Mac-only for the UI; C would bring Windows UI work into this story. If ARC finds that B cannot be done without changing the Windows app, ARC raises it in the plan. | Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted. **Superseded** later the same day by Michael's scope change "no mixed versions": AC-44 removed, the Windows parent app is not used against this story's service (Out of Scope, Change Log). |
+| OQ-3 | **Group lines for past days on Reports.** Computed with the **current** members (simple, consistent with today's budget, AC-22) or with the members **on that day** (needs a history of memberships). | **Current members** (AC-36). Moving an app changes the group lines of past days; per-app lines never change. | Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted (AC-22, AC-36 unchanged). |
+| OQ-4 | **Members shown on the Rules page.** All apps of the group, or only those the selected kid has used? | **All members** of the group (one group definition for the PC), comma-separated under the group name (AC-15). | Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted (AC-15 unchanged). |
+| OQ-5 | **Limits.** | No fixed limit on groups or apps per group. Performance is checked with **20 groups and 100 apps** (AC-41). Group sections sorted alphabetically (AC-2). | Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted (AC-2, AC-41 unchanged). |
 
 ---
 
@@ -361,7 +362,8 @@ All five questions are **resolved**. Michael: "All 5 question proposals are ok w
 
 - Prerequisite stories: US-004 (app records, usage, Reports), US-005 (Rules page, break times, kid dialog), US-006 (app rules, warnings, grace period), US-007 (Mac app 0.7.0)
 - Follow-up story: **US-009** — Windows 10 support for the Windows parent app, and the Windows parent app on par with the Mac app (App Groups page, App group rules, Reports group lines). Written after this story is closed (Michael, 2026-10-31).
-- Dependency: Windows regression of 0.7.0 (`02_Implementation/docs/testing/US-007/test-report.md` §6, F-1) before any Windows build of this story.
+- Windows build: the Windows parent app only has to compile and pass its unit tests (shared Core and Shared code), see the note above the ACs. The Windows regression of 0.7.0 (`02_Implementation/docs/testing/US-007/test-report.md` §6, F-1) is no longer a precondition of this story (Michael, 2026-10-31).
+- Versions: this story delivers service, tray client and Mac app as **0.8.0**; US-009 delivers all four assets as **0.9.0**, distributed together.
 - Also due with this story: US-007 F-2 (Step 9 documentation, with step c) and F-3 (Mac update over an installed version, repeated by AC-42).
 - General product requirements: v1.8 amendment (groups), see the amendment section; the Windows 10 part follows with US-009.
 - Architecture: ADR-006 (graceful-then-force termination), ADR-010 (event-driven state propagation), ADR-011 (session agent), ADR-020 (Mac app)
@@ -377,3 +379,4 @@ All five questions are **resolved**. Michael: "All 5 question proposals are ok w
 | 2026-10-31 | Story split decided: US-008 = app groups in the service and the Mac app; US-009 = Windows 10 support plus Windows parent app parity | Michael (via the Orchestrator) |
 | 2026-10-31 | Story created (status `New`), v1.8 amendment (groups) written; OQ-1 to OQ-5 open | PRO |
 | 2026-10-31 | Story approved; OQ-1 to OQ-5 answered as proposed, ACs unchanged; v1.8 amendment (groups) in effect. Status stays `New` until the implementation plan is approved | Michael (via the Orchestrator), recorded by PRO |
+| 2026-10-31 | Scope change "keep it simple": no mixed versions (AC-44 and group K removed, test setup without the Windows app, OQ-2 superseded, Out of Scope line added); precondition "Windows regression of 0.7.0" replaced by "Windows build and unit tests stay green"; US-009 delivers all four assets as 0.9.0. Plan Q-1 accepted: moving a not-running app into a group that shortens the time of running member apps is a rule change with grace period (AC-22, AC-32, AC-34 reworded) | Michael (via the Orchestrator), recorded by PRO |
