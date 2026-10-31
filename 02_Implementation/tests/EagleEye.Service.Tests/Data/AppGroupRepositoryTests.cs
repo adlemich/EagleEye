@@ -173,7 +173,7 @@ public sealed class AppGroupRepositoryTests : IAsyncLifetime
             var groups = await new AppGroupRepository(database).LoadAllAsync();
             Assert.Equal((0, 0, 0, 1), (groups.Groups.Count, groups.Members.Count, groups.Rules.Count, groups.Catalog.Count));
             Assert.Empty(await new UsageRepository(database).GetSpansAsync(Kid, new DateOnly(2026, 10, 1), new DateOnly(2026, 10, 31)));
-            Assert.Equal(["budget used up", "45", null, null], await HistoryAsync(database));
+            Assert.Equal(new string?[] { "budget used up", "45", null, null }, await HistoryAsync(database));
         }
         finally
         {

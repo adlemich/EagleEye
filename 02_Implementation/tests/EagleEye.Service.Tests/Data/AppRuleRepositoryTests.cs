@@ -157,7 +157,7 @@ public sealed class AppRuleRepositoryTests : IAsyncLifetime
             Assert.All(rules.Apps, a => Assert.Equal((0, BreakTimeDays.None), (a.BudgetMinutes, a.Days)));
             Assert.Null(await new WarningSettingsRepository(database).LoadAsync());
             Assert.Equal(
-                ["blocked start", "break time", "0", "kid1", "app start", "3", "1200", "1439", "31", "Sa", "closed gracefully", "0.4", "shown"],
+                new string?[] { "blocked start", "break time", "0", "kid1", "app start", "3", "1200", "1439", "31", "Sa", "closed gracefully", "0.4", "shown" },
                 await HistoryRowAsync(database));
         }
         finally
