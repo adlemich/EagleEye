@@ -1,6 +1,6 @@
 # Implementation Report: US-009 — Windows Parent App on Windows 10, and Windows Parent App Parity (0.9.0)
 
-**Status**: Windows part (Steps 1 to 3) done; Michael's hands-on part of the Step 2 check and Step 4 (Windows 10 pre-check) pending; Step 5 (MacBook) open
+**Status**: Windows part (Steps 1 to 3) done, incl. Michael's hands-on part of the Step 2 check (all pass, 2026-10-31); Step 4 (Windows 10 pre-check) pending; Step 5 (MacBook) open
 **Author**: DEV
 **Branch**: `feature/US-009-windows-parent-app-parity`
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-009/implementation-plan.md` (approved 2026-10-31)
@@ -20,7 +20,7 @@
 | # | Plan | Done instead | Why |
 |---|---|---|---|
 | DV-1 | Step 2: DEV pairs the Debug app with the service 0.8.0 (Michael reads out the code) and checks the 11 points live | DEV checked the views with the temporary US-008 probe (sample data, fake models, not committed; source kept as `evidence/step2-ui-probe.cs.txt`), plus a live check of the unpaired start and an unreachable host. The live pairing, the touchpad and the system accent change are on Michael's short list (§8.4). | DEV cannot read the pairing code (it is shown to Michael on this PC) and cannot use a physical touchpad. The probe gives every page in a known state, as in US-008 §8.3. |
-| DV-2 | Drag check "with mouse and touchpad" | Mouse checked with real WinUI pointer input (synthetic `mouse_event` moves: drag start, highlight, drop, 20 drags). Touchpad: Michael (§8.4). | No physical touchpad for DEV. |
+| DV-2 | Drag check "with mouse and touchpad" | Mouse checked with real WinUI pointer input (synthetic `mouse_event` moves: drag start, highlight, drop, 20 drags). Touchpad: Michael (§8.4). Done: Michael, pass. | No physical touchpad for DEV. |
 | DV-3 | DEV handover rule "smoke check: installer installs" | Not on this PC. The install smoke check is Step 4 on the Windows 10 PC. | TI-12: service 0.8.0 and the Windows app starting point must stay untouched. |
 
 ## 3. Files
@@ -46,14 +46,14 @@ No production logic changed, so no new tests. Windows, `pwsh 02_Implementation/s
 | # | Point |
 |---|---|
 | R-1 | **Flaky test (pre-existing, not changed)**: `CloseSequenceRunnerTests.ParallelLimit_FurtherSequencesQueueAndAreDroppedAtStop` failed once (expected 64 inserts, got 65), then passed in every later run. It is a timing race in the test (a queued sequence can insert before `StopAsync` drops it). Unrelated to US-009. Recommend an issue for a later story. |
-| R-2 | **AC-33 starting point**: in the Windows account `Admin` on this PC there is **no** installed Windows parent app (no uninstall entry, no install folder, no data folder). The story expects 0.6.2 "in Michael's admin account". If it is in another Windows account, fine; otherwise TES needs a different starting point for AC-33. DEV did not install or uninstall anything. |
+| R-2 | **AC-33 starting point** (resolved 2026-10-31): the Windows parent app 0.6.2 had been uninstalled earlier by Michael; nothing is installed on this PC. PRO changed AC-33 to a fresh installation on Windows 11; the 0.6.2 → 0.9.0 update path is not tested (`90a1379`). DEV did not install or uninstall anything. |
 | R-3 | Icon buttons (pencil, trash can) show the native WinUI button frame (thin border, no fill). This is the same look as the 0.6.2 break-time trash can on Windows; kept (less code, Q-4 spirit). TES judges AC-14. |
 | R-4 | Rules page at the minimum window size (900 × 600) and 150 %: the table is wider than the window and scrolls sideways (`ScrollView Orientation="Both"`, unchanged since US-005). Not new. |
 
 ## 6. How to Test (preliminary, completed after Step 5)
 
 - **Artifacts** (git-ignored, Windows Developer Machine): `03_Delivery/windows/EagleEye-Setup-0.9.0.exe` (service + tray, Windows 11 only), `03_Delivery/windows/EagleEye-ParentApp-Setup-0.9.0.exe` (Windows 10 22H2 / 11, x64). Mac `.dmg`: Step 5.
-- **Starting points**: untouched by DEV (service and tray 0.8.0 on this PC; see R-2 for the Windows app).
+- **Starting points**: untouched by DEV (service and tray 0.8.0 on this PC; no Windows parent app installed, AC-33 is a fresh installation, R-2).
 - **Known limitations**: drag shows no caption on Windows (by design, §1); Rules page scrolls sideways at the minimum size (R-4).
 - **Logs**: service `%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log`.
 
@@ -80,16 +80,16 @@ Window 1100 × 720 and 900 × 600 (minimum), 150 % scaling, dark and light, acce
 | # | Check item (plan Decision 2) | Result | Evidence |
 |---|---|---|---|
 | 1 | Unpaired start → Settings with host dialog; unreachable host → error naming the host | Pass (live) | `step2-14-live-unreachable-host.png` |
-| 1 | Paired start → Reports; "Forget pairing" when unreachable | Michael (§8.4) / TES | — |
+| 1 | Paired start → Reports; "Forget pairing" when unreachable | Paired start: Pass (Michael, M-1). "Forget pairing": TES | — |
 | 2 | Menu: four entries in order; clicked through all four twice → only one highlighted | Pass; native WinUI highlight kept (Q-3) | `step2-11-…` |
-| 3 | Headings outlined in the accent colour, text normal colour, buttons distinct | Pass (probe accents). Live accent change while running: Michael | `step2-13-…` |
+| 3 | Headings outlined in the accent colour, text normal colour, buttons distinct | Pass (probe accents). Live accent change while running: Pass (Michael, M-4) | `step2-13-…` |
 | 4 | App Groups: explanation ("Trackpad", Q-1), add button, sort, "In keiner Gruppe" last, empty text, tooltip with program path | Pass | `step2-01-…`, `step2-05-…` |
-| 5 | Pencil / trash-can buttons: size, both themes | Pass (native frame, R-3). Their tooltips: Michael | `step2-01-…`, `step2-13-…` |
+| 5 | Pencil / trash-can buttons: size, both themes | Pass (native frame, R-3). Their tooltips: Pass (Michael, M-3) | `step2-01-…`, `step2-13-…` |
 | 6 | Name dialog loop: empty → message, duplicate ("games") → message, emoji ("Musik 🎮") accepted and sorted, Escape, rename pre-filled, delete confirmation with title | Pass. No "single ContentDialog" error, so no `Task.Yield` was needed (TI-6) | `step2-09-…`, `step2-10-…` |
-| 7 | Drag-and-drop (Decision 4) | Pass with the mouse, see §8.3. Touchpad: Michael | `step2-02` to `step2-08` |
+| 7 | Drag-and-drop (Decision 4) | Pass with the mouse (§8.3); touchpad and mouse live: Pass (Michael, M-2) | `step2-02` to `step2-08` |
 | 8 | "≡" and right-click → "Verschieben nach …" with the right targets, choice moves, Escape cancels | Pass | `step2-06-…`, `step2-07-…` |
 | 9 | Rules: "App-Gruppen-Regeln", members line, "(keine Apps)", grouped apps hidden from "Applikations-Regeln", checkbox columns at 150 % | Pass ("Loading … after reconnect": TES) | `step2-12-…` |
-| 10 | Reports: "App-Gruppen" table under a day, none for a day without group lines | Pass (refresh after a live move: Michael) | `step2-13-…` |
+| 10 | Reports: "App-Gruppen" table under a day, none for a day without group lines | Pass (refresh after a live move: Pass, Michael M-5) | `step2-13-…` |
 | 11 | Settings, break times with trash can, app rules, warning texts (spot) | Pass (spot) | `step2-11-…`, `step2-13-…` |
 
 ### 8.3 Drag-and-drop decision rule (Decision 4) — result
@@ -102,7 +102,7 @@ Window 1100 × 720 and 900 × 600 (minimum), 150 % scaling, dark and light, acce
 | Right-click on an entry | Menu opens, no drag starts |
 | WinUI quirk | Caption "Kopieren" next to the pointer → hidden, Windows-only (`step2-02` before, `step2-03` after) |
 
-Rule outcome: **pass with one small Windows-only fix**; no stop needed.
+Rule outcome: **pass with one small Windows-only fix**; no stop needed. Confirmed live by Michael with touchpad and mouse (M-2).
 
 **Fixes from Step 2**
 
@@ -112,16 +112,16 @@ Rule outcome: **pass with one small Windows-only fix**; no stop needed.
 
 ### 8.4 Michael's hands-on part of the Step 2 check (pending)
 
-See the request in the hand-over; the result is recorded here.
+Done by Michael on the Windows Developer Machine, 2026-10-31 (Debug build, own data folder, paired with the service 0.8.0).
 
 | # | Check | Result |
 |---|---|---|
-| M-1 | Pair the Debug app with the service 0.8.0 on this PC; restart → opens on Berichte | |
-| M-2 | Touchpad drag and mouse drag on App Gruppen with live data (into a test group and back) | |
-| M-3 | Tooltips on pencil and trash can | |
-| M-4 | Change the Windows accent colour while the app runs → frames follow (at the latest after re-activating the window) | |
-| M-5 | After a move, Berichte shows the new group lines without "Wird geladen …" | |
-| M-6 | Delete the test group; "Kopplung aufheben"; close the app | |
+| M-1 | Pair the Debug app with the service 0.8.0 on this PC; restart → opens on Berichte | Pass |
+| M-2 | Touchpad drag and mouse drag on App Gruppen with live data (into a test group and back) | Pass with touchpad and mouse. Finding: not intuitive — the drag starts on the app name, the "≡" icon cannot be dragged and a click on it opens "Verschieben nach …". **Michael's decision: keep as is** (option A: no code, Mac and Windows identical); recorded by PRO in the story UI notes (`90a1379`). |
+| M-3 | Tooltips on pencil and trash can | Pass |
+| M-4 | Change the Windows accent colour while the app runs → frames follow (at the latest after re-activating the window) | Pass |
+| M-5 | After a move, Berichte shows the new group lines without "Wird geladen …" | Pass |
+| M-6 | Delete the test group; "Kopplung aufheben"; close the app | Done (test group deleted, pairing removed, app closed) |
 
 ### 8.5 Step 3 — Installers
 
