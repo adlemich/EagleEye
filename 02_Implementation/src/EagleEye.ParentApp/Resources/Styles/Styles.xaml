@@ -92,17 +92,13 @@
         <Setter Property="HorizontalOptions" Value="Start" />
     </Style>
 
-    <!-- US-008: buttons on a heading bar ("Rename", "Delete"): no fill, border and text in the normal text colour (the
-         bar is outlined, not filled, since Michael's finding), so they read in light and dark on every accent colour. "Normal" sets every property that another state changes:
-         Mac Catalyst does not repaint a property that becomes unset (TI-10). -->
-    <Style x:Key="HeadingBarButton" TargetType="Button">
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+    <!-- Icon button (US-005 break-time delete; US-008 group header rename/delete): 32 × 32 with a theme-dependent SVG
+         (trash_*.svg, pencil_*.svg), no fill. Explicit transparent "Normal" (Catalyst repaint rule, TI-10). -->
+    <Style x:Key="IconButton" TargetType="ImageButton">
+        <Setter Property="WidthRequest" Value="32" />
+        <Setter Property="HeightRequest" Value="32" />
+        <Setter Property="Padding" Value="4" />
         <Setter Property="BackgroundColor" Value="Transparent" />
-        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource SecondaryTextLight}, Dark={StaticResource SecondaryTextDark}}" />
-        <Setter Property="BorderWidth" Value="1" />
-        <Setter Property="CornerRadius" Value="4" />
-        <Setter Property="Padding" Value="10,2" />
-        <Setter Property="FontSize" Value="13" />
         <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="VisualStateManager.VisualStateGroups">
             <VisualStateGroupList>

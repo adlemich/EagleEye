@@ -31,10 +31,15 @@
                                 <Border Style="{StaticResource SectionHeaderBar}" Padding="14,2,8,2" MinimumHeightRequest="34">
                                 <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                                     <Label Grid.Column="0" Text="{Binding Title}" Style="{StaticResource SectionHeader}" />
-                                    <Button Grid.Column="1" Text="{x:Static core:AppTexts.GroupsRename}" Style="{StaticResource HeadingBarButton}"
-                                            Command="{Binding RenameCommand}" IsVisible="{Binding IsGroup}" />
-                                    <Button Grid.Column="2" Text="{x:Static core:AppTexts.GroupsDelete}" Style="{StaticResource HeadingBarButton}"
-                                            Command="{Binding DeleteCommand}" IsVisible="{Binding IsGroup}" />
+                                    <!-- Michael's request (D-19): icon buttons, the same style and trash icon as the break-time delete. -->
+                                    <ImageButton Grid.Column="1" Source="{AppThemeBinding Light=pencil_light.png, Dark=pencil_dark.png}"
+                                                 Style="{StaticResource IconButton}" Command="{Binding RenameCommand}" IsVisible="{Binding IsGroup}"
+                                                 SemanticProperties.Description="{x:Static core:AppTexts.GroupsRename}"
+                                                 ToolTipProperties.Text="{x:Static core:AppTexts.GroupsRename}" />
+                                    <ImageButton Grid.Column="2" Source="{AppThemeBinding Light=trash_light.png, Dark=trash_dark.png}"
+                                                 Style="{StaticResource IconButton}" Command="{Binding DeleteCommand}" IsVisible="{Binding IsGroup}"
+                                                 SemanticProperties.Description="{x:Static core:AppTexts.GroupsDelete}"
+                                                 ToolTipProperties.Text="{x:Static core:AppTexts.GroupsDelete}" />
                                 </Grid>
                                 </Border>
 

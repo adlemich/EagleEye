@@ -41,7 +41,7 @@ EagleEye.ParentApp/
 │   │                        US-008: section "App-Gruppen-Regeln" before it (same columns and row view model; the
 │   │                        members, comma-separated, below the group name)
 │   ├── AppGroupsView        US-008 App Groups: explanation, "Add group", one section per group (heading bar with
-│   │                        "Rename"/"Delete" in style HeadingBarButton) and "Not in any group". Drag-and-drop with
+│   │                        pencil and trash icon buttons, style IconButton) and "Not in any group". Drag-and-drop with
 │   │                        MAUI DragGestureRecognizer (entry) / DropGestureRecognizer (entry area of a section,
 │   │                        min. one row high, so empty groups are targets) as chosen by the Step 1 spike; the
 │   │                        dragged app is passed in-app (AppGroupsViewModel.DraggedApp). Highlight: DataTrigger on
@@ -56,7 +56,7 @@ EagleEye.ParentApp/
 ├── Resources/
 │   ├── Styles/              Colors (light/dark via AppThemeBinding) and styles; heading = Border SectionHeaderBar (accent outline,
 │   │                        transparent fill; US-008 D-18) around a SectionHeader label;
-│   │                        US-008: DropHighlightLight/Dark, HeadingBarButton, EntryMenuButton. MacStyles.xaml
+│   │                        US-008: DropHighlightLight/Dark, IconButton, EntryMenuButton. MacStyles.xaml
 │   │                        (Mac only, merged after Styles.xaml): buttons in the accent colour, explicit "Normal"
 │   └── AppIcon/             appicon.svg (MAUI icon), eagleeye.ico (exe and installer icon)
 └── Platforms/

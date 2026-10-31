@@ -58,9 +58,7 @@
                                 <ImageButton Grid.Column="0"
                                              Source="{AppThemeBinding Light=trash_light.png, Dark=trash_dark.png}"
                                              Command="{Binding DeleteCommand}"
-                                             WidthRequest="32" HeightRequest="32" Padding="4"
-                                             BackgroundColor="Transparent"
-                                             VerticalOptions="Center"
+                                             Style="{StaticResource IconButton}"
                                              SemanticProperties.Description="{x:Static core:AppTexts.RulesDeleteEntry}"
                                              ToolTipProperties.Text="{x:Static core:AppTexts.RulesDeleteEntry}" />
                                 <CheckBox Grid.Column="1" IsChecked="{Binding IsActive}" HorizontalOptions="Center" VerticalOptions="Center" />

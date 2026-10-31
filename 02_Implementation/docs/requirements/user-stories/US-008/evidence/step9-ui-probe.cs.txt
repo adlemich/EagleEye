@@ -170,7 +170,7 @@ public static class UiProbe
         public event Action? Changed { add { } remove { } }
         public string? SelectedAccountSid => Kid;
         public AccountsLoadState LoadState => AccountsLoadState.Ready;
-        public AccountRulesDto? Snapshot { get; } = new(1, null, Kid, [], EagleEye.Shared.Constants.BreakTimeRules.DefaultDisplayText, true);
+        public AccountRulesDto? Snapshot { get; } = new(1, null, Kid, [new BreakTimeEntryDto(1, true, 1200, 1439, BreakTimeDays.All)], EagleEye.Shared.Constants.BreakTimeRules.DefaultDisplayText, true);
         public void SelectAccount(string? accountSid) { }
         public Task<bool> AddEntryAsync() => Task.FromResult(true);
         public Task<bool> DeleteEntryAsync(long entryId) => Task.FromResult(true);
