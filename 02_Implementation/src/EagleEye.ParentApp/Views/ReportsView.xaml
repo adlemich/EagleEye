@@ -28,7 +28,9 @@
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="vm:DayUsageViewModel">
                         <VerticalStackLayout Spacing="4">
-                            <Label Text="{Binding Heading}" Style="{StaticResource SectionHeader}" />
+                            <Border Style="{StaticResource SectionHeaderBar}">
+                                <Label Text="{Binding Heading}" Style="{StaticResource SectionHeader}" />
+                            </Border>
                             <Label Text="{x:Static core:AppTexts.ReportsNoUsageToday}" IsVisible="{Binding ShowNoUsageToday}" />
                             <Grid ColumnDefinitions="360,160" ColumnSpacing="16" IsVisible="{Binding HasRows}">
                                 <Label Grid.Column="0" Text="{x:Static core:AppTexts.ReportsColumnApp}" FontAttributes="Bold" />

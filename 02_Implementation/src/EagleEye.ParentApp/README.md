@@ -54,7 +54,8 @@ EagleEye.ParentApp/
 │                            MauiAppDataPaths, Platforms/MacCatalyst/MacKeychainSecretStore (macOS),
 │                            HeadingBarColorService (accent colour → resources HeadingBarBackgroundColor/TextColor)
 ├── Resources/
-│   ├── Styles/              Colors (light/dark via AppThemeBinding) and styles; SectionHeader = heading bar;
+│   ├── Styles/              Colors (light/dark via AppThemeBinding) and styles; heading = Border SectionHeaderBar (accent outline,
+│   │                        transparent fill; US-008 D-18) around a SectionHeader label;
 │   │                        US-008: DropHighlightLight/Dark, HeadingBarButton, EntryMenuButton. MacStyles.xaml
 │   │                        (Mac only, merged after Styles.xaml): buttons in the accent colour, explicit "Normal"
 │   └── AppIcon/             appicon.svg (MAUI icon), eagleeye.ico (exe and installer icon)

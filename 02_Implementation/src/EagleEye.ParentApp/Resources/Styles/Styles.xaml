@@ -11,16 +11,28 @@
         <Setter Property="FontSize" Value="14" />
     </Style>
 
-    <!-- Heading bar (US-004 ISSUE-007): Settings section headings and Reports day headings. A full-width bar
-         in the platform accent colour with readable text; dynamic resources, so accent colour changes apply
-         at once. -->
-    <Style x:Key="SectionHeader" TargetType="Label">
-        <Setter Property="BackgroundColor" Value="{DynamicResource HeadingBarBackgroundColor}" />
-        <Setter Property="TextColor" Value="{DynamicResource HeadingBarTextColor}" />
-        <Setter Property="FontSize" Value="16" />
-        <Setter Property="Padding" Value="14,6" />
+    <!-- Heading bar (US-004 ISSUE-007): section headings of every page and Reports day headings. US-008 (Michael's
+         finding after installing 0.8.0): outlined, not filled, so buttons with a solid accent fill stand out. A
+         full-width Border (SectionHeaderBar) with a line in the platform accent colour and an explicit transparent
+         fill (Catalyst repaint rule), holding a Label in the normal text colour (SectionHeader). Dynamic resources,
+         so accent colour changes apply at once. Usage: <Border Style="{StaticResource SectionHeaderBar}"><Label
+         Style="{StaticResource SectionHeader}" … /></Border>. -->
+    <Style x:Key="SectionHeaderBar" TargetType="Border">
+        <Setter Property="Stroke" Value="{DynamicResource HeadingBarBrush}" />
+        <Setter Property="StrokeThickness" Value="2" />
+        <Setter Property="StrokeShape" Value="Rectangle" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="Padding" Value="14,5" />
         <Setter Property="Margin" Value="0,8,0,4" />
         <Setter Property="HorizontalOptions" Value="Fill" />
+    </Style>
+
+    <Style x:Key="SectionHeader" TargetType="Label">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="LineBreakMode" Value="WordWrap" />
     </Style>
 
@@ -80,13 +92,13 @@
         <Setter Property="HorizontalOptions" Value="Start" />
     </Style>
 
-    <!-- US-008: buttons on a heading bar ("Rename", "Delete"): no fill, border and text in the heading-bar text colour, so
-         they stay readable on every accent colour (TI-11). "Normal" sets every property that another state changes:
+    <!-- US-008: buttons on a heading bar ("Rename", "Delete"): no fill, border and text in the normal text colour (the
+         bar is outlined, not filled, since Michael's finding), so they read in light and dark on every accent colour. "Normal" sets every property that another state changes:
          Mac Catalyst does not repaint a property that becomes unset (TI-10). -->
     <Style x:Key="HeadingBarButton" TargetType="Button">
-        <Setter Property="TextColor" Value="{DynamicResource HeadingBarTextColor}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
         <Setter Property="BackgroundColor" Value="Transparent" />
-        <Setter Property="BorderColor" Value="{DynamicResource HeadingBarTextColor}" />
+        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource SecondaryTextLight}, Dark={StaticResource SecondaryTextDark}}" />
         <Setter Property="BorderWidth" Value="1" />
         <Setter Property="CornerRadius" Value="4" />
         <Setter Property="Padding" Value="10,2" />

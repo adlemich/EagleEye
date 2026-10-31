@@ -44,9 +44,10 @@ public static class UiProbe
             var (bg, fg) = HeadingBarPalette.For(new RgbColor(rgb[0], rgb[1], rgb[2]));
             Application.Current!.Resources["HeadingBarBackgroundColor"] = Color.FromRgb(bg.R, bg.G, bg.B);
             Application.Current!.Resources["HeadingBarTextColor"] = Color.FromRgb(fg.R, fg.G, fg.B);
+            Application.Current!.Resources["HeadingBarBrush"] = new SolidColorBrush(Color.FromRgb(bg.R, bg.G, bg.B));
         }
 
-        var key = mode.StartsWith("rules") ? MainViewModel.RulesKey : mode.StartsWith("reports") ? MainViewModel.ReportsKey : MainViewModel.AppGroupsKey;
+        var key = mode.StartsWith("settings") ? MainViewModel.SettingsKey : mode.StartsWith("rules") ? MainViewModel.RulesKey : mode.StartsWith("reports") ? MainViewModel.ReportsKey : MainViewModel.AppGroupsKey;
         main.SelectedItem = main.MenuItems.First(i => i.Key == key);
         Log($"page {key}");
         if (key != MainViewModel.AppGroupsKey) return;
@@ -56,7 +57,7 @@ public static class UiProbe
         if (mode == "groups-drag")
         {
             Log("step A: highlight School"); vm.BeginDrag(vm.Sections[2].Apps[2]); vm.DragOver(vm.Sections[1]);
-            await Task.Delay(4000);
+            await Task.Delay(5000);
             Log("step B: highlight Not in any group"); vm.DragOver(vm.Sections[2]);
             await Task.Delay(4000);
             Log("step C: end drag (no highlight)"); vm.EndDrag();

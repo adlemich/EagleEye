@@ -13,7 +13,9 @@
 
             <!-- Visual appearance (AC-9) -->
             <VerticalStackLayout x:Name="AppearanceSection" x:DataType="vm:AppearanceViewModel" Spacing="4">
-                <Label Text="{x:Static core:AppTexts.SectionAppearance}" Style="{StaticResource SectionHeader}" />
+                <Border Style="{StaticResource SectionHeaderBar}">
+                    <Label Text="{x:Static core:AppTexts.SectionAppearance}" Style="{StaticResource SectionHeader}" />
+                </Border>
                 <HorizontalStackLayout Spacing="12">
                     <Switch IsToggled="{Binding IsDarkMode}" VerticalOptions="Center" />
                     <Label Text="{Binding ThemeLabel}" VerticalOptions="Center" />
@@ -22,7 +24,9 @@
 
             <!-- Server connection (AC-8, AC-11 to AC-30) -->
             <VerticalStackLayout x:Name="ServerSection" x:DataType="vm:ServerConnectionViewModel" Spacing="8">
-                <Label Text="{x:Static core:AppTexts.SectionServerConnection}" Style="{StaticResource SectionHeader}" />
+                <Border Style="{StaticResource SectionHeaderBar}">
+                    <Label Text="{x:Static core:AppTexts.SectionServerConnection}" Style="{StaticResource SectionHeader}" />
+                </Border>
                 <HorizontalStackLayout Spacing="8">
                     <Label Text="{x:Static core:AppTexts.PairingStatusLabel}" FontAttributes="Bold" />
                     <Label Text="{Binding PairingStatusText}" />
@@ -75,7 +79,9 @@
 
             <!-- User accounts on the EagleEye PC (US-003 AC-6 to AC-17) -->
             <VerticalStackLayout x:Name="UserAccountsSection" x:DataType="vm:UserAccountsViewModel" Spacing="6">
-                <Label Text="{x:Static core:AppTexts.SectionUserAccounts}" Style="{StaticResource SectionHeader}" />
+                <Border Style="{StaticResource SectionHeaderBar}">
+                    <Label Text="{x:Static core:AppTexts.SectionUserAccounts}" Style="{StaticResource SectionHeader}" />
+                </Border>
                 <Label Text="{Binding StatusText}" IsVisible="{Binding HasStatus}" />
                 <Label Text="{x:Static core:AppTexts.UserAccountsInstruction}" IsVisible="{Binding IsListVisible}" />
                 <!-- Account table (ISSUE-006): fixed column widths (device-independent units, so they scale
@@ -105,7 +111,9 @@
 
             <!-- Time-elapsed warnings (US-006 AC-13 to AC-16): two fixed rows. Columns 160 | 96 | * (min 320). -->
             <VerticalStackLayout x:Name="WarningsSection" x:DataType="vm:WarningSettingsViewModel" Spacing="6">
-                <Label Text="{x:Static core:AppTexts.SectionTimeWarnings}" Style="{StaticResource SectionHeader}" />
+                <Border Style="{StaticResource SectionHeaderBar}">
+                    <Label Text="{x:Static core:AppTexts.SectionTimeWarnings}" Style="{StaticResource SectionHeader}" />
+                </Border>
                 <Label Text="{x:Static core:AppTexts.WarningsExplanation}" LineBreakMode="WordWrap" MaximumWidthRequest="900" HorizontalOptions="Start" />
                 <Label Text="{Binding StatusText}" IsVisible="{Binding HasStatus}" />
                 <Grid ColumnDefinitions="160,96,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="6"

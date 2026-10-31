@@ -28,14 +28,15 @@
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="vm:AppGroupSectionViewModel">
                             <VerticalStackLayout Spacing="0">
-                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Padding="0,0,8,0"
-                                      BackgroundColor="{DynamicResource HeadingBarBackgroundColor}">
-                                    <Label Grid.Column="0" Text="{Binding Title}" Style="{StaticResource SectionHeader}" Margin="0" />
+                                <Border Style="{StaticResource SectionHeaderBar}" Padding="14,2,8,2" MinimumHeightRequest="34">
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                    <Label Grid.Column="0" Text="{Binding Title}" Style="{StaticResource SectionHeader}" />
                                     <Button Grid.Column="1" Text="{x:Static core:AppTexts.GroupsRename}" Style="{StaticResource HeadingBarButton}"
                                             Command="{Binding RenameCommand}" IsVisible="{Binding IsGroup}" />
                                     <Button Grid.Column="2" Text="{x:Static core:AppTexts.GroupsDelete}" Style="{StaticResource HeadingBarButton}"
                                             Command="{Binding DeleteCommand}" IsVisible="{Binding IsGroup}" />
                                 </Grid>
+                                </Border>
 
                                 <Border StrokeThickness="0" BackgroundColor="Transparent" MinimumHeightRequest="40" Padding="0,4">
                                     <Border.Triggers>

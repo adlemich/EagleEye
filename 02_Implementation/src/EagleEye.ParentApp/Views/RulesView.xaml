@@ -26,7 +26,11 @@
 
             <VerticalStackLayout Spacing="8" IsVisible="{Binding IsRulesVisible}">
 
-                <Label Text="{x:Static core:AppTexts.RulesSectionBreakTimes}" Style="{StaticResource SectionHeader}" />
+                <Border Style="{StaticResource SectionHeaderBar}">
+
+                    <Label Text="{x:Static core:AppTexts.RulesSectionBreakTimes}" Style="{StaticResource SectionHeader}" />
+
+                </Border>
 
                 <Button Text="{x:Static core:AppTexts.RulesAddEntry}"
                         Command="{Binding AddEntryCommand}"
@@ -91,7 +95,9 @@
                      and the same row view model as the application rules (220 | 64 | 64 | 7 × 48); below the group name its
                      members (OQ-4). -->
                 <VerticalStackLayout Spacing="8" Margin="0,16,0,0" BindingContext="{Binding GroupRules}" x:DataType="vm:AppGroupRulesSectionViewModel">
-                    <Label Text="{x:Static core:AppTexts.RulesSectionGroupRules}" Style="{StaticResource SectionHeader}" />
+                    <Border Style="{StaticResource SectionHeaderBar}">
+                        <Label Text="{x:Static core:AppTexts.RulesSectionGroupRules}" Style="{StaticResource SectionHeader}" />
+                    </Border>
                     <Label Text="{x:Static core:AppTexts.RulesGroupRulesExplanation}" LineBreakMode="WordWrap" MaximumWidthRequest="900" HorizontalOptions="Start" />
                     <Label Text="{Binding StatusText}" IsVisible="{Binding HasStatus}" />
 
@@ -144,7 +150,9 @@
 
                 <!-- US-006 AC-1 to AC-10: the application rules of the same account. Columns 220 | 64 | 64 | 7 × 48. -->
                 <VerticalStackLayout Spacing="8" Margin="0,16,0,0" BindingContext="{Binding AppRules}" x:DataType="vm:AppRulesSectionViewModel">
-                    <Label Text="{x:Static core:AppTexts.RulesSectionAppRules}" Style="{StaticResource SectionHeader}" />
+                    <Border Style="{StaticResource SectionHeaderBar}">
+                        <Label Text="{x:Static core:AppTexts.RulesSectionAppRules}" Style="{StaticResource SectionHeader}" />
+                    </Border>
                     <Label Text="{x:Static core:AppTexts.RulesAppRulesExplanation}" LineBreakMode="WordWrap" MaximumWidthRequest="900" HorizontalOptions="Start" />
                     <Label Text="{Binding StatusText}" IsVisible="{Binding HasStatus}" />
 
