@@ -85,6 +85,7 @@ Console output: `02_Implementation/artifacts/smoke-us008-console*.txt` (git-igno
 - Database: new tables `AppGroups`, `AppGroupMembers`, `AppGroupRules`, `ActivitySpans`; `BlockedStarts.GroupId`, `GroupName`.
 - Group lines on Reports start with the install (earlier days have no spans, Q-2).
 - Known limitation: the Windows parent app 0.7 must not be used against the 0.8 service (no mixed versions); the Mac app 0.8.0 follows in Steps 8–10.
+- **Done (Michael, 2026-10-31):** 0.8.0 installed over 0.6.2 on the service PC. Log at 15:16:18 shows `App groups loaded: 0 groups with 0 apps, 0 group rules.` (migration 6 ran), no WRN/ERR/FTL since the install. REG-001-01 to -05 OK; tray *App Infos* shows 0.8. Evidence: `02_Implementation/docs/requirements/user-stories/US-008/evidence/install-0.8.0-log-excerpt.txt` (full log kept locally, git-ignored). Step 7 complete except D-8 / Q-DEV-1.
 
 ## 7. Machine(s) Used
 

@@ -5,6 +5,8 @@ metadata:
   type: project
 ---
 
+**Update 2026-10-31 15:30 (US-008 H2 ready): Michael installed 0.8.0 on the service PC; migration 6 proven in log (evidence `docs/requirements/user-stories/US-008/evidence/install-0.8.0-log-excerpt.txt`), REG-001 OK. Q-DEV-1 still unanswered (default: live group smoke + perf in TES run as kid1). NEXT: MacBook DEV session Steps 8–10.**
+
 **Update 2026-10-31 (US-008 step c, Windows): DEV (subagent) did Steps 2–6 + Step 7 code, pushed b33eb45..1a159eb; 2 889 tests green; installer `03_Delivery/windows/EagleEye-Setup-0.8.0.exe` (local only); deviations D-1..D-8 in `docs/requirements/user-stories/US-008/implementation-report.md`. OPEN before H2: Michael installs 0.8.0 elevated over service 0.6.2 on this PC (192.168.1.37), checks log for `App groups loaded: …` (= migration 6 proof), runs REG-001-01..05, answers Q-DEV-1 (live group smoke + perf check: in TES run as kid1, or DEV with Michael signed in as kid1). Then H2: MacBook DEV session Steps 8–10 (hub client/gateway already done, D-2), then H3 → Windows Step 11. Windows machine has no Python.**
 
 **Update 2026-10-31 (US-008 step c): plan APPROVED (3792b63; story Analyzed, ADR-021 Accepted). Michael's simplification: NO mixed versions/compat (AC-44 removed, 43 ACs), 0.8.0 = service+tray+Mac; US-009 = Win10 parent app + Windows parity, ALL FOUR assets 0.9.0. Guidance: prefer less code where requirements allow either way. Step 1 (Mac DnD spike) DONE, Michael checked by hand: all OK → MAUI drag/drop + "≡ Move to…" + right-click menu (8bd5919, pushed = H1). NEXT: Michael on Windows, DEV session in agents/dev for Steps 2–7, then H2 → MacBook Steps 8–10, H3 → Windows Step 11.**
