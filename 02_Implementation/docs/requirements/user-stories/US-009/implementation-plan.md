@@ -10,6 +10,8 @@
 
 **Amended** (Accepted, approved by Michael with this plan, 2026-10-31; applied by ARC on the branch): ADR-009 (installer minimum Windows 10 22H2), ADR-019 (Windows row of the platform table), ADR-007 (third, test-only machine), arc42 (header, §7, §7.4), coding guidelines §16.1. The Windows 10 test PC row in `02_Implementation/docs/dev-process/dev-environments.md` §1 is added by the Orchestrator. No new ADR.
 
+**Changed during step c** (Michael, 2026-10-31; no re-approval needed): the Windows parent app 0.6.2 had been uninstalled earlier and no Windows parent app is installed anywhere, so **AC-33 is a fresh installation of the Windows app 0.9.0 on Windows 11**; the update from 0.6.2 is not tested (story OQ-5 and Out of Scope, `90a1379`; implementation report R-2). Updated here: TI-11, TI-12, Decision 2 (dev check), Step 3, the AC-33 row, Manual Verification Notes (starting points, install order).
+
 **Guidance for DEV (Michael, 2026-10-31)**: where the requirements allow either way, choose the option with **less code**. No mixed-version or compatibility handling: only the four 0.9.0 assets together are supported.
 
 ---
@@ -44,8 +46,8 @@ The service, the tray client and the Mac app change their **version number only*
 | **TI-8** | **Text "mouse or trackpad"** in the App Groups explanation (US-008 D-14). AC-13 wants "touchpad" in the Windows wording. Core is platform-neutral. | AC-13, AC-28 | **Q-1 resolved** (Michael, 2026-10-31): keep "trackpad" on both platforms. No new text pair, no code; Windows shows the 0.8.0 explanation text. TES records no wording issue for it. |
 | **TI-9** | **Windows 10 rendering differences**: no Segoe UI Variable (WinUI falls back to Segoe UI, slightly different widths); the Windows 10 emoji font lacks the newest emojis (shown as boxes or split); no rounded corners or Mica (out of scope). | AC-8 | No code. DEV's Step 2 check uses 150 % scaling and the 900 × 600 minimum; the Windows 10 pre-check (Step 4) covers the rest. TES should use common emojis (e.g. 🎮 😀) for AC-8 and AC-15. |
 | **TI-10** | **TLS from Windows 10.** Windows 10 SChannel has TLS 1.3 off by default; the service certificate is ECDSA P-256/SHA-256 and Kestrel uses the OS defaults. | AC-6 | No code: Windows 10 negotiates TLS 1.2 with ECDHE-ECDSA, which Windows 11 offers. Proven by Step 4. |
-| **TI-11** | **Update 0.6.2 → 0.9.0 of the Windows app.** | AC-33 | The parent database has no schema change since 0.6.2 (`ParentApp.Core/Data` unchanged), the Inno Setup `AppId` and data folder are unchanged, so the update keeps pairing and appearance. DEV must **not** install 0.9.0 over Michael's 0.6.2 (it is the AC-33 starting point). |
-| **TI-12** | **Test starting points must stay untouched** until the test run: service 0.8.0 (AC-31), Windows app 0.6.2 in Michael's account (AC-33), Mac app 0.8.0 (AC-32), no app on the Windows 10 PC (AC-2). | Test validity | DEV uses the Debug build with `EAGLEEYE_DEV_APP_DATA_DIR` (US-005 D-5) and does not run any installer on the service PC or the MacBook. The Windows 10 pre-check ends with an uninstall (Step 4), which also exercises AC-3. |
+| **TI-11** | **Fresh installation of the Windows app 0.9.0 on Windows 11** (changed during step c, 2026-10-31: 0.6.2 had been uninstalled earlier; the update from 0.6.2 is not tested). | AC-33 | Nothing to migrate. DEV must **not** install the Windows app 0.9.0 on the service PC (an account without a Windows parent app is the AC-33 starting point). |
+| **TI-12** | **Test starting points must stay untouched** until the test run: service 0.8.0 (AC-31), no Windows parent app installed in Michael's account (AC-33, fresh installation; changed during step c, 2026-10-31), Mac app 0.8.0 (AC-32), no app on the Windows 10 PC (AC-2). | Test validity | DEV uses the Debug build with `EAGLEEYE_DEV_APP_DATA_DIR` (US-005 D-5) and does not run any installer on the service PC or the MacBook. The Windows 10 pre-check ends with an uninstall (Step 4), which also exercises AC-3. |
 | **TI-13** | **Test-code warnings** (US-008 F-2): 8 × CS8631, 1 × xUnit2029. | Delivery note | Step 1 (Decision 5). |
 
 ---
@@ -128,7 +130,7 @@ Nothing else is Windows-10-specific in code: no OS version checks, no Windows-10
 
 ### Decision 2: Windows on-screen check (Step 2)
 
-DEV runs the Windows app **Debug** build on the Windows Developer Machine with `EAGLEEYE_DEV_APP_DATA_DIR` set to a folder under `02_Implementation/artifacts/` (git-ignored), so Michael's installed 0.6.2 and its pairing stay untouched (TI-12). DEV pairs it with the installed service 0.8.0; Michael reads out the pairing code (the service is on this PC). There is no contract change, so the 0.8.0 service is a valid counterpart for this dev check.
+DEV runs the Windows app **Debug** build on the Windows Developer Machine with `EAGLEEYE_DEV_APP_DATA_DIR` set to a folder under `02_Implementation/artifacts/` (git-ignored), so the AC-33 starting point (no Windows parent app installed) stays untouched (TI-12; changed during step c, 2026-10-31: 0.6.2 had been uninstalled earlier). DEV pairs it with the installed service 0.8.0; Michael reads out the pairing code (the service is on this PC). There is no contract change, so the 0.8.0 service is a valid counterpart for this dev check.
 
 Check list (screenshots in `US-009/evidence/`, light and dark, 100 % and 150 %, two accent colours, window at 900 × 600):
 
@@ -246,7 +248,7 @@ All steps on `feature/US-009-windows-parent-app-parity`. Commit after each step 
 ### Step 3: Windows installers (Windows)
 
 1. `pwsh 02_Implementation/scripts/package-windows.ps1 -Target All` → `03_Delivery/windows/EagleEye-Setup-0.9.0.exe` and `EagleEye-ParentApp-Setup-0.9.0.exe`; check the file versions (Explorer *Properties*) and SHA-256 in the report.
-2. **No installer is run on this PC** (TI-12): service 0.8.0 and Windows app 0.6.2 stay as test starting points.
+2. **No installer is run on this PC** (TI-12): service 0.8.0 and "no Windows parent app installed" (AC-33, fresh installation; changed during step c, 2026-10-31) stay as test starting points.
 3. `implementation-report.md` §Windows incl. the Step 4 check list. Commit, push (**H1**).
 
 **Michael sees**: the two 0.9.0 installers in `03_Delivery/windows/`.
@@ -311,7 +313,7 @@ The pairing of step 4 is removed again in step 6, so it leaves no orphan device 
 | AC-30 versions | 1, 3, 5 | — | all |
 | AC-31 service update | 3 | — | SVC |
 | AC-32 Mac update | 5 | — | Mac |
-| AC-33 Windows app 0.6.2 → 0.9.0 | 3 | — | W11 |
+| AC-33 Windows app 0.9.0 fresh installation on Windows 11 (changed during step c, 2026-10-31) | 3 | — | W11 |
 | AC-34 Windows regression | 2 | existing | W11 |
 | AC-35 Mac = 0.8.0, US-008 Mac ACs in full | 5 | existing | Mac |
 | AC-36 service/tray = 0.8.0 | 1 | existing | SVC |
@@ -351,8 +353,8 @@ No change. Service log entries for group changes made in the Windows app are the
 | What | Where / how |
 |---|---|
 | Artifacts | `03_Delivery/windows/EagleEye-Setup-0.9.0.exe`, `03_Delivery/windows/EagleEye-ParentApp-Setup-0.9.0.exe` (Windows Developer Machine; copy to the Windows 10 PC), `03_Delivery/macos/EagleEye-ParentApp-0.9.0.dmg` (MacBook). All git-ignored. |
-| Starting points (untouched by DEV) | Service and tray 0.8.0 on the service PC; Windows app 0.6.2 in Michael's admin account; Mac app 0.8.0; no EagleEye on the Windows 10 PC (Step 4 ended with an uninstall). |
-| Suggested install order | Service 0.9.0 over 0.8.0 first (AC-31, REG-001), then the Windows app over 0.6.2 (AC-33), the Windows 10 PC (AC-2), the Mac app (AC-32). No mixed versions are tested. |
+| Starting points (untouched by DEV) | Service and tray 0.8.0 on the service PC; no Windows parent app in Michael's admin account (AC-33 is a fresh installation; changed during step c, 2026-10-31); Mac app 0.8.0; no EagleEye on the Windows 10 PC (Step 4 ended with an uninstall). |
+| Suggested install order | Service 0.9.0 over 0.8.0 first (AC-31, REG-001), then the Windows app fresh in Michael's admin account (AC-33), the Windows 10 PC (AC-2), the Mac app (AC-32). No mixed versions are tested. |
 | Version refusal | Inno Setup built-in message (German or English, by the wizard language), no custom text. AC-4 needs a Windows 10 older than 22H2 or 32-bit; usually "not tested". |
 | Windows 10 look | No Segoe UI Variable, no rounded corners or Mica (out of scope). Use common emojis (🎮, 😀); newest emojis may not exist in the Windows 10 font. |
 | Language on Windows | Windows display language; switching needs signing out and in again (AC-9). |
