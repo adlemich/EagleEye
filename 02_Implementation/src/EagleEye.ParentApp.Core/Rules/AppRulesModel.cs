@@ -9,7 +9,7 @@ namespace EagleEye.ParentApp.Core.Rules;
 /// write returns <c>true</c> when a snapshot confirming it was applied, and <c>false</c> on rejection, connection loss
 /// or timeout (then the stored state is fetched again if the outcome is unknown).
 /// </summary>
-public interface IAppRulesModel
+public interface IAppRulesModel : IRuleTableWrites
 {
     /// <summary>Raised (on any thread) when the selection, the load state or the snapshot changed.</summary>
     event Action? Changed;
@@ -25,12 +25,6 @@ public interface IAppRulesModel
 
     /// <summary>Selects an account (or none) and fetches its app rules while connected (AC-1).</summary>
     void SelectAccount(string? accountSid);
-
-    /// <summary>Sets the hours or the minutes of an app's budget (AC-7, AC-8).</summary>
-    Task<bool> SetBudgetAsync(long appId, AppBudgetPart part, int value);
-
-    /// <summary>Ticks or unticks a weekday of an app (AC-7).</summary>
-    Task<bool> SetDayAsync(long appId, DayOfWeek day, bool isAllowed);
 
     /// <summary>Sets the budget text; empty or a default restores the default (AC-10).</summary>
     Task<bool> SetBudgetTextAsync(string text);
@@ -50,12 +44,12 @@ public sealed class AppRulesModel : SelectedAccountModel<AppRulesDto>, IAppRules
     }
 
     /// <inheritdoc />
-    public Task<bool> SetBudgetAsync(long appId, AppBudgetPart part, int value) =>
-        WriteAsync((client, id, sid, ct) => client.SetAppBudgetAsync(id, sid, appId, part, value, ct));
+    public Task<bool> SetBudgetAsync(long id, AppBudgetPart part, int value) =>
+        WriteAsync((client, requestId, sid, ct) => client.SetAppBudgetAsync(requestId, sid, id, part, value, ct));
 
     /// <inheritdoc />
-    public Task<bool> SetDayAsync(long appId, DayOfWeek day, bool isAllowed) =>
-        WriteAsync((client, id, sid, ct) => client.SetAppDayAsync(id, sid, appId, day, isAllowed, ct));
+    public Task<bool> SetDayAsync(long id, DayOfWeek day, bool isAllowed) =>
+        WriteAsync((client, requestId, sid, ct) => client.SetAppDayAsync(requestId, sid, id, day, isAllowed, ct));
 
     /// <inheritdoc />
     public Task<bool> SetBudgetTextAsync(string text)

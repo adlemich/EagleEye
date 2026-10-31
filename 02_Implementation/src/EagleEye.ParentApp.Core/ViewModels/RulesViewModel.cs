@@ -31,7 +31,8 @@ public enum RulesState
 /// by entry id, creation order), "Add new entry" (disabled at 20 entries), the display text (saved when the parent leaves
 /// the box, and before the page or the account changes, <see cref="FlushPendingEdits"/>; an unchanged default follows
 /// the parent app's language, ADR-016), one message line for refused edits and failed writes, and the section
-/// "Application rules" (<see cref="AppRules"/>) for the same account. Follows the models on the UI thread; never polls.
+/// "Application rules" (<see cref="AppRules"/>) and, before it, "App group rules" (<see cref="GroupRules"/>, US-008) for the
+/// same account. Follows the models on the UI thread; never polls.
 /// </summary>
 public sealed class RulesViewModel : ObservableObject, IBreakTimeRowHost
 {
@@ -46,11 +47,17 @@ public sealed class RulesViewModel : ObservableObject, IBreakTimeRowHost
     private string _errorText = string.Empty;
 
     /// <summary>Creates the view model and follows the models.</summary>
-    public RulesViewModel(IUserAccountsModel accounts, IAccountRulesModel rules, AppRulesSectionViewModel appRules, IUiDispatcher dispatcher)
+    public RulesViewModel(
+        IUserAccountsModel accounts,
+        IAccountRulesModel rules,
+        AppRulesSectionViewModel appRules,
+        AppGroupRulesSectionViewModel groupRules,
+        IUiDispatcher dispatcher)
     {
         _accounts = accounts ?? throw new ArgumentNullException(nameof(accounts));
         _rules = rules ?? throw new ArgumentNullException(nameof(rules));
         AppRules = appRules ?? throw new ArgumentNullException(nameof(appRules));
+        GroupRules = groupRules ?? throw new ArgumentNullException(nameof(groupRules));
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         AddEntryCommand = new RelayCommand(() => LastWrite = SendAsync(model => model.AddEntryAsync()), () => CanAddEntry);
         Apply();
@@ -60,6 +67,9 @@ public sealed class RulesViewModel : ObservableObject, IBreakTimeRowHost
 
     /// <summary>The section "Application rules" of the selected account (US-006).</summary>
     public AppRulesSectionViewModel AppRules { get; }
+
+    /// <summary>The section "App group rules" of the selected account (US-008 AC-15).</summary>
+    public AppGroupRulesSectionViewModel GroupRules { get; }
 
     /// <summary>The controlled accounts (AC-2).</summary>
     public ObservableCollection<AccountOption> Accounts => _selection.Accounts;
@@ -89,6 +99,7 @@ public sealed class RulesViewModel : ObservableObject, IBreakTimeRowHost
             OnPropertyChanged();
             _rules.SelectAccount(value?.Sid);
             AppRules.SelectAccount(value?.Sid);
+            GroupRules.SelectAccount(value?.Sid);
         }
     }
 
@@ -204,6 +215,7 @@ public sealed class RulesViewModel : ObservableObject, IBreakTimeRowHost
 
         CommitDisplayText();
         AppRules.FlushPendingEdits();
+        GroupRules.FlushPendingEdits();
     }
 
     /// <inheritdoc />

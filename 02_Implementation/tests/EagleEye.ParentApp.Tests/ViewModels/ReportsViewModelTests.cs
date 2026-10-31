@@ -118,6 +118,16 @@ public sealed class ReportsViewModelTests
     }
 
     [Fact]
+    public void Report_GroupLinesOfEachDayShown()
+    {
+        ConnectWithAccounts();
+
+        _usage.Publish(AccountsLoadState.Ready, Today, Day(Today.AddDays(-1), 7) with { Groups = [new GroupUsageDto(7, "Games", 600)] });
+
+        Assert.Equal((false, "Games"), (_viewModel.Days[0].HasGroupRows, _viewModel.Days[1].GroupRows.Single().DisplayName));
+    }
+
+    [Fact]
     public void Midnight_NewTodayMovesFirstAndOldTodayBecomesPast()
     {
         ConnectWithAccounts();

@@ -121,6 +121,29 @@ public static class AppTexts
     public static string ForgetConfirmTitle => Get(nameof(ForgetConfirmTitle));
     public static string ForgetConfirmMessageFormat => Get(nameof(ForgetConfirmMessageFormat));
     public static string InfoPairingForgottenFormat => Get(nameof(InfoPairingForgottenFormat));
+    public static string MenuAppGroups => Get(nameof(MenuAppGroups));
+    public static string GroupsExplanation => Get(nameof(GroupsExplanation));
+    public static string GroupsAdd => Get(nameof(GroupsAdd));
+    public static string GroupsRename => Get(nameof(GroupsRename));
+    public static string GroupsDelete => Get(nameof(GroupsDelete));
+    public static string GroupsUngrouped => Get(nameof(GroupsUngrouped));
+    public static string GroupsEmpty => Get(nameof(GroupsEmpty));
+    public static string GroupsAllGrouped => Get(nameof(GroupsAllGrouped));
+    public static string GroupsNewTitle => Get(nameof(GroupsNewTitle));
+    public static string GroupsRenameTitle => Get(nameof(GroupsRenameTitle));
+    public static string GroupsNameLabel => Get(nameof(GroupsNameLabel));
+    public static string GroupsInvalidName => Get(nameof(GroupsInvalidName));
+    public static string GroupsDuplicateName => Get(nameof(GroupsDuplicateName));
+    public static string GroupsDeleteTitle => Get(nameof(GroupsDeleteTitle));
+    public static string GroupsDeleteConfirmFormat => Get(nameof(GroupsDeleteConfirmFormat));
+    public static string GroupsMoveTo => Get(nameof(GroupsMoveTo));
+    public static string RulesSectionGroupRules => Get(nameof(RulesSectionGroupRules));
+    public static string RulesGroupRulesExplanation => Get(nameof(RulesGroupRulesExplanation));
+    public static string RulesColumnGroup => Get(nameof(RulesColumnGroup));
+    public static string RulesNoGroups => Get(nameof(RulesNoGroups));
+    public static string RulesGroupNoApps => Get(nameof(RulesGroupNoApps));
+    public static string ReportsGroupsHeading => Get(nameof(ReportsGroupsHeading));
+    public static string ReportsColumnGroup => Get(nameof(ReportsColumnGroup));
 #pragma warning restore CS1591
 
     /// <summary>Formats a composite text with the current culture.</summary>

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using EagleEye.ParentApp.Core.Accounts;
+using EagleEye.ParentApp.Core.Groups;
 using EagleEye.ParentApp.Core.Rules;
 using EagleEye.ParentApp.Core.ViewModels;
 using EagleEye.ParentApp.Tests.Fakes;
@@ -17,6 +18,9 @@ public sealed class AppRulesSectionViewModelTests
     private static readonly AppRuleDto Zoo = new(3, "Zoo", @"C:\Apps\zoo.exe", 90, BreakTimeDays.All);
 
     private readonly Mock<IAppRulesModel> _model = new();
+    private readonly Mock<IAppGroupsModel> _groups = new();
+    private AccountsLoadState _groupsState = AccountsLoadState.Ready;
+    private AppGroupsDto _groupsSnapshot = new(1, null, [], []);
     private AccountsLoadState _state = AccountsLoadState.Ready;
     private AppRulesDto? _snapshot;
 
@@ -27,6 +31,8 @@ public sealed class AppRulesSectionViewModelTests
         _model.Setup(m => m.SetBudgetAsync(It.IsAny<long>(), It.IsAny<AppBudgetPart>(), It.IsAny<int>())).ReturnsAsync(true);
         _model.Setup(m => m.SetDayAsync(It.IsAny<long>(), It.IsAny<DayOfWeek>(), It.IsAny<bool>())).ReturnsAsync(true);
         _model.Setup(m => m.SetBudgetTextAsync(It.IsAny<string>())).ReturnsAsync(true);
+        _groups.SetupGet(g => g.LoadState).Returns(() => _groupsState);
+        _groups.SetupGet(g => g.Snapshot).Returns(() => _groupsSnapshot);
         _snapshot = Snapshot(1, Zoo, Editor, Paint);
     }
 
@@ -368,11 +374,43 @@ public sealed class AppRulesSectionViewModelTests
     [Fact]
     public void Guards_Throw()
     {
-        Assert.Throws<ArgumentNullException>(() => new AppRulesSectionViewModel(null!, new ImmediateDispatcher()));
-        Assert.Throws<ArgumentNullException>(() => new AppRulesSectionViewModel(_model.Object, null!));
+        Assert.Throws<ArgumentNullException>(() => new AppRulesSectionViewModel(null!, _groups.Object, new ImmediateDispatcher()));
+        Assert.Throws<ArgumentNullException>(() => new AppRulesSectionViewModel(_model.Object, null!, new ImmediateDispatcher()));
+        Assert.Throws<ArgumentNullException>(() => new AppRulesSectionViewModel(_model.Object, _groups.Object, null!));
     }
 
-    private AppRulesSectionViewModel Create() => new(_model.Object, new ImmediateDispatcher());
+    // ---------- US-008 AC-17: grouped apps are not listed ----------
+
+    [Fact]
+    public void GroupedApp_Hidden_ReturnsWithItsOwnRuleWhenItLeavesTheGroup()
+    {
+        _groupsSnapshot = Groups(2, (@"c:\apps\PAINT.exe", 7), (Editor.ProgramPath, null));
+        var vm = Create();
+        Assert.Equal([1L, 3L], vm.Rows.Select(r => r.AppId));
+
+        _groupsSnapshot = Groups(3, (Paint.ProgramPath, null));
+        _groups.Raise(g => g.Changed += null);
+
+        Assert.Equal([1L, 2L, 3L], vm.Rows.Select(r => r.AppId));
+        Assert.Equal(("0", "0"), (vm.Rows[1].HoursText, vm.Rows[1].MinutesText));
+    }
+
+    [Theory]
+    [InlineData(AccountsLoadState.Loading)]
+    [InlineData(AccountsLoadState.NotAvailable)]
+    public void GroupsNotReady_SectionNotReady(AccountsLoadState state)
+    {
+        _groupsState = state;
+
+        var vm = Create();
+
+        Assert.Equal((state, 0), (vm.State, vm.Rows.Count));
+    }
+
+    private static AppGroupsDto Groups(long revision, params (string Path, long? GroupId)[] apps) =>
+        new(revision, null, [new AppGroupDto(7, "Games")], [.. apps.Select(a => new GroupableAppDto(a.Path, "x", a.GroupId))]);
+
+    private AppRulesSectionViewModel Create() => new(_model.Object, _groups.Object, new ImmediateDispatcher());
 
     private static AppRulesDto Snapshot(long revision, params AppRuleDto[] apps) => new(revision, null, Kid, apps, null);
 }

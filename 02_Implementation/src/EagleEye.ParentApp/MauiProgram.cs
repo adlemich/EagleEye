@@ -2,6 +2,7 @@ using EagleEye.ParentApp.Core.Abstractions;
 using EagleEye.ParentApp.Core.Accounts;
 using EagleEye.ParentApp.Core.Communication;
 using EagleEye.ParentApp.Core.Data;
+using EagleEye.ParentApp.Core.Groups;
 using EagleEye.ParentApp.Core.Reports;
 using EagleEye.ParentApp.Core.Rules;
 using EagleEye.ParentApp.Core.Settings;
@@ -69,6 +70,10 @@ public static class MauiProgram
         services.AddSingleton<IAppRulesModel, AppRulesModel>();
         services.AddSingleton<IWarningSettingsModel, WarningSettingsModel>();
 
+        // State areas "AppGroups" and "AppGroupRules" (US-008, ADR-010, ADR-021).
+        services.AddSingleton<IAppGroupsModel, AppGroupsModel>();
+        services.AddSingleton<IAppGroupRulesModel, AppGroupRulesModel>();
+
         // Platform services.
         services.AddSingleton<IThemeService, MauiThemeService>();
         services.AddSingleton<IDialogService, MauiDialogService>();
@@ -82,6 +87,8 @@ public static class MauiProgram
         services.AddSingleton<UserAccountsViewModel>();
         services.AddSingleton<ReportsViewModel>();
         services.AddSingleton<AppRulesSectionViewModel>();
+        services.AddSingleton<AppGroupRulesSectionViewModel>();
+        services.AddSingleton<AppGroupsViewModel>();
         services.AddSingleton<RulesViewModel>();
         services.AddSingleton<WarningSettingsViewModel>();
         services.AddSingleton<MainViewModel>();

@@ -281,6 +281,66 @@ public sealed class AccountUsageModelTests
         Assert.Throws<ArgumentNullException>(() => new AccountUsageModel(null!));
     }
 
+    // ---------- US-008 AC-36, AC-37: a group change fetches the usage again ----------
+
+    [Fact]
+    public async Task AppGroupsChanged_Ready_FetchesAgainAndReplacesTheDaysOfTheSameRevision()
+    {
+        await ConnectAndSelectAsync(Kid);
+        var lines = Day(Today, 1, 5) with { Groups = [new GroupUsageDto(7, "Games", 5)] };
+        _client.Setup(c => c.GetAccountUsageAsync(Kid, It.IsAny<CancellationToken>())).ReturnsAsync(Usage(Kid, lines));
+
+        _client.Raise(c => c.AppGroupsChanged += null, new AppGroupsDto(3, null, [], []));
+        await _model.LastFetch;
+
+        Assert.Equal((AccountsLoadState.Ready, "Games", 1), (_model.LoadState, _model.Days[0].Groups[0].Name, _model.Days.Count));
+    }
+
+    [Fact]
+    public async Task AppGroupsChanged_FetchFails_DaysKept()
+    {
+        await ConnectAndSelectAsync(Kid);
+        _client.Setup(c => c.GetAccountUsageAsync(Kid, It.IsAny<CancellationToken>())).ThrowsAsync(new HubException("x"));
+
+        _client.Raise(c => c.AppGroupsChanged += null, new AppGroupsDto(3, null, [], []));
+        await _model.LastFetch;
+
+        Assert.Equal((AccountsLoadState.Ready, 2), (_model.LoadState, _model.Days.Count));
+    }
+
+    [Fact]
+    public async Task AppGroupsChanged_NothingSelectedOrNotReady_NoFetch()
+    {
+        _gateway.SetConnected(_client.Object);
+        _client.Raise(c => c.AppGroupsChanged += null, new AppGroupsDto(3, null, [], []));
+        var fetch = new TaskCompletionSource<AccountUsageDto>();
+        _client.Setup(c => c.GetAccountUsageAsync(Kid, It.IsAny<CancellationToken>())).Returns(fetch.Task);
+        _model.SelectAccount(Kid);
+
+        _client.Raise(c => c.AppGroupsChanged += null, new AppGroupsDto(4, null, [], []));
+
+        _client.Verify(c => c.GetAccountUsageAsync(Kid, It.IsAny<CancellationToken>()), Times.Once);
+        fetch.SetResult(Usage(Kid));
+        await _model.LastFetch;
+    }
+
+    [Fact]
+    public async Task AppGroupsChanged_AccountChangedDuringTheFetch_ResultIgnored()
+    {
+        await ConnectAndSelectAsync(Kid);
+        var fetch = new TaskCompletionSource<AccountUsageDto>();
+        _client.Setup(c => c.GetAccountUsageAsync(Kid, It.IsAny<CancellationToken>())).Returns(fetch.Task);
+        _client.Raise(c => c.AppGroupsChanged += null, new AppGroupsDto(3, null, [], []));
+        var refresh = _model.LastFetch;
+
+        _model.SelectAccount(Kid2);
+        await _model.LastFetch;
+        fetch.SetResult(Usage(Kid, Day(Today, 1, 99)));
+        await refresh;
+
+        Assert.Equal(Kid2, _model.Days.Single().AccountSid);
+    }
+
     private async Task ConnectAndSelectAsync(string sid)
     {
         _gateway.SetConnected(_client.Object);

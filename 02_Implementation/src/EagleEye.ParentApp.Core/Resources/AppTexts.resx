@@ -89,7 +89,7 @@
   <data name="RulesNoDaySelected" xml:space="preserve"><value>Mindestens ein Tag muss ausgewählt sein.</value></data>
   <!-- US-006 -->
   <data name="RulesSectionAppRules" xml:space="preserve"><value>Applikations-Regeln</value></data>
-  <data name="RulesAppRulesExplanation" xml:space="preserve"><value>Lege hier fest, welche Applikationen an welchen Tagen für wie lange verwendet werden dürfen. Wenn kein Tag aktiv ist oder das tägliche Zeitbudget null ist, kann die Applikation vom Kind nicht verwendet werden. Applikationen können generell nur außerhalb der Ruhezeiten verwendet werden. Es werden nur Applikationen angezeigt, die mindestens ein Mal vom Kind gestartet wurden.</value></data>
+  <data name="RulesAppRulesExplanation" xml:space="preserve"><value>Lege hier fest, welche Applikationen an welchen Tagen für wie lange verwendet werden dürfen. Wenn kein Tag aktiv ist oder das tägliche Zeitbudget null ist, kann die Applikation vom Kind nicht verwendet werden. Applikationen können generell nur außerhalb der Ruhezeiten verwendet werden. Es werden nur Applikationen angezeigt, die mindestens ein Mal vom Kind gestartet wurden. Apps in einer App-Gruppe werden unter App-Gruppen-Regeln eingestellt.</value></data>
   <data name="RulesColumnApp" xml:space="preserve"><value>Applikation</value></data>
   <data name="RulesColumnDailyBudget" xml:space="preserve"><value>Tägliches Zeit-Budget</value></data>
   <data name="RulesColumnHours" xml:space="preserve"><value>Stunden</value></data>
@@ -112,4 +112,28 @@
   <data name="ForgetConfirmTitle" xml:space="preserve"><value>Kopplung auf diesem Gerät löschen?</value></data>
   <data name="ForgetConfirmMessageFormat" xml:space="preserve"><value>Der EagleEye-PC {0} ist nicht erreichbar oder seine Identität hat sich geändert. Die Kopplung wird nur auf diesem Gerät gelöscht. Danach kann die App mit einem neuen Kopplungscode neu gekoppelt werden. Der Geräte-Eintrag kann auf dem EagleEye-PC bestehen bleiben; eine andere Eltern-App kann ihn dort derzeit nicht entfernen.</value></data>
   <data name="InfoPairingForgottenFormat" xml:space="preserve"><value>Die Kopplung mit {0} wurde auf diesem Gerät gelöscht. Für eine neue Kopplung ist ein neuer Kopplungscode nötig.</value></data>
+  <!-- US-008: app groups -->
+  <data name="MenuAppGroups" xml:space="preserve"><value>App Gruppen</value></data>
+  <data name="GroupsExplanation" xml:space="preserve"><value>Hier kannst du Apps, die zusammengehören, in eine Gruppe legen, z. B. ein Spiel mit seinem Launcher. Auf der Seite Regeln legst du dann für jedes deiner Kinder ein Zeit-Budget für die ganze Gruppe fest. Eine neue Gruppe ist gesperrt, bis du ihre Regel einstellst. Jede App kann nur in einer Gruppe sein. Apps verschiebst du mit der Maus oder dem Trackpad, mit ≡ oder mit einem Rechtsklick.</value></data>
+  <data name="GroupsAdd" xml:space="preserve"><value>Gruppe hinzufügen</value></data>
+  <data name="GroupsRename" xml:space="preserve"><value>Umbenennen</value></data>
+  <data name="GroupsDelete" xml:space="preserve"><value>Löschen</value></data>
+  <data name="GroupsUngrouped" xml:space="preserve"><value>In keiner Gruppe</value></data>
+  <data name="GroupsEmpty" xml:space="preserve"><value>Keine Apps in dieser Gruppe. Apps hierher ziehen.</value></data>
+  <data name="GroupsAllGrouped" xml:space="preserve"><value>Alle Apps sind in einer Gruppe.</value></data>
+  <data name="GroupsNewTitle" xml:space="preserve"><value>Neue App-Gruppe</value></data>
+  <data name="GroupsRenameTitle" xml:space="preserve"><value>App-Gruppe umbenennen</value></data>
+  <data name="GroupsNameLabel" xml:space="preserve"><value>Name</value></data>
+  <data name="GroupsInvalidName" xml:space="preserve"><value>Bitte einen Namen mit 1 bis 40 Zeichen eingeben.</value></data>
+  <data name="GroupsDuplicateName" xml:space="preserve"><value>Es gibt bereits eine Gruppe mit diesem Namen.</value></data>
+  <data name="GroupsDeleteTitle" xml:space="preserve"><value>App-Gruppe löschen</value></data>
+  <data name="GroupsDeleteConfirmFormat" xml:space="preserve"><value>Gruppe „{0}“ löschen? Ihre Apps kommen nach „In keiner Gruppe“ und verwenden wieder ihre eigenen Applikations-Regeln.</value></data>
+  <data name="GroupsMoveTo" xml:space="preserve"><value>Verschieben nach …</value></data>
+  <data name="RulesSectionGroupRules" xml:space="preserve"><value>App-Gruppen-Regeln</value></data>
+  <data name="RulesGroupRulesExplanation" xml:space="preserve"><value>Hier legst du ein Zeit-Budget pro App-Gruppe fest. Alle Apps einer Gruppe teilen es sich: Die Zeit zählt, solange mindestens eine App der Gruppe verwendet wird. Die Gruppen legst du auf der Seite App Gruppen fest.</value></data>
+  <data name="RulesColumnGroup" xml:space="preserve"><value>App-Gruppe</value></data>
+  <data name="RulesNoGroups" xml:space="preserve"><value>Noch keine App-Gruppen. Du kannst sie auf der Seite App Gruppen anlegen.</value></data>
+  <data name="RulesGroupNoApps" xml:space="preserve"><value>(keine Apps)</value></data>
+  <data name="ReportsGroupsHeading" xml:space="preserve"><value>App-Gruppen</value></data>
+  <data name="ReportsColumnGroup" xml:space="preserve"><value>App-Gruppe</value></data>
 </root>

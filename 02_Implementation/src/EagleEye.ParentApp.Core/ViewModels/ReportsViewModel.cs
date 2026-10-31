@@ -135,8 +135,8 @@ public sealed class ReportsViewModel : ObservableObject
         }
 
         var today = _usage.ServiceToday!.Value; // Ready always has a service date.
-        var days = _usage.Days.ToDictionary(d => d.Day, d => d.Apps);
-        days.TryAdd(today, []);
+        var days = _usage.Days.ToDictionary(d => d.Day);
+        days.TryAdd(today, new DayUsageDto(0, null, string.Empty, today, today, [], []));
         var ordered = days.OrderByDescending(d => d.Key).ToList();
         // Days never change their order, so removing the gone ones and inserting the new ones keeps the list sorted.
         for (var index = Days.Count - 1; index >= 0; index--)
@@ -149,7 +149,7 @@ public sealed class ReportsViewModel : ObservableObject
 
         for (var index = 0; index < ordered.Count; index++)
         {
-            var (day, apps) = ordered[index];
+            var (day, usage) = ordered[index];
             var model = FindDay(day);
             if (model is null)
             {
@@ -157,7 +157,7 @@ public sealed class ReportsViewModel : ObservableObject
                 Days.Insert(index, model);
             }
 
-            model.Update(apps, day == today);
+            model.Update(usage.Apps, day == today, usage.Groups);
         }
     }
 
