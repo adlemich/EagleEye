@@ -1,6 +1,6 @@
 # Implementation Report: US-009 — Windows Parent App on Windows 10, and Windows Parent App Parity (0.9.0)
 
-**Status**: Windows part (Steps 1 to 3) done, incl. Michael's hands-on part of the Step 2 check (all pass, 2026-10-31); Step 4 (Windows 10 pre-check) pending; Step 5 (MacBook) open
+**Status**: Windows part (Steps 1 to 3) done, incl. Michael's hands-on part of the Step 2 check (all pass, 2026-10-31); Step 4 (Windows 10 pre-check) **passed** (H2, 2026-10-31); **next: H3 → Step 5 on the MacBook** (§10); the story goes to `Implemented` at the end of Step 5
 **Author**: DEV
 **Branch**: `feature/US-009-windows-parent-app-parity`
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-009/implementation-plan.md` (approved 2026-10-31)
@@ -62,7 +62,7 @@ No production logic changed, so no new tests. Windows, `pwsh 02_Implementation/s
 | Steps | Machine |
 |---|---|
 | 1 to 3 | Windows Developer Machine (Windows 11, 150 % scaling, dark mode, red accent) |
-| 4 | Windows 10 PC (Michael) — pending |
+| 4 | Windows 10 PC (Michael) — passed 2026-10-31 |
 | 5 | MacBook — open |
 
 ---
@@ -140,12 +140,39 @@ Done by Michael on the Windows Developer Machine, 2026-10-31 (Debug build, own d
 
 | # | Do | Expected | Result |
 |---|---|---|---|
-| 1 | `winver` | Windows 10 22H2, build 19045.x | |
-| 2 | Run `EagleEye-Setup-0.9.0.exe` | Inno Setup message that a newer Windows is needed; nothing installed (AC-5) | |
-| 3 | Run `EagleEye-ParentApp-Setup-0.9.0.exe` as a normal user (no admin prompt) | Installs; start "EagleEye Parent App" from the Start menu | |
-| 4 | Host dialog → `192.168.1.37` → pairing code from the service PC, device name "Windows 10 pre-check" | Connected, no certificate warning | |
-| 5 | Open the four pages once; App Gruppen: create a group, drag one app into it and back (mouse, and touchpad if the PC has one), delete the group | Works as on Windows 11; note any odd look (fonts, emoji, cut-off text) | |
-| 6 | Einstellungen → "Kopplung aufheben"; uninstall via *Einstellungen → Apps → Apps & Features* | Pairing removed; app uninstalled | |
-| 7 | Report to DEV (H2): pass/fail per row, screenshots of anything odd | | |
+| 1 | `winver` | Windows 10 22H2, build 19045.x | Pass (per Michael's summary) |
+| 2 | Run `EagleEye-Setup-0.9.0.exe` | Inno Setup message that a newer Windows is needed; nothing installed (AC-5) | Pass (per Michael's summary) |
+| 3 | Run `EagleEye-ParentApp-Setup-0.9.0.exe` as a normal user (no admin prompt) | Installs; start "EagleEye Parent App" from the Start menu | Pass (per Michael's summary) |
+| 4 | Host dialog → `192.168.1.37` → pairing code from the service PC, device name "Windows 10 pre-check" | Connected, no certificate warning | Pass (per Michael's summary) |
+| 5 | Open the four pages once; App Gruppen: create a group, drag one app into it and back (mouse, and touchpad if the PC has one), delete the group | Works as on Windows 11; note any odd look (fonts, emoji, cut-off text) | Pass (per Michael's summary) |
+| 6 | Einstellungen → "Kopplung aufheben"; uninstall via *Einstellungen → Apps → Apps & Features* | Pairing removed; app uninstalled | Pass (per Michael's summary) |
+| 7 | Report to DEV (H2): pass/fail per row, screenshots of anything odd | — | Reported 2026-10-31, see below |
+
+**Result (H2, 2026-10-31)**: Michael: *"done. The app is installing and working on Windows 10."* He gave no per-row detail; rows 1 to 6 are marked passed on the basis of this summary. No screenshots, no finding, no fix needed, so the 0.9.0 installers stay as built (§8.5).
 
 If the service PC's firewall blocks the Windows 10 PC, test TCP 5443 (`Test-NetConnection 192.168.1.37 -Port 5443`); a failed ping proves nothing.
+
+---
+
+## 10. H3 — Handover to the MacBook (Step 5)
+
+Everything for Step 5 is pushed on `feature/US-009-windows-parent-app-parity`. There is **no shared code change** from Windows (§8.3), so Step 5 has no Mac probe check to do (plan Step 5.2).
+
+**What Michael runs on the MacBook:**
+
+1. In the repo (outside iCloud Drive, e.g. `~/EagleEye`):
+   `git fetch && git switch feature/US-009-windows-parent-app-parity && git pull`
+2. `pwsh 02_Implementation/scripts/env-check.ps1` → host "MacBook", branch `feature/US-009-windows-parent-app-parity`, no uncommitted changes, Xcode and the `maccatalyst` workload found.
+3. Start a Claude Code DEV session in `02_Implementation/agents/dev/` with this prompt:
+   > You are DEV on the MacBook. US-009 step c, plan Step 5 (`02_Implementation/docs/requirements/user-stories/US-009/implementation-plan.md`). Steps 1 to 4 are done on Windows (see `implementation-report.md` §8 to §10). Run `build.ps1` and `test.ps1` (Shared, ParentApp: 0 warnings, all green). No shared change came from Windows, so no Mac probe check. Build the `.dmg` with `package-macos.ps1`, check that it is 0.9.0, and put its SHA-256 in the report. Do not install it over Michael's 0.8.0 (AC-32 starting point). Write report §Mac and the final "How to test" for TES. Set the story to `Implemented`, then commit and push (H4).
+
+**What Step 5 contains** (plan Step 5):
+
+| # | Step 5 | Expected |
+|---|---|---|
+| 5.1 | `pwsh 02_Implementation/scripts/build.ps1` and `test.ps1` | Shared + ParentApp green, 0 warnings (F-2 also on the Mac) |
+| 5.2 | Mac check of shared changes | None (only a Windows-only change) → nothing to check |
+| 5.3 | `pwsh 02_Implementation/scripts/package-macos.ps1` | `03_Delivery/macos/EagleEye-ParentApp-0.9.0.dmg` (`CFBundleShortVersionString` 0.9.0), SHA-256 in the report; **not** installed (Mac app 0.8.0 stays as AC-32 starting point) |
+| 5.4 | Report §Mac + final "How to test" for TES; story status → `Implemented` | Commit, push (**H4**); Michael then switches to Windows for TES's test plan |
+
+Step 6 (Windows close-out) is needed only if Step 5 changes code.
