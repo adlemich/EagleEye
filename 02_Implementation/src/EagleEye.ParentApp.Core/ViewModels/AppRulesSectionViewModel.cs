@@ -3,6 +3,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using EagleEye.ParentApp.Core.Abstractions;
 using EagleEye.ParentApp.Core.Accounts;
+using EagleEye.ParentApp.Core.Groups;
 using EagleEye.ParentApp.Core.Rules;
 using EagleEye.Shared.Constants;
 using EagleEye.Shared.Models;
@@ -14,11 +15,14 @@ namespace EagleEye.ParentApp.Core.ViewModels;
 /// <see cref="RulesViewModel"/>: the table of app records (rows merged by app id, sorted by display name in the parent's
 /// culture ignoring case, then by id; a new record is inserted at its place, AC-4), "No apps recorded yet." when empty,
 /// the budget text (saved when the parent leaves the box and before the page or the account changes; ADR-016 for the
-/// default) and one message line. Follows the model on the UI thread; never polls.
+/// default) and one message line. Follows the model on the UI thread; never polls. US-008 AC-17: apps in an app group
+/// (by program path, from the "AppGroups" area) are not listed; their own rules are kept by the service and their rows
+/// return with them when they leave the group. The section is ready when both areas are.
 /// </summary>
 public sealed class AppRulesSectionViewModel : ObservableObject, IAppRuleRowHost
 {
     private readonly IAppRulesModel _model;
+    private readonly IAppGroupsModel _groups;
     private readonly IUiDispatcher _dispatcher;
     private AccountsLoadState _state = AccountsLoadState.NotAvailable;
     private string _budgetText = string.Empty;
@@ -26,12 +30,14 @@ public sealed class AppRulesSectionViewModel : ObservableObject, IAppRuleRowHost
     private string _errorText = string.Empty;
 
     /// <summary>Creates the section and follows the model.</summary>
-    public AppRulesSectionViewModel(IAppRulesModel model, IUiDispatcher dispatcher)
+    public AppRulesSectionViewModel(IAppRulesModel model, IAppGroupsModel groups, IUiDispatcher dispatcher)
     {
         _model = model ?? throw new ArgumentNullException(nameof(model));
+        _groups = groups ?? throw new ArgumentNullException(nameof(groups));
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         Apply();
         model.Changed += () => dispatcher.Post(Apply);
+        groups.Changed += () => dispatcher.Post(Apply);
     }
 
     /// <summary>The rows of the selected account, sorted by display name (AC-2).</summary>
@@ -149,7 +155,7 @@ public sealed class AppRulesSectionViewModel : ObservableObject, IAppRuleRowHost
     void IAppRuleRowHost.Post(Action action) => _dispatcher.Post(action);
 
     /// <inheritdoc />
-    Task<bool> IAppRuleRowHost.SendAsync(Func<IAppRulesModel, Task<bool>> write) => SendAsync(write);
+    Task<bool> IAppRuleRowHost.SendAsync(Func<IRuleTableWrites, Task<bool>> write) => SendAsync(write);
 
     /// <inheritdoc />
     void IAppRuleRowHost.ShowProblem(AppBudgetProblem problem) =>
@@ -168,7 +174,7 @@ public sealed class AppRulesSectionViewModel : ObservableObject, IAppRuleRowHost
 
     private void Apply()
     {
-        State = _model.LoadState;
+        State = LoadStates.Both(_model.LoadState, _groups.LoadState);
         MergeRows();
         if (!_budgetTextDirty)
         {
@@ -181,8 +187,11 @@ public sealed class AppRulesSectionViewModel : ObservableObject, IAppRuleRowHost
     private void MergeRows()
     {
         var comparer = StringComparer.Create(CultureInfo.CurrentCulture, ignoreCase: true);
+        var grouped = IsReady
+            ? _groups.Snapshot!.Apps.Where(a => a.GroupId is not null).Select(a => a.ProgramPath).ToHashSet(StringComparer.OrdinalIgnoreCase)
+            : [];
         var apps = IsReady
-            ? [.. _model.Snapshot!.Apps.OrderBy(a => a.DisplayName, comparer).ThenBy(a => a.AppId)] // Ready always has a snapshot.
+            ? [.. _model.Snapshot!.Apps.Where(a => !grouped.Contains(a.ProgramPath)).OrderBy(a => a.DisplayName, comparer).ThenBy(a => a.AppId)] // Ready always has both snapshots.
             : new List<AppRuleDto>();
         var ids = apps.Select(a => a.AppId).ToHashSet();
         for (var index = Rows.Count - 1; index >= 0; index--)

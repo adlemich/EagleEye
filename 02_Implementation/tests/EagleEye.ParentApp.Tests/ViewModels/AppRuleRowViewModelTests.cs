@@ -74,7 +74,7 @@ public sealed class AppRuleRowViewModelTests
 
         public void Post(Action action) => action();
 
-        public Task<bool> SendAsync(Func<IAppRulesModel, Task<bool>> write) => write(Model.Object);
+        public Task<bool> SendAsync(Func<IRuleTableWrites, Task<bool>> write) => write(Model.Object);
 
         public void ShowProblem(AppBudgetProblem problem)
         {

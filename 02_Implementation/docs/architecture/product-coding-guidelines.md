@@ -19,6 +19,8 @@
 
 > **Amendment 2026-10-20 (CR-001, ADR-019) — approved by Michael 2026-10-20**: iOS and Android parent apps dropped. §14 (iOS) and §15 (Android) removed (numbers kept), TOC updated; §10.1 and §10.4 without `Platforms/Android` and `Platforms/iOS`; §13 (macOS is a production platform; unsigned `.dmg`; desktop layout only); §16.1 (Windows is a production platform; secure storage and packaging notes without Android).
 
+> **Amendment 2026-10-31 (US-008, ADR-021) — approved by Michael together with the US-008 implementation plan (2026-10-31)**: §10.1 (folders `Service/Groups` for the app-group state owner, snapshot, span union and group usage calculator, and `ParentApp.Core/Groups` for the app-groups model and name rules). Mac Catalyst rule (US-007 lesson): every visual state that sets a background also sets an explicit background in "Normal" (an unset background does not repaint). Where the requirements allow either way, prefer the option with less code (Michael, 2026-10-31).
+
 This document defines the coding standards all EagleEye components must follow. It complements but does not duplicate the system architecture (`arc42/system-architecture.md`) and ADRs — refer to those for architectural decisions, component responsibilities, and design rationale.
 
 **Target runtime**: .NET 10 / C# 14 (LTS, supported until November 2028)
@@ -505,6 +507,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 │   ├── Communication/            # ParentHub, TrayHub, connection management
 │   ├── SessionAgent/             # Agent mode (--session-agent): window scan, "Apps" rule, protocol (ADR-011)
 │   ├── Enforcement/              # Break-time gate, blocked-start sequence, kill set, process terminator (ADR-013, US-005)
+│   ├── Groups/                   # AppGroupService (state owner AppGroups, AppGroupRules), snapshot, span union, group usage (US-008)
 │   ├── Rules/                    # BreakTimeService (state owner AccountRules), schedule evaluation, repository access (US-005)
 │   ├── Configuration/            # ConfigurationManager, YAML reader
 │   ├── Statistics/               # UsageTracker, UsageService (usage state areas), accounting loop, purge (ADR-012)
@@ -524,6 +527,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 │   ├── Abstractions/             # ISecretStore, ISecretProtector, IThemeService, IDialogService, ...
 │   ├── Communication/            # SignalR client, certificate trust, ConnectionCoordinator, ParentHubGateway, StateReplica
 │   ├── Accounts/                 # Feature model of the state area UserAccounts (one folder per feature area)
+│   ├── Groups/                   # Feature model of the global state area AppGroups, group name rules (US-008)
 │   ├── Rules/                    # Feature models of the state areas AccountRules (US-005) and AppRules (US-006)
 │   ├── Settings/                 # Feature model of the global state area WarningSettings (US-006)
 │   ├── Data/                     # SQLite (pairing, settings, secrets), YAML reader

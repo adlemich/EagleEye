@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:core="clr-namespace:EagleEye.ParentApp.Core;assembly=EagleEye.ParentApp.Core"
+             xmlns:vm="clr-namespace:EagleEye.ParentApp.Core.ViewModels;assembly=EagleEye.ParentApp.Core"
+             x:Class="EagleEye.ParentApp.Views.AppGroupsView"
+             x:DataType="vm:AppGroupsViewModel">
+
+    <!-- App Groups (US-008 AC-1 to AC-14). One section per group, then "Not in any group". Apps move by drag-and-drop
+         (MAUI recognizers, spike Step 1), by "≡" and by the right-click menu (AC-11, AC-12). The entry area of a section is
+         the drop target; it has a minimum height of one row, so an empty group is a target too. The highlight is a
+         DataTrigger over an explicit transparent background (Catalyst repaint rule, TI-10). -->
+    <ScrollView>
+        <VerticalStackLayout Spacing="8">
+
+            <Label Text="{x:Static core:AppTexts.MenuAppGroups}" Style="{StaticResource PageHeader}" />
+
+            <Label Text="{Binding StatusText}" IsVisible="{Binding HasStatus}" />
+
+            <VerticalStackLayout Spacing="8" IsVisible="{Binding IsReady}">
+                <Label Text="{x:Static core:AppTexts.GroupsExplanation}" LineBreakMode="WordWrap" MaximumWidthRequest="900" HorizontalOptions="Start" />
+
+                <Button Text="{x:Static core:AppTexts.GroupsAdd}" Command="{Binding AddGroupCommand}" HorizontalOptions="Start" />
+
+                <Label Text="{Binding ErrorText}" IsVisible="{Binding HasError}" Style="{StaticResource ErrorText}" />
+
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Sections}" Spacing="12">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:AppGroupSectionViewModel">
+                            <VerticalStackLayout Spacing="0">
+                                <Border Style="{StaticResource SectionHeaderBar}" Padding="14,2,8,2" MinimumHeightRequest="34">
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                    <Label Grid.Column="0" Text="{Binding Title}" Style="{StaticResource SectionHeader}" />
+                                    <!-- Michael's request (D-19): icon buttons, the same style and trash icon as the break-time delete. -->
+                                    <ImageButton Grid.Column="1" Source="{AppThemeBinding Light=pencil_light.png, Dark=pencil_dark.png}"
+                                                 Style="{StaticResource IconButton}" Command="{Binding RenameCommand}" IsVisible="{Binding IsGroup}"
+                                                 SemanticProperties.Description="{x:Static core:AppTexts.GroupsRename}"
+                                                 ToolTipProperties.Text="{x:Static core:AppTexts.GroupsRename}" />
+                                    <ImageButton Grid.Column="2" Source="{AppThemeBinding Light=trash_light.png, Dark=trash_dark.png}"
+                                                 Style="{StaticResource IconButton}" Command="{Binding DeleteCommand}" IsVisible="{Binding IsGroup}"
+                                                 SemanticProperties.Description="{x:Static core:AppTexts.GroupsDelete}"
+                                                 ToolTipProperties.Text="{x:Static core:AppTexts.GroupsDelete}" />
+                                </Grid>
+                                </Border>
+
+                                <Border StrokeThickness="0" BackgroundColor="Transparent" MinimumHeightRequest="40" Padding="0,4">
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsDropTarget}" Value="True">
+                                            <Setter Property="BackgroundColor"
+                                                    Value="{AppThemeBinding Light={StaticResource DropHighlightLight}, Dark={StaticResource DropHighlightDark}}" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                    <Border.GestureRecognizers>
+                                        <DropGestureRecognizer AllowDrop="True" DragOver="OnDragOver" DragLeave="OnDragLeave" Drop="OnDrop" />
+                                    </Border.GestureRecognizers>
+                                    <VerticalStackLayout Spacing="0">
+                                        <Label Text="{Binding EmptyText}" IsVisible="{Binding ShowEmpty}" Style="{StaticResource SecondaryText}"
+                                               FontAttributes="Italic" Padding="12,8" />
+                                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Apps}" Spacing="0">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:GroupableAppViewModel">
+                                                    <Grid ColumnDefinitions="*,Auto" Padding="12,0" WidthRequest="560" HorizontalOptions="Start"
+                                                          BackgroundColor="Transparent">
+                                                        <Grid.GestureRecognizers>
+                                                            <DragGestureRecognizer CanDrag="True" DragStarting="OnDragStarting" DropCompleted="OnDropCompleted" />
+                                                        </Grid.GestureRecognizers>
+                                                        <FlyoutBase.ContextFlyout>
+                                                            <MenuFlyout>
+                                                                <MenuFlyoutItem Text="{x:Static core:AppTexts.GroupsMoveTo}" Command="{Binding MoveCommand}" />
+                                                            </MenuFlyout>
+                                                        </FlyoutBase.ContextFlyout>
+                                                        <Label Grid.Column="0" Text="{Binding DisplayName}" LineBreakMode="WordWrap" VerticalOptions="Center"
+                                                               ToolTipProperties.Text="{Binding ProgramPath}" />
+                                                        <Button Grid.Column="1" Text="≡" Style="{StaticResource EntryMenuButton}" Command="{Binding MoveCommand}"
+                                                                ToolTipProperties.Text="{x:Static core:AppTexts.GroupsMoveTo}"
+                                                                SemanticProperties.Description="{x:Static core:AppTexts.GroupsMoveTo}" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </VerticalStackLayout>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentView>

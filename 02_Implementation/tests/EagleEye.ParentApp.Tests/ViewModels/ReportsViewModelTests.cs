@@ -118,6 +118,16 @@ public sealed class ReportsViewModelTests
     }
 
     [Fact]
+    public void Report_GroupLinesOfEachDayShown()
+    {
+        ConnectWithAccounts();
+
+        _usage.Publish(AccountsLoadState.Ready, Today, Day(Today.AddDays(-1), 7) with { Groups = [new GroupUsageDto(7, "Games", 600)] });
+
+        Assert.Equal((false, "Games"), (_viewModel.Days[0].HasGroupRows, _viewModel.Days[1].GroupRows.Single().DisplayName));
+    }
+
+    [Fact]
     public void Midnight_NewTodayMovesFirstAndOldTodayBecomesPast()
     {
         ConnectWithAccounts();
@@ -218,7 +228,7 @@ public sealed class ReportsViewModelTests
 
     private static UserAccountListDto Accounts(params UserAccountDto[] accounts) => new(1, null, accounts);
 
-    private static DayUsageDto Day(DateOnly day, long seconds) => new(1, null, Anna, day, Today, [new AppUsageDto(1, "Editor", seconds)]);
+    private static DayUsageDto Day(DateOnly day, long seconds) => new(1, null, Anna, day, Today, [new AppUsageDto(1, "Editor", seconds)], []);
 
     private sealed class FakeAccountsModel : IUserAccountsModel
     {

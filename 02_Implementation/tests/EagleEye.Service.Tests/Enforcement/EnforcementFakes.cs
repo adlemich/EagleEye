@@ -134,3 +134,13 @@ internal sealed class FakeCloser : IAppCloser
         }
     }
 }
+
+/// <summary>A settable view of the app groups (US-008).</summary>
+internal sealed class GroupsView : EagleEye.Service.Groups.IAppGroupsView
+{
+    /// <summary>A new view without groups.</summary>
+    public static GroupsView Empty => new();
+
+    /// <inheritdoc />
+    public EagleEye.Service.Groups.AppGroupsSnapshot Current { get; set; } = EagleEye.Service.Groups.AppGroupsSnapshot.Empty;
+}

@@ -1,4 +1,5 @@
 using EagleEye.Service.Data;
+using EagleEye.Service.Groups;
 using EagleEye.Service.Rules;
 using EagleEye.Service.Statistics;
 using EagleEye.Shared.Constants;
@@ -25,6 +26,7 @@ namespace EagleEye.Service.Enforcement;
 public sealed class AppStartGate(
     IBreakTimeService rules,
     IAppRuleService appRules,
+    IAppGroupsView groups,
     TodayUsageLedger ledger,
     IProcessTable processTable,
     ICloseSequenceRunner runner,
@@ -50,7 +52,8 @@ public sealed class AppStartGate(
         var state = StateOf(observed.SessionId, observed.AccountSid);
         var firstOfRun = state.Run != observed.AgentRun;
         state.Run = observed.AgentRun;
-        var context = new ScreenContext(observed, userName, firstOfRun, rules.Current.For(observed.AccountSid), appRules.Current.For(observed.AccountSid));
+        var context = new ScreenContext(
+            observed, userName, firstOfRun, rules.Current.For(observed.AccountSid), appRules.Current.For(observed.AccountSid), groups.Current);
 
         var kept = new List<ObservedApp>(observed.Apps.Count);
         foreach (var app in observed.Apps)
@@ -140,20 +143,19 @@ public sealed class AppStartGate(
         return DecideByRule(context, app, created, zone);
     }
 
-    /// <summary>US-006 Decision 2, steps 3 and 4: the app rule at the local time of detection.</summary>
+    /// <summary>US-006 Decision 2, steps 3 and 4, per limit subject (US-008 Decision 6): the rule of the app or its group at the local time of detection.</summary>
     private CloseRequest? DecideByRule(ScreenContext context, ObservedApp app, long created, TimeZoneInfo zone)
     {
         var now = BreakTimeSchedule.ToLocal(timeProvider.GetUtcNow(), zone);
-        var rule = context.Apps.ByPath.GetValueOrDefault(app.ProgramPath);
-        var budget = rule?.BudgetMinutes ?? AppRuleRules.DefaultBudgetMinutes;
-        var days = rule?.Days ?? AppRuleRules.DefaultDays;
-        var used = ledger.UsedSeconds(context.Observed.AccountSid, app.ProgramPath, DateOnly.FromDateTime(now));
+        var subject = LimitSubjectResolver.Resolve(
+            ledger, context.Observed.AccountSid, app.ProgramPath, app.DisplayName, context.Apps, context.Groups, DateOnly.FromDateTime(now));
+        var rule = subject.Rule;
         string reason;
-        if (!AppRuleRules.IsAllowedOn(budget, days, now.DayOfWeek))
+        if (!rule.IsAllowedOn(now.DayOfWeek))
         {
             reason = CloseReasons.NotAllowedToday;
         }
-        else if (used >= (long)budget * SecondsPerMinute)
+        else if (subject.UsedSeconds >= (long)rule.BudgetMinutes * SecondsPerMinute)
         {
             reason = CloseReasons.BudgetUsedUp;
         }
@@ -165,8 +167,8 @@ public sealed class AppStartGate(
         return NewRequest(context, app, created, zone, null) with
         {
             Reason = reason,
-            Rule = new AppRuleAtClose(budget, days, used),
-            Message = KidMessageFactory.AppEnd(reason, context.Apps.BudgetText, app.DisplayName),
+            Rule = new AppRuleAtClose(rule.BudgetMinutes, rule.Days, subject.UsedSeconds, subject.GroupId, subject.GroupId is null ? null : subject.Name),
+            Message = KidMessageFactory.AppEnd(reason, context.Apps.BudgetText, subject.Name),
         };
     }
 
@@ -226,5 +228,6 @@ public sealed class AppStartGate(
         public long? Run { get; set; }
     }
 
-    private sealed record ScreenContext(AppsObserved Observed, string UserName, bool FirstOfRun, AccountRules Breaks, AccountAppRules Apps);
+    private sealed record ScreenContext(
+        AppsObserved Observed, string UserName, bool FirstOfRun, AccountRules Breaks, AccountAppRules Apps, AppGroupsSnapshot Groups);
 }

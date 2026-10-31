@@ -18,6 +18,7 @@ public sealed class UsageTracker(TimeProvider timeProvider, ILogger<UsageTracker
     private readonly Dictionary<int, SessionApps> _sessions = [];
     private readonly Dictionary<string, AccountState> _accounts = new(StringComparer.OrdinalIgnoreCase);
     private readonly UsageAccumulator _usage = new();
+    private readonly ActivitySpanAccumulator _spans = new();
     private readonly List<InstanceEvent> _events = [];
     private long _lastAdvance = timeProvider.GetTimestamp();
     private long _nextKey;
@@ -157,7 +158,7 @@ public sealed class UsageTracker(TimeProvider timeProvider, ILogger<UsageTracker
 
     /// <summary>
     /// Returns the instance events since the last call and, when <paramref name="includeUsage"/> is set (ticks),
-    /// the whole seconds credited and the "last seen" time of every open instance.
+    /// the whole seconds credited, the activity spans created or extended (ADR-021 §2) and the "last seen" time of every open instance.
     /// </summary>
     public TrackerOutput TakeOutput(bool includeUsage)
     {
@@ -175,7 +176,7 @@ public sealed class UsageTracker(TimeProvider timeProvider, ILogger<UsageTracker
             .Where(app => app.GoneSince is null)
             .Select(app => new InstanceSeen(app.Key, wallNow))
             .ToList();
-        return new TrackerOutput(events, _usage.Emit(today.AddDays(-1)), seen);
+        return new TrackerOutput(events, _usage.Emit(today.AddDays(-1)), seen) { Spans = _spans.Take(today.AddDays(-1)) };
     }
 
     private void RemoveSessionCore(int sessionId, string reason)
@@ -254,9 +255,12 @@ public sealed class UsageTracker(TimeProvider timeProvider, ILogger<UsageTracker
 
     private void Credit(string sid, OpenApp app, TimeSpan length, DateTimeOffset wallNow)
     {
+        var start = wallNow - length;
         foreach (var (day, part) in DaySplitter.Split(wallNow, length, timeProvider.LocalTimeZone))
         {
             _usage.Add(sid, app.Path, day, part);
+            _spans.Add(sid, app.Path, day, start, start + part);
+            start += part;
         }
     }
 

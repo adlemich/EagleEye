@@ -1,5 +1,6 @@
 using System.Threading.Channels;
 using EagleEye.Service.Enforcement;
+using EagleEye.Service.Groups;
 using EagleEye.Service.Monitoring;
 using EagleEye.Service.UserAccounts;
 
@@ -19,6 +20,7 @@ public sealed class UsageAccountingLoop(
     IUsageService usage,
     IUserAccountService userAccounts,
     IAppEnforcement enforcement,
+    IAppGroupService groups,
     TimeProvider timeProvider,
     ILogger<UsageAccountingLoop> logger) : BackgroundService
 {
@@ -153,7 +155,7 @@ public sealed class UsageAccountingLoop(
         var output = tracker.TakeOutput(includeUsage: true);
         await usage.ApplyAsync(output, _controlled, isTick: true, ct).ConfigureAwait(false);
         enforcement.PublishOpenApps(tracker.OpenPaths());
-        await enforcement.OnTickAsync(new EnforcementTick(_controlled, SessionsInUse(), output.Credits, tracker.IsOpen), ct).ConfigureAwait(false);
+        await enforcement.OnTickAsync(new EnforcementTick(_controlled, SessionsInUse(), output.Credits, tracker.IsOpen) { Spans = output.Spans }, ct).ConfigureAwait(false);
         if (Today() is var today && today != _today)
         {
             // First tick of a new local day (ADR-012 §5, §6): purge, then the new (empty) today for every account.
@@ -183,6 +185,7 @@ public sealed class UsageAccountingLoop(
         }
 
         _controlled = controlled;
+        await groups.OnControlledAccountsAsync([.. controlled.Keys]).ConfigureAwait(false);
         await supervisor.ReconcileAsync(_sessions.Sessions, controlled).ConfigureAwait(false);
     }
 

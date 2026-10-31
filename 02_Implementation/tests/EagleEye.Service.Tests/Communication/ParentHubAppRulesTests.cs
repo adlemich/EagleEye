@@ -1,3 +1,4 @@
+using EagleEye.Service.Groups;
 using EagleEye.Service.Communication;
 using EagleEye.Service.Pairing;
 using EagleEye.Service.Rules;
@@ -32,7 +33,7 @@ public sealed class ParentHubAppRulesTests
         ParentConnectionState.SetPaired(context.Object, "device-1", DeviceName);
         _hub = new ParentHub(
             Mock.Of<IPairingManager>(), Mock.Of<IParentConnectionRegistry>(), Mock.Of<IUserAccountService>(), Mock.Of<IUsageService>(),
-            Mock.Of<IBreakTimeService>(), _apps.Object, _warnings.Object, _logger)
+            Mock.Of<IBreakTimeService>(), _apps.Object, _warnings.Object, Mock.Of<IAppGroupService>(), _logger)
         {
             Context = context.Object,
         };

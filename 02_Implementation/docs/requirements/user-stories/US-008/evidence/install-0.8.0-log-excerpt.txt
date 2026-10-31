@@ -1,0 +1,21 @@
+# US-008 Step 7 / H2 — service 0.8.0 installed by Michael on the Windows service PC, 2026-10-31.
+# Excerpt (lines 1303-1318, today's entries) of %ProgramData%\EagleEye\logs\EagleEye.Service-001.log; full log kept locally (git-ignored).
+# Proof of migration 6: 'App groups loaded: 0 groups with 0 apps, 0 group rules.' No WRN/ERR/FTL entries today.
+# Michael: regression REG-001-01..05 OK; tray App Infos reports 0.8.
+
+2026-10-31 12:21:40.034 +01:00 [INF] EagleEye.Service.UserAccounts.UserAccountService: Account inventory loaded: 2 standard accounts, 1 under parental control.
+2026-10-31 12:21:40.056 +01:00 [INF] EagleEye.Service.Rules.AppRuleService: App rules loaded: 4 rules of 20 apps of 1 accounts, 0 changed budget texts.
+2026-10-31 12:21:40.058 +01:00 [INF] EagleEye.Service.Rules.WarningSettingsService: Warning levels loaded: early 5 min, final 2 min.
+2026-10-31 12:21:40.061 +01:00 [INF] EagleEye.Service.Rules.BreakTimeService: Break times loaded: 2 entries (2 on) of 1 accounts, 0 changed display texts.
+2026-10-31 12:21:42.550 +01:00 [INF] EagleEye.Service.Certificates.CertificateManager: TLS certificate loaded, thumbprint 2B3EE1F8C4BEA86A50A305E9F051A4E50868187FE574814DB99F1F5F933FA6AB.
+2026-10-31 12:21:52.132 +01:00 [INF] EagleEye.Service.Communication.TrayHub: Tray client connected: WbmtV2N400-ZjNOQIOrF3g (session 1, verified).
+2026-10-31 12:23:46.009 +01:00 [INF] EagleEye.Service.Communication.TrayHub: Tray client connected: QSDpQYnZtIob4DCtxx7inA (session 2, verified).
+2026-10-31 15:16:10.138 +01:00 [INF] EagleEye.Service.Communication.TrayHub: Tray client disconnected: QSDpQYnZtIob4DCtxx7inA
+2026-10-31 15:16:10.138 +01:00 [INF] EagleEye.Service.Communication.TrayHub: Tray client disconnected: WbmtV2N400-ZjNOQIOrF3g
+2026-10-31 15:16:18.612 +01:00 [INF] EagleEye.Service.UserAccounts.UserAccountService: Account inventory loaded: 2 standard accounts, 1 under parental control.
+2026-10-31 15:16:18.630 +01:00 [INF] EagleEye.Service.Rules.AppRuleService: App rules loaded: 4 rules of 20 apps of 1 accounts, 0 changed budget texts.
+2026-10-31 15:16:18.647 +01:00 [INF] EagleEye.Service.Groups.AppGroupService: App groups loaded: 0 groups with 0 apps, 0 group rules.
+2026-10-31 15:16:18.649 +01:00 [INF] EagleEye.Service.Rules.WarningSettingsService: Warning levels loaded: early 5 min, final 2 min.
+2026-10-31 15:16:18.652 +01:00 [INF] EagleEye.Service.Rules.BreakTimeService: Break times loaded: 2 entries (2 on) of 1 accounts, 0 changed display texts.
+2026-10-31 15:16:18.707 +01:00 [INF] EagleEye.Service.Certificates.CertificateManager: TLS certificate loaded, thumbprint 2B3EE1F8C4BEA86A50A305E9F051A4E50868187FE574814DB99F1F5F933FA6AB.
+2026-10-31 15:16:23.492 +01:00 [INF] EagleEye.Service.Communication.TrayHub: Tray client connected: QfoJv_Hd3LmwTFA8ytfSTQ (session 2, verified).

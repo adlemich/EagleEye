@@ -73,12 +73,12 @@ public sealed class EnforcementLogTests
     [Fact]
     public void WarningAndGraceTemplates()
     {
-        _log.AppWarning("kid1", "Editor", "notepad.exe", WarningLevel.Early, 2, AppEndKind.Budget, "shown");
-        _log.AppWarning("kid1", "Editor", "notepad.exe", WarningLevel.Final, 1, AppEndKind.Midnight, "shown");
-        _log.AppWarning("kid1", "Editor", "notepad.exe", WarningLevel.Final, 1, AppEndKind.NotAllowedToday, "shown");
-        _log.AppWarning("kid1", "Editor", "notepad.exe", WarningLevel.Final, 1, AppEndKind.Break, "shown");
+        _log.AppWarning("kid1", "Editor (notepad.exe)", WarningLevel.Early, 2, AppEndKind.Budget, "shown");
+        _log.AppWarning("kid1", "Editor (notepad.exe)", WarningLevel.Final, 1, AppEndKind.Midnight, "shown");
+        _log.AppWarning("kid1", "Editor (notepad.exe)", WarningLevel.Final, 1, AppEndKind.NotAllowedToday, "shown");
+        _log.AppWarning("kid1", "Editor (notepad.exe)", WarningLevel.Final, 1, AppEndKind.Break, "shown");
         _log.BreakWarning("kid1", Entry, new DateTime(2026, 10, 12, 20, 0, 0), WarningLevel.Final, 1, "shown (replaced the open message)");
-        _log.AppGrace("kid1", "Editor", "notepad.exe", AppEndKind.Budget, 1, new DateTime(2026, 10, 12, 18, 31, 5), "shown");
+        _log.AppGrace("kid1", "Editor (notepad.exe)", AppEndKind.Budget, 1, new DateTime(2026, 10, 12, 18, 31, 5), "shown");
         _log.BreakGrace("kid1", Entry, new DateTime(2026, 10, 12, 20, 0, 0), 2, 1, new DateTime(2026, 10, 12, 19, 59, 35), "not shown (tray client not connected)");
 
         Assert.Equal(

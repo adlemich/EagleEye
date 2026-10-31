@@ -25,6 +25,12 @@
          (Windows: the user's accent colour) and a readable text colour. -->
     <Color x:Key="HeadingBarBackgroundColor">#1E7B3A</Color>
     <Color x:Key="HeadingBarTextColor">#FFFFFF</Color>
+    <!-- The accent as a brush for the outline of the section headings (Border.Stroke needs a brush). -->
+    <SolidColorBrush x:Key="HeadingBarBrush" Color="#1E7B3A" />
+
+    <!-- Drop target highlight of the App Groups page (US-008 AC-11): a light accent tint, readable text on top. -->
+    <Color x:Key="DropHighlightLight">#CDEBD6</Color>
+    <Color x:Key="DropHighlightDark">#2B5A3A</Color>
 
     <!-- Connection indicator (like the tray client): readable on both themes. -->
     <SolidColorBrush x:Key="StatusConnectedBrushLight" Color="#1E9E46" />

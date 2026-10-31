@@ -1,0 +1,19 @@
+[PROBE] 15:43:37.877 page appgroups
+[PROBE] 15:43:39.380 flyout on Epic Games Launcher: item text 'Verschieben nach …', item context GroupableAppViewModel, command set
+[PROBE] 15:43:39.381 step A: highlight School
+[PROBE] 15:43:43.382 step B: highlight Not in any group
+[PROBE] 15:43:47.387 step C: end drag (no highlight)
+[PROBE] 15:43:51.390 step D: drop Paint on School
+[PROBE] 15:43:51.393 move C:\Windows\mspaint.exe -> 8
+[PROBE] 15:43:55.438 step E: move-to sheet
+[PROBE] 15:44:39.270 page appgroups
+[PROBE] 15:44:40.774 flyout on Epic Games Launcher: item text 'Verschieben nach …', item context GroupableAppViewModel, command set
+[PROBE] 15:44:57.835 page appgroups
+[PROBE] 15:44:59.339 flyout on Epic Games Launcher: item text 'Verschieben nach …', item context GroupableAppViewModel, command set
+[PROBE] 15:44:59.339 step A: highlight School
+[PROBE] 15:45:03.342 step B: highlight Not in any group
+[PROBE] 15:45:07.347 step C: end drag (no highlight)
+[PROBE] 15:44:19.228 page appgroups
+[PROBE] 15:44:20.732 flyout on Epic Games Launcher: item text 'Verschieben nach …', item context GroupableAppViewModel, command set
+[PROBE] 15:44:32.540 page reports
+[PROBE] 15:44:26.062 page rules

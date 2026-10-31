@@ -4,7 +4,8 @@ namespace EagleEye.ParentApp.Services;
 
 /// <summary>
 /// Keeps the heading bar colours (US-004 ISSUE-007) in the app resources
-/// <see cref="BackgroundKey"/> and <see cref="TextKey"/>, which the style <c>SectionHeader</c> uses as
+/// <see cref="BackgroundKey"/> and <see cref="TextKey"/>, which the styles <c>SectionHeaderBar</c> (outline, <see cref="BrushKey"/>), the
+/// selected menu item and the Mac buttons use as
 /// dynamic resources. Background: the platform accent colour (Windows: the user's accent colour; macOS: the accent colour from System Settings, US-007 AC-10),
 /// otherwise the app's primary colour; text: white or black,
 /// whichever stays readable (<see cref="HeadingBarPalette"/>). Refreshed when the accent colour
@@ -17,6 +18,9 @@ public sealed class HeadingBarColorService
 
     /// <summary>Resource key of the bar text colour.</summary>
     public const string TextKey = "HeadingBarTextColor";
+
+    /// <summary>Resource key of the accent as a brush: the outline of the section headings (US-008).</summary>
+    public const string BrushKey = "HeadingBarBrush";
 
 #if WINDOWS
     private readonly Platforms.Windows.WindowsAccentColor _accent = new();
@@ -45,6 +49,7 @@ public sealed class HeadingBarColorService
         var (background, text) = HeadingBarPalette.For(ReadPlatformAccent());
         application.Resources[BackgroundKey] = ToColor(background);
         application.Resources[TextKey] = ToColor(text);
+        application.Resources[BrushKey] = new SolidColorBrush(ToColor(background));
     }
 
     private RgbColor? ReadPlatformAccent()

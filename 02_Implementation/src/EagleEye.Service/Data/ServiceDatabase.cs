@@ -16,6 +16,10 @@ namespace EagleEye.Service.Data;
 /// copy), <c>AccountBudgetTexts</c> (no row = default text, ADR-016) and <c>WarningSettings</c> (at most one row; no row =
 /// 5 / 1 minutes and default texts), and rebuilds <c>BlockedStarts</c> with nullable entry columns plus kind, reason and
 /// app-rule columns (old rows: kind "blocked start", reason "break time").
+/// Migration 6 (US-008, ADR-021) creates <c>AppGroups</c> (name key unique ignoring case), <c>AppGroupMembers</c> (one group
+/// per program path), <c>AppGroupRules</c> (no row = 0:00, no day) and <c>ActivitySpans</c> (credited intervals per app record,
+/// Unix milliseconds UTC, one row per app record and start, purged with <c>DailyUsage</c>), and adds the group columns to
+/// <c>BlockedStarts</c>. No data copy: after the update there are no groups.
 /// </summary>
 /// <param name="connectionString">SQLite connection string, see <see cref="SqliteDatabase.BuildConnectionString"/>.</param>
 public sealed class ServiceDatabase(string connectionString) : SqliteDatabase(connectionString)
@@ -181,6 +185,41 @@ public sealed class ServiceDatabase(string connectionString) : SqliteDatabase(co
         ALTER TABLE BlockedStarts_v5 RENAME TO BlockedStarts;
         CREATE INDEX IX_BlockedStarts_DetectedUtc ON BlockedStarts (DetectedUtc);
         CREATE INDEX IX_BlockedStarts_Account ON BlockedStarts (AccountSid);
+        """,
+        """
+        CREATE TABLE AppGroups (
+            GroupId     INTEGER PRIMARY KEY AUTOINCREMENT,
+            Name        TEXT NOT NULL,
+            NameKey     TEXT NOT NULL UNIQUE,
+            CreatedUtc  TEXT NOT NULL,
+            ChangedUtc  TEXT NOT NULL
+        );
+        CREATE TABLE AppGroupMembers (
+            ProgramPath TEXT PRIMARY KEY NOT NULL COLLATE NOCASE,
+            GroupId     INTEGER NOT NULL REFERENCES AppGroups (GroupId) ON DELETE CASCADE,
+            ChangedUtc  TEXT NOT NULL
+        );
+        CREATE INDEX IX_AppGroupMembers_Group ON AppGroupMembers (GroupId);
+        CREATE TABLE AppGroupRules (
+            GroupId       INTEGER NOT NULL REFERENCES AppGroups (GroupId) ON DELETE CASCADE,
+            AccountSid    TEXT NOT NULL COLLATE NOCASE,
+            BudgetMinutes INTEGER NOT NULL CHECK (BudgetMinutes BETWEEN 0 AND 1439),
+            Days          INTEGER NOT NULL CHECK (Days BETWEEN 0 AND 127),
+            ChangedUtc    TEXT NOT NULL,
+            PRIMARY KEY (GroupId, AccountSid)
+        );
+        CREATE TABLE ActivitySpans (
+            SpanId      INTEGER PRIMARY KEY AUTOINCREMENT,
+            AppId       INTEGER NOT NULL REFERENCES AppRecords (AppId) ON DELETE CASCADE,
+            Day         TEXT NOT NULL,
+            StartUtcMs  INTEGER NOT NULL,
+            EndUtcMs    INTEGER NOT NULL CHECK (EndUtcMs >= StartUtcMs)
+        );
+        CREATE UNIQUE INDEX UX_ActivitySpans_AppStart ON ActivitySpans (AppId, StartUtcMs);
+        CREATE INDEX IX_ActivitySpans_AppDay ON ActivitySpans (AppId, Day);
+        CREATE INDEX IX_ActivitySpans_Day ON ActivitySpans (Day);
+        ALTER TABLE BlockedStarts ADD COLUMN GroupId INTEGER NULL;
+        ALTER TABLE BlockedStarts ADD COLUMN GroupName TEXT NULL;
         """,
     ];
 

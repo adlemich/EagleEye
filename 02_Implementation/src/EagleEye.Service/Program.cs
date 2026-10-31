@@ -4,6 +4,7 @@ using EagleEye.Service.Communication;
 using EagleEye.Service.Data;
 using EagleEye.Service.Diagnostics;
 using EagleEye.Service.Enforcement;
+using EagleEye.Service.Groups;
 using EagleEye.Service.Pairing;
 using EagleEye.Service.Rules;
 using EagleEye.Service.SessionAgent;
@@ -129,6 +130,14 @@ var host = Host.CreateDefaultBuilder(args)
             services.AddSingleton<WarningSettingsService>();
             services.AddSingleton<IWarningSettingsService>(sp => sp.GetRequiredService<WarningSettingsService>());
 
+            // State areas "AppGroups" and "AppGroupRules:{sid}" (US-008, ADR-021).
+            services.AddSingleton<IAppGroupRepository, AppGroupRepository>();
+            services.AddSingleton<AppGroupService>();
+            services.AddSingleton<IAppGroupService>(sp => sp.GetRequiredService<AppGroupService>());
+            services.AddSingleton<IAppGroupsView>(sp => sp.GetRequiredService<AppGroupService>());
+            services.AddSingleton<IAppRecordObserver>(sp => sp.GetRequiredService<AppGroupService>());
+            services.AddSingleton<IAccountDataPurger>(sp => sp.GetRequiredService<AppGroupService>());
+
             // Break-time enforcement at app start (US-005, ADR-013, ADR-014).
             services.AddAppEnforcement();
 
@@ -169,6 +178,7 @@ try
     await host.Services.GetRequiredService<IUserAccountService>().InitializeAsync();
     await host.Services.GetRequiredService<IUsageService>().InitializeAsync();
     await host.Services.GetRequiredService<IAppRuleService>().InitializeAsync();
+    await host.Services.GetRequiredService<IAppGroupService>().InitializeAsync();
     await host.Services.GetRequiredService<IWarningSettingsService>().InitializeAsync();
     await host.Services.GetRequiredService<IBreakTimeService>().InitializeAsync();
     await host.Services.GetRequiredService<EnforcementHistory>().InitializeAsync();

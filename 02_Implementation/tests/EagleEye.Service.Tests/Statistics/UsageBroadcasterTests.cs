@@ -18,7 +18,7 @@ public sealed class UsageBroadcasterTests
         clients.Setup(c => c.Group(ParentHub.ParentsGroup)).Returns(parents.Object);
         var hub = new Mock<IHubContext<ParentHub, IParentClientCallback>>();
         hub.SetupGet(h => h.Clients).Returns(clients.Object);
-        var snapshot = new DayUsageDto(2, null, "S-1-5-21-1", new DateOnly(2026, 10, 7), new DateOnly(2026, 10, 7), []);
+        var snapshot = new DayUsageDto(2, null, "S-1-5-21-1", new DateOnly(2026, 10, 7), new DateOnly(2026, 10, 7), [], []);
 
         await new UsageBroadcaster(hub.Object).BroadcastAsync(snapshot);
 

@@ -10,6 +10,8 @@ namespace EagleEye.ParentApp.Core.Reports;
 /// results of an earlier selection or connection are ignored (generation counter). Broadcasts of the selected
 /// account are applied per day with the revision rule (<see cref="StateReplica{T}"/>); days older than 90 days
 /// and past days without usage are dropped (AC-19). Disconnect → no data (US-003 OQ-5). Never polls.
+/// US-008 (AC-36, AC-37, plan TI-6): a change of the "AppGroups" area changes the group lines of every day, which the
+/// service does not broadcast again; the shown usage is then fetched again and replaces the held days (no "Loading").
 /// </summary>
 public sealed class AccountUsageModel : IAccountUsageModel
 {
@@ -34,6 +36,7 @@ public sealed class AccountUsageModel : IAccountUsageModel
         gateway.Connected += () => Restart(SelectedAccountSid);
         gateway.Disconnected += OnDisconnected;
         gateway.DayUsageChanged += OnDayUsageChanged;
+        gateway.AppGroupsChanged += _ => Refresh();
     }
 
     /// <inheritdoc />
@@ -122,6 +125,24 @@ public sealed class AccountUsageModel : IAccountUsageModel
         }
     }
 
+    private void Refresh()
+    {
+        string sid;
+        long generation;
+        lock (_lock)
+        {
+            if (_selected is null || _loadState != AccountsLoadState.Ready)
+            {
+                return;
+            }
+
+            sid = _selected;
+            generation = _generation;
+        }
+
+        LastFetch = FetchAsync(sid, generation, replace: true);
+    }
+
     private void OnDisconnected()
     {
         lock (_lock)
@@ -135,7 +156,7 @@ public sealed class AccountUsageModel : IAccountUsageModel
         Changed?.Invoke();
     }
 
-    private async Task FetchAsync(string accountSid, long generation)
+    private async Task FetchAsync(string accountSid, long generation, bool replace = false)
     {
         AccountUsageDto usage;
         try
@@ -164,6 +185,12 @@ public sealed class AccountUsageModel : IAccountUsageModel
             if (generation != _generation)
             {
                 return;
+            }
+
+            if (replace)
+            {
+                // The revisions of the days are unchanged by a group change, so the new group lines replace the days.
+                _days.Clear();
             }
 
             foreach (var day in usage.Days)

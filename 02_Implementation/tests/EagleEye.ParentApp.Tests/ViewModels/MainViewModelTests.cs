@@ -61,7 +61,7 @@ public sealed class MainViewModelTests : IAsyncLifetime
         await _viewModel.StartAsync();
 
         Assert.Equal(
-            (_viewModel.MenuItems[2], MainViewModel.ReportsKey, nameof(MainViewModel.SelectedItem)),
+            (_viewModel.MenuItems[3], MainViewModel.ReportsKey, nameof(MainViewModel.SelectedItem)),
             (_viewModel.SelectedItem, _viewModel.SelectedItem.Key, Assert.Single(changes)));
     }
 
@@ -112,7 +112,7 @@ public sealed class MainViewModelTests : IAsyncLifetime
     }
 
     [Fact]
-    public void MenuItems_SettingsRulesReports()
+    public void MenuItems_SettingsAppGroupsRulesReports()
     {
         var titles = TestSupport.InCulture("de-DE", () => new MainViewModel(
             _database,
@@ -121,7 +121,12 @@ public sealed class MainViewModelTests : IAsyncLifetime
             new ServerConnectionViewModel(_coordinator.Object, _dialogs.Object, new ImmediateDispatcher())).MenuItems);
 
         Assert.Equal(
-            [new NavigationItem(MainViewModel.SettingsKey, "Einstellungen"), new NavigationItem(MainViewModel.RulesKey, "Regeln"), new NavigationItem(MainViewModel.ReportsKey, "Berichte")],
+            [
+                new NavigationItem(MainViewModel.SettingsKey, "Einstellungen"),
+                new NavigationItem(MainViewModel.AppGroupsKey, "App Gruppen"),
+                new NavigationItem(MainViewModel.RulesKey, "Regeln"),
+                new NavigationItem(MainViewModel.ReportsKey, "Berichte"),
+            ],
             titles);
     }
 

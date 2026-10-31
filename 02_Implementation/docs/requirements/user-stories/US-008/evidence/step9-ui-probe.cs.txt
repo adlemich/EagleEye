@@ -1,0 +1,200 @@
+// TEMPORARY US-008 Step 9 on-screen probe. NOT COMMITTED (like the Step 1 spike). Delete before commit.
+#if DEBUG
+using EagleEye.ParentApp.Core.Accounts;
+using EagleEye.ParentApp.Core.Appearance;
+using EagleEye.ParentApp.Core.Communication;
+using EagleEye.ParentApp.Core.Groups;
+using EagleEye.ParentApp.Core.Reports;
+using EagleEye.ParentApp.Core.Rules;
+using EagleEye.ParentApp.Core.ViewModels;
+using EagleEye.ParentApp.Views;
+using EagleEye.Shared.Models;
+
+namespace EagleEye.ParentApp.Probe;
+
+public static class UiProbe
+{
+    public const string Kid = "S-1-5-21-1-2-3-1003";
+    public static string? Mode => Environment.GetEnvironmentVariable("EAGLEEYE_UI_PROBE");
+
+    public static void Log(string text) => Console.Error.WriteLine($"[PROBE] {DateTime.Now:HH:mm:ss.fff} {text}");
+
+    public static void Register(IServiceCollection services)
+    {
+        if (Mode is null) return;
+        services.AddSingleton<IConnectionCoordinator, FakeCoordinator>();
+        services.AddSingleton<IUserAccountsModel, FakeAccounts>();
+        services.AddSingleton<IAppGroupsModel, FakeGroups>();
+        services.AddSingleton<IAppGroupRulesModel, FakeGroupRules>();
+        services.AddSingleton<IAppRulesModel, FakeAppRules>();
+        services.AddSingleton<IAccountRulesModel, FakeAccountRules>();
+        services.AddSingleton<IAccountUsageModel, FakeUsage>();
+    }
+
+    public static async void Run(IServiceProvider sp, MainPage page)
+    {
+        if (Mode is not { } mode) return;
+        var theme = Environment.GetEnvironmentVariable("EAGLEEYE_UI_THEME");
+        if (theme is not null) Application.Current!.UserAppTheme = theme == "dark" ? AppTheme.Dark : AppTheme.Light;
+        var main = sp.GetRequiredService<MainViewModel>();
+        await Task.Delay(1500);
+        if (Environment.GetEnvironmentVariable("EAGLEEYE_UI_ACCENT") is { } accent)
+        {
+            var rgb = Convert.FromHexString(accent);
+            var (bg, fg) = HeadingBarPalette.For(new RgbColor(rgb[0], rgb[1], rgb[2]));
+            Application.Current!.Resources["HeadingBarBackgroundColor"] = Color.FromRgb(bg.R, bg.G, bg.B);
+            Application.Current!.Resources["HeadingBarTextColor"] = Color.FromRgb(fg.R, fg.G, fg.B);
+            Application.Current!.Resources["HeadingBarBrush"] = new SolidColorBrush(Color.FromRgb(bg.R, bg.G, bg.B));
+        }
+
+        var key = mode.StartsWith("settings") ? MainViewModel.SettingsKey : mode.StartsWith("rules") ? MainViewModel.RulesKey : mode.StartsWith("reports") ? MainViewModel.ReportsKey : MainViewModel.AppGroupsKey;
+        main.SelectedItem = main.MenuItems.First(i => i.Key == key);
+        Log($"page {key}");
+        if (key != MainViewModel.AppGroupsKey) return;
+        var vm = sp.GetRequiredService<AppGroupsViewModel>();
+        await Task.Delay(1500);
+        CheckFlyout(page);
+        if (mode == "groups-drag")
+        {
+            Log("step A: highlight School"); vm.BeginDrag(vm.Sections[2].Apps[2]); vm.DragOver(vm.Sections[1]);
+            await Task.Delay(5000);
+            Log("step B: highlight Not in any group"); vm.DragOver(vm.Sections[2]);
+            await Task.Delay(4000);
+            Log("step C: end drag (no highlight)"); vm.EndDrag();
+            await Task.Delay(4000);
+            Log("step D: drop Paint on School"); vm.BeginDrag(vm.Sections[2].Apps[2]); vm.DragOver(vm.Sections[1]); await vm.DropAsync(vm.Sections[1]);
+            await Task.Delay(4000);
+            Log("step E: move-to sheet"); vm.Sections[0].Apps[0].MoveCommand.Execute(null);
+        }
+        else if (mode == "groups-rename")
+        {
+            vm.Sections[0].RenameCommand.Execute(null);
+        }
+        else if (mode == "groups-add")
+        {
+            vm.AddGroupCommand.Execute(null);
+        }
+        else if (mode == "groups-delete")
+        {
+            vm.Sections[0].DeleteCommand.Execute(null);
+        }
+    }
+
+    private static void CheckFlyout(Element root)
+    {
+        foreach (var grid in root.GetVisualTreeDescendants().OfType<Grid>())
+        {
+            if (FlyoutBase.GetContextFlyout(grid) is MenuFlyout flyout && flyout.FirstOrDefault() is MenuFlyoutItem item)
+            {
+                Log($"flyout on {(grid.BindingContext as GroupableAppViewModel)?.DisplayName}: item text '{item.Text}', item context {item.BindingContext?.GetType().Name ?? "null"}, command {(item.Command is null ? "null" : "set")}");
+                return;
+            }
+        }
+
+        Log("no flyout found");
+    }
+
+    private sealed class FakeCoordinator : IConnectionCoordinator
+    {
+        public ConnectionState State { get; } = new(ConnectionStatus.PairedConnected, "192.168.1.37", "MacBook", ConnectionMessage.None);
+        public event Action<ConnectionState>? StateChanged { add { } remove { } }
+        public Task<ConnectionState> InitializeAsync() => Task.FromResult(State);
+        public Task BeginPairingAsync(string? hostInput) => Task.CompletedTask;
+        public Task RequestNewCodeAsync() => Task.CompletedTask;
+        public Task SubmitCodeAsync(string? code, string? deviceName) => Task.CompletedTask;
+        public Task CancelPairingAsync() => Task.CompletedTask;
+        public Task<bool> RemovePairingAsync() => Task.FromResult(false);
+        public Task<bool> ForgetPairingLocallyAsync() => Task.FromResult(false);
+    }
+
+    private sealed class FakeAccounts : IUserAccountsModel
+    {
+        public event Action? Changed { add { } remove { } }
+        public AccountsLoadState LoadState => AccountsLoadState.Ready;
+        public UserAccountListDto? Snapshot { get; } = new(1, null, [new UserAccountDto(Kid, "eagleeye-kid", null, false, true)]);
+        public Task<bool> SetParentalControlAsync(string accountSid, bool isUnderParentalControl) => Task.FromResult(true);
+    }
+
+    internal sealed class FakeGroups : IAppGroupsModel
+    {
+        private long _next = 10;
+        private List<AppGroupDto> _groups = [new(7, "Games"), new(8, "School")];
+        private List<GroupableAppDto> _apps =
+        [
+            new(@"C:\Epic\EpicGamesLauncher.exe", "Epic Games Launcher", 7), new(@"C:\Fortnite\Fortnite.exe", "Fortnite", 7),
+            new(@"C:\Minecraft\Minecraft.exe", "Minecraft", 7), new(@"C:\Minecraft\MinecraftLauncher.exe", "Minecraft Launcher", 7),
+            new(@"C:\Xbox\Xbox.exe", "Xbox", 7), new(@"C:\Windows\notepad.exe", "Editor", null), new(@"C:\Chrome\chrome.exe", "Google Chrome", null),
+            new(@"C:\Windows\mspaint.exe", "Paint", null), new(@"C:\Windows\calc.exe", "Rechner", null),
+        ];
+        private long _revision = 1;
+        public event Action? Changed;
+        public AccountsLoadState LoadState => AccountsLoadState.Ready;
+        public AppGroupsDto? Snapshot => new(_revision, null, _groups, _apps);
+        public Task<bool> CreateAsync(string name) { _groups = [.. _groups, new(_next++, name)]; return Done(); }
+        public Task<bool> RenameAsync(long groupId, string name) { _groups = [.. _groups.Select(g => g.GroupId == groupId ? g with { Name = name } : g)]; return Done(); }
+        public Task<bool> DeleteAsync(long groupId) { _groups = [.. _groups.Where(g => g.GroupId != groupId)]; _apps = [.. _apps.Select(a => a.GroupId == groupId ? a with { GroupId = null } : a)]; return Done(); }
+        public Task<bool> MoveAsync(string programPath, long? groupId) { Log($"move {programPath} -> {groupId}"); _apps = [.. _apps.Select(a => a.ProgramPath == programPath ? a with { GroupId = groupId } : a)]; return Done(); }
+        private Task<bool> Done() { _revision++; Changed?.Invoke(); return Task.FromResult(true); }
+    }
+
+    private sealed class FakeGroupRules : IAppGroupRulesModel
+    {
+        public event Action? Changed { add { } remove { } }
+        public AccountsLoadState LoadState => AccountsLoadState.Ready;
+        public AppGroupRulesDto? Snapshot { get; } = new(1, null, Kid, [new AppGroupRuleDto(7, 60, BreakTimeDays.Friday | BreakTimeDays.Saturday | BreakTimeDays.Sunday)]);
+        public void SelectAccount(string? accountSid) { }
+        public Task<bool> SetBudgetAsync(long id, AppBudgetPart part, int value) => Task.FromResult(true);
+        public Task<bool> SetDayAsync(long id, DayOfWeek day, bool isAllowed) => Task.FromResult(true);
+    }
+
+    private sealed class FakeAppRules : IAppRulesModel
+    {
+        public event Action? Changed { add { } remove { } }
+        public string? SelectedAccountSid => Kid;
+        public AccountsLoadState LoadState => AccountsLoadState.Ready;
+        public AppRulesDto? Snapshot { get; } = new(1, null, Kid,
+        [
+            new AppRuleDto(1, "Editor", @"C:\Windows\notepad.exe", 0, BreakTimeDays.None),
+            new AppRuleDto(2, "Google Chrome", @"C:\Chrome\chrome.exe", 30, BreakTimeDays.All),
+            new AppRuleDto(3, "Fortnite", @"C:\Fortnite\Fortnite.exe", 0, BreakTimeDays.None),
+            new AppRuleDto(4, "Paint", @"C:\Windows\mspaint.exe", 0, BreakTimeDays.None),
+        ], null);
+        public void SelectAccount(string? accountSid) { }
+        public Task<bool> SetBudgetAsync(long id, AppBudgetPart part, int value) => Task.FromResult(true);
+        public Task<bool> SetDayAsync(long id, DayOfWeek day, bool isAllowed) => Task.FromResult(true);
+        public Task<bool> SetBudgetTextAsync(string text) => Task.FromResult(true);
+    }
+
+    private sealed class FakeAccountRules : IAccountRulesModel
+    {
+        public event Action? Changed { add { } remove { } }
+        public string? SelectedAccountSid => Kid;
+        public AccountsLoadState LoadState => AccountsLoadState.Ready;
+        public AccountRulesDto? Snapshot { get; } = new(1, null, Kid, [new BreakTimeEntryDto(1, true, 1200, 1439, BreakTimeDays.All)], EagleEye.Shared.Constants.BreakTimeRules.DefaultDisplayText, true);
+        public void SelectAccount(string? accountSid) { }
+        public Task<bool> AddEntryAsync() => Task.FromResult(true);
+        public Task<bool> DeleteEntryAsync(long entryId) => Task.FromResult(true);
+        public Task<bool> SetActiveAsync(long entryId, bool isActive) => Task.FromResult(true);
+        public Task<bool> SetTimeAsync(long entryId, BreakTimeBoundary boundary, int minute) => Task.FromResult(true);
+        public Task<bool> SetDayAsync(long entryId, DayOfWeek day, bool isSelected) => Task.FromResult(true);
+        public Task<bool> SetDisplayTextAsync(string text) => Task.FromResult(true);
+    }
+
+    private sealed class FakeUsage : IAccountUsageModel
+    {
+        private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.Now);
+        public event Action? Changed { add { } remove { } }
+        public string? SelectedAccountSid => Kid;
+        public AccountsLoadState LoadState => AccountsLoadState.Ready;
+        public DateOnly? ServiceToday => Today;
+        public IReadOnlyList<DayUsageDto> Days { get; } =
+        [
+            new(1, null, Kid, Today, Today,
+                [new AppUsageDto(1, "Minecraft", 3000), new AppUsageDto(2, "Minecraft Launcher", 3300), new AppUsageDto(3, "Editor", 600)],
+                [new GroupUsageDto(7, "Games", 3420), new GroupUsageDto(8, "School", 20)]),
+            new(1, null, Kid, Today.AddDays(-1), Today, [new AppUsageDto(3, "Editor", 1200)], []),
+        ];
+        public void SelectAccount(string? accountSid) { }
+    }
+}
+#endif

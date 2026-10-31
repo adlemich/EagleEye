@@ -15,14 +15,14 @@ public enum AppBudgetProblem
     InvalidMinutes,
 }
 
-/// <summary>What an app-rule row needs from its section (<see cref="AppRulesSectionViewModel"/>).</summary>
+/// <summary>What a rule row needs from its section (<see cref="AppRulesSectionViewModel"/>, <see cref="AppGroupRulesSectionViewModel"/>).</summary>
 internal interface IAppRuleRowHost
 {
     /// <summary>Queues an action on the UI thread.</summary>
     void Post(Action action);
 
     /// <summary>Sends a write; shows the AC-12 message on failure and clears the message on success. Never throws.</summary>
-    Task<bool> SendAsync(Func<IAppRulesModel, Task<bool>> write);
+    Task<bool> SendAsync(Func<IRuleTableWrites, Task<bool>> write);
 
     /// <summary>Shows the message of a refused field (AC-8).</summary>
     void ShowProblem(AppBudgetProblem problem);
@@ -34,6 +34,8 @@ internal interface IAppRuleRowHost
 /// and minutes fields are sent on <see cref="CommitHours"/>/<see cref="CommitMinutes"/> (leaving the field, Enter); an
 /// invalid value returns to the confirmed value with a message. Snapshots (<see cref="Update"/>) never overwrite a field
 /// with uncommitted typing or a pending write (AC-17). Rows are merged by <see cref="AppId"/>. UI thread only.
+/// US-008 (AC-15, AC-16): the rows of "App group rules" are the same rows; there <see cref="AppId"/> is the group id,
+/// <see cref="DisplayName"/> the group name and <see cref="ProgramPath"/> the members line.
 /// </summary>
 public sealed class AppRuleRowViewModel : ObservableObject
 {
@@ -216,13 +218,13 @@ public sealed class AppRuleRowViewModel : ObservableObject
         }
     }
 
-    private void Send(string field, Func<IAppRulesModel, Task<bool>> write)
+    private void Send(string field, Func<IRuleTableWrites, Task<bool>> write)
     {
         _pending[field] = _pending.GetValueOrDefault(field) + 1;
         LastWrite = SendAsync(field, write);
     }
 
-    private async Task SendAsync(string field, Func<IAppRulesModel, Task<bool>> write)
+    private async Task SendAsync(string field, Func<IRuleTableWrites, Task<bool>> write)
     {
         await _host.SendAsync(write);
         _host.Post(() =>

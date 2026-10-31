@@ -53,7 +53,7 @@ public sealed class EnforcementLog(ILogger<EnforcementLog> logger, InstanceLogLi
         {
             logger.LogInformation(
                 "Blocked start: account {UserName}, {DisplayName} ({ProcessName}, {ProgramPath}), process {ProcessId}, {Reason} ({Rule}); closing the app.",
-                request.UserName, request.DisplayName, request.ProcessName, request.ProgramPath, request.Targets[0].Pid, request.Reason, RuleText(request.Rule));
+                request.UserName, request.DisplayName, request.ProcessName, request.ProgramPath, request.Targets[0].Pid, ReasonText(request), RuleText(request.Rule));
         }
 
         return true;
@@ -106,12 +106,15 @@ public sealed class EnforcementLog(ILogger<EnforcementLog> logger, InstanceLogLi
         logger.LogWarning(exception, "The app record for the blocked start of {DisplayName} ({ProgramPath}) could not be created.", request.DisplayName, request.ProgramPath);
     }
 
-    /// <summary>"Warning: account kid1, Editor (notepad.exe), early warning, 2 min left (budget); message shown." (AC-37).</summary>
-    public void AppWarning(string userName, string displayName, string processName, WarningLevel level, int minutes, AppEndKind kind, string messageState)
+    /// <summary>
+    /// "Warning: account kid1, Editor (notepad.exe), early warning, 2 min left (budget); message shown." (US-006 AC-37) or
+    /// "Warning: account kid1, group Games (Editor, Paint), …" (US-008 AC-31); <paramref name="subject"/> from <see cref="Subject"/>.
+    /// </summary>
+    public void AppWarning(string userName, string subject, WarningLevel level, int minutes, AppEndKind kind, string messageState)
     {
         logger.LogInformation(
-            "Warning: account {UserName}, {DisplayName} ({ProcessName}), {Level} warning, {Minutes} min left ({End}); message {MessageState}.",
-            userName, displayName, processName, LevelText(level), minutes, EndText(kind), messageState);
+            "Warning: account {UserName}, {Subject}, {Level} warning, {Minutes} min left ({End}); message {MessageState}.",
+            userName, subject, LevelText(level), minutes, EndText(kind), messageState);
     }
 
     /// <summary>"Warning: account kid1, break time 20:00–23:59 (Sa) begins at 20:00, final warning, 1 min left; message shown." (AC-37).</summary>
@@ -125,11 +128,11 @@ public sealed class EnforcementLog(ILogger<EnforcementLog> logger, InstanceLogLi
     }
 
     /// <summary>"Grace period: account kid1, Editor (notepad.exe): the rules changed (budget); closes in 1 min at 18:31:05; message shown." (AC-37).</summary>
-    public void AppGrace(string userName, string displayName, string processName, AppEndKind kind, int minutes, DateTime closesLocal, string messageState)
+    public void AppGrace(string userName, string subject, AppEndKind kind, int minutes, DateTime closesLocal, string messageState)
     {
         logger.LogInformation(
-            "Grace period: account {UserName}, {DisplayName} ({ProcessName}): the rules changed ({End}); closes in {Minutes} min at {Closes}; message {MessageState}.",
-            userName, displayName, processName, EndText(kind), minutes, closesLocal.ToString("HH:mm:ss", CultureInfo.InvariantCulture), messageState);
+            "Grace period: account {UserName}, {Subject}: the rules changed ({End}); closes in {Minutes} min at {Closes}; message {MessageState}.",
+            userName, subject, EndText(kind), minutes, closesLocal.ToString("HH:mm:ss", CultureInfo.InvariantCulture), messageState);
     }
 
     /// <summary>"Grace period: account kid1, break time 20:00–23:59 (Sa) begins at 20:00; 2 app(s) close in 1 min at 19:59:35; message shown." (AC-37).</summary>
@@ -159,15 +162,32 @@ public sealed class EnforcementLog(ILogger<EnforcementLog> logger, InstanceLogLi
         }
     }
 
-    /// <summary>"break time 20:00–23:59 (Sa)", "budget used up" or "not allowed today".</summary>
-    internal static string ReasonText(CloseRequest request) =>
-        request.Entry is { } entry ? $"break time {BreakTimeChangeLog.Range(entry)} ({BreakTimeChangeLog.Days(entry.Days)})" : request.Reason;
+    /// <summary>"Editor (notepad.exe)" for an app, "group Games (Editor, Paint)" for a group with its running apps (US-008 AC-31).</summary>
+    public static string Subject(string? groupName, IEnumerable<(string DisplayName, string ProcessName)> apps)
+    {
+        ArgumentNullException.ThrowIfNull(apps);
+        return groupName is null
+            ? string.Join(", ", apps.Select(a => $"{a.DisplayName} ({a.ProcessName})"))
+            : $"group {groupName} ({string.Join(", ", apps.Select(a => a.DisplayName))})";
+    }
 
-    /// <summary>"rule 0:45, Mo Tu, used 0:45:03".</summary>
-    internal static string RuleText(AppRuleAtClose? rule) =>
-        rule is null
-            ? "rule unknown"
-            : $"rule {AppRuleRules.Format(rule.BudgetMinutes)}, {AppRuleChangeLog.Days(rule.Days)}, used {Duration(rule.UsedSeconds)}";
+    /// <summary>"break time 20:00–23:59 (Sa)", "budget used up", "not allowed today", or "group Games, budget used up" (US-008).</summary>
+    internal static string ReasonText(CloseRequest request) =>
+        request.Entry is { } entry ? $"break time {BreakTimeChangeLog.Range(entry)} ({BreakTimeChangeLog.Days(entry.Days)})"
+        : request.Rule?.GroupName is { } group ? $"group {group}, {request.Reason}"
+        : request.Reason;
+
+    /// <summary>"rule 0:45, Mo Tu, used 0:45:03" or "group rule 1:00, Sa, group used 1:00:02" (US-008).</summary>
+    internal static string RuleText(AppRuleAtClose? rule)
+    {
+        if (rule is null)
+        {
+            return "rule unknown";
+        }
+
+        var group = rule.GroupId is null ? string.Empty : "group ";
+        return $"{group}rule {AppRuleRules.Format(rule.BudgetMinutes)}, {AppRuleChangeLog.Days(rule.Days)}, {group}used {Duration(rule.UsedSeconds)}";
+    }
 
     /// <summary>"early" or "final".</summary>
     internal static string LevelText(WarningLevel level) => level == WarningLevel.Early ? "early" : "final";

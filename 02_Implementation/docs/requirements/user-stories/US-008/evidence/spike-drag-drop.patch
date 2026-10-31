@@ -1,0 +1,351 @@
+diff --git a/02_Implementation/src/EagleEye.ParentApp/App.xaml.cs b/02_Implementation/src/EagleEye.ParentApp/App.xaml.cs
+index deda6f4..24cfc11 100644
+--- a/02_Implementation/src/EagleEye.ParentApp/App.xaml.cs
++++ b/02_Implementation/src/EagleEye.ParentApp/App.xaml.cs
+@@ -35,7 +35,11 @@ public partial class App : Application
+     protected override Window CreateWindow(IActivationState? activationState)
+     {
+         // Resolved here, not in the constructor: the views need the styles loaded by InitializeComponent.
+-        var window = new Window(_services.GetRequiredService<MainPage>())
++        // US-008 Step 1 spike (throwaway, not committed).
++        Page startPage = Environment.GetEnvironmentVariable("EAGLEEYE_SPIKE_DND") == "1"
++            ? new SpikeDragDropPage()
++            : _services.GetRequiredService<MainPage>();
++        var window = new Window(startPage)
+         {
+             Title = WindowTitle,
+             MinimumWidth = MinimumWidth,
+diff --git a/02_Implementation/src/EagleEye.ParentApp/Views/SpikeDragDropPage.cs b/02_Implementation/src/EagleEye.ParentApp/Views/SpikeDragDropPage.cs
+new file mode 100644
+index 0000000..031708e
+--- /dev/null
++++ b/02_Implementation/src/EagleEye.ParentApp/Views/SpikeDragDropPage.cs
+@@ -0,0 +1,328 @@
++// US-008 Step 1 spike (throwaway, NOT production code, never committed as source). Started only when the
++// environment variable EAGLEEYE_SPIKE_DND=1 is set (App.CreateWindow). Checks MAUI drag-and-drop, a right-click
++// ContextFlyout, the "≡" action sheet and the name prompt loop on Mac Catalyst (implementation plan Decision 9).
++using System.Collections.ObjectModel;
++using System.Globalization;
++
++namespace EagleEye.ParentApp.Views;
++
++/// <summary>Throwaway drag-and-drop spike page (US-008 Step 1).</summary>
++public sealed class SpikeDragDropPage : ContentPage
++{
++    private const int MaxNameLength = 40;
++    private static readonly Color HighlightLight = Color.FromArgb("#CDE8D5");
++    private static readonly Color HighlightDark = Color.FromArgb("#2E5A3C");
++
++    private readonly List<SpikeSection> _sections = [];
++    private readonly VerticalStackLayout _sectionHost = new() { Spacing = 16 };
++    private readonly Label _log = new() { FontSize = 12, LineBreakMode = LineBreakMode.WordWrap };
++    private readonly Label _counter = new() { FontSize = 13, FontAttributes = FontAttributes.Bold };
++    private readonly ObservableCollection<string> _logLines = [];
++    private SpikeApp? _dragged;
++    private int _dragsStarted;
++    private int _dragsCompleted;
++    private int _drops;
++    private int _stuckAtCompletion;
++
++    /// <summary>Creates the page with three sections and ten entries.</summary>
++    public SpikeDragDropPage()
++    {
++        Title = "US-008 Spike";
++        this.SetAppThemeColor(BackgroundColorProperty, Colors.White, Color.FromArgb("#141716"));
++        _sections.Add(new SpikeSection(1, "Games"));
++        _sections.Add(new SpikeSection(2, "School (empty)"));
++        _sections.Add(new SpikeSection(null, "Not in any group"));
++        string[] games = ["Minecraft", "Roblox", "Fortnite"];
++        string[] rest = ["Safari", "Word", "Excel", "Teams", "Discord", "Steam", "Spotify"];
++        foreach (var name in games) _sections[0].Apps.Add(new SpikeApp(name, $@"C:\Games\{name}\{name}.exe"));
++        foreach (var name in rest) _sections[2].Apps.Add(new SpikeApp(name, $@"C:\Program Files\{name}\{name}.exe"));
++
++        var addButton = new Button { Text = "Add group" };
++        addButton.Clicked += async (_, _) => await AddGroupAsync();
++        var header = new VerticalStackLayout
++        {
++            Spacing = 8,
++            Children =
++            {
++                new Label { Text = "US-008 drag-and-drop spike (throwaway)", FontSize = 20, FontAttributes = FontAttributes.Bold },
++                new Label { Text = "Drag an app onto another section. Right-click an app for the context menu. Use ≡ for \"Move to …\".", LineBreakMode = LineBreakMode.WordWrap },
++                addButton,
++                _counter,
++            },
++        };
++        var logBox = new Border { Padding = 8, Content = _log, HeightRequest = 180, StrokeThickness = 1 };
++        logBox.SetAppThemeColor(Border.StrokeProperty, Color.FromArgb("#D0D5D2"), Color.FromArgb("#3A423E"));
++        var layout = new Grid
++        {
++            Padding = 24,
++            RowSpacing = 12,
++            RowDefinitions = { new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto) },
++        };
++        layout.Add(header, 0, 0);
++        layout.Add(new ScrollView { Content = _sectionHost }, 0, 1);
++        layout.Add(logBox, 0, 2);
++        Content = layout;
++        Rebuild();
++        Log("Spike page ready.");
++        _ = RunProbeAsync(Environment.GetEnvironmentVariable("EAGLEEYE_SPIKE_PROBE"));
++    }
++
++    private void Rebuild()
++    {
++        _sectionHost.Children.Clear();
++        foreach (var section in _sections)
++        {
++            _sectionHost.Children.Add(BuildSection(section));
++        }
++        UpdateCounter();
++    }
++
++    private View BuildSection(SpikeSection section)
++    {
++        var title = new Label { Text = section.Title, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center };
++        title.SetDynamicResource(Label.TextColorProperty, "HeadingBarTextColor");
++        var bar = new Grid { Padding = new Thickness(12, 6), ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) } };
++        bar.SetDynamicResource(BackgroundColorProperty, "HeadingBarBackgroundColor");
++        bar.Add(title, 0, 0);
++        if (section.GroupId is not null)
++        {
++            var rename = new Button { Text = "Rename", Padding = new Thickness(10, 2) };
++            rename.Clicked += async (_, _) => await RenameAsync(section);
++            bar.Add(rename, 1, 0);
++        }
++
++        var entries = new VerticalStackLayout { MinimumHeightRequest = 36, Padding = new Thickness(0, 4) };
++        foreach (var app in section.Apps.OrderBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase))
++        {
++            entries.Children.Add(BuildEntry(app, section));
++        }
++        if (section.Apps.Count == 0)
++        {
++            entries.Children.Add(new Label { Text = "No apps. Drag apps here.", FontAttributes = FontAttributes.Italic, Padding = new Thickness(12, 8) });
++        }
++
++        var target = new Border { StrokeThickness = 0, Content = entries };
++        section.Target = target;
++        SetNormal(section);
++        var drop = new DropGestureRecognizer { AllowDrop = true };
++        drop.DragOver += (_, e) =>
++        {
++            if (!section.IsHighlighted) Log($"DragOver {section.Title}");
++            section.IsHighlighted = true;
++            SetHighlight(section);
++            e.AcceptedOperation = DataPackageOperation.Copy;
++        };
++        drop.DragLeave += (_, _) =>
++        {
++            Log($"DragLeave {section.Title}");
++            section.IsHighlighted = false;
++            SetNormal(section);
++        };
++        drop.Drop += (_, e) =>
++        {
++            _drops++;
++            section.IsHighlighted = false;
++            SetNormal(section);
++            e.Handled = true;
++            var app = _dragged;
++            Log($"Drop on {section.Title}: {app?.Name ?? "(no in-app data)"}");
++            if (app is not null) Move(app, section, "drag");
++        };
++        target.GestureRecognizers.Add(drop);
++        return new VerticalStackLayout { Spacing = 0, Children = { bar, target } };
++    }
++
++    private View BuildEntry(SpikeApp app, SpikeSection section)
++    {
++        var name = new Label { Text = app.Name, VerticalOptions = LayoutOptions.Center };
++        ToolTipProperties.SetText(name, app.Path);
++        var menuButton = new Button { Text = "≡", Padding = new Thickness(10, 0), MinimumWidthRequest = 36 };
++        ToolTipProperties.SetText(menuButton, "Move to …");
++        menuButton.Clicked += async (_, _) => await ChooseTargetAsync(app, section);
++        var row = new Grid
++        {
++            Padding = new Thickness(12, 4),
++            ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) },
++        };
++        row.SetAppThemeColor(BackgroundColorProperty, Colors.Transparent, Colors.Transparent);
++        row.Add(name, 0, 0);
++        row.Add(menuButton, 1, 0);
++
++        var drag = new DragGestureRecognizer { CanDrag = true };
++        drag.DragStarting += (_, e) =>
++        {
++            _dragsStarted++;
++            _dragged = app;
++            e.Data.Text = app.Path;
++            Log($"DragStarting {app.Name} (from {section.Title})");
++            UpdateCounter();
++        };
++        drag.DropCompleted += (_, _) =>
++        {
++            _dragsCompleted++;
++            var stuck = _sections.Where(s => s.IsHighlighted).Select(s => s.Title).ToList();
++            if (stuck.Count > 0)
++            {
++                _stuckAtCompletion++;
++                Log($"DropCompleted: highlight still set on {string.Join(", ", stuck)}, cleared");
++                foreach (var s in _sections.Where(s => s.IsHighlighted)) { s.IsHighlighted = false; SetNormal(s); }
++            }
++            else
++            {
++                Log($"DropCompleted {app.Name}");
++            }
++            _dragged = null;
++            UpdateCounter();
++        };
++        row.GestureRecognizers.Add(drag);
++
++        var flyout = new MenuFlyout();
++        foreach (var target in _sections.Where(s => s != section))
++        {
++            var item = new MenuFlyoutItem { Text = $"Move to {target.Title}" };
++            item.Clicked += (_, _) => Move(app, target, "context menu");
++            flyout.Add(item);
++        }
++        FlyoutBase.SetContextFlyout(row, flyout);
++        return row;
++    }
++
++    private async Task ChooseTargetAsync(SpikeApp app, SpikeSection current)
++    {
++        var options = _sections.Where(s => s != current).Select(s => s.Title).ToArray();
++        Log($"≡ pressed on {app.Name}");
++        var choice = await DisplayActionSheetAsync($"Move \"{app.Name}\" to …", "Cancel", null, options);
++        var target = _sections.FirstOrDefault(s => s.Title == choice && s != current);
++        Log($"Action sheet result: {choice ?? "(null)"}");
++        if (target is not null) Move(app, target, "≡ menu");
++    }
++
++    private void Move(SpikeApp app, SpikeSection target, string via)
++    {
++        var source = _sections.First(s => s.Apps.Contains(app));
++        if (source == target)
++        {
++            Log($"Move {app.Name} via {via}: own section, nothing to do");
++            return;
++        }
++        source.Apps.Remove(app);
++        target.Apps.Add(app);
++        Log($"Moved {app.Name}: {source.Title} → {target.Title} (via {via})");
++        // Rebuild after the gesture callbacks have returned.
++        Dispatcher.Dispatch(Rebuild);
++    }
++
++    private async Task AddGroupAsync()
++    {
++        var name = await PromptNameAsync("Add group", string.Empty, null);
++        if (name is null) return;
++        _sections.Insert(_sections.Count - 1, new SpikeSection(_sections.Count + 10, name));
++        Rebuild();
++    }
++
++    private async Task RenameAsync(SpikeSection section)
++    {
++        var name = await PromptNameAsync("Rename group", section.Title, section);
++        if (name is null) return;
++        section.Title = name;
++        Rebuild();
++    }
++
++    private async Task<string?> PromptNameAsync(string title, string initial, SpikeSection? renaming, string? firstMessage = null)
++    {
++        var text = initial;
++        var message = firstMessage;
++        while (true)
++        {
++            var body = message is null ? "Name (1 to 40 characters):" : $"{message}\n\nName (1 to 40 characters):";
++            var result = await DisplayPromptAsync(title, body, "OK", "Cancel", null, MaxNameLength, Keyboard.Text, text);
++            if (result is null)
++            {
++                Log($"Prompt '{title}' cancelled");
++                return null;
++            }
++            text = result;
++            message = Validate(result.Trim(), renaming);
++            if (message is null)
++            {
++                Log($"Prompt '{title}' accepted: {result.Trim()}");
++                return result.Trim();
++            }
++            Log($"Prompt '{title}' invalid: {message}");
++        }
++    }
++
++    private string? Validate(string name, SpikeSection? renaming)
++    {
++        if (name.Length == 0) return "Enter a name.";
++        if (new StringInfo(name).LengthInTextElements > MaxNameLength) return "At most 40 characters.";
++        if (_sections.Any(s => s != renaming && string.Equals(s.Title, name, StringComparison.CurrentCultureIgnoreCase)))
++        {
++            return "A group with this name already exists.";
++        }
++        return null;
++    }
++
++    private void SetHighlight(SpikeSection section)
++    {
++        section.Target?.SetAppThemeColor(BackgroundColorProperty, HighlightLight, HighlightDark);
++    }
++
++    private static void SetNormal(SpikeSection section)
++    {
++        // Catalyst lesson (US-007): an explicit background, never "unset".
++        section.Target?.SetAppThemeColor(BackgroundColorProperty, Color.FromArgb("#F2F4F3"), Color.FromArgb("#1F2421"));
++    }
++
++    private void UpdateCounter()
++    {
++        _counter.Text = $"Drags started: {_dragsStarted} · completed: {_dragsCompleted} · drops on a section: {_drops} · highlight still set at completion: {_stuckAtCompletion}";
++    }
++
++    private void Log(string line)
++    {
++        var stamped = $"{DateTime.Now:HH:mm:ss.fff} {line}";
++        Console.Error.WriteLine($"[SPIKE] {stamped}");
++        _logLines.Insert(0, stamped);
++        while (_logLines.Count > 12) _logLines.RemoveAt(_logLines.Count - 1);
++        _log.Text = string.Join("\n", _logLines);
++    }
++
++    private async Task RunProbeAsync(string? probe)
++    {
++        if (string.IsNullOrEmpty(probe)) return;
++        Log($"Probe mode: {probe}");
++        await Task.Delay(TimeSpan.FromSeconds(3));
++        switch (probe)
++        {
++            case "highlight":
++                _sections[1].IsHighlighted = true;
++                SetHighlight(_sections[1]);
++                Log("Probe: highlight School on");
++                await Task.Delay(TimeSpan.FromSeconds(4));
++                _sections[1].IsHighlighted = false;
++                SetNormal(_sections[1]);
++                Log("Probe: highlight School off");
++                await Task.Delay(TimeSpan.FromSeconds(1));
++                Move(_sections[2].Apps.First(a => a.Name == "Discord"), _sections[1], "probe");
++                break;
++            case "sheet":
++                await ChooseTargetAsync(_sections[0].Apps[0], _sections[0]);
++                break;
++            case "prompt":
++                await PromptNameAsync("Add group", "games", null, "A group with this name already exists.");
++                break;
++        }
++    }
++
++    private sealed class SpikeSection(int? groupId, string title)
++    {
++        public int? GroupId { get; } = groupId;
++        public string Title { get; set; } = title;
++        public List<SpikeApp> Apps { get; } = [];
++        public Border? Target { get; set; }
++        public bool IsHighlighted { get; set; }
++    }
++
++    private sealed record SpikeApp(string Name, string Path);
++}

@@ -33,15 +33,16 @@ public sealed class AppEnforcementTests
         _rules.SetupGet(r => r.Current).Returns(RulesSnapshot.Empty);
         _appRules.SetupGet(r => r.Current).Returns(AppRulesSnapshot.Empty.With(Kid, AccountAppRules.Empty.WithApp(new AppRuleEntry(1, Notepad, "Editor", 60, BreakTimeDays.All))));
         _usage.Setup(u => u.GetUsageAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _usage.Setup(u => u.GetSpansAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         var ignoreList = new EnforcementIgnoreList(@"C:\Windows");
         var registry = new CloseRegistry();
         var log = new EnforcementLog(new TestLogger<EnforcementLog>(), new InstanceLogLimiter(_time));
         var warnings = new Mock<IWarningSettingsService>();
         warnings.SetupGet(w => w.Current).Returns(WarningSettings.Defaults);
         _ledger = new TodayUsageLedger(_usage.Object, _appRules.Object, _time, new TestLogger<TodayUsageLedger>());
-        var gate = new AppStartGate(_rules.Object, _appRules.Object, _ledger, Mock.Of<IProcessTable>(), _runner.Object, registry, ignoreList, _time, _gateLogger);
+        var gate = new AppStartGate(_rules.Object, _appRules.Object, GroupsView.Empty, _ledger, Mock.Of<IProcessTable>(), _runner.Object, registry, ignoreList, _time, _gateLogger);
         var engine = new TimeLimitEngine(
-            _rules.Object, _appRules.Object, warnings.Object, _ledger, _sessionApps, registry, _runner.Object, Mock.Of<IKidMessenger>(), ignoreList, log, _time);
+            _rules.Object, _appRules.Object, GroupsView.Empty, warnings.Object, _ledger, _sessionApps, registry, _runner.Object, Mock.Of<IKidMessenger>(), ignoreList, log, _time);
         _enforcement = new AppEnforcement(
             gate,
             _ledger,
@@ -79,9 +80,16 @@ public sealed class AppEnforcementTests
         var controlled = new Dictionary<string, string> { [Kid] = "kid1" };
 
         await _enforcement.OnTickAsync(new EnforcementTick(controlled, [], [], (_, _) => false), CancellationToken.None);
-        await _enforcement.OnTickAsync(new EnforcementTick(controlled, [], [new UsageCredit(Kid, Notepad, today, 5)], (_, _) => false), CancellationToken.None);
+        var start = new DateTimeOffset(2026, 10, 12, 8, 0, 0, TimeSpan.Zero);
+        await _enforcement.OnTickAsync(
+            new EnforcementTick(controlled, [], [new UsageCredit(Kid, Notepad, today, 5)], (_, _) => false)
+            {
+                Spans = [new SpanUpdate(Kid, Notepad, today, start, start.AddSeconds(5))],
+            },
+            CancellationToken.None);
 
         Assert.Equal(105, _ledger.UsedSeconds(Kid, Notepad, today));
+        Assert.Equal(5, _ledger.GroupUsedSeconds(Kid, [Notepad], today));
         _rules.VerifyGet(r => r.Current, Times.AtLeast(2));
     }
 

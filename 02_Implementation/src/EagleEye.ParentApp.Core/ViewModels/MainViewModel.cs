@@ -5,7 +5,7 @@ using EagleEye.ParentApp.Core.Data;
 namespace EagleEye.ParentApp.Core.ViewModels;
 
 /// <summary>
-/// The main window (FR-APP-081, US-002 AC-8): navigation menu ("Settings", "Rules", "Reports"), the
+/// The main window (FR-APP-081, US-002 AC-8): navigation menu ("Settings", "App Groups", "Rules", "Reports"; US-008 AC-1), the
 /// selected page, and the start sequence (database, theme, connection, start page, host dialog
 /// if not paired).
 /// </summary>
@@ -17,6 +17,9 @@ public sealed class MainViewModel(
 {
     /// <summary>Key of the settings page.</summary>
     public const string SettingsKey = "settings";
+
+    /// <summary>Key of the app groups page (US-008 AC-1).</summary>
+    public const string AppGroupsKey = "appgroups";
 
     /// <summary>Key of the rules page (US-005 AC-1).</summary>
     public const string RulesKey = "rules";
@@ -31,6 +34,7 @@ public sealed class MainViewModel(
     public IReadOnlyList<NavigationItem> MenuItems { get; } =
     [
         new NavigationItem(SettingsKey, AppTexts.MenuSettings),
+        new NavigationItem(AppGroupsKey, AppTexts.MenuAppGroups),
         new NavigationItem(RulesKey, AppTexts.MenuRules),
         new NavigationItem(ReportsKey, AppTexts.MenuReports),
     ];

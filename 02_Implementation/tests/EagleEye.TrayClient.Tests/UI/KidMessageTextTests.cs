@@ -45,6 +45,25 @@ public sealed class KidMessageTextTests
         },
     };
 
+    /// <summary>US-008: the service puts the group name into AppName; the tray renders it unchanged (no tray code change).</summary>
+    public static TheoryData<KidMessageReason, int, string, string> GroupInfo => new()
+    {
+        { KidMessageReason.AppEarlyWarning, 5, "Games: noch 5 Minuten.", "Games: 5 minutes left." },
+        { KidMessageReason.AppFinalWarning, 1, "Games: noch 1 Minute.", "Games: 1 minute left." },
+        { KidMessageReason.AppGracePeriod, 1, "Games: Deine Eltern haben die Regeln geändert. Games wird in 1 Minute geschlossen.", "Games: your parents changed the rules. Games closes in 1 minute." },
+        { KidMessageReason.AppNotAllowedToday, 1, "Games: heute nicht erlaubt.", "Games: not allowed today." },
+        { KidMessageReason.AppBudgetUsedUp, 1, "Games: Zeit-Budget aufgebraucht.", "Games: time budget used up." },
+    };
+
+    [Theory]
+    [MemberData(nameof(GroupInfo))]
+    public void Compose_GroupName_InTheInfoLine_GermanAndEnglish(KidMessageReason reason, int minutes, string german, string english)
+    {
+        var message = Dto(reason, "Games", minutes);
+
+        Assert.Equal((german, english), (KidMessageText.Compose(message, German, German).Info, KidMessageText.Compose(message, English, English).Info));
+    }
+
     [Theory]
     [MemberData(nameof(GermanInfo))]
     public void Compose_German_DefaultTextAndInfoLine(KidMessageDto message, string text, string info)
