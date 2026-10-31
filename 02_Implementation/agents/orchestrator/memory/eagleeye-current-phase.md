@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-10-31 US-008 step c: Steps 2–7 done on Windows (1a159eb); Michael installs 0.8.0 + answers Q-DEV-1, then H2 MacBook Steps 8–10; US-009 Win10 + Windows parity (all 0.9.0)
+description: EagleEye workflow status — 2026-10-31 US-008 step c: Windows Steps 2–7 + Mac Steps 8–10 done (a0f4877, .dmg 0.8.0); Michael's Mac manual check next, then H3 Windows Step 11; Q-DEV-1 open
 metadata:
   type: project
 ---
+
+**Update 2026-10-31 (US-008 H2 done, MacBook): DEV (subagent) did Steps 8–10, pushed ae0486f, 94e82a7, a0f4877. Tests: Shared 305, ParentApp 1 109 green, 0 warnings. `.dmg` `03_Delivery/macos/EagleEye-ParentApp-0.8.0.dmg` SHA-256 9e5e2bc4…dfd48c. Deviations D-9..D-17 in report §8.4 (D-9 right-click = one item "Verschieben nach …"; D-17 no live test/install). Michael's 12-point Mac check list in report §8.6. Open: DEV proposes adding the Catalyst "Normal" colour rule + DnD finding to `dev-environments.md` §5 (Orchestrator/Michael decide); Q-DEV-1. NEXT: Michael installs .dmg over 0.7.0 and runs §8.6, then H3 → Windows DEV Step 11 (Windows parent app must compile the new shared XAML, all four test projects).**
 
 **Update 2026-10-31 15:30 (US-008 H2 ready): Michael installed 0.8.0 on the service PC; migration 6 proven in log (evidence `docs/requirements/user-stories/US-008/evidence/install-0.8.0-log-excerpt.txt`), REG-001 OK. Q-DEV-1 still unanswered (default: live group smoke + perf in TES run as kid1). NEXT: MacBook DEV session Steps 8–10.**
 
