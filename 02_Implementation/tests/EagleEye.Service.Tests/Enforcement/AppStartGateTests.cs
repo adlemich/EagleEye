@@ -1,5 +1,6 @@
 using EagleEye.Service.Data;
 using EagleEye.Service.Enforcement;
+using EagleEye.Service.Groups;
 using EagleEye.Service.Rules;
 using EagleEye.Service.Statistics;
 using EagleEye.Service.Tests.Statistics;
@@ -34,6 +35,7 @@ public sealed class AppStartGateTests
     private readonly HashSet<string> _open = new(StringComparer.OrdinalIgnoreCase);
     private readonly AppStartGate _gate;
     private readonly Mock<IAppRuleService> _appRules = new();
+    private readonly GroupsView _groups = new();
     private readonly Mock<IUsageRepository> _usage = new();
     private readonly TodayUsageLedger _ledger;
     private readonly CloseRegistry _registry = new();
@@ -62,7 +64,7 @@ public sealed class AppStartGateTests
         SetAppRule(Kid, 2, Paint, AppRuleRules.MaxBudgetMinutes, BreakTimeDays.All);
         SetAppRule(Kid2, 3, Notepad, AppRuleRules.MaxBudgetMinutes, BreakTimeDays.All);
         _gate = new AppStartGate(
-            _rules.Object, _appRules.Object, _ledger, _table.Object, _runner.Object, _registry, new EnforcementIgnoreList(@"C:\Windows"), _time, _logger);
+            _rules.Object, _appRules.Object, _groups, _ledger, _table.Object, _runner.Object, _registry, new EnforcementIgnoreList(@"C:\Windows"), _time, _logger);
         SetRules(Kid, Evening);
     }
 
@@ -400,6 +402,49 @@ public sealed class AppStartGateTests
         Assert.Same(report, Screen(report));
         handle.Verify(h => h.AddProcesses(It.Is<IReadOnlyList<ObservedProcess>>(p => p.Single() == new ObservedProcess(12, Ft(20, 6)))), Times.Once);
         Assert.Empty(_started);
+    }
+
+    [Fact]
+    public async Task Screen_GroupExhausted_BlockedWithTheGroupNameAndGroupRule()
+    {
+        // AC-25: Paint and Notepad in "Games" 0:05; Notepad used 5 min (span) → Paint is blocked, no used time added.
+        SetRules(Kid, Evening with { IsActive = false });
+        _groups.Current = AppGroupsSnapshot.Empty.WithGroup(7, "Games").WithMember(Notepad, 7).WithMember(Paint, 7)
+            .WithRule(7, Kid, new LimitRule(5, BreakTimeDays.All));
+        await _ledger.EnsureLoadedAsync([Kid], CancellationToken.None);
+        var day = DateOnly.FromDateTime(_time.GetLocalNow().DateTime);
+        _ledger.ApplySpans([new SpanUpdate(Kid, Notepad, day, Utc(19, 0), Utc(19, 5))]);
+
+        var screened = Screen(Report(App(Paint, (10, Ft(20, 9)))));
+
+        var start = _started.Single();
+        Assert.Empty(screened.Apps);
+        Assert.Equal((CloseReasons.BudgetUsedUp, new AppRuleAtClose(5, BreakTimeDays.All, 300, 7, "Games")), (start.Reason, start.Rule));
+        Assert.Equal(new KidMessageDto(KidMessageReason.AppBudgetUsedUp, null, "Games", null, null, null), start.Message);
+    }
+
+    [Fact]
+    public void Screen_GroupNotAllowedToday_Blocked_OwnRuleIgnored()
+    {
+        // AC-24/AC-25: Paint's own rule allows it all day, but its group is not allowed on Monday.
+        SetRules(Kid, Evening with { IsActive = false });
+        SetAppRule(Kid, 2, Paint, AppRuleRules.MaxBudgetMinutes, BreakTimeDays.All);
+        _groups.Current = AppGroupsSnapshot.Empty.WithGroup(7, "Games").WithMember(Paint, 7).WithRule(7, Kid, new LimitRule(60, BreakTimeDays.Saturday));
+
+        Screen(Report(App(Paint, (10, Ft(20, 9)))));
+
+        Assert.Equal((CloseReasons.NotAllowedToday, "Games"), (_started.Single().Reason, _started.Single().Message!.AppName));
+    }
+
+    [Fact]
+    public void Screen_GroupAllows_OwnRuleZeroIgnored_Passes()
+    {
+        SetRules(Kid, Evening with { IsActive = false });
+        SetAppRule(Kid, 2, Paint, 0, BreakTimeDays.None);
+        _groups.Current = AppGroupsSnapshot.Empty.WithGroup(7, "Games").WithMember(Paint, 7).WithRule(7, Kid, new LimitRule(60, BreakTimeDays.All));
+        var report = Report(App(Paint, (10, Ft(20, 9))));
+
+        Assert.Same(report, Screen(report));
     }
 
     [Fact]

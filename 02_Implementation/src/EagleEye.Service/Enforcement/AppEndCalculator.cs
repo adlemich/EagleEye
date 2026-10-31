@@ -40,12 +40,12 @@ public static class AppEndCalculator
     private const double SecondsPerMinute = 60;
 
     /// <summary>The end within the horizon, or <c>null</c>.</summary>
-    /// <param name="rule">The app rule; <c>null</c> = the default rule (0:00, no day).</param>
+    /// <param name="rule">The rule of the limit subject (own app rule or group rule, ADR-021 §4); <c>null</c> = the default rule (0:00, no day).</param>
     /// <param name="usedSeconds">Used time today.</param>
     /// <param name="entries">The account's break entries.</param>
     /// <param name="nowUtc">Now.</param>
     /// <param name="zone">The local zone.</param>
-    public static AppEnd? Compute(AppRuleEntry? rule, long usedSeconds, IReadOnlyList<BreakTimeEntryDto> entries, DateTimeOffset nowUtc, TimeZoneInfo zone)
+    public static AppEnd? Compute(LimitRule? rule, long usedSeconds, IReadOnlyList<BreakTimeEntryDto> entries, DateTimeOffset nowUtc, TimeZoneInfo zone)
     {
         ArgumentNullException.ThrowIfNull(entries);
         ArgumentNullException.ThrowIfNull(zone);

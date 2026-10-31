@@ -25,6 +25,7 @@ public sealed class TimeLimitEngineTests
     private readonly FakeTimeProvider _time = new(Local(10, 0));
     private readonly Mock<IBreakTimeService> _breaks = new();
     private readonly Mock<IAppRuleService> _appRules = new();
+    private readonly GroupsView _groups = new();
     private readonly Mock<IWarningSettingsService> _warnings = new();
     private readonly Mock<IUsageRepository> _usage = new();
     private readonly Mock<ICloseSequenceRunner> _runner = new();
@@ -62,7 +63,7 @@ public sealed class TimeLimitEngineTests
         _ledger = new TodayUsageLedger(_usage.Object, _appRules.Object, _time, new TestLogger<TodayUsageLedger>());
         _ledger.EnsureLoadedAsync([Kid, Kid2], CancellationToken.None).GetAwaiter().GetResult();
         _engine = new TimeLimitEngine(
-            _breaks.Object, _appRules.Object, _warnings.Object, _ledger, _sessions, _registry, _runner.Object, _messenger.Object,
+            _breaks.Object, _appRules.Object, _groups, _warnings.Object, _ledger, _sessions, _registry, _runner.Object, _messenger.Object,
             new EnforcementIgnoreList(@"C:\Windows"), new EnforcementLog(_logger, new InstanceLogLimiter(_time)), _time);
         SetRule(Kid, 1, Notepad, 3);
         SetRule(Kid, 2, Paint, 60);

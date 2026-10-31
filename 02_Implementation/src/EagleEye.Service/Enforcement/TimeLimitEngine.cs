@@ -1,6 +1,8 @@
 using AppKey = (int SessionId, string PathUpper);
+using SubjectKey = (int SessionId, string Key);
 using EagleEye.Service.Communication;
 using EagleEye.Service.Data;
+using EagleEye.Service.Groups;
 using EagleEye.Service.Rules;
 using EagleEye.Service.Statistics;
 using EagleEye.Shared.Models;
@@ -8,18 +10,20 @@ using EagleEye.Shared.Models;
 namespace EagleEye.Service.Enforcement;
 
 /// <summary>
-/// Time limits of running apps (ADR-015, US-006 Decisions 5 to 8), evaluated once per accounting tick after the tick's
-/// credits are in the <see cref="TodayUsageLedger"/>. For every running app of a controlled account (reported, open in
-/// the tracker, not ignored, not being closed): the end of its allowed time (<see cref="AppEndCalculator"/>), a grace
-/// period after a parent change that moved the end earlier (<see cref="GracePolicy"/>), the warnings
-/// (<see cref="WarningLedger"/>, at most one message per session and tick) and the close when no time is left (one
-/// break-time message per session for all apps closed by a break). Never awaits: messages and close sequences run as
-/// tasks. State per app ends when the app is no longer running; state per account when it is no longer controlled.
-/// Used by the accounting loop only.
+/// Time limits of running apps (ADR-015, ADR-021 §4, US-006 Decisions 5 to 8, US-008 Decision 6), evaluated once per
+/// accounting tick after the tick's credits and spans are in the <see cref="TodayUsageLedger"/>. The running apps of a
+/// controlled account (reported, open in the tracker, not ignored, not being closed) are grouped by their
+/// <see cref="LimitSubject"/> (the app, or its app group). Per subject: the end of its allowed time
+/// (<see cref="AppEndCalculator"/>), a grace period after a parent change that moved the end earlier for one of its apps
+/// (<see cref="GracePolicy"/>), the warnings (<see cref="WarningLedger"/>, at most one message per session and tick) and the
+/// close of all its running apps with one message when no time is left (one break-time message per session for all apps
+/// closed by a break). Never awaits: messages and close sequences run as tasks. State per subject ends when none of its apps
+/// runs; state per account when it is no longer controlled. Used by the accounting loop only.
 /// </summary>
 public sealed class TimeLimitEngine(
     IBreakTimeService breaks,
     IAppRuleService appRules,
+    IAppGroupsView groups,
     IWarningSettingsService warningSettings,
     TodayUsageLedger ledger,
     SessionAppsView sessions,
@@ -31,9 +35,9 @@ public sealed class TimeLimitEngine(
     TimeProvider timeProvider)
 {
     private readonly WarningLedger _warnings = new();
-    private readonly Dictionary<AppKey, (long Started, double Seconds)> _graces = [];
+    private readonly Dictionary<SubjectKey, (long Started, double Seconds)> _graces = [];
     private readonly Dictionary<AppKey, CloseEntry> _closed = [];
-    private readonly Dictionary<string, (AccountRules Breaks, AccountAppRules Apps)> _rules = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, RuleSet> _rules = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<AppKey, AppEndKind?> _lastEnds = [];
 
     /// <summary>Evaluates every running app of the controlled accounts.</summary>
@@ -47,39 +51,54 @@ public sealed class TimeLimitEngine(
         var zone = timeProvider.LocalTimeZone;
         var local = BreakTimeSchedule.ToLocal(nowUtc, zone);
         _warnings.Prune(DateOnly.FromDateTime(local));
-        var tick = new Tick(nowUtc, zone, local, warningSettings.Current, [], []);
+        var tick = new Tick(nowUtc, zone, local, warningSettings.Current, [], [], []);
+        var groupsNow = groups.Current;
         foreach (var session in sessions.Sessions.ToList())
         {
             if (controlledAccounts.TryGetValue(session.AccountSid, out var userName))
             {
-                EvaluateSession(new SessionContext(tick, session, userName, breaks.Current.For(session.AccountSid), appRules.Current.For(session.AccountSid)), isOpen);
+                EvaluateSession(new SessionContext(tick, session, userName, RulesOf(session.AccountSid, groupsNow)), isOpen);
             }
         }
 
-        Forget(_graces, tick.Seen.ContainsKey);
+        Forget(_graces, tick.Subjects.Contains);
         Forget(_closed, tick.Reported.Contains);
         _lastEnds = tick.Seen;
         _rules.Clear();
         foreach (var sid in controlledAccounts.Keys)
         {
-            _rules[sid] = (breaks.Current.For(sid), appRules.Current.For(sid));
+            _rules[sid] = RulesOf(sid, groupsNow);
         }
     }
+
+    private RuleSet RulesOf(string sid, AppGroupsSnapshot groupsNow) => new(breaks.Current.For(sid), appRules.Current.For(sid), groupsNow);
 
     private void EvaluateSession(SessionContext context, Func<string, string, bool> isOpen)
     {
         var sid = context.Session.AccountSid;
-        context.Old = _rules.TryGetValue(sid, out var old) && (!ReferenceEquals(old.Breaks, context.Breaks) || !ReferenceEquals(old.Apps, context.Apps))
-            ? old
-            : null;
+        context.Old = _rules.TryGetValue(sid, out var old) && old.DiffersFrom(context.Rules) ? old : null;
+        var day = DateOnly.FromDateTime(context.Tick.Local);
+        var subjects = new Dictionary<string, (LimitSubject Subject, List<(ObservedApp App, AppKey Key)> Apps)>(StringComparer.Ordinal);
         foreach (var app in context.Session.Apps)
         {
             var key = new AppKey(context.Session.SessionId, app.ProgramPath.ToUpperInvariant());
             context.Tick.Reported.Add(key);
             if (IsRunning(context, app, key, isOpen))
             {
-                EvaluateApp(context, app, key);
+                var subject = LimitSubjectResolver.Resolve(ledger, sid, app.ProgramPath, app.DisplayName, context.Rules.Apps, context.Rules.Groups, day);
+                if (!subjects.TryGetValue(subject.Key, out var entry))
+                {
+                    entry = (subject, []);
+                    subjects[subject.Key] = entry;
+                }
+
+                entry.Apps.Add((app, key));
             }
+        }
+
+        foreach (var (subject, apps) in subjects.Values)
+        {
+            EvaluateSubject(context, subject, apps);
         }
 
         if (context.BreakGraces.Count > 0)
@@ -106,24 +125,26 @@ public sealed class TimeLimitEngine(
         return !(_closed.TryGetValue(key, out var closed) && app.Processes.All(p => closed.Known.Contains((p.Pid, p.Created))));
     }
 
-    private void EvaluateApp(SessionContext context, ObservedApp app, AppKey key)
+    private void EvaluateSubject(SessionContext context, LimitSubject subject, List<(ObservedApp App, AppKey Key)> apps)
     {
         var tick = context.Tick;
-        var rule = context.Apps.ByPath.GetValueOrDefault(app.ProgramPath);
-        var used = ledger.UsedSeconds(context.Session.AccountSid, app.ProgramPath, DateOnly.FromDateTime(tick.Local));
-        var end = AppEndCalculator.Compute(rule, used, context.Breaks.Entries, tick.NowUtc, tick.Zone);
+        var end = AppEndCalculator.Compute(subject.Rule, subject.UsedSeconds, context.Rules.Breaks.Entries, tick.NowUtc, tick.Zone);
         var natural = end?.SecondsLeft ?? double.PositiveInfinity;
-        var firstSeen = !_lastEnds.ContainsKey(key);
-        tick.Seen[key] = end?.Kind;
+        var graceKey = new SubjectKey(context.Session.SessionId, subject.Key);
+        tick.Subjects.Add(graceKey);
+        foreach (var (_, key) in apps)
+        {
+            tick.Seen[key] = end?.Kind;
+        }
+
         var afterGrace = false;
-        var effective = natural;
-        if (_graces.TryGetValue(key, out var grace))
+        if (_graces.TryGetValue(graceKey, out var grace))
         {
             var graceLeft = grace.Seconds - timeProvider.GetElapsedTime(grace.Started).TotalSeconds;
             if (natural > 0 && natural >= graceLeft)
             {
                 // The natural time left (e.g. after a raised budget) is at least the grace: the grace ends.
-                _graces.Remove(key);
+                _graces.Remove(graceKey);
             }
             else if (graceLeft > 0)
             {
@@ -134,45 +155,50 @@ public sealed class TimeLimitEngine(
                 afterGrace = true;
             }
         }
-        else if (context.Old is { } old && !firstSeen && end is not null && StartsGrace(context, old, app, used, natural))
+        else if (context.Old is { } old && end is not null && apps.Any(a => _lastEnds.ContainsKey(a.Key) && StartsGrace(context, old, a.App, natural)))
         {
-            StartGrace(context, app, key, end);
+            StartGrace(context, subject, apps, graceKey, end);
             return;
         }
 
-        if (effective > 0)
+        if (natural > 0)
         {
-            Warn(context, app, end, effective);
+            Warn(context, subject, apps, end, natural);
         }
         else
         {
             // end is not null: no time left means an end within the horizon.
-            Close(context, app, key, end!, afterGrace, new AppRuleAtClose(rule?.BudgetMinutes ?? 0, rule?.Days ?? BreakTimeDays.None, used));
+            Close(context, subject, apps, graceKey, end!, afterGrace);
         }
     }
 
-    private bool StartsGrace(SessionContext context, (AccountRules Breaks, AccountAppRules Apps) old, ObservedApp app, long used, double natural)
+    /// <summary>The app's end under the previous rules, groups and members (its previous subject) vs. the new end (ADR-021 §4).</summary>
+    private bool StartsGrace(SessionContext context, RuleSet old, ObservedApp app, double natural)
     {
-        var oldEnd = AppEndCalculator.Compute(old.Apps.ByPath.GetValueOrDefault(app.ProgramPath), used, old.Breaks.Entries, context.Tick.NowUtc, context.Tick.Zone);
-        return GracePolicy.Starts(natural, oldEnd?.SecondsLeft ?? double.PositiveInfinity, context.Tick.Settings.FinalMinutes);
+        var tick = context.Tick;
+        var before = LimitSubjectResolver.Resolve(
+            ledger, context.Session.AccountSid, app.ProgramPath, app.DisplayName, old.Apps, old.Groups, DateOnly.FromDateTime(tick.Local));
+        var oldEnd = AppEndCalculator.Compute(before.Rule, before.UsedSeconds, old.Breaks.Entries, tick.NowUtc, tick.Zone);
+        return GracePolicy.Starts(natural, oldEnd?.SecondsLeft ?? double.PositiveInfinity, tick.Settings.FinalMinutes);
     }
 
-    private void StartGrace(SessionContext context, ObservedApp app, AppKey key, AppEnd end)
+    private void StartGrace(SessionContext context, LimitSubject subject, List<(ObservedApp App, AppKey Key)> apps, SubjectKey graceKey, AppEnd end)
     {
         var settings = context.Tick.Settings;
         var seconds = GracePolicy.Threshold(settings.FinalMinutes);
-        _graces[key] = (timeProvider.GetTimestamp(), seconds);
-        _warnings.MarkShown(WarningKeyOf(context, app, end), WarningLevel.Final);
+        _graces[graceKey] = (timeProvider.GetTimestamp(), seconds);
+        _warnings.MarkShown(WarningKeyOf(context, subject, end), WarningLevel.Final);
         if (end.Kind == AppEndKind.Break)
         {
-            context.BreakGraces.Add(end);
+            context.BreakGraces.AddRange(apps.Select(_ => end));
             return;
         }
 
         var closes = context.Tick.Local.AddSeconds(seconds);
+        var what = Describe(subject, apps);
         context.Outbox.Add(
-            KidMessageFactory.AppGrace(settings, app.DisplayName),
-            state => log.AppGrace(context.UserName, app.DisplayName, app.ProcessName, end.Kind, settings.FinalMinutes, closes, state));
+            KidMessageFactory.AppGrace(settings, subject.Name),
+            state => log.AppGrace(context.UserName, what, end.Kind, settings.FinalMinutes, closes, state));
     }
 
     private void AddBreakGraceMessage(SessionContext context)
@@ -188,7 +214,7 @@ public sealed class TimeLimitEngine(
             state => log.BreakGrace(context.UserName, entry, begins, count, settings.FinalMinutes, closes, state));
     }
 
-    private void Warn(SessionContext context, ObservedApp app, AppEnd? end, double left)
+    private void Warn(SessionContext context, LimitSubject subject, List<(ObservedApp App, AppKey Key)> apps, AppEnd? end, double left)
     {
         var settings = context.Tick.Settings;
         if (end is null || LevelFor(left, settings) is not { } level)
@@ -196,7 +222,7 @@ public sealed class TimeLimitEngine(
             return;
         }
 
-        var key = WarningKeyOf(context, app, end);
+        var key = WarningKeyOf(context, subject, end);
         if (_warnings.IsShown(key, level))
         {
             return;
@@ -214,31 +240,46 @@ public sealed class TimeLimitEngine(
         }
         else
         {
+            var what = Describe(subject, apps);
             context.Outbox.Add(
-                KidMessageFactory.AppWarning(level, settings, app.DisplayName, left),
-                state => log.AppWarning(context.UserName, app.DisplayName, app.ProcessName, level, minutes, end.Kind, state));
+                KidMessageFactory.AppWarning(level, settings, subject.Name, left),
+                state => log.AppWarning(context.UserName, what, level, minutes, end.Kind, state));
         }
     }
 
-    private void Close(SessionContext context, ObservedApp app, AppKey key, AppEnd end, bool afterGrace, AppRuleAtClose rule)
+    /// <summary>Closes all running apps of the subject; a group with several running apps gets one shared message (AC-27).</summary>
+    private void Close(SessionContext context, LimitSubject subject, List<(ObservedApp App, AppKey Key)> apps, SubjectKey graceKey, AppEnd end, bool afterGrace)
     {
-        _graces.Remove(key);
-        var request = NewRequest(context, app, end, afterGrace) with { Rule = end.Kind == AppEndKind.Break ? null : rule };
+        _graces.Remove(graceKey);
+        var rule = end.Kind == AppEndKind.Break
+            ? null
+            : new AppRuleAtClose(subject.Rule.BudgetMinutes, subject.Rule.Days, subject.UsedSeconds, subject.GroupId, subject.GroupId is null ? null : subject.Name);
+        var closes = apps.Select(a => (a.App, a.Key, Request: NewRequest(context, a.App, end, afterGrace) with { Rule = rule })).ToList();
         if (end.Kind == AppEndKind.Break)
         {
-            context.BreakCloses.Add((app, key, request));
+            context.BreakCloses.AddRange(closes);
             return;
         }
 
-        var reason = request.Reason;
-        Start(context, app, key, request with { Message = KidMessageFactory.AppEnd(reason, context.Apps.BudgetText, app.DisplayName) });
+        var message = KidMessageFactory.AppEnd(closes[0].Request.Reason, context.Rules.Apps.BudgetText, subject.Name);
+        if (closes.Count == 1)
+        {
+            Start(context, closes[0].App, closes[0].Key, closes[0].Request with { Message = message });
+            return;
+        }
+
+        var shared = messenger.ShowAsync(context.Session.SessionId, message, CancellationToken.None);
+        foreach (var (app, key, request) in closes)
+        {
+            Start(context, app, key, request with { SharedMessageState = shared });
+        }
     }
 
     /// <summary>A break begins: one break-time message per session for all its apps (AC-29).</summary>
     private void CloseForBreak(SessionContext context)
     {
         var entry = context.BreakCloses[0].Request.Entry!; // A break close always carries its entry.
-        var message = messenger.ShowAsync(context.Session.SessionId, KidMessageFactory.BreakTime(context.Breaks.CustomText, entry), CancellationToken.None);
+        var message = messenger.ShowAsync(context.Session.SessionId, KidMessageFactory.BreakTime(context.Rules.Breaks.CustomText, entry), CancellationToken.None);
         foreach (var (app, key, request) in context.BreakCloses)
         {
             Start(context, app, key, request with { SharedMessageState = message });
@@ -279,10 +320,13 @@ public sealed class TimeLimitEngine(
         };
     }
 
-    private static WarningKey WarningKeyOf(SessionContext context, ObservedApp app, AppEnd end) =>
+    private static string Describe(LimitSubject subject, List<(ObservedApp App, AppKey Key)> apps) =>
+        EnforcementLog.Subject(subject.GroupId is null ? null : subject.Name, apps.Select(a => (a.App.DisplayName, a.App.ProcessName)));
+
+    private static WarningKey WarningKeyOf(SessionContext context, LimitSubject subject, AppEnd end) =>
         end.Kind == AppEndKind.Break
             ? WarningLedger.BreakKey(context.Session.SessionId, end.BreakStartLocal!.Value) // A break end always carries its start.
-            : WarningLedger.AppKey(context.Session.AccountSid, app.ProgramPath, DateOnly.FromDateTime(context.Tick.Local));
+            : WarningLedger.SubjectKey(context.Session.AccountSid, subject, DateOnly.FromDateTime(context.Tick.Local));
 
     private static WarningLevel? LevelFor(double left, WarningSettings settings) =>
         left <= GracePolicy.Threshold(settings.FinalMinutes) ? WarningLevel.Final
@@ -290,7 +334,8 @@ public sealed class TimeLimitEngine(
         : null;
 
     /// <summary>Removes the entries whose key is not kept.</summary>
-    private static void Forget<TValue>(Dictionary<AppKey, TValue> entries, Func<AppKey, bool> keep)
+    private static void Forget<TKey, TValue>(Dictionary<TKey, TValue> entries, Func<TKey, bool> keep)
+        where TKey : notnull
     {
         foreach (var key in entries.Keys.ToList())
         {
@@ -301,10 +346,19 @@ public sealed class TimeLimitEngine(
         }
     }
 
-    private sealed record Tick(
-        DateTimeOffset NowUtc, TimeZoneInfo Zone, DateTime Local, WarningSettings Settings, Dictionary<AppKey, AppEndKind?> Seen, HashSet<AppKey> Reported);
+    /// <summary>The rules of an account at one tick: break times, app rules and the (global) app groups with their rules.</summary>
+    private sealed record RuleSet(AccountRules Breaks, AccountAppRules Apps, AppGroupsSnapshot Groups)
+    {
+        /// <summary>Whether a parent change replaced any of the snapshots (a grace period may start).</summary>
+        public bool DiffersFrom(RuleSet other) =>
+            !ReferenceEquals(Breaks, other.Breaks) || !ReferenceEquals(Apps, other.Apps) || !ReferenceEquals(Groups, other.Groups);
+    }
 
-    private sealed class SessionContext(Tick tick, SessionApps session, string userName, AccountRules breaks, AccountAppRules apps)
+    private sealed record Tick(
+        DateTimeOffset NowUtc, TimeZoneInfo Zone, DateTime Local, WarningSettings Settings, Dictionary<AppKey, AppEndKind?> Seen, HashSet<AppKey> Reported,
+        HashSet<SubjectKey> Subjects);
+
+    private sealed class SessionContext(Tick tick, SessionApps session, string userName, RuleSet rules)
     {
         public Tick Tick { get; } = tick;
 
@@ -312,11 +366,9 @@ public sealed class TimeLimitEngine(
 
         public string UserName { get; } = userName;
 
-        public AccountRules Breaks { get; } = breaks;
+        public RuleSet Rules { get; } = rules;
 
-        public AccountAppRules Apps { get; } = apps;
-
-        public (AccountRules Breaks, AccountAppRules Apps)? Old { get; set; }
+        public RuleSet? Old { get; set; }
 
         public MessageOutbox Outbox { get; } = new();
 

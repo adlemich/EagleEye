@@ -40,9 +40,9 @@ public sealed class AppEnforcementTests
         var warnings = new Mock<IWarningSettingsService>();
         warnings.SetupGet(w => w.Current).Returns(WarningSettings.Defaults);
         _ledger = new TodayUsageLedger(_usage.Object, _appRules.Object, _time, new TestLogger<TodayUsageLedger>());
-        var gate = new AppStartGate(_rules.Object, _appRules.Object, _ledger, Mock.Of<IProcessTable>(), _runner.Object, registry, ignoreList, _time, _gateLogger);
+        var gate = new AppStartGate(_rules.Object, _appRules.Object, GroupsView.Empty, _ledger, Mock.Of<IProcessTable>(), _runner.Object, registry, ignoreList, _time, _gateLogger);
         var engine = new TimeLimitEngine(
-            _rules.Object, _appRules.Object, warnings.Object, _ledger, _sessionApps, registry, _runner.Object, Mock.Of<IKidMessenger>(), ignoreList, log, _time);
+            _rules.Object, _appRules.Object, GroupsView.Empty, warnings.Object, _ledger, _sessionApps, registry, _runner.Object, Mock.Of<IKidMessenger>(), ignoreList, log, _time);
         _enforcement = new AppEnforcement(
             gate,
             _ledger,

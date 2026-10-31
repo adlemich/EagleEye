@@ -3,7 +3,7 @@ using EagleEye.Shared.Models;
 namespace EagleEye.Service.Enforcement;
 
 /// <summary>
-/// Which warnings were shown (ADR-015 §4, US-006 Decision 6). Keys: per account, app and local day for app ends; per
+/// Which warnings were shown (ADR-015 §4, US-006 Decision 6). Keys: per account, limit subject (app or group, US-008) and local day for app ends; per
 /// session and break occurrence for break ends. Showing the final warning also marks the early warning. Shown levels are
 /// never re-armed that day, also when a parent raises a budget (plan Q-5). In memory only (ADR-015 §9). Pure.
 /// </summary>
@@ -17,6 +17,16 @@ public sealed class WarningLedger
         ArgumentNullException.ThrowIfNull(accountSid);
         ArgumentNullException.ThrowIfNull(programPath);
         return new WarningKey($"app|{accountSid.ToUpperInvariant()}|{programPath.ToUpperInvariant()}", day, null);
+    }
+
+    /// <summary>The key of a limit subject's end (ADR-021 §4): <see cref="AppKey"/> for an app, <c>group|SID|id</c> for a group.</summary>
+    public static WarningKey SubjectKey(string accountSid, LimitSubject subject, DateOnly day)
+    {
+        ArgumentNullException.ThrowIfNull(accountSid);
+        ArgumentNullException.ThrowIfNull(subject);
+        return subject.GroupId is { } groupId
+            ? new WarningKey($"group|{accountSid.ToUpperInvariant()}|{groupId}", day, null)
+            : AppKey(accountSid, subject.MemberPaths[0], day);
     }
 
     /// <summary>The key of a break occurrence in a session.</summary>
