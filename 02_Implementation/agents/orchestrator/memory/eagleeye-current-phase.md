@@ -5,6 +5,8 @@ metadata:
   type: project
 ---
 
+**Update 2026-10-31 (US-009 H3): Step 4 Win10 PC PASSED per Michael's summary ("installing and working on Windows 10"; no per-row detail), recorded 655329b. NEXT: MacBook DEV Step 5 (build/test, .dmg 0.9.0 not installed — AC-32 start stays 0.8.0, story → Implemented, H4), report §10 has the prompt; Step 6 only if Step 5 changes code; then step-c approval → TES.**
+
 **Update 2026-10-31 (US-009 step c, later): Michael M-1..M-6 pass; M-2 finding (drag by app name, "≡" only opens Move-to, not a handle) → kept as is (option A, no code). 0.6.2 was uninstalled → AC-33 = fresh install on Win11, 0.6.2 update untested (story 90a1379, report 8374abe, plan 083f7fb). NEXT: Michael Step 4 on Win10 PC (report §9) → H3 MacBook Step 5.**
 
 **Update 2026-10-31 (US-009 step c, Windows): plan approved (f8e13a4, story Analyzed, ADR-009/019/007 amendments Accepted; Q-1 keep "trackpad"). dev-environments §1 Win10 test PC (2345f01). DEV Steps 1–3 done ef35ca6: 0.9.0, F-2 warnings gone (3 002 tests, 0 warnings), installers `03_Delivery/windows/EagleEye-Setup-0.9.0.exe` + `EagleEye-ParentApp-Setup-0.9.0.exe`; one Windows-only fix (hide "Kopieren" drag caption, #if WINDOWS), no shared change → no Mac check in Step 5. DEV used real pointer input on Michael's desktop (briefly opened Start menu). OPEN: Michael's M-1..M-6 live check on this PC (pairing, touchpad/mouse drag, tooltips, accent, Reports, unpair); Windows app 0.6.2 NOT found in account Admin (AC-33 starting point?); flaky CloseSequenceRunnerTests.ParallelLimit (issue later). Then H1 → Step 4 Win10 PC (report §9).**
