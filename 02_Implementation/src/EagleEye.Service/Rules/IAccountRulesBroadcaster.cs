@@ -13,4 +13,10 @@ public interface IAccountRulesBroadcaster
 
     /// <summary>Broadcasts a snapshot of the global state area "WarningSettings" (US-006) to the group <c>Parents</c>.</summary>
     Task BroadcastAsync(WarningSettingsDto snapshot);
+
+    /// <summary>Broadcasts a snapshot of the global state area "AppGroups" (US-008) to the group <c>Parents</c>.</summary>
+    Task BroadcastAsync(AppGroupsDto snapshot);
+
+    /// <summary>Broadcasts a snapshot of the state area "AppGroupRules:{sid}" (US-008) to the group <c>Parents</c>.</summary>
+    Task BroadcastAsync(AppGroupRulesDto snapshot);
 }

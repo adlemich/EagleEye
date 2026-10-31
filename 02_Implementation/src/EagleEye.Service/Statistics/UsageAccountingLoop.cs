@@ -1,5 +1,6 @@
 using System.Threading.Channels;
 using EagleEye.Service.Enforcement;
+using EagleEye.Service.Groups;
 using EagleEye.Service.Monitoring;
 using EagleEye.Service.UserAccounts;
 
@@ -19,6 +20,7 @@ public sealed class UsageAccountingLoop(
     IUsageService usage,
     IUserAccountService userAccounts,
     IAppEnforcement enforcement,
+    IAppGroupService groups,
     TimeProvider timeProvider,
     ILogger<UsageAccountingLoop> logger) : BackgroundService
 {
@@ -183,6 +185,7 @@ public sealed class UsageAccountingLoop(
         }
 
         _controlled = controlled;
+        await groups.OnControlledAccountsAsync([.. controlled.Keys]).ConfigureAwait(false);
         await supervisor.ReconcileAsync(_sessions.Sessions, controlled).ConfigureAwait(false);
     }
 

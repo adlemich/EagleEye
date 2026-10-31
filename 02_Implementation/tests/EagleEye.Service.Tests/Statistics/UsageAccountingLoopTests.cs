@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using EagleEye.Service.Groups;
 using EagleEye.Service.Enforcement;
 using EagleEye.Service.Monitoring;
 using EagleEye.Service.Statistics;
@@ -22,6 +23,7 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
     private readonly Mock<IUsageService> _usage = new();
     private readonly Mock<IUserAccountService> _accounts = new();
     private readonly Mock<IAppEnforcement> _enforcement = new();
+    private readonly Mock<IAppGroupService> _groups = new();
     private readonly TestLogger<UsageAccountingLoop> _logger = new();
     private readonly ConcurrentQueue<(TrackerOutput Output, bool IsTick)> _applied = new();
     private readonly ConcurrentQueue<(string What, IReadOnlyList<UsageCredit> Credits)> _order = new();
@@ -52,7 +54,7 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
             .Returns(Task.CompletedTask);
         _loop = new UsageAccountingLoop(
             _queue, _sessions.Object, _supervisor.Object, new UsageTracker(_time, new TestLogger<UsageTracker>()),
-            _usage.Object, _accounts.Object, _enforcement.Object, _time, _logger);
+            _usage.Object, _accounts.Object, _enforcement.Object, _groups.Object, _time, _logger);
         await _loop.StartAsync(CancellationToken.None);
         await WaitFor(() => Ticks() == 1);
     }
@@ -70,6 +72,7 @@ public sealed class UsageAccountingLoopTests : IAsyncLifetime
     [Fact]
     public void Start_ImmediateTickReconcilesSessionsAccountsAndAgents()
     {
+        _groups.Verify(g => g.OnControlledAccountsAsync(It.Is<IReadOnlyCollection<string>>(c => c.Single() == Kid), It.IsAny<CancellationToken>()), Times.Once);
         _supervisor.Verify(s => s.ReconcileAsync(
             It.Is<IReadOnlyCollection<SessionInfo>>(c => c.Single().SessionId == 2),
             It.Is<IReadOnlyDictionary<string, string>>(d => d[Kid] == "kid1")), Times.Once);
