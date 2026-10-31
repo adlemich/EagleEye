@@ -1,9 +1,11 @@
 # EagleEye -- General Product Requirements
 
-*Status: Approved v1.8 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07; v1.4 approved by Michael 2026-10-07; v1.5 approved by Michael 2026-10-10; v1.6 approved by Michael 2026-10-12; v1.7 approved by Michael 2026-10-20; v1.8 (app groups) approved by Michael with US-008 on 2026-10-31)*
+*Status: Approved v1.8 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by Michael 2026-10-04; v1.3 approved by Michael 2026-10-07; v1.4 approved by Michael 2026-10-07; v1.5 approved by Michael 2026-10-10; v1.6 approved by Michael 2026-10-12; v1.7 approved by Michael 2026-10-20; v1.8 (app groups) approved by Michael with US-008 on 2026-10-31; v1.9 (Windows 10 for the Windows parent app) proposed with US-009 on 2026-10-31, takes effect when Michael approves US-009)*
 *Approved: v1.0 by Michael*
 *Maintainer: PRO Agent*
 *Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07, 2026-10-10, 2026-10-12, 2026-10-20, 2026-10-31*
+
+> **v1.9 amendment (2026-10-31, decided by Michael from pilot feedback item 1, with US-009; takes effect when Michael approves US-009)**: the **Windows parent app** also runs on **Windows 10 22H2 (build 19045 or newer), x64**. Its installer refuses older Windows versions with a message. The **service and the tray client stay Windows 11 only**, so on Windows 10 the parent app is always a remote parent app on the LAN (FR-APP-091). Changed: §2.1 (Devices), FR-APP-092, §9.1 (note only), §9.5 (OS), §11.1 Q-8 (new).
 
 > **v1.8 amendment (2026-10-31, directed by Michael from pilot feedback, with US-008; approved by Michael 2026-10-31)**: **app groups** with a shared daily budget. The parent groups apps that belong together (e.g. a game, its launcher, anti-cheat and store app) on a new "App Groups" page. Groups are defined once per service PC; every app is in at most one group; new apps are in no group; deleting a group returns its apps to "not in any group". Per group and account, the Rules page holds a **group rule** (daily budget and weekdays, default 0:00 and no day ticked). A grouped app is limited only by its group rule; its own app rule is kept and applies again when it leaves the group. The group's used time is the time during which **at least one** member app is active, computed with the current members. Warnings, blocks, closes and grace periods work for groups as for apps. Reports also show the used time per group. The Windows 10 support for the Windows parent app (pilot feedback item 1) is amended with US-009. Changed: FR-SVC-011, FR-SVC-020, FR-SVC-022, FR-SVC-032, FR-SVC-047, FR-APP-042 to FR-APP-044 (new), FR-APP-062 (new), §4.3 step 12a (new), TC-020, TC-026 (new), TC-033.
 
@@ -84,7 +86,7 @@ EagleEye is a parental control solution that enables parents to monitor and cont
 |-----------|--------|
 | **Role** | Father, mother, grandparent, or other legal guardian responsible for the child. |
 | **Windows account** | Local administrator account. Required for installing EagleEye and the applications the child may use. |
-| **Devices** | Windows 11 PC (x64) or Mac (macOS 26+, Apple Silicon). *(v1.7; was: Android phone or iPhone as primary devices)* |
+| **Devices** | Windows 10 22H2 (build 19045 or newer, x64) or Windows 11 PC (x64), or Mac (macOS 26+, Apple Silicon). *(v1.9: Windows 10 added, for the parent app only; v1.7; was: Android phone or iPhone as primary devices)* |
 | **Technical skill** | Can follow a guided installer and enter a hostname/IP address. Does not need developer or networking expertise. |
 | **Needs** | (1) Control which apps the child may use. (2) Set time budgets and pause windows. (3) View usage statistics remotely. (4) Receive real-time event notifications (e.g. child attempts a blocked app). |
 | **Constraints** | May not always be physically near the Windows PC. Manages rules from a Windows PC (the monitored PC itself or another one) or a Mac on the same LAN (or via home VPN at the user's own setup). *(v1.7; was: from a mobile device)* |
@@ -343,7 +345,7 @@ The parent app is a single MAUI codebase deployed to Windows and macOS. It conne
 |----|-------------|
 | FR-APP-090 | The Windows parent app shall provide the same functionality as the macOS parent app (FR-APP-082). *(v1.7; was: as the other parent apps)* |
 | FR-APP-091 | The Windows parent app shall work both on the same PC as `EagleEye.Service` and remotely from another PC on the LAN. In both cases it uses the same communication model as the macOS parent app: TLS-encrypted connection, pairing (FR-SVC-090 to FR-SVC-098) and the parent API. There is no special local or privileged access path. *(v1.7; was: as the mobile apps)* |
-| FR-APP-092 | The Windows parent app shall be delivered as its own Windows installer, separate from and independent of the `EagleEye.Service` installer. The installer shall be self-contained: no other software (e.g. a runtime) has to be installed before or alongside it. It shall provide a guided wizard for install, repair (re-install over an existing installation) and uninstall, and uninstalling shall remove the application cleanly. *(v1.2; replaces the v1.1 copy deployment.)* |
+| FR-APP-092 | The Windows parent app shall be delivered as its own Windows installer, separate from and independent of the `EagleEye.Service` installer. The installer shall be self-contained: no other software (e.g. a runtime) has to be installed before or alongside it. It shall provide a guided wizard for install, repair (re-install over an existing installation) and uninstall, and uninstalling shall remove the application cleanly. *(v1.2; replaces the v1.1 copy deployment.)* The installer runs on every Windows version of §9.5 and refuses older versions with a message. *(v1.9)* |
 
 #### 3.3.10 macOS Parent App (added in v1.7)
 
@@ -544,7 +546,7 @@ This describes the end-to-end workflow from installation to daily use.
 
 | Attribute | Requirement |
 |-----------|-------------|
-| **OS** | Windows 11 (x64) -- Home and Pro editions |
+| **OS** | Windows 11 (x64) -- Home and Pro editions *(v1.9: stays Windows 11 only; Windows 10 is supported for the parent app only, §9.5)* |
 | **Runtime** | .NET 10 |
 | **Service account** | SYSTEM |
 | **Installer** | Inno Setup -- provides install, repair, uninstall wizard |
@@ -574,7 +576,7 @@ This describes the end-to-end workflow from installation to daily use.
 
 | Attribute | Requirement |
 |-----------|-------------|
-| **OS** | Windows 11 (x64) |
+| **OS** | Windows 10 22H2 (build 19045 or newer) or Windows 11, x64 *(v1.9; was: Windows 11 (x64))*. On Windows 10 the parent app runs only as a remote parent app, because the service needs Windows 11 (§9.1, FR-APP-091). |
 | **Framework** | .NET MAUI (WinUI) |
 | **UI** | Desktop-style, like macOS |
 | **Distribution** | Separate app with **its own self-contained installer** (install, repair, uninstall wizard), FR-APP-092. Not part of the EagleEye service installer. *(v1.2; v1.1 used copy deployment.)* |
@@ -617,9 +619,10 @@ The questions raised by the v1.1 amendment were answered by Michael on 2026-10-0
 | Q-5 | On which platforms does the parent app ship? (supersedes Q-3) | Michael, 2026-10-20: only as the Windows parent app (own installer) and the Mac app (Mac Catalyst, `.dmg`). The iPhone and Android apps are removed: no paid Apple Developer account just to run his own app on his own phone; Android is dropped with it. Windows and Mac are the production platforms. → §3.3, §9, §10, CR-001 |
 | Q-6 | Is the Mac app a full-parity production platform, and when does it catch up with the features of US-002 to US-006 (built only in the Windows parent app)? | Michael, 2026-10-20: yes, full parity with the Windows app (FR-APP-082, FR-APP-110). A new US-007 "macOS parent app parity" brings the Mac app up to the Windows feature level after CR-001 is merged (the number is reused; the aborted iOS US-007 never reached `main`). From then on, every parent-app story names both apps. → §3.3, §3.3.10 |
 | Q-7 | Without a paid Apple Developer account the `.dmg` cannot be Developer-ID signed or notarised, so macOS asks for confirmation at the first start (Gatekeeper). Acceptable? | Michael, 2026-10-20: accepted. An unsigned, un-notarised `.dmg` is fine; Michael does not plan to distribute it, and a one-time allow in the macOS settings on his MacBook is enough. → §9.4 |
+| Q-8 | Does the parent app run on Windows 10? | Michael, 2026-10-31: yes, the Windows parent app on Windows 10 22H2 (build 19045) x64; the installer refuses older versions with a message. The service and the tray client stay Windows 11 only. → §2.1, §9.1, §9.5, FR-APP-092, US-009 |
 
 No open questions.
 
 ---
 
-*End of General Product Requirements — Approved v1.7*
+*End of General Product Requirements — Approved v1.8; v1.9 proposed with US-009*

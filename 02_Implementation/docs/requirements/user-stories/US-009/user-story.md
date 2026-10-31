@@ -3,7 +3,7 @@
 **Status**: New
 **Created**: 2026-10-31
 **Component(s)**: EagleEye.ParentApp (incl. EagleEye.ParentApp.Core). EagleEye.Service, EagleEye.TrayClient, EagleEye.Shared: no behaviour change expected, new version 0.9.0 and regression only (group J)
-**Platform(s)**: ParentApp Windows (Windows 10 22H2 and Windows 11, Windows Developer Machine and a Windows 10 PC) · ParentApp macOS (version only, regression, MacBook) · Windows service/tray (version only, regression, Windows 11)
+**Platform(s)**: ParentApp Windows (Windows 10 22H2 and Windows 11, Windows Developer Machine and Michael's Windows 10 test PC) · ParentApp macOS (version only, regression, MacBook) · Windows service/tray (version only, regression, Windows 11)
 
 ---
 
@@ -39,7 +39,7 @@ Two items of the pilot feedback of 2026-10-31 (Michael, relayed by the Orchestra
 | Section headings **outlined** in the accent colour (no solid fill), heading text in the normal text colour | US-008 report D-18 (Michael's finding on 0.8.0) | solid accent-filled bars (ISSUE-007) |
 | Shared logic of US-007 (connection, start-up errors, language choice, accent palette, texts) | US-007 implementation report | never built and run on Windows (US-007 F-1) |
 
-References: FR-APP-042 to FR-APP-044, FR-APP-062 (v1.8, US-008), FR-APP-081 to FR-APP-083, FR-APP-090 to FR-APP-092, FR-APP-110, NFR-L-010 to NFR-L-012, §2.1, §9.1, §9.5. Architecture: ADR-009 (Windows parent app packaging, per-user installer), ADR-010, ADR-019, ADR-021 (on the US-008 branch). Follow-ups: US-007 test report F-1 and the not verified US-007 AC-25 and AC-33; US-008 Out of Scope "Two parent apps showing groups at the same time".
+References: FR-APP-042 to FR-APP-044, FR-APP-062 (v1.8, US-008), FR-APP-081 to FR-APP-083, FR-APP-090 to FR-APP-092, FR-APP-110, NFR-L-010 to NFR-L-012, §2.1, §9.1, §9.5. Architecture: ADR-009 (Windows parent app packaging, per-user installer), ADR-010, ADR-019, ADR-021 (US-008). Follow-ups: US-007 test report F-1 and the not verified US-007 AC-25 and AC-33; US-008 Out of Scope "Two parent apps showing groups at the same time".
 
 > **Note on Windows 10**: Microsoft ended regular support for Windows 10 on 2025-10-14. Supporting Windows 10 22H2 for the parent app is Michael's decision for the pilot. This story does not add anything for Windows 10 beyond what it needs to install and run.
 
@@ -47,15 +47,15 @@ References: FR-APP-042 to FR-APP-044, FR-APP-062 (v1.8, US-008), FR-APP-081 to F
 
 - *Windows app*: the EagleEye parent app for Windows (US-002 to US-006, and the build of this story).
 - *Mac app*: the EagleEye parent app for macOS (US-007, US-008, and the build of this story).
-- *Windows 10 PC*: a PC (or virtual machine) with Windows 10 22H2, build 19045 or newer, x64, in the same LAN as the service PC (OQ-1).
+- *Windows 10 PC*: Michael's third, physical Windows PC with Windows 10 22H2, build 19045 or newer, x64, in the same LAN as the service PC (OQ-1).
 - *Service PC*, *account*, *controlled account*, *app*, *app group*, *group rule*, *grouped app*, *group used time*, *kid dialog*, *heading bar*: as in US-003 to US-008.
 - *Parity rule*: AC-1 below.
 
 ---
 
-## Product requirement change (v1.9, to apply after US-008 is merged)
+## Product requirement amendment (v1.9, takes effect when Michael approves this story)
 
-`main` is still at v1.7; v1.8 (app groups) is on `feature/US-008-app-groups`. To avoid a conflict, this branch does **not** edit `02_Implementation/docs/requirements/general-product-requirements.md`. After US-008 is merged into `main` and `main` is merged into this branch, PRO applies the following **v1.9 amendment** (with Michael's approval of this story). US-008's v1.8 note already announces it ("The Windows 10 support for the Windows parent app … is amended with US-009").
+US-008 (v1.8) is merged into `main` and `main` into this branch. The **v1.9 amendment** is now written into `02_Implementation/docs/requirements/general-product-requirements.md` (marked "proposed with US-009"); it takes effect with Michael's approval of this story. US-008's v1.8 note announces it.
 
 - **§2.1 Parent, Devices**: "Windows 10 22H2 (build 19045 or newer, x64) or Windows 11 PC (x64), or Mac (macOS 26+, Apple Silicon)". The kid's device stays "Windows 11 PC only".
 - **§9.5 Windows (ParentApp), OS**: "Windows 10 22H2 (build 19045 or newer) or Windows 11, x64". New row note: on Windows 10 the parent app runs only as a remote parent app, because the service needs Windows 11 (§9.1, FR-APP-091).
@@ -122,7 +122,7 @@ References: FR-APP-042 to FR-APP-044, FR-APP-062 (v1.8, US-008), FR-APP-081 to F
 ### D. App Groups page (FR-APP-042, FR-APP-043; US-008 groups A to C)
 
 - [ ] **AC-13** [W11]: The App Groups page of the Windows app shows the same content as the Mac app (US-008 AC-2 to AC-6): the explanatory text including the sentence on how to move apps (US-008 D-14, with "touchpad" for the Windows wording if the Mac text names the trackpad); "Add group"; one section per group sorted alphabetically ignoring case; "Not in any group" at the bottom; every app once with its display name and its program path as a tooltip; Windows Explorer not listed; the empty-section texts; the page states "Not connected", no controlled account (US-008 D-15) and "Loading …"; a new app appears in "Not in any group" within 15 seconds without any action. The page has no account selection.
-- [ ] **AC-14** [W11]: The group heading of each group section shows the group name and the **Rename** and **Delete** controls in the same form as the Mac app 0.8.0 as delivered (US-008 D-19: icon buttons with a tooltip "Rename" / "Delete" ("Umbenennen" / "Löschen"); OQ-4). "Not in any group" has no such controls.
+- [ ] **AC-14** [W11]: The group heading of each group section shows the group name and the **Rename** and **Delete** controls as in the Mac app 0.8.0 (US-008 D-19, OQ-4): a **pencil** icon button (Rename) and a **trash-can** icon button (Delete), each with the tooltip "Rename" / "Delete" ("Umbenennen" / "Löschen"), visible in light and dark mode. The pencil opens the rename dialog, the trash can the delete confirmation (AC-15). "Not in any group" has no such controls.
 - [ ] **AC-15** [W11]: Creating, renaming and deleting groups work as US-008 AC-7 to AC-10: the dialog "New app group" / "Rename app group" with "Name", "OK", "Cancel"; the name rules (trimmed, 1 to 40 characters, emojis allowed, entered with the emoji panel; unique ignoring case) with the two messages; an invalid name brings the dialog back with the message and the typed text; Cancel and Escape create nothing; rename pre-filled; the delete confirmation with its title "Delete app group" ("App-Gruppe löschen", US-008 D-16) and question; after deleting, the apps are in "Not in any group" with their own rules.
 - [ ] **AC-16** [W11] [W10]: Drag-and-drop works as US-008 AC-11 with the **mouse and the touchpad**: an app can be dragged from any section onto any other section, including an empty group and "Not in any group"; the section under the pointer is highlighted and the highlight moves with the pointer; dropping onto the app's own section or outside any section changes nothing; the highlight is always cleared afterwards; it also works when the window is small and the page scrolls. Touch screens are not required (OQ-3).
 - [ ] **AC-17** [W11]: Each app entry has the "≡" button, and a right click on the entry offers "Move to …" ("Verschieben nach …"); both open the same list of targets (every group except the app's current one, and "Not in any group" if the app is in a group) and "Cancel" (US-008 AC-12, D-9). Choosing a target moves the app as a drop would; "Cancel" moves nothing.
@@ -161,8 +161,17 @@ References: FR-APP-042 to FR-APP-044, FR-APP-062 (v1.8, US-008), FR-APP-081 to F
 ### J. Regression
 
 - [ ] **AC-34** [W11]: Apart from the version number and the changes of this story, the Windows app 0.9.0 behaves as 0.6.2 (US-007 F-1). Spot check: a connection error naming the host (US-002 AC-12); "Forget pairing on this device" offered when the service is unreachable (ISSUE-009); one tick and one untick (US-003); one break time added, changed and deleted and the display text changed (US-005); one app rule and the budget text changed (US-006); the warning minutes with one validation message (US-006 AC-15); Reports with today's usage following within 15 seconds (US-004 AC-22).
-- [ ] **AC-35** [Mac]: The Mac app 0.9.0 behaves as 0.8.0, apart from the version number. Spot check: one app moved between groups, one group rule changed, one break time change, Reports of today for `kid1`.
+- [ ] **AC-35** [Mac]: The Mac app 0.9.0 behaves as 0.8.0, apart from the version number. Because US-008 was closed without a test run (US-008 test report F-1), its Mac-app ACs are checked here **in full** on the Mac app 0.9.0: US-008 AC-1 to AC-18, AC-35 to AC-37 and AC-43, including the outlined headings (D-18) and the pencil and trash-can icon buttons (D-19).
 - [ ] **AC-36** [SVC]: The service and the tray client 0.9.0 behave as 0.8.0, apart from the version number. Besides REG-001 (AC-31), the sample of AC-27 shows that group enforcement is unchanged.
+
+### K. Retest of US-008 (US-008 test report F-1)
+
+US-008 was closed on 2026-10-31 without a manual test run; Michael: "I will do the tests with US-009 again."
+
+- [ ] **AC-37** [SVC] [W11 or Mac]: The US-008 ACs that were not verified manually hold for the service and tray client 0.9.0, checked as written in US-008 with the Windows app or the Mac app as the parent app ("the Mac app" in those ACs means either): **AC-19 to AC-23** (group used time), **AC-24 to AC-34** (enforcement of group rules, changes during the day with grace period), **AC-38 to AC-40** (storage and accounts). TES may combine these checks with AC-27, AC-31 and AC-36.
+- [ ] **AC-38** [SVC], *optional pilot check*: US-008 **AC-41** (performance with 20 groups and 100 apps) and the live group smoke of the US-008 plan (Step 7.3, US-008 implementation report D-8). Michael checks these in pilot operation. TES lists them as optional; "not tested" does not block closing this story.
+
+> **Delivery note (DEV, US-008 test report F-2)**: DEV removes the 9 compiler warnings in test code (8× CS8631, 1× xUnit2029; US-008 implementation report §4), so that `test.ps1` again builds with **0 warnings**. DEV shows this in the implementation report (step c); it is not a manual test.
 
 ---
 
@@ -172,7 +181,7 @@ The pages, sections, dialogs and texts are those of the Mac app 0.8.0 (mockups i
 
 ### Windows app, App Groups page (AC-10, AC-11, AC-13 to AC-17)
 
-Headings are outlined in the Windows accent colour (AC-11). "✎" and "🗑" stand for the Rename and Delete icon buttons of the Mac app 0.8.0 (AC-14, OQ-4); "≡" opens "Move to …" (AC-17).
+Headings are outlined in the Windows accent colour (AC-11). "✎" and "🗑" stand for the pencil (Rename) and trash-can (Delete) icon buttons of the Mac app 0.8.0 (AC-14, OQ-4); "≡" opens "Move to …" (AC-17).
 
 ```plantuml
 @startsalt
@@ -248,30 +257,32 @@ M --> [EagleEye service 0.9.0] : LAN, TLS + pairing
 - Touch-screen drag-and-drop (OQ-3). Keyboard-only moving is covered by "≡" (AC-17).
 - Windows-only extras: notifications, a tray icon for the parent app, Windows 11 visual effects that Windows 10 does not have (e.g. rounded window corners, Mica). The look is defined by AC-11 and AC-12, not by these effects.
 - Code signing of the Windows installers (SmartScreen may warn, as before, ADR-009).
-- A full manual verification of the US-006 and US-008 service behaviour beyond the samples of AC-27 and AC-36; the US-008 test run covers groups in the service.
+- A full manual verification of the US-006 service behaviour beyond the spot checks of this story. (The US-008 service behaviour is retested here, group K, because US-008 was closed without a test run.)
 - The US-007 follow-up F-5 (Keychain API, ARC) and the not verified US-007 Mac-only ACs (removal script, sleep/Wi-Fi, Local Network deny); US-007 AC-25 and AC-33 are included (group G).
 
 ---
 
-## Open Questions
+## Open Questions (resolved, answered by Michael, 2026-10-31)
 
-| ID | Question | Proposal |
-|---|---|---|
-| OQ-1 | **Windows 10 test machine.** Do you have a Windows 10 22H2 x64 PC or virtual machine in the LAN for the ACs tagged [W10] (AC-2 to AC-11, AC-16, AC-28, AC-30; AC-24 and AC-26 can use it instead of Windows 11)? | Use a **virtual machine** with Windows 10 22H2 x64 on the Windows Developer Machine (Hyper-V, with an external virtual switch so that it is in the same LAN as the service PC), or the pilot family's Windows 10 PC if you can use it for an hour. Without either, the [W10] ACs cannot be verified, and TES records them as "not tested"; the story could then only be closed with that gap. |
-| OQ-2 | **Older Windows 10 versions.** Should the Windows app installer refuse Windows 10 builds older than 22H2 (19045), or install there untested? | **Refuse** with a message (AC-4): it is clear for the parent and needs no extra testing. 32-bit, ARM, S mode and LTSC are not supported (Out of Scope). |
-| OQ-3 | **Touch screens.** Must drag-and-drop also work with a finger on a touch screen? | **No.** Required are the mouse and the touchpad (AC-16). On a touch screen the parent can use "≡" (AC-17). Less to build and test; the Mac has no touch screen either. |
-| OQ-4 | **Group heading controls.** The Mac app is getting icon buttons for Rename and Delete on the group headings right now (US-008 D-19). Which design is the reference for Windows? | The **Mac app 0.8.0 as delivered when US-008 is closed**. If D-19 changes again before then, the Windows app follows the final Mac design; AC-14 is read that way. |
-| OQ-5 | **Update starting points.** Is any Windows app 0.7.x or 0.8.x installed anywhere? | **No** (none was built). The tests use: service 0.8.0 → 0.9.0 (AC-31), Mac 0.8.0 → 0.9.0 (AC-32), Windows app 0.6.2 → 0.9.0 on Windows 11 (AC-33), fresh installation on Windows 10 (AC-2). |
-| OQ-6 | **Changes outside the Windows app.** May the service, the tray client or the Mac app change in this story? | **Version number only.** If the Windows app needs a change in shared code (ParentApp Core, shared views or styles), it is allowed when the Mac app behaves exactly as 0.8.0 afterwards (AC-35). Anything else is raised with you before the plan is approved. |
-| OQ-7 | **Test depth for the Windows app.** Full re-run of all US-002 to US-006 ACs on Windows, or the new group features in full plus spot checks? | **Group features in full on Windows 11** (groups C to G), **install, connection and a spot check of every page on Windows 10** (group B), and **spot checks** for the earlier features (AC-34). Same depth as US-007 AC-35 and US-008 AC-43. |
+All seven questions are **resolved**. OQ-2, OQ-3, OQ-6 and OQ-7 as proposed; OQ-1, OQ-4 and OQ-5 with Michael's specific answers below. The ACs follow the answers.
+
+| ID | Question | Recommendation | Answer |
+|---|---|---|---|
+| OQ-1 | **Windows 10 test machine.** Do you have a Windows 10 22H2 x64 PC or virtual machine in the LAN for the ACs tagged [W10] (AC-2 to AC-11, AC-16, AC-28, AC-30; AC-24 and AC-26 can use it instead of Windows 11)? | A virtual machine on the Windows Developer Machine, or the pilot family's Windows 10 PC. | **Resolved** (Michael, 2026-10-31): a **physical third Windows PC with Windows 10** is available for testing the app. It is the *Windows 10 PC* of all [W10] ACs (Terms). |
+| OQ-2 | **Older Windows 10 versions.** Should the Windows app installer refuse Windows 10 builds older than 22H2 (19045), or install there untested? | **Refuse** with a message (AC-4). 32-bit, ARM, S mode and LTSC are not supported (Out of Scope). | Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted (AC-4 unchanged; FR-APP-092 v1.9). |
+| OQ-3 | **Touch screens.** Must drag-and-drop also work with a finger on a touch screen? | **No.** Mouse and touchpad (AC-16); on a touch screen the parent can use "≡" (AC-17). | Agreed. — **Resolved** (Michael, 2026-10-31): no touch-screen support required (AC-16, Out of Scope). |
+| OQ-4 | **Group heading controls.** Which design of the Rename and Delete controls on the group headings is the reference for Windows? | The Mac app 0.8.0 as delivered when US-008 is closed. | **Resolved** (Michael, 2026-10-31): the Mac design as delivered with the US-008 close: the **pencil** (Rename) and **trash-can** (Delete) icon buttons of US-008 D-19 (AC-14). |
+| OQ-5 | **Update starting points.** Is any Windows app 0.7.x or 0.8.x installed anywhere? | **No** (none was built). Service 0.8.0 → 0.9.0 (AC-31), Mac 0.8.0 → 0.9.0 (AC-32), Windows app 0.6.2 → 0.9.0 on Windows 11 (AC-33), fresh installation on Windows 10 (AC-2). | **Resolved** (Michael, 2026-10-31): "all will be on 0.8.0, correct." The starting points stay as recommended: the service, the tray client and the Mac app are on 0.8.0; no Windows app 0.7.x or 0.8.x was ever built (US-007 test report §2, US-008 Step 11), so the Windows app on Windows 11 starts from **0.6.2** (AC-33). *Clarification for the Orchestrator to confirm with Michael: "all on 0.8.0" applies to service, tray client and Mac app only, not to the Windows app.* |
+| OQ-6 | **Changes outside the Windows app.** May the service, the tray client or the Mac app change in this story? | **Version number only.** Shared code (ParentApp Core, shared views or styles) may change if the Mac app behaves exactly as 0.8.0 afterwards (AC-35). Anything else is raised with you before the plan is approved. | Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted. |
+| OQ-7 | **Test depth for the Windows app.** Full re-run of all US-002 to US-006 ACs on Windows, or the new group features in full plus spot checks? | **Group features in full on Windows 11** (groups C to G), **install, connection and a spot check of every page on Windows 10** (group B), **spot checks** for the earlier features (AC-34). | Agreed. — **Resolved** (Michael, 2026-10-31): proposal accepted. Added after the US-008 close: the retest of US-008 (AC-35 in full on the Mac, group K). |
 
 ---
 
 ## Related
 
-- Prerequisite stories: **US-008** (app groups, service and Mac app 0.8.0) must be closed and merged into `main` before ARC's plan is approved; US-007 (Mac app parity); US-002 to US-006 (Windows app features).
-- **Branch dependency**: this branch `feature/US-009-windows-parent-app-parity` was created from `main` before US-008 was merged. After the US-008 merge, `main` is merged into this branch (or the branch is rebased on `main`) before ARC writes the plan; then PRO applies the v1.9 amendment above.
-- Requirements: `02_Implementation/docs/requirements/general-product-requirements.md` §2.1, §3.3.8, §3.3.9, §9.1, §9.5 (v1.9 change above); v1.8 (US-008) FR-APP-042 to FR-APP-044, FR-APP-062.
+- Prerequisite stories: **US-008** (app groups, service and Mac app 0.8.0), closed by Michael on 2026-10-31 without a test run and merged into `main` (`8f9bd28`); its manual tests are repeated here (AC-35, group K; `02_Implementation/docs/testing/US-008/test-report.md` F-1, F-2). US-007 (Mac app parity); US-002 to US-006 (Windows app features).
+- **Branch dependency**: resolved. `main` with US-008 was merged into this branch (`2941688`); the v1.9 amendment is applied.
+- Requirements: `02_Implementation/docs/requirements/general-product-requirements.md` §2.1, §3.3.8, §3.3.9, §9.1, §9.5, FR-APP-092, Q-8 (v1.9 amendment above); v1.8 (US-008) FR-APP-042 to FR-APP-044, FR-APP-062.
 - Architecture: ADR-009 (the Windows app installer currently requires Windows 11), ADR-010, ADR-019, ADR-021; arc42 R-18 (US-008).
 - Follow-ups taken over: US-007 test report F-1 (Windows build and regression, AC-34), not verified US-007 AC-25 and AC-33 (AC-24, AC-26); US-008 Out of Scope "Two parent apps showing groups at the same time" (AC-25).
 - Implementation Plan: `US-009/implementation-plan.md` (added by ARC)
@@ -284,3 +295,4 @@ M --> [EagleEye service 0.9.0] : LAN, TLS + pairing
 |---|---|---|
 | 2026-10-31 | Scope decided with US-008: Windows 10 22H2 (19045) x64 for the Windows parent app only; Windows parent app parity including app groups; all four assets 0.9.0; no mixed versions; less code where the requirements allow either way | Michael (via the Orchestrator) |
 | 2026-10-31 | Story created (status `New`), v1.9 requirement change described for after the US-008 merge; OQ-1 to OQ-7 open | PRO |
+| 2026-10-31 | OQ-1 to OQ-7 resolved (OQ-1: physical Windows 10 test PC; OQ-4: pencil and trash-can icon buttons of D-19, AC-14 made concrete; OQ-5: starting points unchanged, wording to be confirmed). US-008 close-out taken over: AC-35 now checks the US-008 Mac-app ACs in full; new group K with AC-37 (US-008 AC-19 to AC-34, AC-38 to AC-40) and AC-38 (optional pilot checks: US-008 AC-41, live group smoke); delivery note F-2 (0 test-code warnings). v1.9 amendment written into the product requirements (proposed, takes effect with this story's approval). 38 ACs. Status stays `New`, awaiting Michael's approval | Michael (answers, via the Orchestrator), PRO |
