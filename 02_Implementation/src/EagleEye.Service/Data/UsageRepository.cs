@@ -105,10 +105,13 @@ public sealed class UsageRepository(ServiceDatabase database) : IUsageRepository
     }
 
     /// <inheritdoc />
-    public Task ApplyAsync(IReadOnlyCollection<UsageIncrement> increments, IReadOnlyCollection<InstanceSeenRecord> seen, CancellationToken ct = default)
+    public Task ApplyAsync(
+        IReadOnlyCollection<UsageIncrement> increments, IReadOnlyCollection<InstanceSeenRecord> seen, IReadOnlyCollection<ActivitySpanWrite> spans,
+        CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(increments);
         ArgumentNullException.ThrowIfNull(seen);
+        ArgumentNullException.ThrowIfNull(spans);
         return database.ExecuteAsync(async (connection, token) =>
         {
             using var transaction = connection.BeginTransaction();
@@ -136,8 +139,52 @@ public sealed class UsageRepository(ServiceDatabase database) : IUsageRepository
                 await command.ExecuteNonQueryAsync(token).ConfigureAwait(false);
             }
 
+            foreach (var span in spans)
+            {
+                using var command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText = """
+                    INSERT INTO ActivitySpans (AppId, Day, StartUtcMs, EndUtcMs) VALUES (@app, @day, @start, @end)
+                    ON CONFLICT (AppId, StartUtcMs) DO UPDATE SET EndUtcMs = MAX(EndUtcMs, excluded.EndUtcMs);
+                    """;
+                command.Parameters.AddWithValue("@app", span.AppId);
+                command.Parameters.AddWithValue("@day", Day(span.Day));
+                command.Parameters.AddWithValue("@start", span.StartUtc.ToUnixTimeMilliseconds());
+                command.Parameters.AddWithValue("@end", span.EndUtc.ToUnixTimeMilliseconds());
+                await command.ExecuteNonQueryAsync(token).ConfigureAwait(false);
+            }
+
             await transaction.CommitAsync(token).ConfigureAwait(false);
             return true;
+        }, ct);
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<StoredSpan>> GetSpansAsync(string accountSid, DateOnly fromDay, DateOnly toDay, CancellationToken ct = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountSid);
+        return database.ExecuteAsync<IReadOnlyList<StoredSpan>>(async (connection, token) =>
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                SELECT s.Day, a.ProgramPath, s.StartUtcMs, s.EndUtcMs
+                FROM ActivitySpans s JOIN AppRecords a ON a.AppId = s.AppId
+                WHERE a.AccountSid = @sid COLLATE NOCASE AND s.Day >= @from AND s.Day <= @to
+                ORDER BY s.StartUtcMs, s.SpanId;
+                """;
+            command.Parameters.AddWithValue("@sid", accountSid);
+            command.Parameters.AddWithValue("@from", Day(fromDay));
+            command.Parameters.AddWithValue("@to", Day(toDay));
+            using var reader = await command.ExecuteReaderAsync(token).ConfigureAwait(false);
+            var rows = new List<StoredSpan>();
+            while (await reader.ReadAsync(token).ConfigureAwait(false))
+            {
+                rows.Add(new StoredSpan(
+                    DateOnly.ParseExact(reader.GetString(0), DayFormat, CultureInfo.InvariantCulture), reader.GetString(1),
+                    DateTimeOffset.FromUnixTimeMilliseconds(reader.GetInt64(2)), DateTimeOffset.FromUnixTimeMilliseconds(reader.GetInt64(3))));
+            }
+
+            return rows;
         }, ct);
     }
 
@@ -171,7 +218,7 @@ public sealed class UsageRepository(ServiceDatabase database) : IUsageRepository
     }
 
     /// <inheritdoc />
-    public Task<(int DayRows, int Instances)> PurgeOlderThanAsync(DateOnly cutoffDay, DateTimeOffset cutoffUtc, CancellationToken ct = default)
+    public Task<(int DayRows, int Instances, int Spans)> PurgeOlderThanAsync(DateOnly cutoffDay, DateTimeOffset cutoffUtc, CancellationToken ct = default)
     {
         return database.ExecuteAsync(async (connection, token) =>
         {
@@ -188,8 +235,14 @@ public sealed class UsageRepository(ServiceDatabase database) : IUsageRepository
             instances.Parameters.AddWithValue("@start", Utc(cutoffUtc));
             var instanceRows = await instances.ExecuteNonQueryAsync(token).ConfigureAwait(false);
 
+            using var spans = connection.CreateCommand();
+            spans.Transaction = transaction;
+            spans.CommandText = "DELETE FROM ActivitySpans WHERE Day < @day;";
+            spans.Parameters.AddWithValue("@day", Day(cutoffDay));
+            var spanRows = await spans.ExecuteNonQueryAsync(token).ConfigureAwait(false);
+
             await transaction.CommitAsync(token).ConfigureAwait(false);
-            return (dayRows, instanceRows);
+            return (dayRows, instanceRows, spanRows);
         }, ct);
     }
 

@@ -21,3 +21,17 @@ public sealed record DayAppUsage(DateOnly Day, long AppId, string DisplayName, l
 
 /// <summary>What was deleted for an account that no longer exists (FR-SVC-047).</summary>
 public sealed record AccountPurge(string AccountSid, int Apps, int Instances, int DayRows);
+
+/// <summary>A new or extended activity span of an app record (ADR-021 §2); identified by app record and start.</summary>
+/// <param name="AppId">The app record.</param>
+/// <param name="Day">The local day of the span (spans are split at local midnight).</param>
+/// <param name="StartUtc">Start of the span.</param>
+/// <param name="EndUtc">The (new) end of the span.</param>
+public sealed record ActivitySpanWrite(long AppId, DateOnly Day, DateTimeOffset StartUtc, DateTimeOffset EndUtc);
+
+/// <summary>A stored activity span of an account's app on a local day.</summary>
+/// <param name="Day">The local day.</param>
+/// <param name="ProgramPath">The app's program path.</param>
+/// <param name="StartUtc">Start of the span.</param>
+/// <param name="EndUtc">End of the span.</param>
+public sealed record StoredSpan(DateOnly Day, string ProgramPath, DateTimeOffset StartUtc, DateTimeOffset EndUtc);

@@ -426,6 +426,80 @@ public sealed class UsageTrackerTests
 
     private static ObservedApp App(string path) => new(path, Path.GetFileName(path), path == Notepad ? "Editor" : "Paint", [new ObservedProcess(1, 1)]);
 
+    [Fact]
+    public void Spans_ConsecutiveTicks_OneSpanExtended()
+    {
+        Observe(2, Kid, Notepad);
+        Activate(Kid);
+
+        var first = Assert.Single(Tick().Spans);
+        var second = Assert.Single(Tick().Spans);
+
+        Assert.Equal(new SpanUpdate(Kid, Notepad, Oct7, Start, Start.AddSeconds(5)), first);
+        Assert.Equal(new SpanUpdate(Kid, Notepad, Oct7, Start, Start.AddSeconds(10)), second);
+    }
+
+    [Fact]
+    public void Spans_InactiveTime_NewSpanAfterwards()
+    {
+        Observe(2, Kid, Notepad);
+        Activate(Kid);
+        Tick();
+        _tracker.SetActivity(_ => false);
+        Tick();
+        Activate(Kid);
+
+        var span = Assert.Single(Tick().Spans);
+
+        Assert.Equal((Start.AddSeconds(10), Start.AddSeconds(15)), (span.StartUtc, span.EndUtc));
+    }
+
+    [Fact]
+    public void Spans_NoCredit_NoSpans()
+    {
+        Observe(2, Kid, Notepad);
+        _tracker.SetActivity(_ => false);
+
+        Assert.Empty(Tick().Spans);
+    }
+
+    [Fact]
+    public void Spans_ParallelApps_SameEnd()
+    {
+        Observe(2, Kid, Notepad, Paint);
+        Activate(Kid);
+
+        var spans = Tick().Spans;
+
+        Assert.Equal([Start.AddSeconds(5)], spans.Select(s => s.EndUtc).Distinct());
+        Assert.Equal(2, spans.Count);
+    }
+
+    [Fact]
+    public void Spans_AcrossMidnight_SplitPerDay()
+    {
+        _time.WallNow = new DateTimeOffset(2026, 10, 7, 21, 59, 57, TimeSpan.Zero); // 23:59:57 local
+        Observe(2, Kid, Notepad);
+        Activate(Kid);
+
+        var spans = Tick().Spans;
+
+        var midnight = new DateTimeOffset(2026, 10, 7, 22, 0, 0, TimeSpan.Zero);
+        Assert.Equal([(Oct7, midnight.AddSeconds(-3), midnight), (Oct8, midnight, midnight.AddSeconds(2))], spans.Select(s => (s.Day, s.StartUtc, s.EndUtc)));
+    }
+
+    [Fact]
+    public void Spans_OnlyInTickOutput()
+    {
+        Observe(2, Kid, Notepad);
+        Activate(Kid);
+        _time.Advance(TimeSpan.FromSeconds(5));
+        _tracker.Advance();
+
+        Assert.Empty(_tracker.TakeOutput(false).Spans);
+        Assert.Single(_tracker.TakeOutput(true).Spans);
+    }
+
     private void Observe(int session, string sid, params string[] paths) => _tracker.ObserveApps(session, sid, [.. paths.Select(App)]);
 
     private void Activate(string sid)

@@ -31,7 +31,12 @@ EagleEye.ParentApp.Core/
 │                        writes confirmed by snapshot, 4 s timeout), TimeOfDayText (7:30, 730, 7, 20.00 → HH:MM),
 │                        BreakTimeEditRules (end > start, ≥ 1 day, ≤ 20 entries). US-006: SelectedAccountModel
 │                        (shared replica/write logic of the per-account areas), AppRulesModel ("AppRules:{sid}"),
-│                        AppBudgetText (hours 0…23, minutes 0…59, ASCII digits, ≤ 2 digits)
+│                        AppBudgetText (hours 0…23, minutes 0…59, ASCII digits, ≤ 2 digits). US-008:
+│                        AppGroupRulesModel ("AppGroupRules:{sid}"), IRuleTableWrites (budget part and weekday of a
+│                        row id: implemented by AppRulesModel and AppGroupRulesModel, so one row type serves both)
+├── Groups/              US-008: AppGroupsModel (global area "AppGroups": groups and listed apps; create, rename,
+│                        delete, move; one fixed key of SelectedAccountModel), AppGroupNameRules (AppGroupNames of
+│                        Shared + no duplicate ignoring case; the renamed group itself is ignored)
 ├── Settings/            US-006: WarningSettingsModel (global area "WarningSettings", one fixed key of
 │                        SelectedAccountModel), WarningEditRules (1…59, early > final)
 ├── Appearance/         HeadingBarPalette: heading bar colours (platform accent or app primary #1E7B3A,
@@ -50,7 +55,15 @@ EagleEye.ParentApp.Core/
 │                        by name in the parent's culture ignoring case), AppRuleRowViewModel, WarningSettingsViewModel,
 │                        WarningRowViewModel, KidTextEditing (ADR-016: defaults shown in the app's language; a text
 │                        equal to any default is sent as "" so the service stores the default)
+│                        US-008: AppGroupsViewModel (App Groups page: states, sections sorted by name, "Not in any
+│                        group" last, name dialog loop, delete confirmation, MoveTargets, drag-and-drop methods),
+│                        AppGroupSectionViewModel, GroupableAppViewModel, AppGroupRulesSectionViewModel (rows are
+│                        AppRuleRowViewModel: id = group, name, members line), OrderedMerge (in-place merge of a
+│                        sorted list into an ObservableCollection), LoadStates (ready when both areas are).
+│                        AppRulesSectionViewModel hides grouped apps; DayUsageViewModel has GroupRows; the Reports
+│                        usage is fetched again on an "AppGroups" broadcast (AccountUsageModel)
 │                        (CommunityToolkit.Mvvm, no source generators)
+├── Localization/        UiCulturePolicy (US-007: German unless the UI language is English)
 ├── AppTexts.cs          Typed access to the localized texts
 └── Resources/           AppTexts.resx (German, default) and AppTexts.en.resx (English)
 ```

@@ -89,7 +89,7 @@
   <data name="RulesNoDaySelected" xml:space="preserve"><value>Select at least one day.</value></data>
   <!-- US-006 -->
   <data name="RulesSectionAppRules" xml:space="preserve"><value>Application rules</value></data>
-  <data name="RulesAppRulesExplanation" xml:space="preserve"><value>Set here which apps may be used on which days and for how long. If no day is ticked or the daily time budget is zero, your kid cannot use the app. Apps can only be used outside break times. Only apps that your kid has started at least once are listed.</value></data>
+  <data name="RulesAppRulesExplanation" xml:space="preserve"><value>Set here which apps may be used on which days and for how long. If no day is ticked or the daily time budget is zero, your kid cannot use the app. Apps can only be used outside break times. Only apps that your kid has started at least once are listed. Apps in an app group are set under App group rules.</value></data>
   <data name="RulesColumnApp" xml:space="preserve"><value>App</value></data>
   <data name="RulesColumnDailyBudget" xml:space="preserve"><value>Daily time budget</value></data>
   <data name="RulesColumnHours" xml:space="preserve"><value>Hours</value></data>
@@ -112,4 +112,28 @@
   <data name="ForgetConfirmTitle" xml:space="preserve"><value>Forget pairing on this device?</value></data>
   <data name="ForgetConfirmMessageFormat" xml:space="preserve"><value>The EagleEye PC {0} cannot be reached or its identity has changed. The pairing is deleted on this device only. Afterwards the app can be paired again with a new pairing code. The device entry may remain on the EagleEye PC; another parent app cannot remove it there at the moment.</value></data>
   <data name="InfoPairingForgottenFormat" xml:space="preserve"><value>The pairing with {0} was deleted on this device. Pairing again requires a new pairing code.</value></data>
+  <!-- US-008: app groups -->
+  <data name="MenuAppGroups" xml:space="preserve"><value>App Groups</value></data>
+  <data name="GroupsExplanation" xml:space="preserve"><value>Here you can put apps that belong together into a group, e.g. a game with its launcher. On the Rules page you then set one time budget for the whole group, for each of your kids. A new group is blocked until you set its rule. Each app can be in only one group. Move apps by dragging them with the mouse or trackpad, with ≡ or with a right click.</value></data>
+  <data name="GroupsAdd" xml:space="preserve"><value>Add group</value></data>
+  <data name="GroupsRename" xml:space="preserve"><value>Rename</value></data>
+  <data name="GroupsDelete" xml:space="preserve"><value>Delete</value></data>
+  <data name="GroupsUngrouped" xml:space="preserve"><value>Not in any group</value></data>
+  <data name="GroupsEmpty" xml:space="preserve"><value>No apps in this group. Drag apps here.</value></data>
+  <data name="GroupsAllGrouped" xml:space="preserve"><value>All apps are in a group.</value></data>
+  <data name="GroupsNewTitle" xml:space="preserve"><value>New app group</value></data>
+  <data name="GroupsRenameTitle" xml:space="preserve"><value>Rename app group</value></data>
+  <data name="GroupsNameLabel" xml:space="preserve"><value>Name</value></data>
+  <data name="GroupsInvalidName" xml:space="preserve"><value>Enter a name with 1 to 40 characters.</value></data>
+  <data name="GroupsDuplicateName" xml:space="preserve"><value>A group with this name already exists.</value></data>
+  <data name="GroupsDeleteTitle" xml:space="preserve"><value>Delete app group</value></data>
+  <data name="GroupsDeleteConfirmFormat" xml:space="preserve"><value>Delete the group "{0}"? Its apps move to "Not in any group" and use their own app rules again.</value></data>
+  <data name="GroupsMoveTo" xml:space="preserve"><value>Move to …</value></data>
+  <data name="RulesSectionGroupRules" xml:space="preserve"><value>App group rules</value></data>
+  <data name="RulesGroupRulesExplanation" xml:space="preserve"><value>Here you set one time budget per app group. All apps of a group share it: the time counts while at least one app of the group is in use. You define the groups on the App Groups page.</value></data>
+  <data name="RulesColumnGroup" xml:space="preserve"><value>App group</value></data>
+  <data name="RulesNoGroups" xml:space="preserve"><value>No app groups yet. You can create them on the App Groups page.</value></data>
+  <data name="RulesGroupNoApps" xml:space="preserve"><value>(no apps)</value></data>
+  <data name="ReportsGroupsHeading" xml:space="preserve"><value>App groups</value></data>
+  <data name="ReportsColumnGroup" xml:space="preserve"><value>App group</value></data>
 </root>

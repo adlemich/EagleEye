@@ -115,8 +115,8 @@ public sealed class AppEndCalculatorTests
         Assert.Throws<ArgumentNullException>(() => AppEndCalculator.Compute(null, 0, [], DateTimeOffset.UtcNow, null!));
     }
 
-    private static AppRuleEntry Rule(int budget, BreakTimeDays days = BreakTimeDays.All) => new(1, "p", "App", budget, days);
+    private static LimitRule Rule(int budget, BreakTimeDays days = BreakTimeDays.All) => new(budget, days);
 
-    private static AppEnd? Compute(AppRuleEntry? rule, long used, IReadOnlyList<BreakTimeEntryDto> entries, int hour, int minute) =>
+    private static AppEnd? Compute(LimitRule? rule, long used, IReadOnlyList<BreakTimeEntryDto> entries, int hour, int minute) =>
         AppEndCalculator.Compute(rule, used, entries, new DateTimeOffset(2026, 10, 12, hour, minute, 0, TimeSpan.FromHours(2)), TestZones.Berlin);
 }

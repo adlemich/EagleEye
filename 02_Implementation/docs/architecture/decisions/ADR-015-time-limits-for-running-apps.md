@@ -1,8 +1,10 @@
 # ADR-015: Time Limits for Running Apps — End of Allowed Time, Warnings, Grace Periods and Enforced Closes
 
-**Status**: Accepted (approved by Michael with the US-006 implementation plan, 2026-10-12; §5 reflects his answer to Q-2, §4 his answer to Q-5)
+**Status**: Accepted (approved by Michael with the US-006 implementation plan, 2026-10-12; §5 reflects his answer to Q-2, §4 his answer to Q-5); US-008 amendment 2026-10-31
 **Date**: 2026-10-12
 **Deciders**: ARC, Michael
+
+> **Amendment 2026-10-31 (US-008, ADR-021) — approved by Michael together with the US-008 implementation plan (2026-10-31)**: the engine and the start gate evaluate **limit subjects** instead of apps. The subject of an app is its **group** if its program path is a group member (the account's group rule; used time = the union of the current members' activity spans today), otherwise the app itself (unchanged: own rule, §2 used time). A grouped app's own rule is ignored while it is grouped. §2: group used time as above. §3: the end is computed once per subject, break times still win. §4: warning keys per subject and day (app keys unchanged). §5: a grace period belongs to the subject; it is detected per running app by comparing its end under the previous snapshots (incl. previous members) with the current end, also when a not-running app is moved into the group; renames never start one. §7: a group close stops all running members with one kid message shared by their close requests (the break-batch pattern). Kid messages carry the subject's name in `AppName`. History rows carry `GroupId` and `GroupName`.
 
 ---
 

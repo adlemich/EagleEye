@@ -1,10 +1,12 @@
 # ADR-010: Event-Driven State Propagation — Service Broadcasts with Revisions
 
-**Status**: Accepted (approved by Michael, 2026-10-07; note added by CR-001, 2026-10-20)
+**Status**: Accepted (approved by Michael, 2026-10-07; note added by CR-001, 2026-10-20; US-008 amendment 2026-10-31)
 **Date**: 2026-10-07
 **Deciders**: Michael (project owner), ARC
 
 > **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped. The remark "relevant later for mobile apps" in the rationale no longer has a target; fetching only the areas a client shows stays the rule for the Windows and macOS apps. The decision is unchanged.
+
+> **Amendment 2026-10-31 (US-008, ADR-021) — approved by Michael together with the US-008 implementation plan (2026-10-31)**: two new state areas, **`AppGroups`** (global: groups, members and the listed apps) and **`AppGroupRules:{sid}`** (group rules of one account, a row for every group), both owned by `AppGroupService` with one revision counter. `DayUsageDto` carries the group lines of its day. A group change does not re-broadcast past days: a parent app that shows Reports **fetches the account's usage again** when it receives an `AppGroups` change. This is a fetch triggered by a broadcast, not polling; the rule "the app never polls" holds. No compatibility with older parent apps is kept (US-008 scope: all components are updated together).
 
 ---
 

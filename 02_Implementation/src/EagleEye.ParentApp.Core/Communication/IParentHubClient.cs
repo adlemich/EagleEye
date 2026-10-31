@@ -97,4 +97,34 @@ public interface IParentHubClient : IAsyncDisposable
 
     /// <summary>Calls <c>IParentHub.SetWarningText</c>.</summary>
     Task<StateWriteAckDto> SetWarningTextAsync(Guid requestId, WarningLevel level, string text, CancellationToken ct);
+
+    /// <summary>The service broadcast <c>IParentClientCallback.OnAppGroupsChanged</c> (US-008).</summary>
+    event Action<AppGroupsDto>? AppGroupsChanged;
+
+    /// <summary>The service broadcast <c>IParentClientCallback.OnAppGroupRulesChanged</c> (US-008).</summary>
+    event Action<AppGroupRulesDto>? AppGroupRulesChanged;
+
+    /// <summary>Calls <c>IParentHub.GetAppGroups</c>.</summary>
+    Task<AppGroupsDto> GetAppGroupsAsync(CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.CreateAppGroup</c>.</summary>
+    Task<StateWriteAckDto> CreateAppGroupAsync(Guid requestId, string name, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.RenameAppGroup</c>.</summary>
+    Task<StateWriteAckDto> RenameAppGroupAsync(Guid requestId, long groupId, string name, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.DeleteAppGroup</c>.</summary>
+    Task<StateWriteAckDto> DeleteAppGroupAsync(Guid requestId, long groupId, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.MoveAppToGroup</c>.</summary>
+    Task<StateWriteAckDto> MoveAppToGroupAsync(Guid requestId, string programPath, long? groupId, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.GetAppGroupRules</c>.</summary>
+    Task<AppGroupRulesDto> GetAppGroupRulesAsync(string accountSid, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.SetAppGroupBudget</c>.</summary>
+    Task<StateWriteAckDto> SetAppGroupBudgetAsync(Guid requestId, string accountSid, long groupId, AppBudgetPart part, int value, CancellationToken ct);
+
+    /// <summary>Calls <c>IParentHub.SetAppGroupDay</c>.</summary>
+    Task<StateWriteAckDto> SetAppGroupDayAsync(Guid requestId, string accountSid, long groupId, DayOfWeek day, bool isAllowed, CancellationToken ct);
 }

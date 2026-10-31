@@ -15,7 +15,14 @@
         <Setter Property="VisualStateManager.VisualStateGroups">
             <VisualStateGroupList>
                 <VisualStateGroup x:Name="CommonStates">
-                    <VisualState x:Name="Normal" />
+                    <!-- US-008 TI-10: explicit "Normal", so a button that was disabled (e.g. while its command runs)
+                         repaints in the accent colour on Mac Catalyst. -->
+                    <VisualState x:Name="Normal">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{DynamicResource HeadingBarBackgroundColor}" />
+                            <Setter Property="TextColor" Value="{DynamicResource HeadingBarTextColor}" />
+                        </VisualState.Setters>
+                    </VisualState>
                     <VisualState x:Name="Disabled">
                         <VisualState.Setters>
                             <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource BorderLight}, Dark={StaticResource BorderDark}}" />

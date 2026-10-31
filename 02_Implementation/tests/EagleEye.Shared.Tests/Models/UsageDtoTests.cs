@@ -9,6 +9,7 @@ public sealed class UsageDtoTests
     private static readonly JsonSerializerOptions WebOptions = new(JsonSerializerDefaults.Web);
     private static readonly DateOnly Today = new(2026, 10, 7);
     private static readonly AppUsageDto Notepad = new(3, "Editor", 605);
+    private static readonly GroupUsageDto Games = new(7, "Games", 720);
 
     [Fact]
     public void AppUsageDto_ConstructionAndEquality()
@@ -22,17 +23,17 @@ public sealed class UsageDtoTests
     public void DayUsageDto_ConstructionAndEquality()
     {
         AppUsageDto[] apps = [Notepad];
-        var dto = new DayUsageDto(4, null, "S-1-5-21-1-2-3-1001", Today, Today, apps);
+        var dto = new DayUsageDto(4, null, "S-1-5-21-1-2-3-1001", Today, Today, apps, []);
 
         Assert.Equal((4L, (Guid?)null, "S-1-5-21-1-2-3-1001", Today, Today), (dto.Revision, dto.LastChangeRequestId, dto.AccountSid, dto.Day, dto.ServiceToday));
-        Assert.Equal(new DayUsageDto(4, null, "S-1-5-21-1-2-3-1001", Today, Today, apps), dto);
+        Assert.Equal(new DayUsageDto(4, null, "S-1-5-21-1-2-3-1001", Today, Today, apps, []), dto);
         Assert.NotEqual(dto with { Day = Today.AddDays(-1) }, dto);
     }
 
     [Fact]
     public void DayUsageDto_JsonRoundTrip_DateOnlyAndApps()
     {
-        var dto = new DayUsageDto(4, null, "S-1-5-21-1-2-3-1001", Today.AddDays(-1), Today, [Notepad]);
+        var dto = new DayUsageDto(4, null, "S-1-5-21-1-2-3-1001", Today.AddDays(-1), Today, [Notepad], [Games]);
 
         var json = JsonSerializer.Serialize(dto, WebOptions);
         var copy = JsonSerializer.Deserialize<DayUsageDto>(json, WebOptions);
@@ -41,12 +42,13 @@ public sealed class UsageDtoTests
         Assert.NotNull(copy);
         Assert.Equal((dto.Revision, dto.LastChangeRequestId, dto.AccountSid, dto.Day, dto.ServiceToday), (copy.Revision, copy.LastChangeRequestId, copy.AccountSid, copy.Day, copy.ServiceToday));
         Assert.Equal(dto.Apps, copy.Apps);
+        Assert.Equal(dto.Groups, copy.Groups);
     }
 
     [Fact]
     public void AccountUsageDto_JsonRoundTrip_EmptyToday()
     {
-        var today = new DayUsageDto(1, null, "S-1-5-21-1-2-3-1001", Today, Today, []);
+        var today = new DayUsageDto(1, null, "S-1-5-21-1-2-3-1001", Today, Today, [], []);
         var dto = new AccountUsageDto("S-1-5-21-1-2-3-1001", Today, [today]);
 
         var copy = JsonSerializer.Deserialize<AccountUsageDto>(JsonSerializer.Serialize(dto, WebOptions), WebOptions);

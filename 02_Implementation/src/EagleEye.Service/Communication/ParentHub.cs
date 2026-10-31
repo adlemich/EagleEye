@@ -1,4 +1,5 @@
 using System.Security.Principal;
+using EagleEye.Service.Groups;
 using EagleEye.Service.Pairing;
 using EagleEye.Service.Rules;
 using EagleEye.Service.Statistics;
@@ -25,6 +26,7 @@ public sealed class ParentHub(
     IBreakTimeService rules,
     IAppRuleService appRules,
     IWarningSettingsService warnings,
+    IAppGroupService groups,
     ILogger<ParentHub> logger) : Hub<IParentClientCallback>, IParentHub
 {
     /// <summary>Group of all paired parent connections.</summary>
@@ -46,6 +48,9 @@ public sealed class ParentHub(
     internal const string TooManyEntriesMessage = "Too many entries.";
     internal const string AppNotFoundMessage = "The app no longer exists.";
     internal const string FinalNotLessMessage = "The final warning must be less minutes before the end than the early warning.";
+    internal const string GroupNotFoundMessage = "The group no longer exists.";
+    internal const string DuplicateGroupNameMessage = "A group with this name already exists.";
+    private const string AppGroupsScope = "app groups";
 
     /// <inheritdoc />
     public async Task<AccountRulesDto> GetAccountRules(string accountSid)
@@ -166,6 +171,72 @@ public sealed class ParentHub(
         WriteCoreAsync(
             requestId, Enum.IsDefined(level) && IsValidText(text), "warning settings",
             device => warnings.SetTextAsync(requestId, level, text, device));
+
+    /// <inheritdoc />
+    public async Task<AppGroupsDto> GetAppGroups()
+    {
+        try
+        {
+            return await groups.GetAsync();
+        }
+        catch (Exception ex) when (ex is not HubException)
+        {
+            logger.LogError(ex, "Reading the app groups failed.");
+            throw new HubException(RulesUnavailableMessage);
+        }
+    }
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> CreateAppGroup(Guid requestId, string name) =>
+        WriteCoreAsync(requestId, AppGroupNames.IsValid(name), AppGroupsScope, device => groups.CreateAsync(requestId, name, device));
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> RenameAppGroup(Guid requestId, long groupId, string name) =>
+        WriteCoreAsync(requestId, AppGroupNames.IsValid(name), AppGroupsScope, device => groups.RenameAsync(requestId, groupId, name, device));
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> DeleteAppGroup(Guid requestId, long groupId) =>
+        WriteCoreAsync(requestId, true, AppGroupsScope, device => groups.DeleteAsync(requestId, groupId, device));
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> MoveAppToGroup(Guid requestId, string programPath, long? groupId) =>
+        WriteCoreAsync(
+            requestId, !string.IsNullOrWhiteSpace(programPath), AppGroupsScope, device => groups.MoveAsync(requestId, programPath, groupId, device));
+
+    /// <inheritdoc />
+    public async Task<AppGroupRulesDto> GetAppGroupRules(string accountSid)
+    {
+        if (!IsValidSid(accountSid))
+        {
+            throw new HubException(InvalidRequestMessage);
+        }
+
+        try
+        {
+            return await groups.GetRulesAsync(accountSid);
+        }
+        catch (UnknownAccountException)
+        {
+            throw new HubException(UnknownAccountMessage);
+        }
+        catch (Exception ex) when (ex is not HubException)
+        {
+            logger.LogError(ex, "Reading the group rules of {AccountSid} failed.", accountSid);
+            throw new HubException(RulesUnavailableMessage);
+        }
+    }
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetAppGroupBudget(Guid requestId, string accountSid, long groupId, AppBudgetPart part, int value) =>
+        WriteRulesAsync(
+            requestId, accountSid, AppRuleRules.IsValidPart(part, value),
+            device => groups.SetBudgetAsync(requestId, accountSid, groupId, part, value, device));
+
+    /// <inheritdoc />
+    public Task<StateWriteAckDto> SetAppGroupDay(Guid requestId, string accountSid, long groupId, DayOfWeek day, bool isAllowed) =>
+        WriteRulesAsync(
+            requestId, accountSid, Enum.IsDefined(day),
+            device => groups.SetDayAsync(requestId, accountSid, groupId, day, isAllowed, device));
 
     /// <inheritdoc />
     public async Task<AccountUsageDto> GetAccountUsage(string accountSid)
@@ -374,6 +445,10 @@ public sealed class ParentHub(
                 return EntryNotFoundMessage;
             case AppNotFoundException:
                 return AppNotFoundMessage;
+            case GroupNotFoundException:
+                return GroupNotFoundMessage;
+            case DuplicateGroupNameException:
+                return DuplicateGroupNameMessage;
             case TooManyEntriesException:
                 return TooManyEntriesMessage;
             case RuleValidationException validation:

@@ -17,6 +17,8 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
     private Action<AccountRulesDto>? _rulesSubscription;
     private Action<AppRulesDto>? _appRulesSubscription;
     private Action<WarningSettingsDto>? _warningsSubscription;
+    private Action<AppGroupsDto>? _groupsSubscription;
+    private Action<AppGroupRulesDto>? _groupRulesSubscription;
     private IParentHubClient? _connected;
 
     /// <inheritdoc />
@@ -39,6 +41,12 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
 
     /// <inheritdoc />
     public event Action<WarningSettingsDto>? WarningSettingsChanged;
+
+    /// <inheritdoc />
+    public event Action<AppGroupsDto>? AppGroupsChanged;
+
+    /// <inheritdoc />
+    public event Action<AppGroupRulesDto>? AppGroupRulesChanged;
 
     /// <inheritdoc />
     public bool IsConnected
@@ -67,6 +75,8 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
                     _subscribed.AccountRulesChanged -= _rulesSubscription;
                     _subscribed.AppRulesChanged -= _appRulesSubscription;
                     _subscribed.WarningSettingsChanged -= _warningsSubscription;
+                    _subscribed.AppGroupsChanged -= _groupsSubscription;
+                    _subscribed.AppGroupRulesChanged -= _groupRulesSubscription;
                 }
 
                 _accountsSubscription = snapshot => Forward(client, () => UserAccountsChanged?.Invoke(snapshot));
@@ -79,6 +89,10 @@ public sealed class ParentHubGateway(TimeProvider timeProvider) : IParentHubGate
                 client.AppRulesChanged += _appRulesSubscription;
                 _warningsSubscription = snapshot => Forward(client, () => WarningSettingsChanged?.Invoke(snapshot));
                 client.WarningSettingsChanged += _warningsSubscription;
+                _groupsSubscription = snapshot => Forward(client, () => AppGroupsChanged?.Invoke(snapshot));
+                client.AppGroupsChanged += _groupsSubscription;
+                _groupRulesSubscription = snapshot => Forward(client, () => AppGroupRulesChanged?.Invoke(snapshot));
+                client.AppGroupRulesChanged += _groupRulesSubscription;
                 _subscribed = client;
             }
 

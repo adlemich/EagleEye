@@ -40,4 +40,17 @@ public interface IParentClientCallback
     /// The warning levels changed (state area "WarningSettings"). Apply only if <see cref="WarningSettingsDto.Revision"/> is higher.
     /// </summary>
     Task OnWarningSettingsChanged(WarningSettingsDto snapshot);
+
+    /// <summary>
+    /// Groups, names, members or the listed apps changed (state area "AppGroups", US-008), including a new listed app (AC-4).
+    /// Apply only if <see cref="AppGroupsDto.Revision"/> is higher. A parent app showing Reports fetches the selected account's
+    /// usage again (group lines of past days follow the current members, ADR-021 §5).
+    /// </summary>
+    Task OnAppGroupsChanged(AppGroupsDto snapshot);
+
+    /// <summary>
+    /// The group rules of one account changed, or a group was created or deleted (state area "AppGroupRules:{sid}").
+    /// Apply only if <see cref="AppGroupRulesDto.Revision"/> is higher than the one held for that account.
+    /// </summary>
+    Task OnAppGroupRulesChanged(AppGroupRulesDto snapshot);
 }

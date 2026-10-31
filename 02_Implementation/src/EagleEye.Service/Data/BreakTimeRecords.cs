@@ -46,11 +46,14 @@ public static class CloseReasons
     public const string BudgetUsedUp = "budget used up";
 }
 
-/// <summary>The app rule of a closed app at the moment of the close (history columns of migration 5).</summary>
+/// <summary>The rule of a closed app at the moment of the close (history columns of migrations 5 and 6): its own app rule, or the
+/// group rule of its app group with the group used time (US-008 AC-31, plan D-4).</summary>
 /// <param name="BudgetMinutes">The budget.</param>
 /// <param name="Days">The allowed weekdays.</param>
-/// <param name="UsedSeconds">The used time today at that moment.</param>
-public sealed record AppRuleAtClose(int BudgetMinutes, BreakTimeDays Days, long UsedSeconds);
+/// <param name="UsedSeconds">The used time today at that moment (of the group for a group rule).</param>
+/// <param name="GroupId">The app group whose rule applied, or <c>null</c> for the app's own rule.</param>
+/// <param name="GroupName">The group's name at that moment, or <c>null</c>.</param>
+public sealed record AppRuleAtClose(int BudgetMinutes, BreakTimeDays Days, long UsedSeconds, long? GroupId = null, string? GroupName = null);
 
 /// <summary>A new row of the history of blocked starts and enforced closes (ADR-013 §7, ADR-015 §7, US-005 AC-35, US-006 AC-37).</summary>
 /// <param name="AccountSid">The account.</param>

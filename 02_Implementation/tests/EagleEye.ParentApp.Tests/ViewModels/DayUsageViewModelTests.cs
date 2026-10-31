@@ -98,5 +98,37 @@ public sealed class DayUsageViewModelTests
         Assert.Throws<ArgumentNullException>(() => new DayUsageViewModel(Day, true).Update(null!, true));
     }
 
+    // ---------- US-008 AC-35: group lines ----------
+
+    [Fact]
+    public void Groups_SortedByUsageThenName_KeptAndRemoved()
+    {
+        var day = new DayUsageViewModel(Day, true);
+        var changes = new List<string?>();
+        day.PropertyChanged += (_, e) => changes.Add(e.PropertyName);
+
+        day.Update([App(1, "Notepad", 60)], true, [new GroupUsageDto(7, "School", 30), new GroupUsageDto(8, "games", 600), new GroupUsageDto(9, "Art", 30)]);
+        var games = day.GroupRows[0];
+        Assert.Equal(["games", "Art", "School"], day.GroupRows.Select(r => r.DisplayName));
+        Assert.Equal(("00:10", true), (games.UsageText, day.HasGroupRows));
+
+        day.Update([App(1, "Notepad", 60)], true, [new GroupUsageDto(8, "Gaming", 660)]);
+
+        Assert.Equal((games, "Gaming", 1), (day.GroupRows[0], games.DisplayName, day.GroupRows.Count));
+        Assert.Contains(nameof(DayUsageViewModel.HasGroupRows), changes);
+    }
+
+    [Fact]
+    public void Groups_None_HiddenAgain()
+    {
+        var day = new DayUsageViewModel(Day, true);
+        day.Update([App(1, "Notepad", 60)], true, [new GroupUsageDto(7, "Games", 59)]);
+        Assert.Equal("00:00", day.GroupRows[0].UsageText);
+
+        day.Update([App(1, "Notepad", 60)], true);
+
+        Assert.False(day.HasGroupRows);
+    }
+
     private static AppUsageDto App(long id, string name, long seconds) => new(id, name, seconds);
 }

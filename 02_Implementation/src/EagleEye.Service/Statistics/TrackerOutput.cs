@@ -29,10 +29,21 @@ public sealed record UsageCredit(string AccountSid, string ProgramPath, DateOnly
 /// <summary>An open instance was seen at this time (stored as "last seen", the end time after a crash).</summary>
 public sealed record InstanceSeen(long InstanceKey, DateTimeOffset LastSeenUtc);
 
+/// <summary>A new or extended activity span of an app (ADR-021 §2): an interval on one local day during which the app was credited.</summary>
+/// <param name="AccountSid">The account.</param>
+/// <param name="ProgramPath">The app's program path.</param>
+/// <param name="Day">The local day.</param>
+/// <param name="StartUtc">Start of the span (its identity per app).</param>
+/// <param name="EndUtc">The current end of the span.</param>
+public sealed record SpanUpdate(string AccountSid, string ProgramPath, DateOnly Day, DateTimeOffset StartUtc, DateTimeOffset EndUtc);
+
 /// <summary>What the tracker produced since its last output.</summary>
 public sealed record TrackerOutput(
     IReadOnlyList<InstanceEvent> Instances, IReadOnlyList<UsageCredit> Credits, IReadOnlyList<InstanceSeen> Seen)
 {
+    /// <summary>The activity spans created or extended since the last tick output (ticks only).</summary>
+    public IReadOnlyList<SpanUpdate> Spans { get; init; } = [];
+
     /// <summary>No output.</summary>
     public static readonly TrackerOutput Empty = new([], [], []);
 }

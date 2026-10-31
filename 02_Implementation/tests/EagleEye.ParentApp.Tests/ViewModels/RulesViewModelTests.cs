@@ -1,4 +1,5 @@
 using EagleEye.ParentApp.Core.Accounts;
+using EagleEye.ParentApp.Core.Groups;
 using EagleEye.ParentApp.Core.Rules;
 using EagleEye.ParentApp.Core.ViewModels;
 using EagleEye.ParentApp.Tests.Fakes;
@@ -19,6 +20,8 @@ public sealed class RulesViewModelTests
     private readonly Mock<IUserAccountsModel> _accounts = new();
     private readonly Mock<IAccountRulesModel> _rules = new();
     private readonly Mock<IAppRulesModel> _appRules = new();
+    private readonly Mock<IAppGroupsModel> _groups = new();
+    private readonly Mock<IAppGroupRulesModel> _groupRules = new();
     private AccountsLoadState _accountsState = AccountsLoadState.Ready;
     private UserAccountListDto _accountList = new(1, null,
     [
@@ -421,11 +424,13 @@ public sealed class RulesViewModelTests
     public void Guards_Throw()
     {
         var dispatcher = new ImmediateDispatcher();
-        var section = new AppRulesSectionViewModel(_appRules.Object, dispatcher);
-        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(null!, _rules.Object, section, dispatcher));
-        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(_accounts.Object, null!, section, dispatcher));
-        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(_accounts.Object, _rules.Object, null!, dispatcher));
-        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(_accounts.Object, _rules.Object, section, null!));
+        var section = new AppRulesSectionViewModel(_appRules.Object, _groups.Object, dispatcher);
+        var groups = new AppGroupRulesSectionViewModel(_groupRules.Object, _groups.Object, dispatcher);
+        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(null!, _rules.Object, section, groups, dispatcher));
+        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(_accounts.Object, null!, section, groups, dispatcher));
+        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(_accounts.Object, _rules.Object, null!, groups, dispatcher));
+        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(_accounts.Object, _rules.Object, section, null!, dispatcher));
+        Assert.Throws<ArgumentNullException>(() => new RulesViewModel(_accounts.Object, _rules.Object, section, groups, null!));
     }
 
     // ---------- US-006: the application rules section and ADR-016 ----------
@@ -495,7 +500,45 @@ public sealed class RulesViewModelTests
         _rules.Verify(r => r.SetDisplayTextAsync(string.Empty), Times.Once);
     }
 
-    private RulesViewModel Create() => new(_accounts.Object, _rules.Object, new AppRulesSectionViewModel(_appRules.Object, new ImmediateDispatcher()), new ImmediateDispatcher());
+    // ---------- US-008: the app group rules section ----------
+
+    [Fact]
+    public void AccountSelection_AlsoSelectsTheGroupRulesSection()
+    {
+        var vm = Create();
+
+        vm.SelectedAccount = vm.Accounts[1];
+
+        _groupRules.Verify(g => g.SelectAccount(Anna), Times.Once);
+        _groupRules.Verify(g => g.SelectAccount(Kid), Times.Once);
+    }
+
+    [Fact]
+    public void FlushPendingEdits_AlsoCommitsTheGroupRules()
+    {
+        _groups.SetupGet(g => g.LoadState).Returns(AccountsLoadState.Ready);
+        _groups.SetupGet(g => g.Snapshot).Returns(new AppGroupsDto(1, null, [new AppGroupDto(7, "Games")], []));
+        _groupRules.SetupGet(g => g.LoadState).Returns(AccountsLoadState.Ready);
+        _groupRules.SetupGet(g => g.Snapshot).Returns(new AppGroupRulesDto(1, null, Anna, []));
+        _groupRules.Setup(g => g.SetBudgetAsync(7, AppBudgetPart.Hours, 1)).ReturnsAsync(true);
+        var vm = Create();
+        vm.GroupRules.Rows[0].HoursText = "1";
+
+        vm.FlushPendingEdits();
+
+        _groupRules.Verify(g => g.SetBudgetAsync(7, AppBudgetPart.Hours, 1), Times.Once);
+    }
+
+    private RulesViewModel Create()
+    {
+        var dispatcher = new ImmediateDispatcher();
+        return new(
+            _accounts.Object,
+            _rules.Object,
+            new AppRulesSectionViewModel(_appRules.Object, _groups.Object, dispatcher),
+            new AppGroupRulesSectionViewModel(_groupRules.Object, _groups.Object, dispatcher),
+            dispatcher);
+    }
 
     private AccountRulesDto Rules(params BreakTimeEntryDto[] entries) => new(5, null, _selected ?? Anna, entries, "Text", false);
 }

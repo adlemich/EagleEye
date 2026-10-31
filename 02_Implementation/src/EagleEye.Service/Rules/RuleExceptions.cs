@@ -57,3 +57,23 @@ public sealed class RuleValidationException : InvalidOperationException
     /// <summary>The broken rule.</summary>
     public RuleViolation Violation { get; }
 }
+
+/// <summary>The app group does not exist (anymore), e.g. another parent app deleted it (US-008).</summary>
+public sealed class GroupNotFoundException : InvalidOperationException
+{
+    /// <summary>Creates the exception.</summary>
+    public GroupNotFoundException()
+        : base("The group no longer exists.")
+    {
+    }
+}
+
+/// <summary>Another app group already has this name, ignoring case (US-008 AC-8).</summary>
+public sealed class DuplicateGroupNameException : InvalidOperationException
+{
+    /// <summary>Creates the exception.</summary>
+    public DuplicateGroupNameException()
+        : base("A group with this name already exists.")
+    {
+    }
+}

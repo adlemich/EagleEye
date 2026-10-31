@@ -11,7 +11,11 @@ public sealed record EnforcementTick(
     IReadOnlyDictionary<string, string> ControlledAccounts,
     IReadOnlyList<SessionInUse> SessionsInUse,
     IReadOnlyList<UsageCredit> Credits,
-    Func<string, string, bool> IsOpen);
+    Func<string, string, bool> IsOpen)
+{
+    /// <summary>The activity spans of this tick, exactly as persisted by the usage service (US-008, ADR-021 §3).</summary>
+    public IReadOnlyList<SpanUpdate> Spans { get; init; } = [];
+}
 
 /// <summary>What the accounting loop needs of the enforcement (US-005 Step 5.4, US-006 Decision 5).</summary>
 public interface IAppEnforcement
@@ -72,6 +76,7 @@ public sealed class AppEnforcement(
         // .NET caches the local zone for the process lifetime; a zone change must apply within 5 s (ADR-012 amendment).
         TimeZoneInfo.ClearCachedData();
         ledger.Apply(tick.Credits);
+        ledger.ApplySpans(tick.Spans);
         await ledger.EnsureLoadedAsync([.. tick.ControlledAccounts.Keys], ct).ConfigureAwait(false);
         await monitor.OnTickAsync(tick.SessionsInUse, ct).ConfigureAwait(false);
         gate.OnTick(tick.ControlledAccounts);

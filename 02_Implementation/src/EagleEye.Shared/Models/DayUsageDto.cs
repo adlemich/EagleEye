@@ -7,10 +7,12 @@ namespace EagleEye.Shared.Models;
 /// <param name="Day">Local date of the service PC.</param>
 /// <param name="ServiceToday">The service PC's local date when the snapshot was made.</param>
 /// <param name="Apps">Apps with usage on that day, in any order (the app sorts).</param>
+/// <param name="Groups">Group lines of that day with the current members and names (US-008 AC-35, AC-36), in any order.</param>
 public sealed record DayUsageDto(
     long Revision,
     Guid? LastChangeRequestId,
     string AccountSid,
     DateOnly Day,
     DateOnly ServiceToday,
-    IReadOnlyList<AppUsageDto> Apps);
+    IReadOnlyList<AppUsageDto> Apps,
+    IReadOnlyList<GroupUsageDto> Groups);
