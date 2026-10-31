@@ -39,6 +39,14 @@ public partial class AppGroupsView : ContentView
         {
             _viewModel.DragOver(section);
             e.AcceptedOperation = DataPackageOperation.Copy;
+#if WINDOWS
+            // US-009 TI-5: WinUI shows the accepted operation as "Copy" next to the pointer; the app is moved, so hide it.
+            if (e.PlatformArgs?.DragEventArgs.DragUIOverride is { } dragUi)
+            {
+                dragUi.IsCaptionVisible = false;
+                dragUi.IsGlyphVisible = false;
+            }
+#endif
         }
     }
 
