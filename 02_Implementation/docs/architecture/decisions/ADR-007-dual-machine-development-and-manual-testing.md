@@ -12,6 +12,11 @@
 >
 > The original text below is kept as history; superseded statements are struck through.
 
+> **Proposed amendment — US-009 (2026-10-31, ARC; awaiting Michael's approval with the US-009 implementation plan)**:
+>
+> 1. **Third machine, test only** (§1, §3): Michael's physical **Windows 10 22H2 PC** (x64, same LAN as the service PC) is used for manual tests of the Windows parent app on Windows 10. It has no repo clone, runs no agent sessions and builds nothing; installers are copied to it from `03_Delivery/windows/` on the Windows Developer Machine. Steps that need it are marked "Windows 10 PC" in implementation plans. `02_Implementation/docs/dev-process/dev-environments.md` §1 gets the matching row (Orchestrator, after approval).
+> 2. **Minimum OS of the Windows parent client** (§2): "minimum Windows 11" becomes "Windows 10 22H2 (build 19045) or Windows 11" (requirements v1.9, ADR-009 amendment).
+
 ---
 
 ## Context
