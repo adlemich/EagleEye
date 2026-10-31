@@ -5,6 +5,8 @@ metadata:
   type: project
 ---
 
+**Update 2026-10-31 (US-008 CLOSED + merged): Michael closed US-008 without manual testing ("I will do the tests with US-009 again"); test report `docs/testing/US-008/test-report.md` (AC-19..34, 38..41 unverified; F-1 retest in US-009 run, F-2 clean up 9 test-code warnings in US-009 step c). Merged --no-ff into main, branch deleted. NEXT: US-009 on `feature/US-009-windows-parent-app-parity` — PRO must rebase/merge main into it and add F-1/F-2 to the story; Michael reviews the draft (OQ-1..7).**
+
 **Update 2026-10-31 (Windows, Step 11 DONE): DEV 3e23fdc pushed — build.ps1 0 warnings (incl. Windows parent app), test.ps1 3 002 green (305/1 493/95/1 109), no fixes needed; story → Implemented; report §6.3 TES handover, §9 UI texts. Note: 9 test-code-only warnings (8× CS8631, 1× xUnit2029), cleanup optional. NEXT: Michael approves step c → TES step d (include optional pilot checks for group live smoke + AC-41).**
 
 **Update 2026-10-31 (Windows, Step 11 running): Q-DEV-1 ANSWERED by Michael: no live group smoke / AC-41 performance check by DEV; he tests it during pilot operation; TES may list it as an optional test in the US-008 test plan. D-8 accepted.**
