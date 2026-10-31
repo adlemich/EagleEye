@@ -1,13 +1,13 @@
 # Implementation Report: US-008 — App Groups
 
 **Author**: DEV
-**Date**: 2026-10-31 (started)
+**Date**: 2026-10-31
 **Branch**: `feature/US-008-app-groups`
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-008/implementation-plan.md` (approved 2026-10-31, revision 1), ADR-021
-**Machine(s) used**: MacBook (Step 1, Steps 8 to 10), Windows Developer Machine (Steps 2 to 7, see §7)
-**Story status**: Analyzed (in implementation)
+**Machine(s) used**: MacBook (Step 1, Steps 8 to 10), Windows Developer Machine (Steps 2 to 7 and 11, see §7)
+**Story status**: Implemented (2026-10-31; step c awaits Michael's approval)
 
-> This report grows with each plan step. Steps 1 to 10 done (Step 7 and Step 10 except the parts that need Michael: §6.2, §8.6). Step 11 (Windows close-out) not started.
+> All plan steps 1 to 11 are done. Michael's install of the service 0.8.0 (§6.2) and his Mac check (§8.6, incl. the D-19 re-check) are done. Q-DEV-1 is closed (§5).
 
 ---
 
@@ -21,10 +21,11 @@
 | 4 | Done | `ActivitySpanAccumulator` in `UsageTracker` (`TrackerOutput.Spans`, ticks only); `UsageService` persists spans with the tick (retried on failure), takes `IEnumerable<IAppRecordObserver>`, fills group lines in `GetAccountUsageAsync` and `PublishDayAsync`. `Groups/SpanUnion`, `Groups/GroupUsageCalculator`, `Groups/AppGroupsSnapshot` (+ `IAppGroupsView`). `TodayUsageLedger.ApplySpans`, `GroupUsedSeconds`; spans passed through `EnforcementTick.Spans`. |
 | 5 | Done | `Groups/AppGroupService` (state owner of both areas, one revision counter, catalog via `Groups/AppGroupCatalog`, controlled set from the loop, purger), `Groups/AppGroupChangeLog`, broadcaster overloads, 8 `ParentHub` methods with safe texts, DI, start order (… app rules → **app groups** → warning settings …). |
 | 6 | Done | `LimitRule`, `LimitSubject`, `LimitSubjectResolver`; `AppEndCalculator` takes `LimitRule?`. `AppStartGate` and `TimeLimitEngine` per subject (group warnings once, grace per subject incl. previous members, one shared close message for a group). `WarningLedger.SubjectKey`; `EnforcementLog` names the group; history columns. All US-006 engine/gate tests green with only constructor/signature edits (AC-30). |
-| 7 | Partly done | TrayClient tests for group names (de/en). `EagleEye-Setup-0.8.0.exe` built. Non-elevated console smoke on a copy of a real v5 database. **Open (Michael)**: install on the service PC + REG-001, live group smoke, performance (§6.2). |
+| 7 | Done | TrayClient tests for group names (de/en). `EagleEye-Setup-0.8.0.exe` built and installed by Michael (migration 6, REG-001 OK, §6.2). Non-elevated console smoke on a copy of a real v5 database. Live group smoke and performance not done by DEV (D-8, accepted by Michael). |
 | 8 | Done (MacBook) | ParentApp.Core: `AppGroupsModel`, `AppGroupRulesModel`, `AppGroupNameRules`, App Groups view models, App group rules section, grouped apps hidden from Application rules, Reports group lines + refetch on a group change, menu, dialogs, texts de/en, unit tests (§8). |
 | 9 | Done (MacBook) | Mac views: `AppGroupsView`, Rules section, Reports group lines, styles; on-screen check with a probe and screenshots (§8.3). |
-| 10 | Done except install (MacBook) | `EagleEye-ParentApp-0.8.0.dmg` built (§8.5); READMEs incl. US-007 F-2; this section. **Open (Michael)**: install over 0.7.0, pairing, live checks (§8.6). |
+| 10 | Done (MacBook) | `EagleEye-ParentApp-0.8.0.dmg` built (§8.5); READMEs incl. US-007 F-2; §8. Michael installed it and ran the check (§8.6); fixes D-18, D-19. |
+| 11 | Done (Windows) | `build.ps1` 0 warnings / 0 errors incl. the Windows parent app, which compiles the Mac-side XAML, styles and SVGs of D-18/D-19; `test.ps1` all four projects green (§4). No Windows-only fix needed, so no new deviation. Windows parent app not run or packaged (TI-13). |
 
 ## 2. Deviations from the Implementation Plan
 
@@ -37,7 +38,7 @@
 | D-5 | `AppGroupsSnapshot` holds the app catalog | Catalog kept in `AppGroupCatalog` inside `AppGroupService`, not in the snapshot. | Catalog changes (new app records, ticked accounts) then do not replace the snapshot the engine compares for grace detection. |
 | D-6 | Group lines: "spans and a current member in the day's app table" | Listed when the current members have spans that day. | Spans and `DailyUsage` come from the same crediting, so this is equivalent; `DayAppUsage` has no program path. |
 | D-7 | Purge log line | "Purged usage data older than …: N daily entries, N history entries, N activity spans." | Span purge is reported in the existing line. |
-| D-8 | Step 7.3 live group smoke (seeded "Test", Notepad 3 min + both 2 min, Paint blocked, member row removed, ungrouped app) and 7.5 performance | **Not done live by DEV** (as US-006 D-15). Done instead: console service on a copy of a real v5 database (no watched session) → migration 6 and group loading verified; the scenarios are covered by unit tests (`TimeLimitEngineGroupTests`, `AppStartGateTests`); AC-41 guard test (union of 20 × 100 spans). | This Windows machine is the service PC and the session is Michael's admin session (in use). A Debug service watching it would apply deny-by-default to every app without a rule (VS Code, terminal) at the first agent report. Needs Michael's decision (§5). |
+| D-8 | Step 7.3 live group smoke (seeded "Test", Notepad 3 min + both 2 min, Paint blocked, member row removed, ungrouped app) and 7.5 performance | **Not done live by DEV** (as US-006 D-15). Done instead: console service on a copy of a real v5 database (no watched session) → migration 6 and group loading verified; the scenarios are covered by unit tests (`TimeLimitEngineGroupTests`, `AppStartGateTests`); AC-41 guard test (union of 20 × 100 spans). | This Windows machine is the service PC and the session is Michael's admin session (in use). A Debug service watching it would apply deny-by-default to every app without a rule (VS Code, terminal) at the first agent report. **Accepted by Michael (2026-10-31)**, see Q-DEV-1 (§5). |
 
 Notes (not deviations):
 - **Installed version**: the service PC runs service **0.6.2**, not 0.7.0 (0.7.0 was the Mac app only). Its database is schema 5, so migration 6 applies as planned.
@@ -59,16 +60,17 @@ Notes (not deviations):
 
 ## 4. Unit Tests
 
-Results on Windows after Step 7 (`build.ps1` 0 warnings, `test.ps1` all green): **Shared 305, Service 1 493, TrayClient 95, ParentApp 996 = 2 889** (baseline 0.7.0 branch start: 282 / 1 365 / 90 / 994 = 2 731).
+**Final result on Windows (Step 11, 2026-10-31, at `9836bd9`)**: `build.ps1` 0 warnings, 0 errors in all five steps (Shared, Service, TrayClient, ParentApp.Core, ParentApp `net10.0-windows10.0.19041.0`). `test.ps1`: **Shared 305, Service 1 493, TrayClient 95, ParentApp 1 109 = 3 002, all passed**, 0 failed (baseline 0.7.0 branch start: 282 / 1 365 / 90 / 994 = 2 731; after Step 7: 305 / 1 493 / 95 / 996 = 2 889).
+
+Note: compiling the test projects shows 9 analyzer warnings. All of them are in test code, none in production code. CS8631 (`Assert.Equal` with a collection expression that contains `null` binds to the `ReadOnlySpan` overload) appears in `EagleEye.Service.Tests/Data/BlockedStartRepositoryTests.cs` (6, older stories), `AppRuleRepositoryTests.cs` (1, older story) and `AppGroupRepositoryTests.cs` (1, US-008, same pattern). xUnit2029 appears in `EagleEye.ParentApp.Tests/ViewModels/RulesViewModelTests.cs` (1, older story). The tests pass and were left unchanged (no unrelated refactoring, less code). One small change can clean them up if Michael wants.
 
 New test classes (`02_Implementation/tests/`): `EagleEye.Shared.Tests/Constants/AppGroupNamesTests.cs`, `Models/AppGroupDtoTests.cs`; `EagleEye.Service.Tests/Data/AppGroupRepositoryTests.cs` (incl. migration 6 on a real version-5 file); `Statistics/ActivitySpanAccumulatorTests.cs`; `Groups/SpanUnionTests.cs` (AC-19 examples, AC-41 guard), `GroupUsageCalculatorTests.cs`, `AppGroupsSnapshotTests.cs`, `AppGroupServiceTests.cs`, `AppGroupCatalogTests.cs`, `AppGroupChangeLogTests.cs` (incl. broadcaster overloads); `Communication/ParentHubAppGroupsTests.cs`; `Enforcement/TimeLimitEngineGroupTests.cs` (AC-24, AC-26 to AC-28, AC-32 to AC-34 scenarios, Michael's examples), `LimitSubjectTests.cs` (resolver, subject key, group log texts); `EagleEye.ParentApp.Tests/Communication/ParentHubGatewayAppGroupsTests.cs`.
 Extended: `UsageRepositoryTests` (spans), `BlockedStartRepositoryTests` (group columns), `UsageServiceTests` (spans, retry, group lines, several observers), `UsageTrackerTests` (spans), `TodayUsageLedgerTests` (spans, group time), `AppStartGateTests` (group blocked/allowed), `AppEnforcementTests`, `UsageAccountingLoopTests`, `TrayClient KidMessageTextTests` (group name for every app reason, de/en).
 
 ## 5. Open Questions and Risks
 
-- **Q-DEV-1 (Michael)**: live group smoke (plan 7.3) and performance measurement (7.5) need a controlled session other than the admin session. Proposal: do them in the TES run with `kid1` after the install (as US-006 D-15), or Michael signs in as `kid1` and DEV gets a go to run them. The engine/gate paths are covered by unit tests.
-- R-1 resolved by the spike; still untested on WinUI (TI-13).
-- Step 9 note: the "≡" glyph is hard to read on the small Mac accent button; give it a larger font or a transparent style.
+- **Q-DEV-1 — closed (Michael, 2026-10-31)**: the live group smoke (plan 7.3) and the performance measurement (7.5, AC-41) needed a controlled session other than the admin session. **Decision**: D-8 is accepted. DEV does neither. Michael checks both during pilot operation. TES may list them as optional tests in the manual test plan. The engine and gate paths are covered by unit tests, incl. the AC-41 guard test.
+- R-1 resolved by the spike; still untested on WinUI (TI-13). The Windows parent app compiles the new views, styles and SVGs (Step 11) but is not run until US-009.
 - After the install, every new group is blocked for every kid until its rule is set (R-4, by design).
 
 ## 6. How to Test
@@ -90,6 +92,23 @@ Console output: `02_Implementation/artifacts/smoke-us008-console*.txt` (git-igno
 - Known limitation: the Windows parent app 0.7 must not be used against the 0.8 service (no mixed versions); the Mac app 0.8.0 follows in Steps 8–10.
 - **Done (Michael, 2026-10-31):** 0.8.0 installed over 0.6.2 on the service PC. Log at 15:16:18 shows `App groups loaded: 0 groups with 0 apps, 0 group rules.` (migration 6 ran), no WRN/ERR/FTL since the install. REG-001-01 to -05 OK; tray *App Infos* shows 0.8. Evidence: `02_Implementation/docs/requirements/user-stories/US-008/evidence/install-0.8.0-log-excerpt.txt` (full log kept locally, git-ignored). Step 7 complete except D-8 / Q-DEV-1.
 
+### 6.3 Handover to TES (final state)
+
+| | |
+|---|---|
+| Version | 0.8.0 (service, tray client, Mac app) |
+| Service + tray | `03_Delivery/windows/EagleEye-Setup-0.8.0.exe` (git-ignored, on the Windows machine). **Already installed** on the service PC `192.168.1.37` (§6.2) |
+| Mac parent app | `03_Delivery/macos/EagleEye-ParentApp-0.8.0.dmg` (git-ignored, on the MacBook), SHA-256 in §8.5. **Already installed** by Michael. After a reinstall, turn the Local Network permission off and on (`02_Implementation/docs/dev-process/dev-environments.md` §5) |
+| Windows parent app | Not part of this story. It builds (Step 11) but is not run, packaged or tested until US-009 (TI-13). Do not use the 0.7.x Windows parent app against the 0.8 service |
+| Test accounts | `kid1`, `kid2` under parental control, with app records (Editor, Paint, Rechner) |
+| Service log | `%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log`. Group lines: `App groups loaded: …`, group changes (`AppGroupChangeLog`), enforcement entries that name the group (`EnforcementLog`), purge line with activity spans (D-7) |
+| Database | `%ProgramData%\EagleEye\` (schema 6: `AppGroups`, `AppGroupMembers`, `AppGroupRules`, `ActivitySpans`; `BlockedStarts.GroupId/GroupName`) |
+| Mac UI checks | §8.6 (Michael's 12 points, passed) can be reused as the base of the Mac part |
+| Kid side | Tray messages name the group instead of the app for group limits (no tray code change; texts from the service, `KidMessageFactory`) |
+| Optional (Q-DEV-1) | Live group smoke as `kid1` (plan 7.3) and performance AC-41 (plan 7.5). Michael checks them in pilot operation; TES may list them as optional tests |
+
+Known limitations: group lines on Reports start with the 0.8.0 install (Q-2). A new group is blocked for every kid until its rule is set (R-4, by design). AC-12 right-click opens one "Move to …" item, which opens the same sheet as "≡" (D-9). The UI texts are listed in §9.
+
 ## 7. Machine(s) Used
 
 | Step | Machine |
@@ -97,7 +116,7 @@ Console output: `02_Implementation/artifacts/smoke-us008-console*.txt` (git-igno
 | 1 | MacBook |
 | 2–7 | Windows Developer Machine (= service PC) |
 | 8–10 | MacBook (Debug probe with sample data; no live connection, see D-17) |
-| 11 | Windows Developer Machine (pending) |
+| 11 | Windows Developer Machine (build, tests, report) |
 
 ---
 
@@ -198,4 +217,39 @@ Preconditions: service and tray 0.8.0 on the service PC (`192.168.1.37`, done), 
 11. **Language**: switch the Mac to English (System Settings → General → Language & Region), restart the app: all new texts in English ("App Groups", "Add group", "Not in any group", "Move to …", "App group rules", "App groups" on Reports).
 12. **AC-43 spot check**: one break-time change, one app-rule change, Reports of today for `kid1`.
 
-Known limitations: the Windows parent app 0.7.x must not be used against the 0.8 service; the Windows parent app compiles the new views but is untested until US-009 (TI-13). Step 11 (Windows build and all four test projects) is still open.
+Known limitations: the Windows parent app 0.7.x must not be used against the 0.8 service; the Windows parent app compiles the new views but is untested until US-009 (TI-13). Step 11 (Windows build and all four test projects) is done, see §4.
+
+---
+
+## 9. UI Texts as Implemented (parent app, `src/EagleEye.ParentApp.Core/Resources/AppTexts.resx` / `AppTexts.en.resx`)
+
+New or changed keys in US-008. TES should use these exact texts.
+
+| Key | Deutsch | English |
+|---|---|---|
+| `MenuAppGroups` | App Gruppen | App Groups |
+| `GroupsExplanation` | Hier kannst du Apps, die zusammengehören, in eine Gruppe legen, z. B. ein Spiel mit seinem Launcher. Auf der Seite Regeln legst du dann für jedes deiner Kinder ein Zeit-Budget für die ganze Gruppe fest. Eine neue Gruppe ist gesperrt, bis du ihre Regel einstellst. Jede App kann nur in einer Gruppe sein. Apps verschiebst du mit der Maus oder dem Trackpad, mit ≡ oder mit einem Rechtsklick. | Here you can put apps that belong together into a group, e.g. a game with its launcher. On the Rules page you then set one time budget for the whole group, for each of your kids. A new group is blocked until you set its rule. Each app can be in only one group. Move apps by dragging them with the mouse or trackpad, with ≡ or with a right click. |
+| `GroupsAdd` | Gruppe hinzufügen | Add group |
+| `GroupsRename` | Umbenennen (tooltip of the pencil icon, D-19) | Rename |
+| `GroupsDelete` | Löschen (tooltip of the trash icon, D-19; button in the confirmation) | Delete |
+| `GroupsUngrouped` | In keiner Gruppe | Not in any group |
+| `GroupsEmpty` | Keine Apps in dieser Gruppe. Apps hierher ziehen. | No apps in this group. Drag apps here. |
+| `GroupsAllGrouped` | Alle Apps sind in einer Gruppe. | All apps are in a group. |
+| `GroupsNewTitle` | Neue App-Gruppe | New app group |
+| `GroupsRenameTitle` | App-Gruppe umbenennen | Rename app group |
+| `GroupsNameLabel` | Name | Name |
+| `GroupsInvalidName` | Bitte einen Namen mit 1 bis 40 Zeichen eingeben. | Enter a name with 1 to 40 characters. |
+| `GroupsDuplicateName` | Es gibt bereits eine Gruppe mit diesem Namen. | A group with this name already exists. |
+| `GroupsDeleteTitle` | App-Gruppe löschen | Delete app group |
+| `GroupsDeleteConfirmFormat` | Gruppe „{0}“ löschen? Ihre Apps kommen nach „In keiner Gruppe“ und verwenden wieder ihre eigenen Applikations-Regeln. | Delete the group "{0}"? Its apps move to "Not in any group" and use their own app rules again. |
+| `GroupsMoveTo` | Verschieben nach … | Move to … |
+| `RulesSectionGroupRules` | App-Gruppen-Regeln | App group rules |
+| `RulesGroupRulesExplanation` | Hier legst du ein Zeit-Budget pro App-Gruppe fest. Alle Apps einer Gruppe teilen es sich: Die Zeit zählt, solange mindestens eine App der Gruppe verwendet wird. Die Gruppen legst du auf der Seite App Gruppen fest. | Here you set one time budget per app group. All apps of a group share it: the time counts while at least one app of the group is in use. You define the groups on the App Groups page. |
+| `RulesColumnGroup` | App-Gruppe | App group |
+| `RulesNoGroups` | Noch keine App-Gruppen. Du kannst sie auf der Seite App Gruppen anlegen. | No app groups yet. You can create them on the App Groups page. |
+| `RulesGroupNoApps` | (keine Apps) | (no apps) |
+| `RulesAppRulesExplanation` (changed, sentence added, AC-17) | … Apps in einer App-Gruppe werden unter App-Gruppen-Regeln eingestellt. | … Apps in an app group are set under App group rules. |
+| `ReportsGroupsHeading` | App-Gruppen | App groups |
+| `ReportsColumnGroup` | App-Gruppe | App group |
+
+Reused without change: the "no controlled account" state of the Rules page (D-15), the save error "Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen." (AC-14), and the app rule validation messages in the group rules rows (D-11). Kid-side tray texts are unchanged. For a group limit the existing messages carry the group name in place of the app name (`KidMessageDto.AppName`).

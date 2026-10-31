@@ -1,6 +1,6 @@
 # US-008: App Groups with a Shared Daily Budget (service and Mac app)
 
-**Status**: Analyzed
+**Status**: Implemented
 **Created**: 2026-10-31
 **Approved**: by Michael, 2026-10-31, with OQ-1 to OQ-5 answered as proposed
 **Component(s)**: EagleEye.Service, EagleEye.TrayClient, EagleEye.Shared, EagleEye.ParentApp
@@ -381,3 +381,4 @@ All five questions are **resolved**. Michael: "All 5 question proposals are ok w
 | 2026-10-31 | Story approved; OQ-1 to OQ-5 answered as proposed, ACs unchanged; v1.8 amendment (groups) in effect. Status stays `New` until the implementation plan is approved | Michael (via the Orchestrator), recorded by PRO |
 | 2026-10-31 | Scope change "keep it simple": no mixed versions (AC-44 and group K removed, test setup without the Windows app, OQ-2 superseded, Out of Scope line added); precondition "Windows regression of 0.7.0" replaced by "Windows build and unit tests stay green"; US-009 delivers all four assets as 0.9.0. Plan Q-1 accepted: moving a not-running app into a group that shortens the time of running member apps is a rule change with grace period (AC-22, AC-32, AC-34 reworded) | Michael (via the Orchestrator), recorded by PRO |
 | 2026-10-31 | Implementation plan (`US-008/implementation-plan.md`, revision 1) and ADR-021 approved by Michael; plan Q-2 resolved (no group times before 0.8.0; where requirements allow either way, the option with less code); status → `Analyzed` | Michael (via the Orchestrator), recorded by ARC |
+| 2026-10-31 | Implemented as version 0.8.0 (service + tray `EagleEye-Setup-0.8.0.exe`, installed on the service PC; Mac app `EagleEye-ParentApp-0.8.0.dmg`); Windows build and all four unit test projects green; status `Implemented`. Report: `US-008/implementation-report.md` | DEV |
