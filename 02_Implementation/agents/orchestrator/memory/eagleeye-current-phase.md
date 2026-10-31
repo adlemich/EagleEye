@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-10-31 US-008 step c: Mac done + Michael check OK (icon re-check pending), H3 Windows Step 11 next; US-009 story draft (12f34fa) awaits Michael (OQ-1..7)
+description: EagleEye workflow status — 2026-10-31 US-008 closed + merged; US-009 step a: story updated (a1c0098, 38 ACs, req. v1.9 proposed), awaits Michael's approval + OQ-5 confirmation
 metadata:
   type: project
 ---
+
+**Update 2026-10-31 (US-009 step a): main merged into the US-009 branch (2941688). Michael answered OQ-1..7: physical 3rd Windows 10 PC for [W10]; OQ-2/3/6/7 as proposed; OQ-4 = Mac D-19 design; OQ-5 "all on 0.8.0" — but the Windows parent app on Win11 is 0.6.2 (never built 0.7/0.8), awaiting his confirmation. PRO (subagent) updated story a1c0098: 38 ACs, new group K (AC-37 required US-008 retest AC-19..34, 38..40; AC-38 optional AC-41 perf + live smoke), AC-35 full US-008 Mac checks, F-2 warning cleanup as DEV delivery note; requirements v1.9 written as proposed (takes effect on story approval). NEXT: Michael approves story → ARC plan.**
 
 **Update 2026-10-31 (US-008 CLOSED + merged): Michael closed US-008 without manual testing ("I will do the tests with US-009 again"); test report `docs/testing/US-008/test-report.md` (AC-19..34, 38..41 unverified; F-1 retest in US-009 run, F-2 clean up 9 test-code warnings in US-009 step c). Merged --no-ff into main, branch deleted. NEXT: US-009 on `feature/US-009-windows-parent-app-parity` — PRO must rebase/merge main into it and add F-1/F-2 to the story; Michael reviews the draft (OQ-1..7).**
 
