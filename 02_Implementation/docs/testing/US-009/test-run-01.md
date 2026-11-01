@@ -118,7 +118,7 @@ Patterns: `App groups loaded` · `app group|app moved|group rule` · `Test` · `
 - Step 3: *Wird ausgeführt*, *Automatisch*, *Lokales System*.
 - Step 4: after the install time, a line "App groups loaded: N groups with M apps, K group rules." with N ≥ 1 (Rechnen), M ≥ 1, K ≥ 1 (the same numbers as the last line before the update). No `[ERR]` line since the install.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -142,7 +142,7 @@ Patterns: `App groups loaded` · `app group|app moved|group rule` · `Test` · `
 - Step 4: ≤ 60 s **green** again.
 - Note: kid1 must not use Editor or Paint now (Session 6B).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -168,7 +168,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 2: the app starts from the Start menu without any further step.
 - Step 3: **EagleEye Parent App**, version **0.9.0**, publisher **Michael Adler**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -188,7 +188,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 2: no certificate warning or extra step; green **"Verbunden mit 192.168.1.37"**; *Gekoppelt*.
 - Step 3: green without a pairing code ≤ 30 s; the app opens on **Berichte**, with **Berichte** selected in the menu.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -210,7 +210,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 3: today **Rechnen 00:02** (±1); past days with the same group lines as noted in S-10 (or none, if none were noted).
 - Step 4: as before the update. (The Mac pairing is checked in TC-009-37.)
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -228,7 +228,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 1: **Einstellungen**, **App Gruppen**, **Regeln**, **Berichte**, in this order.
 - Step 2: only the selected entry is highlighted at any time; the entry selected before returns to normal. (Native Windows highlight, plan Q-3.)
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -249,7 +249,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 2: buttons are clearly distinguishable from headings (0.6.2 Windows button style, plan Q-4).
 - Step 4: the frames follow the new colour, at the latest when the window is activated again.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -269,7 +269,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Steps 1, 2, 4: all pages, dialogs and the status bar readable; no text cut off; explanatory texts wrap; checkboxes ticked/unticked clearly visible; trash-can icon visible.
 - Step 3: the window does not get smaller than 900 × 600; the pages scroll; every control reachable. On *Regeln* the table may scroll sideways at 150 % (known, R-4: not a Fail).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -289,7 +289,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 2: tooltip with the program path.
 - Step 3: section **School** in its alphabetical place with **"Keine Apps in dieser Gruppe. Apps hierher ziehen."**
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -311,7 +311,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 3: **"Keine Konten unter Elternkontrolle. Konten unter Einstellungen auswählen."**
 - Step 4: the page with groups and apps as before; kid1's and kid2's rules unchanged (glance at *Regeln*).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -331,7 +331,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 2: tooltips **Umbenennen** and **Löschen**.
 - Step 3: the pencil opens **App-Gruppe umbenennen**, the trash can the delete confirmation; Abbrechen changes nothing.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -358,7 +358,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 7: section **Musik 🎮** with the emoji shown as an emoji, in its alphabetical place.
 - *Regeln* (glance, kid1 and kid2): **Games** and **Musik 🎮** with **0:00**, no day ticked.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -385,7 +385,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 6: Paint is listed again with **its own earlier rule** (0:17, MO).
 - Step 7: only **Rechnen** is left. Set Paint's own rule back to what it was.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -411,7 +411,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - After every drop or release: no highlight remains (both modes).
 - Note: dragging works on the app's **name**; "≡" is not a drag handle (story UI note: no issue).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -427,7 +427,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 
 - As TC-009-14 steps 1 and 5, including the highlight that is cleared afterwards.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -449,7 +449,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 3: the right-click shows one item **Verschieben nach …**, which opens the same list (D-9); Paint moves to *In keiner Gruppe*.
 - Step 4: nothing moves.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -469,7 +469,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 2: the page shows the last state (Games, Rechnen, School; Paint under *In keiner Gruppe*).
 - Step 3: Information lines such as "app group created: Games", "app group renamed: Games → Gaming", "app group deleted: …", "app moved: Paint → Games", "app moved: Paint → not in any group", naming **Papas PC**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -488,8 +488,8 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 2: **"Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen."**; Paint returns to its stored section.
 - Step 3: green; the page shows the stored state (Paint where the last "app moved" log line says; write which in Notes).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Observed**:
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Observed**: Even though that the text "...konnte nicht gespeichert werden..." is shown, the status line in the windows parent app still showed green (and connected text). This is a mismatch, the status bar should show red when the server is down.
 - **Notes**:
 
 ### TC-009-19: Rules: the "App-Gruppen-Regeln" section *(essential)*
@@ -507,7 +507,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 2: kid2: every group **0:00**, no day (only kid1's Rechnen rule was set in S-10).
 - The "Noch keine App-Gruppen …" text needs a state without groups: optional TC-009-72.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -532,7 +532,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Steps 4, 5: the typed value is saved (1:15, then 1:20), not lost.
 - Step 6: stored.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -552,7 +552,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 2: Paint is gone from *Applikations-Regeln*; under *App-Gruppen-Regeln* School shows "Paint" below its name.
 - Step 3: Paint is back with **its own rule as before**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -569,7 +569,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 
 - Steps 1, 2: both sections show **Wird geladen …** until their data is there; **Rechner never appears** under *Applikations-Regeln*, not even briefly.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -588,7 +588,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - The heading "App-Gruppen" is outlined like the day headings.
 - Sorting by usage and "same as in the Mac app" are checked in TC-009-58 (two groups with time) and TC-009-52.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -608,7 +608,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 3: without any action, today shows Rechner and **Rechnen** about **1 minute more** (≤ 15 s after you are back). Kid1's Rechner usage: write it down (≈ 00:03), Session 6B uses it.
 - Note: the timed "≤ 15 s while the kid uses the app" is checked on the Mac (TC-009-58), because only the kid's session in front counts.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -626,7 +626,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 - Step 1: every text in English with the wording of TC-009-47 / §2 (Mac reference): "App Groups", "Add group", "Not in any group", "Move to …", "App group rules", "(no apps)", "App groups" / "App group" / "Usage (HH:MM)"; no German leftovers, no internal keys.
 - Step 2: German again.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -652,7 +652,7 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 - Step 2: a message that a newer Windows (Windows 11) is needed (Inno Setup's built-in text, German or English); the setup ends; nothing installed.
 - Step 3: no EagleEye entry.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -674,7 +674,7 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 - Step 3: the app starts on **Einstellungen** with the host dialog, without any further step.
 - Step 4: **EagleEye Parent App**, **0.9.0**, **Michael Adler**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -696,7 +696,7 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 - Step 3: **"Der Kopplungscode ist falsch."** (or same meaning); not paired; red.
 - Step 4: green **"Verbunden mit 192.168.1.37"**, *Gekoppelt*.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -716,8 +716,8 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 - Step 2: red **"Nicht verbunden mit 192.168.1.37"** ≤ **30 s**.
 - Step 3: green ≤ **60 s** without any action.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Observed**:
+- **Result**: [ ] Pass  [X ] Fail  [ ] Blocked  [ ] Skipped
+- **Observed**: The status bar in the App on Windows 10 stayed green.
 - **Notes**:
 
 ### TC-009-30: All four pages on Windows 10 (spot check incl. the three ways to move) *(essential)*
@@ -741,7 +741,7 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 - Step 7: the account, warning, group, group rule and break changes are logged with **Windows 10 PC**.
 - Touchpad missing → write "no touchpad" in Notes (not a Fail).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -765,7 +765,7 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 - Steps 3, 4: no text cut off, no control unreachable, checkboxes and the trash-can icon visible; window ≥ 900 × 600 with scrolling pages. Fonts may look slightly different from Windows 11 (no Segoe UI Variable; known).
 - Step 5: 😀 and 🎮 shown as emojis (a box or a split symbol = Fail for these two common emojis).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -784,7 +784,7 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 - Step 2: every text English, with the wording of §2 (= Mac app 0.8.0; Mac reference TC-009-47); no German leftovers, no third language, no internal keys. The **unchanged default** kid texts are shown in English (e.g. "You have used up your time! Sorry, that's it for now.").
 - Step 3: all German again, defaults in German.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -802,7 +802,7 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 - Step 1: completes without errors.
 - Step 2: green ≤ 30 s **without a pairing code**; device still **Windows 10 PC**; **Dunkel** kept.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -822,7 +822,7 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 - Step 2: no entry.
 - Step 3: neither folder exists (no program files, no connection or pairing data).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -838,7 +838,7 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 
 - A message that this Windows version is not supported (Inno Setup's built-in text); nothing installed.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -854,7 +854,7 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 
 - The app is **German**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -882,7 +882,7 @@ The Mac cases are **quick re-confirms** of your 12-point check on 0.8.0 (US-008 
 - Step 4: "succeeded" / "Connection to 192.168.1.37 port 5443 … succeeded!".
 - Step 5: both show **0.9.0**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -904,7 +904,7 @@ The Mac cases are **quick re-confirms** of your 12-point check on 0.8.0 (US-008 
 - Step 3: readable, nothing cut off.
 - Step 4: **"Keine Konten unter Elternkontrolle. Konten unter Einstellungen auswählen."** (≤ 5 s), then the page again.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -922,7 +922,7 @@ The Mac cases are **quick re-confirms** of your 12-point check on 0.8.0 (US-008 
 - Step 1: as TC-009-09 (explanation, button, sorted sections, In keiner Gruppe last, each app once, tooltip with the program path, no Windows Explorer, no account selection, empty text for School).
 - Step 2: identical wording (a difference = Fail, AC-28).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -940,7 +940,7 @@ The Mac cases are **quick re-confirms** of your 12-point check on 0.8.0 (US-008 
 - Step 1: the two messages of TC-009-12 with the typed text kept; Escape creates nothing; **Musik 🎮** created and sorted.
 - Step 2: tooltips **Umbenennen** / **Löschen**; pencil and trash-can icons visible in the current mode; rename works; delete dialog with title **App-Gruppe löschen** and the question of §2; Abbrechen keeps, Löschen removes.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -958,7 +958,7 @@ The Mac cases are **quick re-confirms** of your 12-point check on 0.8.0 (US-008 
 
 - As TC-009-14 and TC-009-16: moves as expected, own section and outside change nothing, highlight follows and is always cleared, the list excludes the current section and includes *In keiner Gruppe* only for a grouped app.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -976,7 +976,7 @@ The Mac cases are **quick re-confirms** of your 12-point check on 0.8.0 (US-008 
 - Step 1: the last state (Games, Rechnen, School; Paint under *In keiner Gruppe*); every change of TC-009-40/-41 had shown ≤ 5 s.
 - Step 2: create, rename, delete and move lines naming the Mac's device name.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -995,7 +995,7 @@ The Mac cases are **quick re-confirms** of your 12-point check on 0.8.0 (US-008 
 
 - As TC-009-19 to TC-009-22 on the Mac: same layout and texts as the W11 app; validation message; saved ≤ 5 s; own rule comes back; **Wird geladen …** in both sections until loaded, Rechner never briefly under *Applikations-Regeln*.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1012,7 +1012,7 @@ The Mac cases are **quick re-confirms** of your 12-point check on 0.8.0 (US-008 
 
 - **"Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen."**; the page returns to the stored state.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1030,7 +1030,7 @@ The Mac cases are **quick re-confirms** of your 12-point check on 0.8.0 (US-008 
 - Step 1: **App-Gruppen** / **App-Gruppe** · **Nutzung (HH:MM)** under today with **Rechnen ≈ 00:03**, the **same value as in the W11 app** (AC-22 "same as in the Mac app"); no part on days without group time.
 - Step 2: all days follow the name ≤ 5 s, without **Wird geladen …**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1046,7 +1046,7 @@ The Mac cases are **quick re-confirms** of your 12-point check on 0.8.0 (US-008 
 
 - Green ≤ 30 s without a code or a Keychain prompt; opens on **Berichte**; groups, rules unchanged.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1062,7 +1062,7 @@ The Mac cases are **quick re-confirms** of your 12-point check on 0.8.0 (US-008 
 
 - All texts English; the same wording as on Windows 10 in TC-009-32 (a difference = Fail, AC-28).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1080,7 +1080,7 @@ The Mac cases are **quick re-confirms** of your 12-point check on 0.8.0 (US-008 
 
 - Steps 1, 2: saved ≤ 5 s, as in 0.8.0. Step 3: today's lines as on the W11 app.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1102,7 +1102,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 
 - Both green **"Verbunden mit 192.168.1.37"**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1125,7 +1125,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Steps 1 to 5, 7: each change appears in the other app **≤ 5 s** without any action there.
 - Step 6: after 5 s both apps show Editor in the **same** group (the last change the service received; write which in Notes).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1147,7 +1147,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Steps 3, 4: the open Rules page follows ≤ 5 s: Paint leaves/returns to *Applikations-Regeln*, School's member line changes, the group row appears, is renamed and disappears; Rechner leaves Rechnen's line and returns; no grouped app shows under *Applikations-Regeln*.
 - Step 5: both show the same minutes (20 or 40).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1165,7 +1165,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Step 1: in W, today (and past days with Rechner time) show **School** instead of **Rechnen** ≤ 5 s, without **Wird geladen …**.
 - Step 2: in M, **Rechnen** is back ≤ 5 s, without **Wird geladen …**. Both apps show the same values.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1188,7 +1188,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 
 - Every change shows in the other app **≤ 5 s** without any action; at the end everything is as before (kid2 ticked, no extra break, texts and values as before, early 3, final default text).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1206,7 +1206,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Step 1: M is *Nicht gekoppelt*; W stays green **"Verbunden mit 192.168.1.37"** and works.
 - Step 2: M green again (needed as the remote parent app in Session 6B).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1230,7 +1230,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Step 2: dialog **"Kopplung auf diesem Gerät löschen?"** with the explanation and **Kopplung auf diesem Gerät löschen** / **Abbrechen**; Abbrechen keeps the pairing.
 - Step 3: green ≤ 60 s without any action; the forget button disappears.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1250,7 +1250,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Steps 1 to 3: each change stored ≤ 5 s (log line), the field keeps its value; no message.
 - Step 4: `0` → **"Bitte Minuten zwischen 1 und 59 eingeben."**; `3` → **"Die finale Warnung muss weniger Minuten vor dem Ende liegen als die frühe Warnung."**; `1` stored.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1289,7 +1289,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Lap 3 between **5:00 and 5:15**: **one** dialog with kid1's budget text and **"Test: Zeit-Budget aufgebraucht."** — not one per app; lap 4 ≤ **5:35**: **Notepad and Paint both closed**.
 - Log: warning lines naming kid1, group **Test**, early / final; close lines for Editor and Paint naming group Test, budget used up, closed gracefully.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1315,7 +1315,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Step 5: "Blocked start" lines naming group Test and the reason (budget used up / not allowed today).
 - Step 6: W11 shows the **same** group values as M.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1335,7 +1335,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Step 2: the app appears in **In keiner Gruppe** ≤ **15 s**, in its alphabetical place, once.
 - Step 3: listed there too.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1358,7 +1358,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Steps 3, 4: no dialog, nothing closed (kid3 is not controlled; admins are never limited).
 - Step 5: kid3 not listed; kid1's Test value unchanged (other accounts never count).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1379,7 +1379,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Step 3: Paint closed between **C + 60 s** and **C + 75 s** with the budget text; gone ≤ **C + 95 s**. One warning, not one per app.
 - Log: "Grace period: … group Test …".
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1401,7 +1401,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Step 3: Rechner closed between C + 60 s and C + 75 s.
 - Step 4: today **Test** ≈ the Test value of step 0 + Rechner's usage today (Rechner's line, incl. this case) ± 1 (Rechner never ran together with Editor or Paint, so nothing overlaps); **Rechnen** is no longer listed today (no members); past days that had Rechnen time show it under **Test** now.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1422,7 +1422,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Step 3: Paint closed between C + 60 s and C + 75 s.
 - Step 4: Editor, Paint, Rechner under *In keiner Gruppe*; in *Applikations-Regeln* again with their own earlier rules (Paint 0:00). Move **Rechner** back into **Rechnen**.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1442,7 +1442,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Steps 1, 2: **no** kid dialog (Paint's earlier time leaves well over 3 minutes).
 - Step 3: the **early** warning at once (≤ C + 15 s) naming Rechnen; no grace close.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1460,7 +1460,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 
 - Step 2: blocked with the break display text (not the group text).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1476,7 +1476,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 
 - Rechnen grew by about the 1 minute plus the time after coming back, **not** by the 3 minutes away (±1).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1495,7 +1495,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 
 - Everything as noted: groups with members, group rules, today's group lines (no time lost or added).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1517,7 +1517,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Step 1: every group (Games, Rechnen, School) **0:00**, no day ticked.
 - Step 2: kid3 unticked (it must not stay controlled: deny-by-default would block its apps).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1536,7 +1536,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - Step 2: the new app is no longer listed (no controlled account has a record of it); Rechnen shows only Rechner.
 - Step 3: the new app is back **in Rechnen**; kid1's Rechnen rule is unchanged (0:30, MO–SO). Move the new app back to *In keiner Gruppe* (or leave it).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1552,7 +1552,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 
 - Rechner starts (Rechnen 0:30 applies again) and its time counts for Rechnen.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1572,7 +1572,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 
 - Not noticeably slower; CPU within US-004 AC-25. "Not tested" does not block closing (story AC-38).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -1588,7 +1588,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 
 - Rules: **"Noch keine App-Gruppen. Du kannst sie auf der Seite App Gruppen anlegen."** App Gruppen: only *In keiner Gruppe* with all apps.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
 - **Notes**:
 
