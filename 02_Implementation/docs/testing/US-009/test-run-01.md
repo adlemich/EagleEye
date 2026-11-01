@@ -1604,10 +1604,18 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 
 | Session | Pass | Fail | Blocked | Skipped | Not executed |
 |---|---|---|---|---|---|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
-| 6A–6D | | | | | |
-| **Total** | | | | | |
+| 1 | 2 | 0 | 0 | 0 | 0 |
+| 2 | 21 | 0 | 0 | 2 (TC-009-12, -25) | 0 |
+| 3 | 7 | 1 (TC-009-29) | 0 | 3 (TC-009-26, -35, -36) | 0 |
+| 4 | 8 | 0 | 0 | 3 (TC-009-40, -44, -47) | 1 (TC-009-45) |
+| 5 | 0 | 0 | 0 | 6 (TC-009-49 to -54) | 0 |
+| 6A–6D | 11 | 0 | 0 | 7 (TC-009-55, -56, -63, -66, -70, -71, -72) | 0 |
+| **Total** | **49** | **1** | **0** | **21** | **1** |
+
+*TES evaluation notes (2026-11-01; Michael's ticks and texts unchanged):*
+
+- Ticks with stray spaces (`[ X]`, `[X ]`) are read as ticked.
+- **TC-009-45: no result recorded.** The result line reads `X ] Pass` (no opening bracket), so no box is ticked. Counted as not executed; Michael to confirm the result in a later run or in chat.
+- **TC-009-29 Fail** and the **Observed note on TC-009-18** (ticked Pass) describe the same defect: `02_Implementation/docs/testing/US-009/issues/ISSUE-010.md`. TC-009-18's Pass is consistent with its expected results (save error text, page back to the stored state); the status bar was not part of them.
+- Not filled in: execution dates, service PC IP, winver, macOS version, account names (header); Session 0 (S-1 to S-12) and Session 6B preparation (P-1 to P-6) checkboxes. No evidence or service-log copies were committed (LOG-COPY after the Fail not done).
+- 12 of the 21 skipped cases are essential: TC-009-12, -26, -40, -49 to -56, -63. Evaluation: `02_Implementation/docs/testing/US-009/test-report.md`.
