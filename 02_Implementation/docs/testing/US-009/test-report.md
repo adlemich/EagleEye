@@ -1,6 +1,6 @@
 # Test Report: US-009 — Windows Parent App on Windows 10, and Windows Parent App Parity (0.9.0)
 
-**Status**: Draft, for approval by Michael
+**Status**: Accepted by Michael on 2026-11-01 by closing US-009 with ISSUE-010 as a known issue (under observation) and the open gaps as listed; the open points TES raised in its hand-back (TC-009-45 result, S-6 for kid2, severity Medium, §11 regression additions) were not answered separately
 **Date**: 2026-11-01
 **Author**: TES
 **Test runs evaluated**: `02_Implementation/docs/testing/US-009/test-run-01.md` (results as committed by Michael in `87a6cc5`)

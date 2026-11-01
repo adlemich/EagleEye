@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-11-01 US-009 step d: step c approved; TES test plan + run-01 checklist e4714e7 (72 TCs, ~8 h essential, 11 open points) await Michael approval
+description: EagleEye workflow status — 2026-11-01 US-009 CLOSED (known issue ISSUE-010) and merged into main; between stories, Michael wants to move on to other things
 metadata:
   type: project
 ---
+
+**Update 2026-11-01 (US-009 CLOSED, MacBook): Michael ran test run 01 (49 Pass, 1 Fail TC-009-29, 21 Skipped, TC-009-45 no result). TES report 35e1726: 24/38 ACs verified, AC-6 failed (known issue), 13 not/partly verified (all of Session 5 two-apps-at-once skipped). ISSUE-010 (`docs/testing/US-009/issues/`, Medium, status New + decision: known issue under observation): Windows parent app status bar stays green when service stopped/suspended — status bar only follows SignalR Reconnecting/Closed; save errors (4 s write timeout) don't notify ConnectionCoordinator; no ServerTimeout/KeepAlive set (30 s default); Mac likely affected (shared Core). Michael closed US-009 and gave the go to merge; merged --no-ff into main, branch deleted. Unanswered TES points: TC-009-45 result, S-6 kid2 English, severity, report §11 regression additions. NEXT: between stories; Michael wants to move on to other things.**
 
 **Update 2026-11-01 (US-009 step d, MacBook): Michael approved step c (recorded in story + report). TES (subagent) wrote `docs/testing/US-009/test-plan.md` (Draft) + `test-run-01.md`, e4714e7: 72 TCs (59 essential/13 optional), sessions 0–6D, ~8 h essential over 3 days; all 38 ACs mapped; US-008 AC-6 not testable. Plan §8 has 11 open points for Michael (kid accounts, baseline group "Rechnen", English depth, Mac depth, ≤15 s timing, orphan device, service IP .37 vs .85, 6B timing...). NEXT: Michael approves plan / answers §8 → run 01 starts on Windows (Session 0); afterwards TES step f report.**
 
