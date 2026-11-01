@@ -24,6 +24,8 @@ EagleEye is developed on **two machines that share one git repository** (`https:
 
 **Third machine, test only (since US-009, ADR-007 amendment 2026-10-31):** Michael's **Windows 10 test PC** (Windows 10 22H2, build 19045+, x64, same LAN as the service PC). It has no repo, no agents and no builds. Michael copies the git-ignored installers from `03_Delivery/windows/` to it by hand and runs the Windows parent app checks there. The parent app on Windows 10 always connects to the service on another PC; the service installer refuses Windows 10.
 
+**Fourth machine, test only (since US-010, ADR-007 amendment 2026-11-01):** the **kid's gaming PC** (`192.168.1.85`, Windows 11 x64, same LAN). It is the pilot service PC with EagleEye service + tray installed and the kid's controlled account; the Mac app is paired with it. It has no repo, no agents and no builds. Michael copies the git-ignored installers from `03_Delivery/windows/` to it by hand and runs the game checks there (Minecraft, Fortnite with Easy Anti-Cheat, launchers). DEV installs nothing on it.
+
 `EagleEye.Shared` is built on both machines; it is the only component that both machines change. Changes to `EagleEye.Shared/Contracts/` (API-first) should be made on the Windows machine, because that is where both ends of the contract (service and clients) can be built and tested together.
 
 ---
