@@ -91,7 +91,6 @@ $RECYCLE.BIN/
 03_Delivery/windows/*.exe
 03_Delivery/windows/*.msi
 03_Delivery/macos/*.dmg
-03_Delivery/spikes/
 
 # -----------------------------------------------------------------------------
 # Logs

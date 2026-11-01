@@ -1,2 +1,0 @@
-{ "startMinutes": 15, "label": "Spiele", "corner": "TopRight", "opacity": 50,
-  "alpha": "perPixel", "reassert": true, "beep": true, "fontSizePt": 16, "cpuLogSeconds": 30 }
