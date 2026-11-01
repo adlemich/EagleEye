@@ -26,8 +26,8 @@
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <!-- macOS -->
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">26.0</SupportedOSPlatformVersion>
-    <!-- Windows: the SDK requires the API minimum to be at most the TFM version (19041). Windows 11 is
-         enforced by the installer (parentapp-setup.iss, MinVersion=10.0.22000). -->
+    <!-- Windows: the SDK requires the API minimum to be at most the TFM version (19041). The minimum OS,
+         Windows 10 22H2, is enforced by the installer (parentapp-setup.iss, MinVersion=10.0.19045). -->
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.19041.0</SupportedOSPlatformVersion>
     <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.19041.0</TargetPlatformMinVersion>
   </PropertyGroup>

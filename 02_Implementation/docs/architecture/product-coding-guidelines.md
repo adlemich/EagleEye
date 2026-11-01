@@ -1,7 +1,7 @@
 # EagleEye — Product Coding Guidelines
 
-*Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); CR-001 amendment approved (2026-10-20)*
-*Maintainer: ARC Agent | Last Updated: 2026-10-20*
+*Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); CR-001 amendment approved (2026-10-20); US-008 and US-009 amendments approved (2026-10-31)*
+*Maintainer: ARC Agent | Last Updated: 2026-10-31*
 
 > **Amendment 2026-10-04 (US-002, ADR-008, ADR-009)**: §10.1, §10.2, §10.4 (`ParentApp.Core`, Shared `Communication/` and `Data/`), §12.2 (pairing code in a topmost window), §16.1 (packaging per ADR-009, token storage via DPAPI `ISecretStore`).
 
@@ -20,6 +20,8 @@
 > **Amendment 2026-10-20 (CR-001, ADR-019) — approved by Michael 2026-10-20**: iOS and Android parent apps dropped. §14 (iOS) and §15 (Android) removed (numbers kept), TOC updated; §10.1 and §10.4 without `Platforms/Android` and `Platforms/iOS`; §13 (macOS is a production platform; unsigned `.dmg`; desktop layout only); §16.1 (Windows is a production platform; secure storage and packaging notes without Android).
 
 > **Amendment 2026-10-31 (US-008, ADR-021) — approved by Michael together with the US-008 implementation plan (2026-10-31)**: §10.1 (folders `Service/Groups` for the app-group state owner, snapshot, span union and group usage calculator, and `ParentApp.Core/Groups` for the app-groups model and name rules). Mac Catalyst rule (US-007 lesson): every visual state that sets a background also sets an explicit background in "Normal" (an unset background does not repaint). Where the requirements allow either way, prefer the option with less code (Michael, 2026-10-31).
+
+> **Amendment 2026-10-31 (US-009) — approved by Michael together with the US-009 implementation plan (2026-10-31)**: §16.1 (minimum OS of the Windows parent app: Windows 10 22H2, enforced by the installer with `MinVersion=10.0.19045`; no Windows-10-specific code).
 
 This document defines the coding standards all EagleEye components must follow. It complements but does not duplicate the system architecture (`arc42/system-architecture.md`) and ADRs — refer to those for architectural decisions, component responsibilities, and design rationale.
 
@@ -722,7 +724,7 @@ Everything the kid's programs control is **untrusted input** for the SYSTEM serv
 
 ### 16.1 Windows Considerations
 
-- **Target**: `net10.0-windows10.0.19041.0`. The csproj minimum (`SupportedOSPlatformVersion` / `TargetPlatformMinVersion`) is `10.0.19041.0`, because the SDK rejects a minimum above the TFM version (`NETSDK1135`); the minimum OS **Windows 11** is enforced by the installer (`MinVersion=10.0.22000`). MAUI renders through WinUI 3.
+- **Target**: `net10.0-windows10.0.19041.0`. The csproj minimum (`SupportedOSPlatformVersion` / `TargetPlatformMinVersion`) is `10.0.19041.0`, because the SDK rejects a minimum above the TFM version (`NETSDK1135`); the minimum OS **Windows 10 22H2** (build 19045, x64) is enforced by the installer (`MinVersion=10.0.19045`, `ArchitecturesAllowed=x64compatible`; US-009, ADR-009). Do not add OS version checks or Windows-10-specific code paths; on Windows 10 the app is always a remote parent app (the service needs Windows 11). MAUI renders through WinUI 3.
 - **Desktop UI**: same desktop-style layout as macOS (§13). Resizable window with a sensible minimum size. No portrait lock.
 - **TLS trust**: as on macOS, accept the service's self-signed certificate programmatically (trust on first use, then the pinned thumbprint; `CertificateTrustPolicy` in `ParentApp.Core`, ADR-008 §3). Set the callback on both the HTTP handler and `ClientWebSocketOptions.RemoteCertificateValidationCallback`. Never install the certificate into the Windows certificate store.
 - **Secure storage**: store the pairing token via the Core abstraction `ISecretStore`, never in plain SQLite. On Windows, `ProtectedSecretStore` (Core) keeps the encrypted bytes in the `Secrets` table, and the platform class `Platforms/Windows/DpapiSecretProtector` (`ISecretProtector`) encrypts with DPAPI `DataProtectionScope.CurrentUser`. **Do not use MAUI `SecureStorage` on Windows**: it needs package identity, and the app is unpackaged (ADR-009). macOS uses `MauiSecureStorageSecretStore` (Keychain, §13.1).

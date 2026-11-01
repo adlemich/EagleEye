@@ -49,8 +49,8 @@ SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-; Windows 11 (the app's API minimum is lower, see EagleEye.ParentApp.csproj).
-MinVersion=10.0.22000
+; Windows 10 22H2 (build 19045) or Windows 11, x64 (FR-APP-092 v1.9, ADR-009). The service stays Windows 11 (setup.iss).
+MinVersion=10.0.19045
 ; Repair/update while the app runs: close it via the Restart Manager.
 CloseApplications=yes
 RestartApplications=no

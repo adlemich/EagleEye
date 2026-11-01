@@ -357,7 +357,7 @@ public sealed class RulesViewModelTests
 
         vm.FlushPendingEdits();
 
-        Assert.Empty(_rules.Invocations.Where(i => i.Method.Name.StartsWith("Set", StringComparison.Ordinal)));
+        Assert.DoesNotContain(_rules.Invocations, i => i.Method.Name.StartsWith("Set", StringComparison.Ordinal));
     }
 
     [Fact]

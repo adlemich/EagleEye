@@ -1,6 +1,6 @@
 # ADR-007: Two-Machine Development and Manual Acceptance Testing
 
-**Status**: Accepted (§2 "Distribution" superseded by ADR-009, 2026-10-04; machine roles and §2 "Role" amended by CR-001 / ADR-019, 2026-10-20)
+**Status**: Accepted (§2 "Distribution" superseded by ADR-009, 2026-10-04; machine roles and §2 "Role" amended by CR-001 / ADR-019, 2026-10-20; third, test-only machine and Windows parent client minimum OS amended by US-009, accepted 2026-10-31)
 **Date**: 2026-10-03
 **Deciders**: Michael (project owner)
 
@@ -11,6 +11,11 @@
 > 3. **Communication** (§2): "same model as the mobile apps" now means the same model as the macOS app (FR-APP-091, FR-APP-111).
 >
 > The original text below is kept as history; superseded statements are struck through.
+
+> **Amendment 2026-10-31 (US-009) — accepted, approved by Michael together with the US-009 implementation plan (2026-10-31)**:
+>
+> 1. **Third machine, test only** (§1, §3): Michael's physical **Windows 10 22H2 PC** (x64, same LAN as the service PC) is used for manual tests of the Windows parent app on Windows 10. It has no repo clone, runs no agent sessions and builds nothing; installers are copied to it from `03_Delivery/windows/` on the Windows Developer Machine. Steps that need it are marked "Windows 10 PC" in implementation plans. `02_Implementation/docs/dev-process/dev-environments.md` §1 gets the matching row (Orchestrator, after approval).
+> 2. **Minimum OS of the Windows parent client** (§2): "minimum Windows 11" becomes "Windows 10 22H2 (build 19045) or Windows 11" (requirements v1.9, ADR-009 amendment).
 
 ---
 

@@ -76,7 +76,7 @@ All UI texts come from `EagleEye.ParentApp.Core/Resources/AppTexts*.resx` (Germa
 
 | Platform | Min Version | Built on | Distribution |
 |----------|-------------|----------|--------------|
-| Windows | Windows 11 | Windows machine | Per-user installer `03_Delivery/windows/EagleEye-ParentApp-Setup-<version>.exe` (unpackaged, self-contained, no admin rights, ADR-009) |
+| Windows | Windows 10 22H2 (build 19045) or Windows 11, x64 | Windows machine | Per-user installer `03_Delivery/windows/EagleEye-ParentApp-Setup-<version>.exe` (unpackaged, self-contained, no admin rights, ADR-009) |
 | macOS | macOS 26 | MacBook | `.dmg` in `03_Delivery/macos/`, ad-hoc signed only (no Developer ID, no notarisation, ADR-019); allow once via *System Settings → Privacy & Security → Open Anyway* |
 
 ## Mac Catalyst rule: explicit "Normal" (US-007, US-008)

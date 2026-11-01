@@ -28,11 +28,12 @@ public sealed class BlockedStartRepositoryTests : IAsyncLifetime
         var id = await _repository.InsertAsync(Record(Kid, Now));
 
         Assert.Equal(
-            [
+            new string?[]
+            {
                 "S-1-5-21-1-2-3-1003", "kid1", Now.AddSeconds(-2).ToString("O"), "2026-10-10 20:10:00", Now.ToString("O"), "Editor",
                 "notepad.exe", @"C:\Windows\System32\notepad.exe", "5120", "app start", "3", "1200", "1439", "31", "Sa",
                 null, null, null, null,
-            ],
+            },
             await RowAsync(id));
     }
 
@@ -41,7 +42,7 @@ public sealed class BlockedStartRepositoryTests : IAsyncLifetime
     {
         var id = await _repository.InsertAsync(Record(Kid, Now));
 
-        Assert.Equal(["blocked start", "break time", "0", null, null, null, null, null], await NewColumnsAsync(id));
+        Assert.Equal(new string?[] { "blocked start", "break time", "0", null, null, null, null, null }, await NewColumnsAsync(id));
     }
 
     [Fact]
@@ -59,8 +60,8 @@ public sealed class BlockedStartRepositoryTests : IAsyncLifetime
 
         var id = await _repository.InsertAsync(record);
 
-        Assert.Equal(["running app", "budget used up", "1", "45", "127", "2705", null, null], await NewColumnsAsync(id));
-        Assert.Equal(["grace period ended", null, null, null, null], (await RowAsync(id))[9..14]);
+        Assert.Equal(new string?[] { "running app", "budget used up", "1", "45", "127", "2705", null, null }, await NewColumnsAsync(id));
+        Assert.Equal(new string?[] { "grace period ended", null, null, null, null }, (await RowAsync(id))[9..14]);
     }
 
     [Fact]
@@ -76,7 +77,7 @@ public sealed class BlockedStartRepositoryTests : IAsyncLifetime
 
         var id = await _repository.InsertAsync(record);
 
-        Assert.Equal(["blocked start", "budget used up", "0", "60", "32", "3600", "7", "Games"], await NewColumnsAsync(id));
+        Assert.Equal(new string?[] { "blocked start", "budget used up", "0", "60", "32", "3600", "7", "Games" }, await NewColumnsAsync(id));
     }
 
     [Fact]
@@ -93,7 +94,7 @@ public sealed class BlockedStartRepositoryTests : IAsyncLifetime
 
         await _repository.CompleteAsync(id, "closed gracefully", 0.4, "shown", Now.AddSeconds(1));
 
-        Assert.Equal(["closed gracefully", "0.4", "shown", Now.AddSeconds(1).ToString("O")], (await RowAsync(id))[15..]);
+        Assert.Equal(new string?[] { "closed gracefully", "0.4", "shown", Now.AddSeconds(1).ToString("O") }, (await RowAsync(id))[15..]);
     }
 
     [Fact]
