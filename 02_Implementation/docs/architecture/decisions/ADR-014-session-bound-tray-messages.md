@@ -4,6 +4,13 @@
 **Date**: 2026-10-10
 **Deciders**: ARC, Michael
 
+> **Amendment 2026-11-01 (US-010, ADR-022) — Proposed with the US-010 implementation plan, for Michael's approval**
+>
+> 1. **New push `ITrayClientCallback.OnRemainingTime(RemainingTimeDto)`**: fire-and-forget (no client result), sent by the time-limit engine **every tick (5 s)** to the newest verified tray connection (§1, §2 binding unchanged) of each session of a controlled account, also when the model is empty. The model holds one line per running subject (app or group, own time without breaks), one break line, the warning minutes and the strongest signal of the tick (`None`, `Early`, `Final`, `Expired`). The tray counts down locally, hides the overlay after 15 s without a push, on disconnect and while the session is locked (ADR-022).
+> 2. **Warnings and grace periods no longer use `ShowKidMessage`**. The reasons `AppEarlyWarning`, `AppFinalWarning`, `BreakEarlyWarning`, `BreakFinalWarning`, `AppGracePeriod`, `BreakGracePeriod` and the field `KidMessageDto.Minutes` are removed. The kid dialog (§3) stays for blocked starts and enforced closes only (`AppNotAllowedToday`, `AppBudgetUsedUp`, `BreakTime`), unchanged.
+> 3. **Message states**: a warning or grace period is logged as `shown in overlay` when the model was sent to a verified tray connection, else `not shown (tray client not connected)`. `not shown (replaced in the same tick)` is no longer used. The service cannot know whether the overlay was visible (exclusive fullscreen, ADR-022 §5).
+> 4. Service and tray ship in one installer (0.10.0); no compatibility code.
+
 > **Amendment 2026-10-12 (US-006, ADR-015, ADR-016) — approved by Michael together with the US-006 implementation plan (2026-10-12)**
 >
 > 1. **One request for all kid messages**: `ITrayClientCallback.ShowKidMessage(KidMessageDto)` replaces `ShowBreakTimeMessage`. The DTO carries a **reason** (warnings, grace periods, blocked or closed by budget, break time), the parent's text or `null` for the default, and the data of the info line (app name, minutes, break times). Service and tray client ship in one installer, so the old method is removed.

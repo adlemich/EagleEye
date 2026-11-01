@@ -4,6 +4,8 @@
 **Date**: 2026-10-12
 **Deciders**: ARC, Michael
 
+> **Amendment 2026-11-01 (US-010) — Proposed with the US-010 implementation plan, for Michael's approval**: the early and the final **warning texts are removed** (requirements v1.10, FR-APP-054: the parent sets only the minutes; the warnings appear in the remaining-time overlay, ADR-022). `DefaultTextKind.EarlyWarningText` and `FinalWarningText` and their entries in `DefaultTexts.resx` / `DefaultTexts.en.resx` are deleted; the service drops the stored texts (migration 7). The mechanism of this ADR stays unchanged for the **break display text** and the **budget text**, whose dialogs remain (US-010 AC-13).
+
 ---
 
 ## Context
