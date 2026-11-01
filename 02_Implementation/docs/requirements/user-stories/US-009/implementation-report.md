@@ -1,6 +1,6 @@
 # Implementation Report: US-009 — Windows Parent App on Windows 10, and Windows Parent App Parity (0.9.0)
 
-**Status**: **Implemented** (2026-11-01). Steps 1 to 3 (Windows) done; Step 4 (Windows 10 pre-check) passed (H2, 2026-10-31); Step 5 (MacBook) done (§11); Step 6 not needed (no code change in Step 5). **Next: H4 → Michael switches to Windows; TES writes the test plan** (§6)
+**Status**: **Implemented** (2026-11-01). Steps 1 to 3 (Windows) done; Step 4 (Windows 10 pre-check) passed (H2, 2026-10-31); Step 5 (MacBook) done (§11); Step 6 not needed (no code change in Step 5). **Step c approved by Michael on 2026-11-01.** Next: step d, TES test plan `02_Implementation/docs/testing/US-009/test-plan.md` (§6)
 **Author**: DEV
 **Branch**: `feature/US-009-windows-parent-app-parity`
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-009/implementation-plan.md` (approved 2026-10-31)
