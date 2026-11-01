@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-11-01 US-010 (time overlay) pre-story: ARC feasibility 3de30c9 says feasible with limits (option a: tray click-through topmost window); Michael decides on a Windows spike before PRO writes the story
+description: EagleEye workflow status — 2026-11-01 US-010 pre-story: ARC spike instructions c938036 ready; NEXT Windows DEV builds portable OverlaySpike exe (02_Implementation/spikes/US-010-overlay), then Michael tests on kid gaming PC
 metadata:
   type: project
 ---
+
+**Update 2026-11-01 (US-010 spike prep, MacBook): Michael approved the overlay spike. ARC wrote `US-010/spike-overlay-instructions.md` + results template `spike-overlay-results.md` (c938036): throwaway project `02_Implementation/spikes/US-010-overlay/` (own csproj, not in sln/scripts/installers; delete before merge), single-file self-contained win-x64 exe to `03_Delivery/spikes/` (git-ignored), global hotkeys Strg+Alt+Umschalt+…, log next to exe; never shows a normal window so EagleEye (ADR-011 §4) should not record/block it (DEV check D-10). Machines: pilot gaming PC = service PC 192.168.1.85 (Mac paired with it in US-008); Windows dev machine ZOCK-O-MAT-V3 = 192.168.1.37 — ARC's repo search didn't know .85, Michael to confirm (Q-A..Q-D in instructions §8). NEXT: Windows DEV session with ARC's ready prompt (in instructions/report), then Michael runs SP-01..SP-18 on gaming PC, then DEV/ARC evaluate in spike-overlay.md, then PRO writes US-010.**
 
 **Update 2026-11-01 (US-010 pre-story, MacBook): Michael wants a half-transparent always-on-top remaining-time overlay for the kid instead of the 5/1-min OK dialogs. Orchestrator created branch `feature/US-010-time-overlay` from main (no story yet, Michael wanted feasibility first). ARC (subagent, no internet) wrote `docs/requirements/user-stories/US-010/feasibility-overlay.md` (3de30c9): feasible with limits; recommended (a) layered click-through topmost no-activate window in the tray + new remaining-time push from service; Game Bar widget and injection rejected; exclusive fullscreen not covered; requirements already have FR-TRAY-030 / NFR-P-011; story M; spike ½–1 day on Windows proposed; Q-1..Q-15 product questions for PRO. NEXT: Michael decides spike before story.**
 
