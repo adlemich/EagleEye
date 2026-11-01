@@ -1,6 +1,6 @@
 # US-009: Windows Parent App on Windows 10, and Windows Parent App Parity (0.9.0)
 
-**Status**: Analyzed
+**Status**: Implemented
 **Created**: 2026-10-31
 **Approved**: by Michael, 2026-10-31, with OQ-1 to OQ-7 as resolved (OQ-5 wording confirmed) and the larger test run accepted
 **Component(s)**: EagleEye.ParentApp (incl. EagleEye.ParentApp.Core). EagleEye.Service, EagleEye.TrayClient, EagleEye.Shared: no behaviour change expected, new version 0.9.0 and regression only (group J)
