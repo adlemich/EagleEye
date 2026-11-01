@@ -23,8 +23,6 @@ public interface IWarningSettingsModel
     /// <summary>Sets the minutes of a level (AC-15).</summary>
     Task<bool> SetMinutesAsync(WarningLevel level, int minutes);
 
-    /// <summary>Sets the text of a level; empty or a default restores the default (AC-15).</summary>
-    Task<bool> SetTextAsync(WarningLevel level, string text);
 }
 
 /// <summary>
@@ -48,12 +46,6 @@ public sealed class WarningSettingsModel : SelectedAccountModel<WarningSettingsD
     public Task<bool> SetMinutesAsync(WarningLevel level, int minutes) =>
         WriteAsync((client, id, _, ct) => client.SetWarningMinutesAsync(id, level, minutes, ct));
 
-    /// <inheritdoc />
-    public Task<bool> SetTextAsync(WarningLevel level, string text)
-    {
-        ArgumentNullException.ThrowIfNull(text);
-        return WriteAsync((client, id, _, ct) => client.SetWarningTextAsync(id, level, text, ct));
-    }
 
     /// <inheritdoc />
     protected override Task<WarningSettingsDto> FetchAsync(IParentHubClient client, string accountSid, CancellationToken ct) =>

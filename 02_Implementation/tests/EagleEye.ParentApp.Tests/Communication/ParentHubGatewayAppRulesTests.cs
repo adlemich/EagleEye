@@ -9,7 +9,7 @@ namespace EagleEye.ParentApp.Tests.Communication;
 public sealed class ParentHubGatewayAppRulesTests
 {
     private static readonly AppRulesDto Apps = new(2, null, "S-1-5-21-1", [], null);
-    private static readonly WarningSettingsDto Warnings = new(3, null, 5, null, 1, null);
+    private static readonly WarningSettingsDto Warnings = new(3, null, 5, 1);
 
     [Fact]
     public void AppRulesAndWarningSettings_ForwardedOnlyFromCurrentClientWhileConnected()

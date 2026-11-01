@@ -17,9 +17,7 @@ public sealed record StoredAppRecord(
 /// <param name="BudgetTexts">All changed budget texts (no row = default text, ADR-016).</param>
 public sealed record StoredAppRules(IReadOnlyList<StoredAppRecord> Apps, IReadOnlyList<StoredDisplayText> BudgetTexts);
 
-/// <summary>The stored warning settings (single row of <c>WarningSettings</c>); texts <c>null</c> = default text.</summary>
+/// <summary>The stored warning settings (single row of <c>WarningSettings</c>; schema 7 has no texts, US-010).</summary>
 /// <param name="EarlyMinutes">Minutes of the early warning.</param>
-/// <param name="EarlyText">The parent's early warning text, or <c>null</c>.</param>
 /// <param name="FinalMinutes">Minutes of the final warning.</param>
-/// <param name="FinalText">The parent's final warning text, or <c>null</c>.</param>
-public sealed record StoredWarningSettings(int EarlyMinutes, string? EarlyText, int FinalMinutes, string? FinalText);
+public sealed record StoredWarningSettings(int EarlyMinutes, int FinalMinutes);

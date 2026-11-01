@@ -106,6 +106,7 @@ var host = Host.CreateDefaultBuilder(args)
                 sp.GetRequiredService<EagleEye.Service.Monitoring.IProcessInspector>(),
                 Path.Combine(Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory))!, "TrayClient", "EagleEye.TrayClient.exe"))); // The service folder has a parent.
             services.AddSingleton<IKidMessenger, KidMessenger>();
+        services.AddSingleton<IOverlayPublisher, OverlayPublisher>();
 
             // State area "UserAccounts" (US-003, ADR-010).
             services.AddSingleton<ILocalAccountSource, NetApiLocalAccountSource>();

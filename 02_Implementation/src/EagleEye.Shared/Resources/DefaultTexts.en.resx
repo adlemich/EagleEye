@@ -7,6 +7,4 @@
   <!-- English. Default kid texts, ADR-016. -->
   <data name="BreakDisplayText" xml:space="preserve"><value>Hi! Unfortunately, your parents have set a PC break for this time. You can't use this program right now. Sorry. How about using the time to read a book? 😊</value></data>
   <data name="BudgetText" xml:space="preserve"><value>You have used up your time! Sorry, that's it for now.</value></data>
-  <data name="EarlyWarningText" xml:space="preserve"><value>Attention, you only have 5 minutes left! Save your progress.</value></data>
-  <data name="FinalWarningText" xml:space="preserve"><value>Attention!!! Only 1 minute left – save quickly now!</value></data>
 </root>

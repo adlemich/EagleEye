@@ -164,11 +164,6 @@ public interface IParentHub
     /// <param name="minutes">The new minutes before the end.</param>
     Task<StateWriteAckDto> SetWarningMinutes(Guid requestId, WarningLevel level, int minutes);
 
-    /// <summary>Sets the text of one level; same text rules as <see cref="SetBudgetText"/> (AC-15).</summary>
-    /// <param name="requestId">Client-generated correlation id.</param>
-    /// <param name="level">The level.</param>
-    /// <param name="text">The new text.</param>
-    Task<StateWriteAckDto> SetWarningText(Guid requestId, WarningLevel level, string text);
 
     /// <summary>
     /// Returns the groups and the listed apps (state area "AppGroups", FR-APP-042, US-008). Listed: every program path with an

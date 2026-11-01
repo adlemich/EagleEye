@@ -8,10 +8,4 @@ public enum DefaultTextKind
 
     /// <summary>The budget text of an account (FR-APP-053).</summary>
     BudgetText,
-
-    /// <summary>The text of the early warning (FR-APP-054).</summary>
-    EarlyWarningText,
-
-    /// <summary>The text of the final warning (FR-APP-054).</summary>
-    FinalWarningText,
 }

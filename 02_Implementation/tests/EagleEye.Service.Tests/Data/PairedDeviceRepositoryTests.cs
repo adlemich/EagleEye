@@ -23,7 +23,7 @@ public sealed class PairedDeviceRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task InitializeAsync_NewDatabase_IsAtLatestSchemaVersion()
     {
-        Assert.Equal(6, await _database.GetSchemaVersionAsync());
+        Assert.Equal(7, await _database.GetSchemaVersionAsync());
     }
 
     [Fact]

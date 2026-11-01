@@ -1,8 +1,6 @@
-using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using EagleEye.ParentApp.Core.Rules;
 using EagleEye.ParentApp.Core.Settings;
-using EagleEye.Shared.Constants;
 using EagleEye.Shared.Models;
 
 namespace EagleEye.ParentApp.Core.ViewModels;
@@ -21,19 +19,16 @@ internal interface IWarningRowHost
 }
 
 /// <summary>
-/// One of the two fixed rows of the time-elapsed warnings (US-006 AC-13 to AC-16): the fixed label, the minutes before
-/// the end (sent on <see cref="CommitMinutes"/>, checked against the confirmed other level) and the display text (sent on
-/// <see cref="CommitText"/>; an unchanged default follows the parent app's language, ADR-016). Snapshots never overwrite
-/// uncommitted typing or a pending write. UI thread only.
+/// One of the two fixed rows of the time-elapsed warnings (US-006 AC-13 to AC-16, US-010 AC-30): the fixed label and the
+/// minutes before the end (sent on <see cref="CommitMinutes"/>, checked against the confirmed other level). The warning
+/// texts were removed with US-010. Snapshots never overwrite uncommitted typing or a pending write. UI thread only.
 /// </summary>
 public sealed class WarningRowViewModel : ObservableObject
 {
     private readonly IWarningRowHost _host;
     private WarningSettingsDto _confirmed;
     private string _minutesText;
-    private string _text;
     private bool _minutesDirty;
-    private bool _textDirty;
     private int _pendingMinutes;
 
     internal WarningRowViewModel(WarningLevel level, WarningSettingsDto confirmed, IWarningRowHost host)
@@ -42,7 +37,6 @@ public sealed class WarningRowViewModel : ObservableObject
         _confirmed = confirmed ?? throw new ArgumentNullException(nameof(confirmed));
         _host = host ?? throw new ArgumentNullException(nameof(host));
         _minutesText = AppBudgetText.Format(ConfirmedMinutes);
-        _text = ConfirmedText;
     }
 
     /// <summary>The level of this row.</summary>
@@ -51,8 +45,6 @@ public sealed class WarningRowViewModel : ObservableObject
     /// <summary>"Early warning" or "Final warning" (AC-13).</summary>
     public string Label => Level == WarningLevel.Early ? AppTexts.WarningsEarly : AppTexts.WarningsFinal;
 
-    /// <summary>Maximum length of the text (AC-15).</summary>
-    public int TextMaxLength => BreakTimeRules.MaxDisplayTextLength;
 
     /// <summary>The minutes before the end as typed or confirmed.</summary>
     public string MinutesText
@@ -67,29 +59,12 @@ public sealed class WarningRowViewModel : ObservableObject
         }
     }
 
-    /// <summary>The display text as typed or confirmed.</summary>
-    public string Text
-    {
-        get => _text;
-        set
-        {
-            if (SetProperty(ref _text, value ?? string.Empty))
-            {
-                _textDirty = BreakTimeRules.NormalizeLineBreaks(_text) != ConfirmedText;
-            }
-        }
-    }
 
     /// <summary>The last write started by this row (awaited by tests).</summary>
     internal Task LastWrite { get; private set; } = Task.CompletedTask;
 
     private int ConfirmedMinutes => Level == WarningLevel.Early ? _confirmed.EarlyMinutes : _confirmed.FinalMinutes;
 
-    private string? ConfirmedParentText => Level == WarningLevel.Early ? _confirmed.EarlyText : _confirmed.FinalText;
-
-    private string ConfirmedText => KidTextEditing.ShownText(ConfirmedParentText, Kind, CultureInfo.CurrentUICulture);
-
-    private DefaultTextKind Kind => Level == WarningLevel.Early ? DefaultTextKind.EarlyWarningText : DefaultTextKind.FinalWarningText;
 
     /// <summary>Commits changed minutes (leaving the field or Enter, AC-15).</summary>
     public void CommitMinutes()
@@ -116,25 +91,6 @@ public sealed class WarningRowViewModel : ObservableObject
         }
     }
 
-    /// <summary>Commits the text (leaving the box, before the page changes; AC-15).</summary>
-    public void CommitText()
-    {
-        if (!_textDirty)
-        {
-            return;
-        }
-
-        _textDirty = false;
-        var confirmed = ConfirmedText;
-        var send = KidTextEditing.Commit(_text, confirmed, ConfirmedParentText is null, Kind);
-        if (send is null)
-        {
-            SetProperty(ref _text, confirmed, nameof(Text));
-            return;
-        }
-
-        LastWrite = _host.SendAsync(model => model.SetTextAsync(Level, send));
-    }
 
     /// <summary>Applies a snapshot to every field without typing or a pending write.</summary>
     internal void Update(WarningSettingsDto confirmed)
@@ -172,11 +128,6 @@ public sealed class WarningRowViewModel : ObservableObject
         if (!_minutesDirty && _pendingMinutes == 0)
         {
             SetProperty(ref _minutesText, AppBudgetText.Format(ConfirmedMinutes), nameof(MinutesText));
-        }
-
-        if (!_textDirty)
-        {
-            SetProperty(ref _text, ConfirmedText, nameof(Text));
         }
     }
 }

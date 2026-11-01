@@ -12,8 +12,8 @@ internal sealed record KidMessageContent(string Text, string Info);
 
 /// <summary>
 /// Renders a kid message in the kid's language (US-006 Decision 9, ADR-016): the parent's text, or the default text of
-/// the reason's kind in the UI culture, and the info line by reason (singular or plural minutes, times in the kid's
-/// short time format; an end of 23:59 is midnight). Pure.
+/// the reason's kind in the UI culture, and the info line by reason (times in the kid's short time format; an end of
+/// 23:59 is midnight). Since US-010 only blocked starts and enforced closes use the dialog. Pure.
 /// </summary>
 internal static class KidMessageText
 {
@@ -27,12 +27,10 @@ internal static class KidMessageText
         ArgumentNullException.ThrowIfNull(uiCulture);
         ArgumentNullException.ThrowIfNull(formatCulture);
         var text = message.ParentText ?? DefaultTexts.Get(KindOf(message.Reason), uiCulture);
-        var minutes = message.Minutes ?? 1;
         var info = string.Format(
             formatCulture,
-            TrayTexts.Get(InfoKey(message.Reason, minutes), uiCulture),
+            TrayTexts.Get(InfoKey(message.Reason), uiCulture),
             message.AppName ?? string.Empty,
-            minutes,
             Time(message.BreakStartMinute, uiCulture, formatCulture),
             Time(message.BreakEndMinute, uiCulture, formatCulture));
         return new KidMessageContent(text, info);
@@ -41,19 +39,12 @@ internal static class KidMessageText
     /// <summary>The default text of a reason (ADR-016).</summary>
     internal static DefaultTextKind KindOf(KidMessageReason reason) => reason switch
     {
-        KidMessageReason.AppEarlyWarning or KidMessageReason.BreakEarlyWarning => DefaultTextKind.EarlyWarningText,
-        KidMessageReason.AppFinalWarning or KidMessageReason.BreakFinalWarning
-            or KidMessageReason.AppGracePeriod or KidMessageReason.BreakGracePeriod => DefaultTextKind.FinalWarningText,
         KidMessageReason.AppNotAllowedToday or KidMessageReason.AppBudgetUsedUp => DefaultTextKind.BudgetText,
         _ => DefaultTextKind.BreakDisplayText,
     };
 
-    private static string InfoKey(KidMessageReason reason, int minutes) => reason switch
+    private static string InfoKey(KidMessageReason reason) => reason switch
     {
-        KidMessageReason.AppEarlyWarning or KidMessageReason.AppFinalWarning => minutes == 1 ? "InfoMinutesLeftOne" : "InfoMinutesLeftMany",
-        KidMessageReason.BreakEarlyWarning or KidMessageReason.BreakFinalWarning => "InfoBreakBegins",
-        KidMessageReason.AppGracePeriod => minutes == 1 ? "InfoAppGraceOne" : "InfoAppGraceMany",
-        KidMessageReason.BreakGracePeriod => minutes == 1 ? "InfoBreakGraceOne" : "InfoBreakGraceMany",
         KidMessageReason.AppNotAllowedToday => "InfoNotAllowedToday",
         KidMessageReason.AppBudgetUsedUp => "InfoBudgetUsedUp",
         _ => "InfoBreakTime",

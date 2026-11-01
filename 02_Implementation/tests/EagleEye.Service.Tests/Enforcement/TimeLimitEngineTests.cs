@@ -4,6 +4,7 @@ using EagleEye.Service.Enforcement;
 using EagleEye.Service.Rules;
 using EagleEye.Service.Statistics;
 using EagleEye.Service.Tests.Statistics;
+using EagleEye.Shared.Constants;
 using EagleEye.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Time.Testing;
@@ -12,7 +13,10 @@ using Xunit;
 
 namespace EagleEye.Service.Tests.Enforcement;
 
-/// <summary>US-006 Decisions 5 to 8 as scenarios. 2026-10-12 is a Monday; Berlin is UTC+2 that day.</summary>
+/// <summary>
+/// US-006 Decisions 5 to 8 as scenarios, with the warnings and grace periods in the overlay model of US-010 (Decision 2).
+/// 2026-10-12 is a Monday; Berlin is UTC+2 that day.
+/// </summary>
 public sealed class TimeLimitEngineTests
 {
     private const string Kid = "S-1-5-21-1-2-3-1003";
@@ -30,18 +34,22 @@ public sealed class TimeLimitEngineTests
     private readonly Mock<IUsageRepository> _usage = new();
     private readonly Mock<ICloseSequenceRunner> _runner = new();
     private readonly Mock<IKidMessenger> _messenger = new();
+    private readonly Mock<IOverlayPublisher> _overlay = new();
     private readonly SessionAppsView _sessions = new();
     private readonly CloseRegistry _registry = new();
     private readonly TestLogger<EnforcementLog> _logger = new();
     private readonly TodayUsageLedger _ledger;
     private readonly TimeLimitEngine _engine;
     private readonly List<(int Session, KidMessageDto Message)> _messages = [];
+    private readonly List<(int Session, RemainingTimeDto Model)> _pushes = [];
     private readonly List<(CloseRequest Request, Mock<ICloseSequenceHandle> Handle)> _closes = [];
     private readonly HashSet<string> _open = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<int> _inUse = [2];
     private Dictionary<string, string> _controlled = new() { [Kid] = "kid1" };
     private RulesSnapshot _breakRules = RulesSnapshot.Empty;
     private AppRulesSnapshot _apps = AppRulesSnapshot.Empty;
-    private WarningSettings _settings = new(5, null, 1, null);
+    private WarningSettings _settings = new(5, 1);
+    private string _overlayState = KidMessageStates.ShownInOverlay;
 
     public TimeLimitEngineTests()
     {
@@ -54,6 +62,9 @@ public sealed class TimeLimitEngineTests
         _messenger.Setup(m => m.ShowAsync(It.IsAny<int>(), It.IsAny<KidMessageDto>(), It.IsAny<CancellationToken>()))
             .Callback<int, KidMessageDto, CancellationToken>((s, m, _) => _messages.Add((s, m)))
             .ReturnsAsync(KidMessageStates.Shown);
+        _overlay.Setup(o => o.Publish(It.IsAny<int>(), It.IsAny<RemainingTimeDto>()))
+            .Callback<int, RemainingTimeDto>((s, m) => _pushes.Add((s, m)))
+            .Returns(() => _overlayState);
         _runner.Setup(r => r.Start(It.IsAny<CloseRequest>())).Returns<CloseRequest>(request =>
         {
             var handle = new Mock<ICloseSequenceHandle>();
@@ -63,29 +74,32 @@ public sealed class TimeLimitEngineTests
         _ledger = new TodayUsageLedger(_usage.Object, _appRules.Object, _time, new TestLogger<TodayUsageLedger>());
         _ledger.EnsureLoadedAsync([Kid, Kid2], CancellationToken.None).GetAwaiter().GetResult();
         _engine = new TimeLimitEngine(
-            _breaks.Object, _appRules.Object, _groups, _warnings.Object, _ledger, _sessions, _registry, _runner.Object, _messenger.Object,
+            _breaks.Object, _appRules.Object, _groups, _warnings.Object, _ledger, _sessions, _registry, _runner.Object, _messenger.Object, _overlay.Object,
             new EnforcementIgnoreList(@"C:\Windows"), new EnforcementLog(_logger, new InstanceLogLimiter(_time)), _time);
         SetRule(Kid, 1, Notepad, 3);
         SetRule(Kid, 2, Paint, 60);
     }
 
-    // ---------- Budget: AC-22, AC-24, AC-25 ----------
+    private RemainingTimeDto Last => _pushes[^1].Model;
+
+    // ---------- Budget: AC-22, AC-24, AC-25; US-010 AC-5, AC-7 to AC-9, AC-14 ----------
 
     [Fact]
-    public void Budget_EarlyAtOnceThenFinalThenClose()
+    public void Budget_EarlyAtOnceThenFinalThenExpired_LinesFollow_NoKidDialog()
     {
         Run(Notepad);
 
         Evaluate();
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppEarlyWarning, null, "Editor", 3, null, null), _messages.Single().Message);
+        Assert.Equal((OverlaySignal.Early, 5, 1), (Last.Signal, Last.EarlyMinutes, Last.FinalMinutes));
+        Assert.Equal(new OverlayLineDto(OverlayLineKind.App, "Editor", 180, OverlayLevel.Early, true), Last.Lines.Single());
 
         Use(Notepad, 115);
         Evaluate();
-        Assert.Single(_messages);
+        Assert.Equal((OverlaySignal.None, 65), (Last.Signal, Last.Lines.Single().Seconds));
 
         Use(Notepad, 5);
         Evaluate();
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppFinalWarning, null, "Editor", 1, null, null), _messages[^1].Message);
+        Assert.Equal(new OverlayLineDto(OverlayLineKind.App, "Editor", 60, OverlayLevel.Final, true), Last.Lines.Single());
 
         Use(Notepad, 60);
         Evaluate();
@@ -93,10 +107,16 @@ public sealed class TimeLimitEngineTests
         Assert.Equal(
             (CloseKinds.RunningApp, CloseReasons.BudgetUsedUp, BlockedStartTexts.BudgetRanOutTrigger, false, new AppRuleAtClose(3, BreakTimeDays.All, 180)),
             (close.Kind, close.Reason, close.Trigger, close.AfterGrace, close.Rule));
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppBudgetUsedUp, null, "Editor", null, null, null), close.Message);
+        Assert.Equal(new KidMessageDto(KidMessageReason.AppBudgetUsedUp, null, "Editor", null, null), close.Message);
         Assert.False(close.RemovesFromReport);
-        Assert.Equal(2, _messages.Count);
-        Assert.Contains("Warning: account kid1, Editor (notepad.exe), early warning, 3 min left (budget); message shown.", _logger.Messages(LogLevel.Information));
+        Assert.Equal(new OverlayLineDto(OverlayLineKind.App, "Editor", 0, OverlayLevel.Expired, false), Last.Lines.Single());
+        Assert.Equal([OverlaySignal.Early, OverlaySignal.Final, OverlaySignal.Expired], Signals());
+        Assert.Empty(_messages);
+        Assert.Contains("Warning: account kid1, Editor (notepad.exe), early warning, 3 min left (budget); shown in overlay.", _logger.Messages(LogLevel.Information));
+
+        _closes[0].Handle.SetupGet(h => h.IsCompleted).Returns(true);
+        Evaluate();
+        Assert.Empty(Last.Lines);
     }
 
     [Fact]
@@ -109,11 +129,12 @@ public sealed class TimeLimitEngineTests
         Use(Notepad, 10);
         Evaluate();
 
-        Assert.Equal(KidMessageReason.AppFinalWarning, _messages.Single().Message.Reason);
+        Assert.Equal([OverlaySignal.Final], Signals());
+        Assert.Equal(OverlayLevel.Final, Last.Lines.Single().Level);
     }
 
     [Fact]
-    public void AppRestartedTheSameDay_WarningNotShownAgain()
+    public void AppRestartedTheSameDay_WarningNotSignalledAgain()
     {
         Run(Notepad);
         Evaluate();
@@ -123,7 +144,43 @@ public sealed class TimeLimitEngineTests
         Run(Notepad, pid: 20);
         Evaluate();
 
-        Assert.Single(_messages);
+        Assert.Equal([OverlaySignal.Early], Signals());
+        Assert.Equal(OverlayLevel.Early, Last.Lines.Single().Level);
+    }
+
+    [Fact]
+    public void TrayNotConnected_LogSaysNotShown()
+    {
+        _overlayState = KidMessageStates.NotConnected;
+        Run(Notepad);
+
+        Evaluate();
+
+        Assert.Contains("Warning: account kid1, Editor (notepad.exe), early warning, 3 min left (budget); not shown (tray client not connected).", _logger.Messages(LogLevel.Information));
+    }
+
+    [Fact]
+    public void TwoLevelsInOneTick_StrongestSignalOnly()
+    {
+        SetRule(Kid, 2, Paint, 1);
+        Run(Notepad, Paint);
+
+        Evaluate();
+
+        Assert.Equal(OverlaySignal.Final, Last.Signal);
+        Assert.Equal([60, 180], Last.Lines.Select(l => l.Seconds).Order());
+        Assert.Equal(2, _logger.Messages(LogLevel.Information).Count(m => m.EndsWith("; shown in overlay.", StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public void SessionNotInUse_BudgetLineNotCounting()
+    {
+        _inUse.Clear();
+        Run(Notepad);
+
+        Evaluate();
+
+        Assert.False(Last.Lines.Single().Counting);
     }
 
     [Fact]
@@ -155,18 +212,26 @@ public sealed class TimeLimitEngineTests
         Assert.Equal((CloseReasons.NotAllowedToday, BlockedStartTexts.RulesChangedTrigger), (_closes.Single().Request.Reason, _closes.Single().Request.Trigger));
         Assert.Equal(KidMessageReason.AppNotAllowedToday, _closes.Single().Request.Message!.Reason);
         Assert.Empty(_messages);
+        Assert.Equal([OverlaySignal.Expired], Signals());
     }
 
     [Fact]
-    public void NoEndWithinTheHorizon_Nothing()
+    public void NoEndWithinTheHorizon_EmptyModelPushed()
     {
         SetRule(Kid, 2, Paint, 120);
         Run(Paint);
 
         Evaluate();
 
-        Assert.Empty(_messages);
+        Assert.Equal((2, OverlaySignal.None), (_pushes.Single().Session, Last.Signal));
+        Assert.Empty(Last.Lines);
         Assert.Empty(_closes);
+    }
+
+    [Fact]
+    public void Horizon_CoversTheLargestDisplayThreshold()
+    {
+        Assert.True(AppEndCalculator.Horizon.TotalMinutes >= OverlayRules.MaxThresholdMinutes);
     }
 
     [Fact]
@@ -196,10 +261,10 @@ public sealed class TimeLimitEngineTests
         Assert.Equal(2, _closes.Count);
     }
 
-    // ---------- Exemptions: AC-26, AC-27 ----------
+    // ---------- Exemptions: AC-26, AC-27; US-010 AC-2 ----------
 
     [Fact]
-    public void NotOpenIgnoredUncontrolledOrWithoutProcesses_NeverWarnedOrClosed()
+    public void NotOpenIgnoredUncontrolledOrWithoutProcesses_NeverWarnedOrClosed_UncontrolledSessionGetsNoPush()
     {
         SetRule(Kid, 1, Notepad, 0);
         SetRule(Kid2, 5, Paint, 0);
@@ -211,6 +276,8 @@ public sealed class TimeLimitEngineTests
 
         Assert.Empty(_closes);
         Assert.Empty(_messages);
+        Assert.Equal(2, _pushes.Single().Session);
+        Assert.Empty(Last.Lines);
     }
 
     [Fact]
@@ -223,38 +290,46 @@ public sealed class TimeLimitEngineTests
         Evaluate();
 
         Assert.Empty(_closes);
+        Assert.Empty(Last.Lines);
     }
 
-    // ---------- Break times: AC-28 to AC-31 ----------
+    // ---------- Break times: AC-28 to AC-31; US-010 AC-3, AC-10 ----------
 
     [Fact]
-    public void BreakBegins_WarningsOncePerSessionThenAllAppsClosedWithOneMessage()
+    public void BreakBegins_BreakLineSignalledOnceThenAllAppsClosedWithOneMessage()
     {
         SetBreaks(Kid, Evening);
         Run(Notepad, Paint);
         SetRule(Kid, 1, Notepad, 120);
         At(19, 54, 50);
         Evaluate();
-        Assert.Empty(_messages);
+        Assert.Equal(OverlaySignal.None, Last.Signal);
+        Assert.Equal(
+            [new OverlayLineDto(OverlayLineKind.App, "App", 3600, OverlayLevel.Normal, true), new OverlayLineDto(OverlayLineKind.Break, null, 310, OverlayLevel.Normal, true)],
+            Last.Lines);
 
         At(19, 55, 0);
         Evaluate();
-        Assert.Equal(new KidMessageDto(KidMessageReason.BreakEarlyWarning, null, null, 5, 1200, null), _messages.Single().Message);
+        Assert.Equal((OverlaySignal.Early, OverlayLevel.Early), (Last.Signal, Last.Lines.Single(l => l.Kind == OverlayLineKind.Break).Level));
 
         At(19, 59, 0);
         Evaluate();
-        Assert.Equal(KidMessageReason.BreakFinalWarning, _messages[^1].Message.Reason);
+        Assert.Equal(OverlaySignal.Final, Last.Signal);
 
         At(20, 0, 2);
         Evaluate();
-        Assert.Equal(new KidMessageDto(KidMessageReason.BreakTime, null, null, null, 1200, 1439), _messages[^1].Message);
-        Assert.Equal(3, _messages.Count);
+        Assert.Equal(new KidMessageDto(KidMessageReason.BreakTime, null, null, 1200, 1439), _messages.Single().Message);
         Assert.Equal(2, _closes.Count);
         Assert.All(_closes, c => Assert.Equal(
             (CloseReasons.BreakTime, BlockedStartTexts.BreakBeganTrigger, (KidMessageDto?)null, Evening, (AppRuleAtClose?)null),
             (c.Request.Reason, c.Request.Trigger, c.Request.Message, c.Request.Entry, c.Request.Rule)));
         Assert.Same(_closes[0].Request.SharedMessageState, _closes[1].Request.SharedMessageState);
+        Assert.Equal((OverlaySignal.Expired, new OverlayLineDto(OverlayLineKind.Break, null, 0, OverlayLevel.Expired, false)), (Last.Signal, Last.Lines.Single()));
         Assert.Contains(_logger.Messages(LogLevel.Information), m => m.StartsWith("Warning: account kid1, break time 20:00–23:59", StringComparison.Ordinal));
+
+        _closes.ForEach(c => c.Handle.SetupGet(h => h.IsCompleted).Returns(true));
+        Evaluate();
+        Assert.Empty(Last.Lines);
     }
 
     [Fact]
@@ -268,12 +343,12 @@ public sealed class TimeLimitEngineTests
         At(19, 59, 0);
         Evaluate();
 
-        Assert.Equal([KidMessageReason.BreakEarlyWarning, KidMessageReason.BreakFinalWarning], _messages.Select(m => m.Message.Reason));
-        Assert.Equal(2, _messages[0].Message.Minutes);
+        Assert.Equal([OverlaySignal.Early, OverlaySignal.Final], Signals());
+        Assert.Contains(_logger.Messages(LogLevel.Information), m => m.Contains("early warning, 2 min left; shown in overlay.", StringComparison.Ordinal));
     }
 
     [Fact]
-    public void BudgetEndsAfterTheBreak_OnlyBreakWarnings_BudgetFirst_OnlyAppWarnings()
+    public void BudgetEndsAfterTheBreak_OwnTimeLineIgnoresTheBreak_OneSignal()
     {
         SetBreaks(Kid, Evening);
         SetRule(Kid, 1, Notepad, 30);
@@ -283,11 +358,26 @@ public sealed class TimeLimitEngineTests
 
         Evaluate();
 
-        Assert.Equal(KidMessageReason.BreakEarlyWarning, _messages.Single().Message.Reason);
-        Assert.Contains(_logger.Messages(LogLevel.Information), m => m.Contains("early warning, 2 min left (budget); message not shown (replaced in the same tick)", StringComparison.Ordinal));
+        Assert.Equal(OverlaySignal.Early, Last.Signal);
+        Assert.Contains(new OverlayLineDto(OverlayLineKind.App, "Editor", 1800, OverlayLevel.Normal, true), Last.Lines);
+        Assert.Contains(new OverlayLineDto(OverlayLineKind.App, "App", 120, OverlayLevel.Early, true), Last.Lines);
+        Assert.Contains(new OverlayLineDto(OverlayLineKind.Break, null, 180, OverlayLevel.Early, true), Last.Lines);
+        Assert.Contains(_logger.Messages(LogLevel.Information), m => m.Contains("early warning, 2 min left (budget); shown in overlay.", StringComparison.Ordinal));
     }
 
-    // ---------- Grace periods: AC-32, AC-33 ----------
+    [Fact]
+    public void BreakWithoutARunningApp_NoBreakLine()
+    {
+        SetBreaks(Kid, Evening);
+        At(19, 50, 0);
+        _sessions.Update(2, Kid, []);
+
+        Evaluate();
+
+        Assert.Empty(Last.Lines);
+    }
+
+    // ---------- Grace periods: AC-32, AC-33; US-010 AC-12 ----------
 
     [Fact]
     public void RuleChangedToZero_GraceOfTheFinalMinutesThenClose()
@@ -298,19 +388,22 @@ public sealed class TimeLimitEngineTests
         SetRule(Kid, 1, Notepad, 0);
 
         Evaluate();
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppGracePeriod, null, "Editor", 1, null, null), _messages.Single().Message);
+        Assert.Equal((OverlaySignal.Final, new OverlayLineDto(OverlayLineKind.App, "Editor", 60, OverlayLevel.Final, true)), (Last.Signal, Last.Lines.Single()));
         Assert.Empty(_closes);
-        Assert.Contains(_logger.Messages(LogLevel.Information), m => m.StartsWith("Grace period: account kid1, Editor (notepad.exe): the rules changed (not allowed today); closes in 1 min at", StringComparison.Ordinal));
+        Assert.Empty(_messages);
+        Assert.Contains(_logger.Messages(LogLevel.Information), m => m.StartsWith("Grace period: account kid1, Editor (notepad.exe): the rules changed (not allowed today); closes in 1 min at", StringComparison.Ordinal)
+            && m.EndsWith("; shown in overlay.", StringComparison.Ordinal));
 
         Advance(59);
         Evaluate();
         Assert.Empty(_closes);
+        Assert.Equal((OverlaySignal.None, 1), (Last.Signal, Last.Lines.Single().Seconds));
 
         Advance(1);
         Evaluate();
         var close = _closes.Single().Request;
         Assert.Equal((true, BlockedStartTexts.GraceEndedTrigger, CloseReasons.NotAllowedToday), (close.AfterGrace, close.Trigger, close.Reason));
-        Assert.Single(_messages);
+        Assert.Equal([OverlaySignal.Final, OverlaySignal.Expired], Signals());
     }
 
     [Fact]
@@ -323,7 +416,7 @@ public sealed class TimeLimitEngineTests
         SetRule(Kid, 1, Notepad, 0);
         Evaluate();
 
-        Assert.Equal(KidMessageReason.AppGracePeriod, _messages.Single().Message.Reason);
+        Assert.Equal([OverlaySignal.Final], Signals());
     }
 
     [Fact]
@@ -336,7 +429,7 @@ public sealed class TimeLimitEngineTests
 
         SetRule(Kid, 1, Notepad, 3);
         Evaluate();
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppGracePeriod, null, "Editor", 1, null, null), _messages.Single().Message);
+        Assert.Equal((OverlaySignal.Final, 60), (Last.Signal, Last.Lines.Single().Seconds));
 
         Use(Notepad, 50);
         Evaluate();
@@ -346,6 +439,7 @@ public sealed class TimeLimitEngineTests
         Evaluate();
         Assert.True(_closes.Single().Request.AfterGrace);
     }
+
     [Fact]
     public void ChangeLeavingAtLeastTheFinalButWithinTheEarly_EarlyAtOnceNoGrace()
     {
@@ -357,7 +451,9 @@ public sealed class TimeLimitEngineTests
         SetRule(Kid, 1, Notepad, 4);
         Evaluate();
 
-        Assert.Equal((KidMessageReason.AppEarlyWarning, 3), (_messages.Single().Message.Reason, _messages.Single().Message.Minutes));
+        Assert.Equal([OverlaySignal.Early], Signals());
+        Assert.Equal(180, Last.Lines.Single().Seconds);
+        Assert.Contains(_logger.Messages(LogLevel.Information), m => m.Contains("early warning, 3 min left (budget)", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -376,7 +472,7 @@ public sealed class TimeLimitEngineTests
         Use(Notepad, 125);
         Evaluate();
 
-        Assert.Single(_messages);
+        Assert.Equal([OverlaySignal.Final], Signals());
         Assert.Empty(_closes);
     }
 
@@ -390,11 +486,11 @@ public sealed class TimeLimitEngineTests
         SetRule(Kid, 1, Notepad, 4);
         Evaluate();
 
-        Assert.Equal([KidMessageReason.AppFinalWarning], _messages.Select(m => m.Message.Reason));
+        Assert.Equal([OverlaySignal.Final], Signals());
     }
 
     [Fact]
-    public void BreakNowInEffect_OneGraceMessagePerSessionThenCloseWithTheBreakText()
+    public void BreakNowInEffect_BreakLineShowsTheGrace_AppLinesKeepTheirOwnTime_ThenCloseWithTheBreakText()
     {
         At(19, 0, 0);
         Run(Notepad, Paint);
@@ -403,14 +499,23 @@ public sealed class TimeLimitEngineTests
         SetBreaks(Kid, Evening with { StartMinute = 1140 });
 
         Evaluate();
-        Assert.Equal(new KidMessageDto(KidMessageReason.BreakGracePeriod, null, null, 1, 1140, null), _messages.Single().Message);
-        Assert.Contains(_logger.Messages(LogLevel.Information), m => m.Contains("begins at 19:00; 2 app(s) close in 1 min", StringComparison.Ordinal));
+        Assert.Equal(OverlaySignal.Final, Last.Signal);
+        Assert.Equal(
+            [new OverlayLineDto(OverlayLineKind.App, "Editor", 3600, OverlayLevel.Normal, true), new OverlayLineDto(OverlayLineKind.App, "App", 3600, OverlayLevel.Normal, true),
+             new OverlayLineDto(OverlayLineKind.Break, null, 60, OverlayLevel.Final, true)],
+            Last.Lines);
+        Assert.Empty(_messages);
+        Assert.Contains(_logger.Messages(LogLevel.Information), m => m.Contains("begins at 19:00; 2 app(s) close in 1 min", StringComparison.Ordinal) && m.EndsWith("; shown in overlay.", StringComparison.Ordinal));
 
-        Advance(60);
+        Advance(20);
+        Evaluate();
+        Assert.Equal(40, Last.Lines.Single(l => l.Kind == OverlayLineKind.Break).Seconds);
+
+        Advance(40);
         Evaluate();
         Assert.Equal(2, _closes.Count);
         Assert.All(_closes, c => Assert.Equal((true, CloseReasons.BreakTime), (c.Request.AfterGrace, c.Request.Reason)));
-        Assert.Equal(KidMessageReason.BreakTime, _messages[^1].Message.Reason);
+        Assert.Equal(KidMessageReason.BreakTime, _messages.Single().Message.Reason);
     }
 
     [Fact]
@@ -426,6 +531,7 @@ public sealed class TimeLimitEngineTests
         Advance(30);
         Evaluate();
         Assert.Empty(_closes);
+        Assert.Equal(30, Last.Lines.Single(l => l.Kind == OverlayLineKind.Break).Seconds);
 
         Advance(30);
         Evaluate();
@@ -442,7 +548,8 @@ public sealed class TimeLimitEngineTests
         SetBreaks(Kid, Evening with { StartMinute = 1143 });
         Evaluate();
 
-        Assert.Equal((KidMessageReason.BreakEarlyWarning, 3), (_messages.Single().Message.Reason, _messages.Single().Message.Minutes));
+        Assert.Equal([OverlaySignal.Early], Signals());
+        Assert.Contains(_logger.Messages(LogLevel.Information), m => m.Contains("early warning, 3 min left;", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -452,12 +559,13 @@ public sealed class TimeLimitEngineTests
         SetRule(Kid, 1, Notepad, 10);
         Run(Notepad);
         Evaluate();
-        Assert.Empty(_messages);
+        Assert.Empty(Signals());
 
-        _settings = new WarningSettings(15, null, 10, null);
+        _settings = new WarningSettings(15, 10);
         Evaluate();
 
-        Assert.Equal(KidMessageReason.AppFinalWarning, _messages.Single().Message.Reason);
+        Assert.Equal([OverlaySignal.Final], Signals());
+        Assert.Equal((15, 10, OverlayLevel.Final), (Last.EarlyMinutes, Last.FinalMinutes, Last.Lines.Single().Level));
     }
 
     [Fact]
@@ -471,22 +579,23 @@ public sealed class TimeLimitEngineTests
         Run(Notepad);
         Evaluate();
 
-        Assert.Empty(_messages);
+        Assert.Equal([OverlaySignal.Expired], Signals());
         Assert.Single(_closes);
     }
 
     [Fact]
-    public void AccountLeavesControl_StateCleared()
+    public void AccountLeavesControl_StateCleared_NoPushWhileNotControlled()
     {
         SetRule(Kid, 1, Notepad, 60);
         Run(Notepad);
         Evaluate();
         SetRule(Kid, 1, Notepad, 0);
         Evaluate();
-        Assert.Single(_messages);
+        Assert.Equal([OverlaySignal.Final], Signals());
 
         _controlled = [];
         Evaluate();
+        Assert.Equal(2, _pushes.Count);
         _controlled = new Dictionary<string, string> { [Kid] = "kid1" };
         Evaluate();
 
@@ -497,13 +606,15 @@ public sealed class TimeLimitEngineTests
     // ---------- Midnight (OQ-4) ----------
 
     [Fact]
-    public void MidnightWithTheNextDayNotAllowed_WarningsThenClosedAtMidnight()
+    public void MidnightWithTheNextDayNotAllowed_WarningsThenClosedAtMidnight_LineCountsAlsoWhenNotInUse()
     {
+        _inUse.Clear();
         SetRule(Kid, 2, Paint, 1439, BreakTimeDays.Monday);
         At(23, 59, 30);
         Run(Paint);
         Evaluate();
         Assert.Contains(_logger.Messages(LogLevel.Information), m => m.Contains("final warning, 1 min left (midnight)", StringComparison.Ordinal));
+        Assert.Equal(new OverlayLineDto(OverlayLineKind.App, "App", 30, OverlayLevel.Final, true), Last.Lines.Single());
 
         _time.SetUtcNow(Local(23, 59, 30).AddSeconds(35));
         Evaluate();
@@ -518,11 +629,14 @@ public sealed class TimeLimitEngineTests
     [Fact]
     public void Guards_Throw()
     {
-        Assert.Throws<ArgumentNullException>(() => _engine.Evaluate(null!, (_, _) => true));
-        Assert.Throws<ArgumentNullException>(() => _engine.Evaluate(_controlled, null!));
+        Assert.Throws<ArgumentNullException>(() => _engine.Evaluate(null!, (_, _) => true, _inUse));
+        Assert.Throws<ArgumentNullException>(() => _engine.Evaluate(_controlled, null!, _inUse));
+        Assert.Throws<ArgumentNullException>(() => _engine.Evaluate(_controlled, (_, _) => true, null!));
     }
 
-    private void Evaluate() => _engine.Evaluate(_controlled, (_, path) => _open.Contains(path));
+    private List<OverlaySignal> Signals() => [.. _pushes.Select(p => p.Model.Signal).Where(s => s != OverlaySignal.None)];
+
+    private void Evaluate() => _engine.Evaluate(_controlled, (_, path) => _open.Contains(path), _inUse);
 
     private void Run(params string[] paths) => Run(paths, 10);
 

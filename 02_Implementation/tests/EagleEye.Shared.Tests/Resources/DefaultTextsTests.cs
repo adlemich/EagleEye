@@ -18,16 +18,7 @@ public sealed class DefaultTextsTests
             "Du hast deine Zeit aufgebraucht! Leider ist jetzt Schluss.",
             "You have used up your time! Sorry, that's it for now."
         },
-        {
-            DefaultTextKind.EarlyWarningText,
-            "Achtung, du hast nur noch 5 Minuten! Speichere deinen Fortschritt.",
-            "Attention, you only have 5 minutes left! Save your progress."
-        },
-        {
-            DefaultTextKind.FinalWarningText,
-            "Achtung!!! Nur noch 1 Minute – jetzt aber schnell speichern!",
-            "Attention!!! Only 1 minute left – save quickly now!"
-        },
+
         {
             DefaultTextKind.BreakDisplayText,
             BreakTimeRules.DefaultDisplayText,
@@ -83,7 +74,7 @@ public sealed class DefaultTextsTests
 
         Assert.False(DefaultTexts.IsAnyDefault(DefaultTextKind.BudgetText, english + " "));
         Assert.False(DefaultTexts.IsAnyDefault(DefaultTextKind.BudgetText, english + "\r\n"));
-        Assert.False(DefaultTexts.IsAnyDefault(DefaultTextKind.EarlyWarningText, english));
+        Assert.False(DefaultTexts.IsAnyDefault(DefaultTextKind.BreakDisplayText, english));
         Assert.False(DefaultTexts.IsAnyDefault(
             DefaultTextKind.BreakDisplayText, BreakTimeRules.DefaultDisplayText.Replace("\U0001F60A", "\U0001F600", StringComparison.Ordinal)));
     }
@@ -109,6 +100,14 @@ public sealed class DefaultTextsTests
     public void SupportedCultures_GermanAndEnglish()
     {
         Assert.Equal(["de", "en"], DefaultTexts.SupportedCultures.Select(c => c.Name));
+    }
+
+    [Fact]
+    public void Kinds_OnlyBreakDisplayTextAndBudgetText()
+    {
+        Assert.Equal([DefaultTextKind.BreakDisplayText, DefaultTextKind.BudgetText], Enum.GetValues<DefaultTextKind>());
+        Assert.Null(DefaultTexts.ResourceManager.GetString("EarlyWarningText", CultureInfo.InvariantCulture));
+        Assert.Null(DefaultTexts.ResourceManager.GetString("FinalWarningText", CultureInfo.InvariantCulture));
     }
 
     [Fact]

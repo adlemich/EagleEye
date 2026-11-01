@@ -6,7 +6,7 @@ namespace EagleEye.TrayClient.Tests.UI;
 
 public sealed class KidMessagePresenterTests
 {
-    private static readonly KidMessageDto Message = new(KidMessageReason.AppEarlyWarning, "Hallo \U0001F60A\nZeile 2", "Editor", 2, null, null);
+    private static readonly KidMessageDto Message = new(KidMessageReason.AppBudgetUsedUp, "Hallo \U0001F60A\nZeile 2", "Editor", null, null);
 
     private readonly List<KidMessageContent> _shown = [];
     private readonly List<KidMessageContent> _replaced = [];

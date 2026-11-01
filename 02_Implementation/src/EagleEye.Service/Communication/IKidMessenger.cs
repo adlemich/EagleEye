@@ -12,7 +12,7 @@ public interface IKidMessenger
     Task<string> ShowAsync(int sessionId, KidMessageDto message, CancellationToken ct = default);
 }
 
-/// <summary>Message states of warnings, blocked starts and enforced closes (US-005 AC-28, AC-33; US-006 AC-35, AC-37).</summary>
+/// <summary>Message states of warnings, blocked starts and enforced closes (US-005 AC-28, AC-33; US-006 AC-35, AC-37; US-010 AC-36).</summary>
 public static class KidMessageStates
 {
     /// <summary>The tray client opened the dialog.</summary>
@@ -30,6 +30,7 @@ public static class KidMessageStates
     /// <summary>The tray client did not answer within 3 s, or the call failed.</summary>
     public const string NoAnswer = "not shown (tray client did not answer)";
 
-    /// <summary>A more urgent message of the same session was sent in the same tick (US-006 D-4).</summary>
-    public const string ReplacedInTick = "not shown (replaced in the same tick)";
+    /// <summary>A warning or grace period was sent to the session's verified tray client in the overlay model (US-010).</summary>
+    public const string ShownInOverlay = "shown in overlay";
+
 }

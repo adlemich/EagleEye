@@ -6,7 +6,7 @@ using EagleEye.Shared.Models;
 namespace EagleEye.Shared.Resources;
 
 /// <summary>
-/// The default kid texts (ADR-016): break display text, budget text, early and final warning. German is the neutral
+/// The default kid texts (ADR-016): break display text and budget text (the warning texts were removed with US-010). German is the neutral
 /// language (<c>Resources/DefaultTexts.resx</c>), English is a satellite (<c>DefaultTexts.en.resx</c>). The app that
 /// shows a text renders its default in its own UI language; the service stores only the parent's own texts.
 /// </summary>

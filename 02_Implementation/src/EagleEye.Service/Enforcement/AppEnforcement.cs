@@ -80,7 +80,7 @@ public sealed class AppEnforcement(
         await ledger.EnsureLoadedAsync([.. tick.ControlledAccounts.Keys], ct).ConfigureAwait(false);
         await monitor.OnTickAsync(tick.SessionsInUse, ct).ConfigureAwait(false);
         gate.OnTick(tick.ControlledAccounts);
-        engine.Evaluate(tick.ControlledAccounts, tick.IsOpen);
+        engine.Evaluate(tick.ControlledAccounts, tick.IsOpen, tick.SessionsInUse.Select(s => s.SessionId).ToHashSet());
         log.Flush();
     }
 

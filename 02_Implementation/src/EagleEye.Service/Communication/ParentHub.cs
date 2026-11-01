@@ -166,11 +166,6 @@ public sealed class ParentHub(
             requestId, Enum.IsDefined(level) && WarningRules.IsValidMinutes(minutes), "warning settings",
             device => warnings.SetMinutesAsync(requestId, level, minutes, device));
 
-    /// <inheritdoc />
-    public Task<StateWriteAckDto> SetWarningText(Guid requestId, WarningLevel level, string text) =>
-        WriteCoreAsync(
-            requestId, Enum.IsDefined(level) && IsValidText(text), "warning settings",
-            device => warnings.SetTextAsync(requestId, level, text, device));
 
     /// <inheritdoc />
     public async Task<AppGroupsDto> GetAppGroups()

@@ -29,6 +29,8 @@ public sealed class TimeLimitEngineGroupTests
     private readonly Mock<IUsageRepository> _usage = new();
     private readonly Mock<ICloseSequenceRunner> _runner = new();
     private readonly Mock<IKidMessenger> _messenger = new();
+    private readonly Mock<IOverlayPublisher> _overlay = new();
+    private readonly List<RemainingTimeDto> _pushes = [];
     private readonly SessionAppsView _sessions = new();
     private readonly TestLogger<EnforcementLog> _logger = new();
     private readonly TodayUsageLedger _ledger;
@@ -45,12 +47,15 @@ public sealed class TimeLimitEngineGroupTests
         _time.SetLocalTimeZone(TestZones.Berlin);
         _breaks.SetupGet(b => b.Current).Returns(() => _breakRules);
         _appRules.SetupGet(a => a.Current).Returns(() => _apps);
-        _warnings.SetupGet(w => w.Current).Returns(new WarningSettings(3, null, 1, null));
+        _warnings.SetupGet(w => w.Current).Returns(new WarningSettings(3, 1));
         _usage.Setup(u => u.GetUsageAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         _usage.Setup(u => u.GetSpansAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         _messenger.Setup(m => m.ShowAsync(It.IsAny<int>(), It.IsAny<KidMessageDto>(), It.IsAny<CancellationToken>()))
             .Callback<int, KidMessageDto, CancellationToken>((_, m, _) => _messages.Add(m))
             .ReturnsAsync(KidMessageStates.Shown);
+        _overlay.Setup(o => o.Publish(It.IsAny<int>(), It.IsAny<RemainingTimeDto>()))
+            .Callback<int, RemainingTimeDto>((_, m) => _pushes.Add(m))
+            .Returns(KidMessageStates.ShownInOverlay);
         _runner.Setup(r => r.Start(It.IsAny<CloseRequest>())).Returns<CloseRequest>(request =>
         {
             _closes.Add(request);
@@ -59,7 +64,7 @@ public sealed class TimeLimitEngineGroupTests
         _ledger = new TodayUsageLedger(_usage.Object, _appRules.Object, _time, new TestLogger<TodayUsageLedger>());
         _ledger.EnsureLoadedAsync([Kid], CancellationToken.None).GetAwaiter().GetResult();
         _engine = new TimeLimitEngine(
-            _breaks.Object, _appRules.Object, _groups, _warnings.Object, _ledger, _sessions, new CloseRegistry(), _runner.Object, _messenger.Object,
+            _breaks.Object, _appRules.Object, _groups, _warnings.Object, _ledger, _sessions, new CloseRegistry(), _runner.Object, _messenger.Object, _overlay.Object,
             new EnforcementIgnoreList(@"C:\Windows"), new EnforcementLog(_logger, new InstanceLogLimiter(_time)), _time);
         SetOwnRule(1, Notepad, 600);
         SetOwnRule(2, Paint, 600);
@@ -67,34 +72,36 @@ public sealed class TimeLimitEngineGroupTests
     }
 
     [Fact]
-    public void MichaelsExample_WarningsOncePerGroup_BothClosedWithOneMessage()
+    public void MichaelsExample_WarningsOncePerGroup_OneLine_BothClosedWithOneMessage()
     {
         // AC-26, AC-27: "Test" 0:05, early 3 / final 1; Notepad 3 min alone, then Notepad and Paint 2 min together.
         SetGroupRule(5);
         Run(Notepad);
         Evaluate();
-        Assert.Empty(_messages);
+        Assert.Equal(new OverlayLineDto(OverlayLineKind.Group, "Test", 300, OverlayLevel.Normal, true), _pushes[^1].Lines.Single());
 
         Use(120, Notepad);
         Evaluate();
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppEarlyWarning, null, "Test", 3, null, null), _messages.Single());
+        Assert.Equal((OverlaySignal.Early, 180), (_pushes[^1].Signal, _pushes[^1].Lines.Single().Seconds));
 
         Use(60, Notepad);
         Run(Notepad, Paint);
         Evaluate();
+        Assert.Equal(new OverlayLineDto(OverlayLineKind.Group, "Test", 120, OverlayLevel.Early, true), _pushes[^1].Lines.Single());
         Use(60, Notepad, Paint);
         Evaluate();
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppFinalWarning, null, "Test", 1, null, null), _messages[^1]);
+        Assert.Equal(OverlaySignal.Final, _pushes[^1].Signal);
 
         Use(60, Notepad, Paint);
         Evaluate();
 
-        Assert.Equal(3, _messages.Count);
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppBudgetUsedUp, null, "Test", null, null, null), _messages[^1]);
+        Assert.Equal([OverlaySignal.Early, OverlaySignal.Final, OverlaySignal.Expired], Signals());
+        Assert.Equal(new OverlayLineDto(OverlayLineKind.Group, "Test", 0, OverlayLevel.Expired, false), _pushes[^1].Lines.Single());
+        Assert.Equal(new KidMessageDto(KidMessageReason.AppBudgetUsedUp, null, "Test", null, null), _messages.Single());
         Assert.Equal([Paint, Notepad], _closes.Select(c => c.ProgramPath).Order());
         Assert.All(_closes, c => Assert.Equal((null, true), (c.Message, c.SharedMessageState is not null)));
         Assert.All(_closes, c => Assert.Equal(new AppRuleAtClose(5, BreakTimeDays.All, 300, Test, "Test"), c.Rule));
-        Assert.Contains("Warning: account kid1, group Test (Editor), early warning, 3 min left (budget); message shown.", _logger.Messages(LogLevel.Information));
+        Assert.Contains("Warning: account kid1, group Test (Editor), early warning, 3 min left (budget); shown in overlay.", _logger.Messages(LogLevel.Information));
     }
 
     [Fact]
@@ -107,7 +114,7 @@ public sealed class TimeLimitEngineGroupTests
 
         Evaluate();
 
-        Assert.Empty(_messages);
+        Assert.Empty(Signals());
         Assert.Empty(_closes);
     }
 
@@ -132,11 +139,12 @@ public sealed class TimeLimitEngineGroupTests
         Run(Paint);
         Use(600, Notepad);
         Evaluate();
-        Assert.Empty(_messages);
+        Assert.Empty(Signals());
 
         _groups.Current = _groups.Current.WithMember(Paint, Test);
         Evaluate();
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppGracePeriod, null, "Test", 1, null, null), _messages.Single());
+        Assert.Equal((OverlaySignal.Final, new OverlayLineDto(OverlayLineKind.Group, "Test", 60, OverlayLevel.Final, true)), (_pushes[^1].Signal, _pushes[^1].Lines.Single()));
+        Assert.Empty(_messages);
 
         Advance(30);
         Evaluate();
@@ -160,7 +168,7 @@ public sealed class TimeLimitEngineGroupTests
         _groups.Current = _groups.Current.WithoutGroup(Test);
         Evaluate();
 
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppGracePeriod, null, "App", 1, null, null), _messages.Single());
+        Assert.Equal((OverlaySignal.Final, new OverlayLineDto(OverlayLineKind.App, "App", 60, OverlayLevel.Final, true)), (_pushes[^1].Signal, _pushes[^1].Lines.Single()));
     }
 
     [Fact]
@@ -170,12 +178,13 @@ public sealed class TimeLimitEngineGroupTests
         SetGroupRule(3);
         Run(Notepad);
         Evaluate();
-        _messages.Clear();
+        _pushes.Clear();
 
         _groups.Current = _groups.Current.WithGroup(Test, "Gaming");
         Evaluate();
 
-        Assert.Empty(_messages);
+        Assert.Empty(Signals());
+        Assert.Equal("Gaming", _pushes[^1].Lines.Single().Name);
     }
 
     [Fact]
@@ -188,11 +197,11 @@ public sealed class TimeLimitEngineGroupTests
         Run(Paint);
         Use(1800, Paint);
         Evaluate();
-        Assert.Empty(_messages);
+        Assert.Empty(Signals());
 
         _groups.Current = _groups.Current.WithMember(Notepad, Test);
         Evaluate();
-        Assert.Equal(KidMessageReason.AppGracePeriod, _messages.Single().Reason);
+        Assert.Equal([OverlaySignal.Final], Signals());
 
         Advance(61);
         Evaluate();
@@ -211,7 +220,7 @@ public sealed class TimeLimitEngineGroupTests
         _groups.Current = _groups.Current.WithMember(Notepad, Test);
         Evaluate();
 
-        Assert.Empty(_messages);
+        Assert.Empty(Signals());
     }
 
     [Fact]
@@ -222,18 +231,19 @@ public sealed class TimeLimitEngineGroupTests
         Evaluate();
         SetGroupRule(0);
         Evaluate();
-        Assert.Equal(KidMessageReason.AppGracePeriod, _messages.Single().Reason);
+        Assert.Equal([OverlaySignal.Final], Signals());
 
         Run(Paint, Notepad);
         Advance(30);
         Evaluate();
-        Assert.Single(_messages);
+        Assert.Equal([OverlaySignal.Final], Signals());
+        Assert.Equal(30, _pushes[^1].Lines.Single().Seconds);
         Assert.Empty(_closes);
 
         Advance(31);
         Evaluate();
         Assert.Equal(2, _closes.Count);
-        Assert.Equal(2, _messages.Count);
+        Assert.Single(_messages);
     }
 
     [Fact]
@@ -244,12 +254,13 @@ public sealed class TimeLimitEngineGroupTests
         Run(Notepad);
         Use(3000, Notepad);
         Evaluate();
-        Assert.Empty(_messages);
+        Assert.Empty(Signals());
 
         SetGroupRule(52);
         Evaluate();
 
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppEarlyWarning, null, "Test", 2, null, null), _messages.Single());
+        Assert.Equal([OverlaySignal.Early], Signals());
+        Assert.Contains(_logger.Messages(LogLevel.Information), m => m.Contains("group Test (Editor), early warning, 2 min left (budget)", StringComparison.Ordinal));
         Assert.Empty(_closes);
     }
 
@@ -261,12 +272,13 @@ public sealed class TimeLimitEngineGroupTests
         Run(Notepad);
         Use(3480, Notepad);
         Evaluate();
-        _messages.Clear();
+        _pushes.Clear();
 
         SetGroupRule(59, BreakTimeDays.All, 2);
         Evaluate();
 
-        Assert.Empty(_messages);
+        Assert.Empty(Signals());
+        Assert.Equal(OverlayLevel.Early, _pushes[^1].Lines.Single().Level);
         Assert.Empty(_closes);
     }
 
@@ -280,10 +292,32 @@ public sealed class TimeLimitEngineGroupTests
 
         Evaluate();
 
-        Assert.Equal(KidMessageReason.BreakEarlyWarning, _messages.Single().Reason);
+        Assert.Equal([OverlaySignal.Early], Signals());
+        Assert.Contains(new OverlayLineDto(OverlayLineKind.Group, "Test", 300, OverlayLevel.Normal, true), _pushes[^1].Lines);
+        Assert.Contains(new OverlayLineDto(OverlayLineKind.Break, null, 120, OverlayLevel.Early, true), _pushes[^1].Lines);
     }
 
-    private void Evaluate() => _engine.Evaluate(_controlled, (_, path) => _running.Contains(path));
+    [Fact]
+    public void ClosedGroup_ExpiringLineReplacedWhenAnotherMemberRunsAgain()
+    {
+        SetGroupRule(5);
+        Run(Notepad);
+        Use(300, Notepad);
+        Evaluate();
+        Assert.Equal(new OverlayLineDto(OverlayLineKind.Group, "Test", 0, OverlayLevel.Expired, false), _pushes[^1].Lines.Single());
+        Evaluate();
+        Assert.Equal(OverlayLevel.Expired, _pushes[^1].Lines.Single().Level);
+
+        SetGroupRule(10);
+        Run(Notepad, Paint);
+        Evaluate();
+
+        Assert.Equal(new OverlayLineDto(OverlayLineKind.Group, "Test", 300, OverlayLevel.Normal, true), _pushes[^1].Lines.Single());
+    }
+
+    private List<OverlaySignal> Signals() => [.. _pushes.Select(p => p.Signal).Where(s => s != OverlaySignal.None)];
+
+    private void Evaluate() => _engine.Evaluate(_controlled, (_, path) => _running.Contains(path), new HashSet<int> { 2 });
 
     private void Run(params string[] paths)
     {

@@ -101,8 +101,6 @@ internal sealed class ParentHubClient : IParentHubClient
     public Task<StateWriteAckDto> SetWarningMinutesAsync(Guid requestId, WarningLevel level, int minutes, CancellationToken ct)
         => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.SetWarningMinutes), requestId, level, minutes, ct);
 
-    public Task<StateWriteAckDto> SetWarningTextAsync(Guid requestId, WarningLevel level, string text, CancellationToken ct)
-        => _connection.InvokeAsync<StateWriteAckDto>(nameof(IParentHub.SetWarningText), requestId, level, text, ct);
 
     public event Action<UserAccountListDto>? UserAccountsChanged;
 

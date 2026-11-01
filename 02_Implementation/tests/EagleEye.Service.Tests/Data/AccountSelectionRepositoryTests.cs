@@ -26,7 +26,7 @@ public sealed class AccountSelectionRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task InitializeAsync_NewDatabase_IsAtLatestSchemaVersion()
     {
-        Assert.Equal(6, await _database.GetSchemaVersionAsync());
+        Assert.Equal(7, await _database.GetSchemaVersionAsync());
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public sealed class AccountSelectionRepositoryTests : IAsyncLifetime
             await database.InitializeAsync();
             var found = await new PairedDeviceRepository(database).FindByTokenHashAsync(new byte[32]);
 
-            Assert.Equal((6L, "device-1"), (await database.GetSchemaVersionAsync(), found?.DeviceId));
+            Assert.Equal((7L, "device-1"), (await database.GetSchemaVersionAsync(), found?.DeviceId));
         }
         finally
         {
