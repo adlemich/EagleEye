@@ -24,4 +24,12 @@ public interface ITrayClientCallback
     /// </summary>
     /// <param name="message">The message to show.</param>
     Task<KidMessageResult> ShowKidMessage(KidMessageDto message);
+
+    /// <summary>
+    /// The remaining-time model of the session (FR-TRAY-020, FR-TRAY-030; ADR-014 as amended by US-010, ADR-022). Fire-and-forget,
+    /// sent every engine tick (5 s) to the newest verified tray connection of a session of a controlled account. The tray counts
+    /// down locally between pushes and hides the overlay when no push came for 15 s.
+    /// </summary>
+    /// <param name="model">The lines, level minutes and signal of this tick.</param>
+    Task OnRemainingTime(RemainingTimeDto model);
 }
