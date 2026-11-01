@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-11-01 US-010 OverlaySpike built 24f6dea (exe in 03_Delivery/spikes); NEXT Michael runs M-1/M-2 checks then SP-01..SP-18 on gaming PC
+description: EagleEye workflow status — 2026-11-01 US-010 spike success; PRO story draft 4545e17 (38 ACs, 0.10.0, OQ-1..16); NEXT Michael approves story → ARC plan
 metadata:
   type: project
 ---
+
+**Update 2026-11-01 (US-010 step a, Windows): Michael ran the spike on the kid gaming PC: SUCCESS (results raw c03341c; only Minecraft explicit exclusive fullscreen hides the pill, accepted; 75 % opacity best; SP-15..18 + D-3..D-9 skipped). Michael direction: tray menu gets opacity, 4 corners, sound next to App Infos; dialog text configs removed from parent apps; warning minutes unchanged. Formal spike evaluation (spike-overlay.md §2) folded into ARC plan (short summary). PRO (subagent) wrote `US-010/user-story.md` 4545e17: 38 ACs A–H, version 0.10.0, only Early/Final warning texts removed (budget + break texts stay, block/close dialogs stay), OQ-1..16 with defaults, requirements v1.10 proposed (FR-TRAY-020/030 changed, FR-TRAY-031/032 new, FR-APP-054...). NEXT: Michael reviews/approves story + OQs → ARC plan. Spike code must be removed before merge.**
 
 **Update 2026-11-01 (US-010 spike built, Windows ZOCK-O-MAT-V3): DEV (subagent) built OverlaySpike, tested build 24f6dea, doc fdccd40 (pushed). Exe `03_Delivery/spikes/US-010-overlay/OverlaySpike.exe` 51 703 364 B, SHA-256 791151FA…59A8445D, reports 0.9.0+24f6dea; no download needed. D-1, D-2, D-11 pass (CPU max 0.07 %, working set drifts +0.25 MB/min, GDI/USER flat). D-10: the WinForms tray context menu was classified as an app → fixed (menus are tool windows); static pass, live run open. D-3..D-9 + live D-10 open: DEV session was disconnected (no input/display). Steps M-1 (Admin, ~12 min) and M-2 (controlled kid account, ~10 min) in `spike-overlay.md` §1.6. Findings: service installed here is 0.8.0, not 0.9.0; accounts eagleeye-kid/ee-kid2 do NOT exist here (standard accounts Micha, Sebastian); this PC has RX 9070 XT → may itself be the gaming PC (Q-A open). NEXT: Michael runs M-1/M-2, answers Q-A, then spike-overlay-results.md P-1..SP-18 on the gaming PC.**
 
