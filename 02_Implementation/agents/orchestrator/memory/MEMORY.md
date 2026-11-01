@@ -4,7 +4,7 @@ One line per memory. Content lives in the linked files, never here.
 
 - [Michael — project owner](michael-project-owner.md) — professional engineer, reviewer and sole approval authority; works on a Windows machine and a MacBook.
 - [Memory lives in the project](memory-lives-in-project.md) — memory files belong in this folder, never under ~/.claude.
-- [Current phase](eagleeye-current-phase.md) — 2026-11-01: US-010 overlay spike: ARC instructions ready; next Windows DEV builds OverlaySpike exe, then Michael tests on gaming PC.
+- [Current phase](eagleeye-current-phase.md) — 2026-11-01: US-010 OverlaySpike built (24f6dea); D-10 menu fix; Michael runs M-1/M-2 (spike-overlay.md §1.6), then gaming-PC run; Q-A open.
 - [US-001 lessons](us001-lessons.md) — localization in every plan, ACs quote English examples, German UI labels in test manuals, publisher "Michael Adler".
 - [Workflow and gates](eagleeye-workflow-gates.md) — five agents, file-based handoffs, approval gates, manual test loop, one feature branch per story merged on close.
 - [Dev and test setup](eagleeye-dev-test-setup.md) — Windows: service/tray/Windows parent app + manual testing; MacBook: Mac app only (repo outside iCloud); ADR-007.

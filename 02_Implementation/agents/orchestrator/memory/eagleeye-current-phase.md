@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-11-01 US-010 pre-story: ARC spike instructions c938036 ready; NEXT Windows DEV builds portable OverlaySpike exe (02_Implementation/spikes/US-010-overlay), then Michael tests on kid gaming PC
+description: EagleEye workflow status — 2026-11-01 US-010 OverlaySpike built 24f6dea (exe in 03_Delivery/spikes); NEXT Michael runs M-1/M-2 checks then SP-01..SP-18 on gaming PC
 metadata:
   type: project
 ---
+
+**Update 2026-11-01 (US-010 spike built, Windows ZOCK-O-MAT-V3): DEV (subagent) built OverlaySpike, tested build 24f6dea, doc fdccd40 (pushed). Exe `03_Delivery/spikes/US-010-overlay/OverlaySpike.exe` 51 703 364 B, SHA-256 791151FA…59A8445D, reports 0.9.0+24f6dea; no download needed. D-1, D-2, D-11 pass (CPU max 0.07 %, working set drifts +0.25 MB/min, GDI/USER flat). D-10: the WinForms tray context menu was classified as an app → fixed (menus are tool windows); static pass, live run open. D-3..D-9 + live D-10 open: DEV session was disconnected (no input/display). Steps M-1 (Admin, ~12 min) and M-2 (controlled kid account, ~10 min) in `spike-overlay.md` §1.6. Findings: service installed here is 0.8.0, not 0.9.0; accounts eagleeye-kid/ee-kid2 do NOT exist here (standard accounts Micha, Sebastian); this PC has RX 9070 XT → may itself be the gaming PC (Q-A open). NEXT: Michael runs M-1/M-2, answers Q-A, then spike-overlay-results.md P-1..SP-18 on the gaming PC.**
 
 **Update 2026-11-01 (US-010 spike prep, MacBook): Michael approved the overlay spike. ARC wrote `US-010/spike-overlay-instructions.md` + results template `spike-overlay-results.md` (c938036): throwaway project `02_Implementation/spikes/US-010-overlay/` (own csproj, not in sln/scripts/installers; delete before merge), single-file self-contained win-x64 exe to `03_Delivery/spikes/` (git-ignored), global hotkeys Strg+Alt+Umschalt+…, log next to exe; never shows a normal window so EagleEye (ADR-011 §4) should not record/block it (DEV check D-10). Machines: pilot gaming PC = service PC 192.168.1.85 (Mac paired with it in US-008); Windows dev machine ZOCK-O-MAT-V3 = 192.168.1.37 — ARC's repo search didn't know .85, Michael to confirm (Q-A..Q-D in instructions §8). NEXT: Windows DEV session with ARC's ready prompt (in instructions/report), then Michael runs SP-01..SP-18 on gaming PC, then DEV/ARC evaluate in spike-overlay.md, then PRO writes US-010.**
 
