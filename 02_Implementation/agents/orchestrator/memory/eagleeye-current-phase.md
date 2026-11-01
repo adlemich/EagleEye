@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-11-01 US-009 step c done on both machines (Step 5 Mac 228cad0, story Implemented, .dmg 0.9.0); awaiting Michael step-c approval → TES test plan on Windows
+description: EagleEye workflow status — 2026-11-01 US-009 step d: step c approved; TES test plan + run-01 checklist e4714e7 (72 TCs, ~8 h essential, 11 open points) await Michael approval
 metadata:
   type: project
 ---
+
+**Update 2026-11-01 (US-009 step d, MacBook): Michael approved step c (recorded in story + report). TES (subagent) wrote `docs/testing/US-009/test-plan.md` (Draft) + `test-run-01.md`, e4714e7: 72 TCs (59 essential/13 optional), sessions 0–6D, ~8 h essential over 3 days; all 38 ACs mapped; US-008 AC-6 not testable. Plan §8 has 11 open points for Michael (kid accounts, baseline group "Rechnen", English depth, Mac depth, ≤15 s timing, orphan device, service IP .37 vs .85, 6B timing...). NEXT: Michael approves plan / answers §8 → run 01 starts on Windows (Session 0); afterwards TES step f report.**
 
 **Update 2026-11-01 (US-009 H4, MacBook): DEV Step 5 done 228cad0 (pushed): build/test 0 warnings, Shared 305 + ParentApp 1 109 green; no shared change from Windows (only #if WINDOWS in AppGroupsView.xaml.cs) → no Mac probe; `.dmg` 0.9.0 SHA-256 9f397006…c5fdde6, NOT installed (Mac app 0.8.0 = AC-32 start). Report §11 Mac + §6 final How to test; story Implemented. Step 6 not needed. Local cleanup: PRO worktree removed, local US-008 branch deleted, local main fast-forwarded. NEXT: Michael approves step c → Windows: TES step d test plan from report §6.**
 
