@@ -32,8 +32,9 @@ EagleEye.Service/
 │                     EnforcementIgnoreList, Win32ProcessTable/Terminator, EnforcementLog (limited for starts),
 │                     TodayUsageLedger (used time = Reports, fed with the tick's credits), TimeLimitEngine (per tick:
 │                     AppEndCalculator, WarningLedger, GracePolicy = minimum grace of the final minutes,
-│                     KidMessageFactory, MessageOutbox: one message per session and tick; closes running apps,
-│                     one break message per session), SessionAppsView, TimeChangeMonitor (findings; Warning with
+│                     KidMessageFactory for block/close messages; US-010: OverlayLineBuilder, one remaining-time
+│                     model per controlled session and tick with the strongest new level as the signal, expiring
+│                     0:00 lines while closing; closes running apps, one break message per session), SessionAppsView, TimeChangeMonitor (findings; Warning with
 │                     old/new local date), AppEnforcement (facade for the loop)
 ├── Rules/            BreakTimeService (state owner of "AccountRules:{sid}", in-memory snapshot), schedule
 │                     evaluation (start inclusive, end exclusive, 23:59 = midnight; NextBegin within a horizon),
@@ -51,7 +52,9 @@ EagleEye.Service/
 │                     group lines on Reports with the current members and names)
 ├── Communication/    SignalR hubs (parent apps, tray client). US-005: TrayHub binds each tray connection to its
 │                     session (Win32TrayClientIdentifier: TCP owner PID + installed path, ADR-014);
-│                     KidMessenger sends ShowKidMessage (KidMessageDto) as a client result (3 s; Shown/Replaced)
+│                     KidMessenger sends ShowKidMessage (KidMessageDto) as a client result (3 s; Shown/Replaced).
+│                     US-010: OverlayPublisher sends OnRemainingTime (fire-and-forget, every tick, newest verified
+│                     tray connection of the session)
 ├── Certificates/     Self-signed TLS certificate generation and management
 ├── UserAccounts/     Account inventory and selection (US-003): NetApiLocalAccountSource (Win32),
 │                     AccountInventoryFilter (standard only; no built-ins by RID, no defaultuser0),
@@ -61,7 +64,8 @@ EagleEye.Service/
 │                     3 AppRecords/AppInstances/DailyUsage, 4 BreakTimeEntries/AccountDisplayTexts/
 │                     BlockedStarts/TimeChangeFindings, 5 AppRules/AccountBudgetTexts/WarningSettings and the
 │                     rebuilt BlockedStarts with kind/reason/app-rule columns, 6 AppGroups/AppGroupMembers/
-│                     AppGroupRules/ActivitySpans and BlockedStarts.GroupId/GroupName), repositories
+│                     AppGroupRules/ActivitySpans and BlockedStarts.GroupId/GroupName, 7 WarningSettings without
+│                     EarlyText/FinalText), repositories
 └── Diagnostics/      Event Log pairing code, admin-only ACL of the logs\ folder
 ```
 
@@ -75,7 +79,7 @@ EagleEye.Service/
 | `AppRules:{sid}` | `Rules/AppRuleService` | `GetAppRules` / `SetAppBudget` (hours or minutes, combined with the stored other part), `SetAppDay`, `SetBudgetText` / `OnAppRulesChanged` (also for new and renamed app records) |
 | `AppGroups` | `Groups/AppGroupService` | `GetAppGroups` / `CreateAppGroup`, `RenameAppGroup`, `DeleteAppGroup`, `MoveAppToGroup` / `OnAppGroupsChanged` (also when a new app is listed) |
 | `AppGroupRules:{sid}` | `Groups/AppGroupService` | `GetAppGroupRules` / `SetAppGroupBudget`, `SetAppGroupDay` / `OnAppGroupRulesChanged` (also for every account when a group is created or deleted) |
-| `WarningSettings` | `Rules/WarningSettingsService` | `GetWarningSettings` / `SetWarningMinutes` (early > final against the stored other level), `SetWarningText` / `OnWarningSettingsChanged` |
+| `WarningSettings` | `Rules/WarningSettingsService` | `GetWarningSettings` / `SetWarningMinutes` (early > final against the stored other level; the texts were removed with US-010) / `OnWarningSettingsChanged` |
 
 Every accepted write and every change of the Windows accounts produces one revision and one broadcast to the group `Parents` (including the sender). Revisions are in memory and start at 1 on every service start.
 

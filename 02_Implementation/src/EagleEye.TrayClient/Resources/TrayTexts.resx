@@ -22,4 +22,17 @@
   <data name="InfoBudgetUsedUp" xml:space="preserve"><value>{0}: Zeit-Budget aufgebraucht.</value></data>
   <data name="InfoBreakTime" xml:space="preserve"><value>Ruhezeit von {1} bis {2}.</value></data>
   <data name="InfoMidnight" xml:space="preserve"><value>24:00</value></data>
+  <!-- US-010: tray menu overlay settings (AC-15) and overlay labels (AC-3, AC-4). -->
+  <data name="MenuOpacity" xml:space="preserve"><value>Deckkraft</value></data>
+  <data name="MenuPosition" xml:space="preserve"><value>Position</value></data>
+  <data name="MenuShowFrom" xml:space="preserve"><value>Anzeigen ab</value></data>
+  <data name="MenuWarningSound" xml:space="preserve"><value>Warnton</value></data>
+  <data name="OpacityFormat" xml:space="preserve"><value>{0} %</value></data>
+  <data name="CornerTopLeft" xml:space="preserve"><value>Oben links</value></data>
+  <data name="CornerTopRight" xml:space="preserve"><value>Oben rechts</value></data>
+  <data name="CornerBottomLeft" xml:space="preserve"><value>Unten links</value></data>
+  <data name="CornerBottomRight" xml:space="preserve"><value>Unten rechts</value></data>
+  <data name="ShowFromFormat" xml:space="preserve"><value>{0} Min.</value></data>
+  <data name="BreakLineFormat" xml:space="preserve"><value>Ruhezeit in {0}</value></data>
+  <data name="MoreLinesFormat" xml:space="preserve"><value>+{0} weitere</value></data>
 </root>

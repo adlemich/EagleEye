@@ -12,7 +12,8 @@ internal static class Program
     private static void Main()
     {
         Application.EnableVisualStyles();
-        Application.SetHighDpiMode(HighDpiMode.SystemAware);
+        // US-010 Decision 6: the overlay must be sharp on every monitor scale (ADR-022 §4).
+        Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
 
         var serviceConnection = new ServiceConnection(ServiceBaseUrl());
         using (var trayContext = new TrayApplicationContext(serviceConnection))

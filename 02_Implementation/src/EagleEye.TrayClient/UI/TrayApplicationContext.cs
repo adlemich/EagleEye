@@ -1,4 +1,7 @@
+using System.Globalization;
+using EagleEye.Shared.Models;
 using EagleEye.TrayClient.Communication;
+using EagleEye.TrayClient.Overlay;
 using Microsoft.AspNetCore.SignalR;
 
 namespace EagleEye.TrayClient.UI;
@@ -7,7 +10,8 @@ namespace EagleEye.TrayClient.UI;
 /// Owns the tray icon: shows the connection state (green/red, AC-6 to AC-9) and offers the
 /// "About" entry that queries the server version live (AC-11, AC-12). Shows pairing codes
 /// sent by the service in a topmost window (US-002 AC-14), and the kid messages of the service (US-005 AC-30, US-006
-/// AC-34: one dialog at a time, a newer message replaces the text).
+/// AC-34: one dialog at a time, a newer message replaces the text). Since US-010 it runs the remaining-time overlay and offers
+/// the overlay settings in the tray menu, which opens with the right and the left mouse button (AC-15).
 /// </summary>
 internal sealed class TrayApplicationContext : ApplicationContext
 {
@@ -16,6 +20,8 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly IServiceConnection _connection;
     private readonly SynchronizationContext _uiContext;
     private readonly ContextMenuStrip _menu;
+    private readonly OverlaySettingsModel _overlaySettings;
+    private readonly OverlayController _overlay;
     private readonly NotifyIcon _notifyIcon;
     private readonly Icon _connectedIcon;
     private readonly Icon _disconnectedIcon;
@@ -31,9 +37,10 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _connection = connection;
 
         // Creating the first control installs the WinForms synchronization context.
-        _menu = new ContextMenuStrip();
+        _overlaySettings = new OverlaySettingsModel(new RegistryOverlaySettingsStore());
+        _menu = TrayMenu.Build(_overlaySettings, OnAboutClicked, CultureInfo.CurrentUICulture);
         _uiContext = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
-        _menu.Items.Add(TrayTexts.AboutMenuItem, null, OnAboutClicked);
+        _overlay = new OverlayController(_overlaySettings, TimeProvider.System);
 
         _connectedIcon = TrayIcons.Load(TrayIcons.Connected, SystemInformation.SmallIconSize);
         _disconnectedIcon = TrayIcons.Load(TrayIcons.Disconnected, SystemInformation.SmallIconSize);
@@ -43,10 +50,12 @@ internal sealed class TrayApplicationContext : ApplicationContext
             ContextMenuStrip = _menu,
             Visible = true,
         };
+        _notifyIcon.MouseUp += OnNotifyIconMouseUp;
         ApplyConnectionState(_connection.IsConnected);
 
         _connection.ConnectionChanged += OnConnectionChanged;
         _connection.PairingCodeReceived += OnPairingCodeReceived;
+        _connection.RemainingTimeReceived += OnRemainingTimeReceived;
 
         // US-005/US-006 (ADR-014 §2): the decision is synchronous, the dialog is created or updated on the UI thread.
         _presenter = new KidMessagePresenter(
@@ -63,7 +72,10 @@ internal sealed class TrayApplicationContext : ApplicationContext
         {
             _connection.ConnectionChanged -= OnConnectionChanged;
             _connection.PairingCodeReceived -= OnPairingCodeReceived;
+            _connection.RemainingTimeReceived -= OnRemainingTimeReceived;
             _connection.KidMessageHandler = null;
+            _notifyIcon.MouseUp -= OnNotifyIconMouseUp;
+            _overlay.Dispose();
             _kidDialog?.Dispose();
             _pairingDialog?.Dispose();
             Application.ApplicationExit -= OnApplicationExit;
@@ -81,6 +93,21 @@ internal sealed class TrayApplicationContext : ApplicationContext
     {
         // Raised on a thread-pool thread by SignalR: marshal to the UI thread.
         _uiContext.Post(_ => ApplyConnectionState(connected), null);
+    }
+
+    private void OnRemainingTimeReceived(RemainingTimeDto model)
+    {
+        // Raised on a thread-pool thread by SignalR: marshal to the UI thread.
+        _uiContext.Post(_ => _overlay.OnRemainingTime(model), null);
+    }
+
+    private void OnNotifyIconMouseUp(object? sender, MouseEventArgs e)
+    {
+        // AC-15 (TI-10): the left button opens the same menu as the right button.
+        if (e.Button == MouseButtons.Left)
+        {
+            TrayMenu.ShowFromLeftClick(_notifyIcon, _menu);
+        }
     }
 
     private void OnPairingCodeReceived(string code)
@@ -138,6 +165,10 @@ internal sealed class TrayApplicationContext : ApplicationContext
     {
         _notifyIcon.Icon = connected ? _connectedIcon : _disconnectedIcon;
         _notifyIcon.Text = connected ? TrayTexts.TooltipConnected : TrayTexts.TooltipDisconnected;
+        if (!connected)
+        {
+            _overlay.OnDisconnected();
+        }
     }
 
     private async void OnAboutClicked(object? sender, EventArgs e)
