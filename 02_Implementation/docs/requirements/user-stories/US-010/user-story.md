@@ -1,8 +1,8 @@
 # US-010: Remaining-Time Overlay Replaces the Warning Dialogs (0.10.0)
 
-**Status**: New (draft; Michael answered OQ-1 to OQ-16 on 2026-11-01 and added the multi-line pill; the changed ACs await his final approval, step a)
+**Status**: New (approved; waiting for the implementation plan, step b)
 **Created**: 2026-11-01
-**Approved**: *not yet*
+**Approved**: by Michael, 2026-11-01, with OQ-1 to OQ-22 as resolved (OQ-4 replaced by the multi-line pill; OQ-2 and OQ-19 replaced by the display threshold 15/30/45/60 min, default 30); requirements v1.10 in effect
 **Component(s)**: EagleEye.TrayClient (overlay, tray menu settings), EagleEye.Service (remaining time for the overlay, warning dialogs dropped, warning texts removed), EagleEye.Shared (contracts), EagleEye.ParentApp incl. EagleEye.ParentApp.Core (warning texts removed from the Settings page)
 **Platform(s)**: Windows service/tray (Windows 11; Windows Developer Machine, and the kid's gaming PC for the game cases, OQ-12) · ParentApp Windows (Windows Developer Machine) · ParentApp macOS (MacBook)
 
@@ -40,7 +40,7 @@ The requirements already foresee this: FR-TRAY-030 ("optionally display a topmos
 | **Budget text** (FR-APP-053) | Rules → "Application rules", "Display text when budget is used up:" ("Anzeige Text wenn Budget aufgebraucht:"), per account | a start is blocked (not allowed today, budget used up) or a running app is closed because its time is up | **Kept** (these dialogs stay, OQ-1) |
 | **Break display text** (FR-APP-052) | Rules → break times, display text, per account | a start is blocked by a break time, or a break begins and closes the running apps | **Kept** (these dialogs stay, OQ-1) |
 
-The overlay replaces the *warnings*, which come **before** the end, while the game is still running. The budget text and the break display text explain **why** a game is gone; they appear when the start is blocked or after the app has been closed, so they do not interrupt play. The feasibility check (Q-6) recommends keeping them. This story therefore removes only the two warning texts, and asks Michael to confirm it in **OQ-1**.
+The overlay replaces the *warnings*, which come **before** the end, while the game is still running. The budget text and the break display text explain **why** a game is gone; they appear when the start is blocked or after the app has been closed, so they do not interrupt play. The feasibility check (Q-6) recommends keeping them. This story therefore removes only the two warning texts; Michael confirmed this in **OQ-1**.
 
 **Decided before this story (do not reopen)**: option (a) of the feasibility check; the tray icon offers opacity, the four corners and the sound option next to "App Infos"; the warning texts go away in the service and in both parent apps; the warning minutes (early, final; 1..59; early greater than final; global) stay as they are; true exclusive fullscreen is an accepted, documented limit; all four assets get the same version, no mixed versions (US-009); where the requirements allow either way, the option with less code is preferred (US-009).
 
@@ -53,29 +53,32 @@ References: FR-TRAY-020, FR-TRAY-021, FR-TRAY-022, FR-TRAY-030, FR-APP-052 to FR
 - *Subject*: what a limit applies to: the app group for a grouped app, otherwise the app itself (US-008, ADR-021).
 - *End*: the end of a subject's allowed time today, as in US-006 (budget used up, not allowed today, midnight when not allowed tomorrow, start of the next break time).
 - *Overlay*, *pill*: the small, rounded, half-transparent display with the remaining times, drawn by the tray client in the kid's session ("Restzeit-Anzeige"). It looks and behaves like the pill of the spike app *OverlaySpike*, but it can hold several lines (AC-3).
-- *Line*: one entry of the pill: a name and a remaining time. There is one line per running ungrouped limited app, one per app group with at least one running app, and one break line when a break is approaching (AC-3).
+- *Line*: one entry of the pill: a name and a remaining time. There is one line per running ungrouped limited app, one per app group with at least one running app, and one break line when a break is approaching, each only while it is *due* (AC-3).
+- *Display threshold* ("Anzeigeschwelle"): the time from which on a line is shown: 15, 30, 45 or 60 minutes, default 30, set in the tray menu "Show from" ("Anzeigen ab") (AC-15).
+- *Due* (line): a line is due while its remaining time is **below** the display threshold (for 30 minutes: "29:59" or less; "30:00" is not yet due), or while it is **at or below the early-warning level**, whichever comes first (AC-3). The break line is due while the break begins in less than the display threshold, or at or below the early-warning level.
 - *Top line*: the first line of the pill, the one with the shortest remaining time. It is shown large; the other lines are smaller (AC-4).
 - *Own remaining time* (of a subject): the time until the subject's own end (budget used up, not allowed today, midnight when not allowed tomorrow), **without** break times. Breaks have their own line.
 - *Signal* (of a warning level): the pulse of the pill plus the sound (if on), given once when a level is reached.
 - *Tray menu*: the menu of the EagleEye tray icon. Today it has one item, "About" ("EagleEye – App Infos").
-- *Overlay settings*: opacity, position and sound, set by the signed-in user in the tray menu.
+- *Overlay settings*: opacity, position, display threshold and sound, set by the signed-in user in the tray menu.
 - *Gaming PC*: the PC on which Michael ran the spike, with the kids' games installed (OQ-12).
 
 ---
 
-## Product requirement amendment (v1.10, proposed; takes effect when Michael approves this story)
+## Product requirement amendment (v1.10, in effect since Michael approved this story on 2026-11-01)
 
-Proposed changes to `02_Implementation/docs/requirements/general-product-requirements.md`. PRO writes them into the file after the approval, as for v1.6 to v1.9.
+The changes below are written into `02_Implementation/docs/requirements/general-product-requirements.md` (v1.10), as for v1.6 to v1.9.
 
 - **FR-TRAY-020** (changed): "The tray client shall show the early and the final warning (TC-030, TC-040) in the remaining-time overlay (FR-TRAY-030): the overlay changes its colour (yellow at the early level, red at the final level), pulses briefly and plays a sound (if the user has not switched it off, FR-TRAY-031). Warnings never open a dialog and never take the keyboard focus. *(v1.10; was: in the topmost dialog of FR-TRAY-022 with the parent's warning text)*"
 - **FR-TRAY-021, FR-TRAY-022** (note only): the topmost kid dialog stays for blocked starts and enforced closes (budget text, break display text). *(v1.10: no longer used for warnings and grace periods)*
-- **FR-TRAY-030** (changed): "While at least one limited application of a controlled account is running, the tray client in that session shall display a small, half-transparent, topmost overlay with one line per running application that is not in an app group, one line per app group with at least one running application, and one line for an approaching break time. Each line shows the name and the remaining time. The lines are sorted by remaining time, shortest first; the top line is large, the others smaller. Each line takes the colour of its own warning level. The overlay never takes the keyboard focus or mouse input, has no taskbar button and is not in Alt+Tab. It is visible over windowed, borderless and Windows-optimised fullscreen applications; over applications in true exclusive fullscreen it is not visible (accepted limit, §10), and the warning sound still plays. *(v1.10; was: optional overlay)*"
-- **FR-TRAY-031** (new): "The tray menu offers the overlay settings next to "App Infos": opacity (25 %, 50 %, 75 %, 100 %; default 75 %), position (one of the four screen corners; default top right) and the warning sound (on/off; default on). The settings belong to the signed-in Windows account, take effect at once and are kept across sign-out, restart and update. *(v1.10)*"
+- **FR-TRAY-030** (changed): "For a controlled account, the tray client in that session shall display a small, half-transparent, topmost overlay with one line per running application that is not in an app group, one line per app group with at least one running application, and one line for an approaching break time. Each line shows the name and the remaining time. A line is shown only while its remaining time is below the display threshold (FR-TRAY-031; for the break line: while the break begins in less than the threshold), or once it has reached the early-warning level, so that a warning is never hidden. The overlay is visible only while at least one line is shown. The lines are sorted by remaining time, shortest first; the top line is large, the others smaller. Each line takes the colour of its own warning level. The overlay never takes the keyboard focus or mouse input, has no taskbar button and is not in Alt+Tab. It is visible over windowed, borderless and Windows-optimised fullscreen applications; over applications in true exclusive fullscreen it is not visible (accepted limit, §10), and the warning sound still plays. *(v1.10; was: optional overlay)*"
+- **FR-TRAY-031** (new): "The tray menu offers the overlay settings next to "App Infos": opacity (25 %, 50 %, 75 %, 100 %; default 75 %), position (one of the four screen corners; default top right), the display threshold (60, 45, 30 or 15 minutes; default 30) and the warning sound (on/off; default on). The settings belong to the signed-in Windows account, take effect at once and are kept across sign-out, restart and update. *(v1.10)*"
 - **FR-TRAY-032** (new): "No window of the tray client (tray menu and its submenus, overlay, dialogs) shall ever be recorded, limited, warned, blocked or closed as an application (FR-SVC-046). *(v1.10, US-010 spike finding D-10)*"
 - **FR-APP-054** (changed): the parent sets only the **minutes** of the two levels (1..59, early greater than final, defaults 5 and 1). The warning texts are removed. *(v1.10)*
 - **TC-030, TC-040** (changed): "warn the kid via the tray client" means the overlay of FR-TRAY-030 / FR-TRAY-020. **TC-031**: "(minutes, 1..59, early greater than final)", without "and text". **TC-041**: "the same two warning levels", without "and texts". **TC-033**: "the final warning is shown at once" becomes "the overlay shows the grace period at once in the final-warning state (red, pulse, sound)". *(v1.10)*
 - **FR-SVC-032, MU-011** (changed): "The two warning levels (FR-APP-054)" instead of "The two warning levels with their texts". *(v1.10)*
 - **§10, row "Full-screen DirectX overlay"** (note added): "Over applications in true exclusive fullscreen (e.g. Minecraft Java's "exclusive fullscreen" option) the overlay is not visible; this is accepted (US-010 spike, Michael 2026-11-01). The warning sound still plays, and the kid dialog of a blocked or closed application appears when the game is closed." *(v1.10)*
+- **§4.4 step 21** (changed): the warning is shown in the overlay. **MU-011** (note): the overlay settings belong to each Windows account. **§11.1 Q-9** (new): which kid texts remain configurable (OQ-1). *(v1.10, added when the amendment was written into the file)*
 - **NFR-P-011**: unchanged (the spike showed no felt impact; AC-27 re-checks it).
 
 ---
@@ -90,7 +93,7 @@ Proposed changes to `02_Implementation/docs/requirements/general-product-require
 
 ### A. The overlay: when it shows and what it shows
 
-- [ ] **AC-1**: When `kid1` starts a limited app (e.g. Notepad with 0:10 and today ticked), the pill appears at the latest **10 seconds** after the start, in the chosen corner of the screen (default **top right**), and shows the app's name and its remaining time, e.g. "Editor 9:59" ("Editor 9:59"). It looks like the spike's pill, which Michael approved: rounded, dark, half-transparent background, clearly readable text in the spike's fonts (AC-4), with a small margin to the screen edge. The pill stays visible as long as at least one limited app is running (OQ-2), and disappears at the latest 10 seconds after the last limited app is closed or ended by the service.
+- [ ] **AC-1**: With the default display threshold of 30 minutes: when `kid1` starts a limited app with less than 30 minutes left (e.g. Notepad with 0:10 and today ticked), the pill appears at the latest **10 seconds** after the start, in the chosen corner of the screen (default **top right**), and shows the app's name and its remaining time, e.g. "Editor 9:59" ("Editor 9:59"). When `kid1` starts an app with more time left (e.g. Notepad with 1:00), **no** pill appears until its line becomes due (AC-3). The pill looks like the spike's pill, which Michael approved: rounded, dark, half-transparent background, clearly readable text in the spike's fonts (AC-4), with a small margin to the screen edge. The pill is visible **only while at least one line is due** (AC-3; Michael, 2026-11-01, replaces OQ-2), and disappears at the latest 10 seconds after the last due line is gone (its apps closed or ended by the service, or a budget raised above the threshold).
 - [ ] **AC-2**: There is **no** pill:
   - in the sessions of `kid3` (not controlled) and of admin accounts;
   - in a session of `kid1` where only exemptions run (desktop, Start menu, File Explorer, the tray client itself);
@@ -98,20 +101,30 @@ Proposed changes to `02_Implementation/docs/requirements/general-product-require
 - [ ] **AC-3**: The pill shows **one line per running subject** and one break line (Michael, 2026-11-01, replaces OQ-4):
   - one line for each running limited app that is **not in a group**, with the app's display name as on Reports;
   - one line for each **app group** with **at least one** running member app, with the group name and the group's remaining time (US-008); several running apps of one group give **one** line;
-  - one **break line** "Break in 18:30" ("Ruhezeit in 18:30") when the next break time of the account begins within the next **60 minutes** (OQ-19) and at least one limited app runs (OQ-5, US-006 AC-28).
+  - one **break line** "Break in 18:30" ("Ruhezeit in 18:30") for the next break time of the account, while at least one limited app runs (OQ-5, US-006 AC-28).
 
-  App and group lines show the subject's **own remaining time** (Terms), so a break does not shorten them; the break has its own line. Every limited app gets a line, also one with a large budget such as 23:59 (OQ-21). Apps not in a group never count twice, and exemptions never get a line. A name longer than 24 characters is shortened with "…".
+  **Display threshold** (Michael, 2026-11-01; replaces OQ-2 and OQ-19): each line is shown only while it is **due**:
+  - an app or group line while its own remaining time is **below** the display threshold: with 30 minutes, from "29:59" on; at "30:00" or more it is not shown;
+  - the break line while the break begins in **less** than the display threshold: with 30 minutes and a break at 20:00, from 19:30:01 on ("Break in 29:59");
+  - **and in any case** once the line has reached the **early-warning level**, so that a warning is never hidden when the early-warning minutes are larger than the threshold (*Orchestrator/PRO interpretation, see the Change Log*).
 
-  Example: `kid1` runs Minecraft and Minecraft Launcher (both in group "Games", 4:12 left), Notepad (not grouped, 42:05 left) and Paint (in group "Drawing", 1:15:00 left); a break begins in 18:30 → the pill has **4 lines**: "Games 4:12", "Break in 18:30", "Editor 42:05", "Drawing 1:15:00" ("Spiele 4:12", "Ruhezeit in 18:30", "Editor 42:05", "Malen 1:15:00"; the group names are the parent's and are not translated).
+  A line that is no longer due (e.g. the parent raises the budget above both the threshold and the early level) disappears. The threshold changes only which lines are shown, never the times, colours, signals or enforcement.
+
+  App and group lines show the subject's **own remaining time** (Terms), so a break does not shorten them; the break has its own line. Every limited app gets a line once it is due, also one with a large budget such as 23:59 (OQ-21). Apps not in a group never count twice, and exemptions never get a line. A name longer than 24 characters is shortened with "…".
+
+  Examples:
+  - `kid1` runs Minecraft and Minecraft Launcher (both in group "Games", 4:12 left), Notepad (not grouped, 42:05 left) and Paint (in group "Drawing", 1:15:00 left); a break begins in 18:30. With the threshold **30 min**, the pill has **2 lines**: "Games 4:12", "Break in 18:30". With **60 min** it has **3 lines**: "Games 4:12", "Break in 18:30", "Editor 42:05" (German "Spiele 4:12", "Ruhezeit in 18:30", "Editor 42:05"; the group names are the parent's and are not translated). "Drawing 1:15:00" is not shown with any threshold.
+  - **Crossing the threshold** (threshold 30, early 5 / final 1, nothing used today): `kid1` starts Notepad with 0:35 and Paint with 0:32 at the same time → no pill. After about 2 minutes, "Paint 29:59" appears (pill visible, one line). After about 5 minutes, "Editor 29:59" appears below it. Each appearance is at the latest 10 seconds after the line became due.
+  - **Early level above the threshold** (threshold 15, early 45 / final 1): Notepad with 1:00 starts → no pill; after 15 minutes (45:00 left) the line "Editor 45:00" appears yellow with the early signal, although it is above 15 minutes.
 - [ ] **AC-4**: **Order, size and format**:
   - The lines are sorted by remaining time, **shortest at the top**, longest at the bottom. With equal times (to the second) the break line comes first, then the names in alphabetical order (OQ-18).
   - The **top line** is large, in the spike's main font (Segoe UI semibold 16 pt at 100 % scaling). All other lines use the spike's **smaller second-line size**. The pill grows downwards (top corners) or upwards (bottom corners) from its corner, so the top line always stays in the same place at the corner.
-  - At most **5 lines** are shown. When there are more, the fifth line reads "+3 more" ("+3 weitere") instead, counting the hidden lines, which are always the longest ones (OQ-20).
+  - At most **5 lines** are shown. When more than 5 lines are due, the fifth line reads "+3 more" ("+3 weitere") instead, counting the hidden due lines, which are always the longest ones (OQ-20). Lines that are not due are never counted.
   - Time format: below one hour **minutes:seconds**, e.g. "14:59", "0:42"; from one hour on **hours:minutes:seconds**, e.g. "1:45:00". Each line counts down once per second while its subject's time is used (US-006 AC-23; for a group: while at least one member is active, US-008). The times stop while the session is locked or switched away and continue from the same values. The break line counts down by the clock.
 - [ ] **AC-5**: The pill matches the service's enforcement. Measured with a stopwatch from the start of a fresh app (e.g. Notepad with 0:03, nothing used today, early 2, final 1): the pill starts at about "2:59", turns yellow at "2:00" and red at "1:00", each at the latest 10 seconds after the real level (US-006 AC-24), and shows "0:00" when the service closes the app (graceful close request at the latest 10 seconds after the budget reached 0, US-006 AC-25). After a lock of 1 minute and an unlock, the pill shows the same value as before the lock (±10 seconds), because locked time is not used time.
 - [ ] **AC-6**: When the parent changes something that moves the end of a running subject (budget raised or lowered, today ticked or unticked, an app moved into or out of a group, a group rule changed, a break time added or moved), the pill shows the new remaining time at the latest **15 seconds** after the parent app shows the confirmed change (5 seconds to take effect, US-006 AC-32, plus 10 seconds). Example: Notepad shows "Editor 5:30"; the parent raises the budget by 10 minutes → "Editor 15:3x".
 
-  **Lines appear, disappear and re-sort** (OQ-22): a line appears at the latest 10 seconds after its first app starts (or after the break comes within 60 minutes), and disappears at the latest 10 seconds after its last app is closed (or when the break begins). Moving an app into or out of a group moves it from its own line to the group's line or back. When the order changes (a new line, a changed budget), the lines re-sort at once, without animation; the new shortest line becomes the large top line. Lines that only count down keep their order. Example: the pill shows "Editor 8:00" (top) and "Paint 12:00"; the parent lowers Paint to 3 minutes left → within 15 seconds "Paint 3:00" is the large top line, "Editor 7:5x" small below it.
+  **Lines appear, disappear and re-sort** (OQ-22): a line appears at the latest 10 seconds after it becomes due (AC-3: its app starts with time below the threshold, its time drops below the threshold, the break comes closer than the threshold, or the early level is reached), and disappears at the latest 10 seconds after its last app is closed, when the break begins, or when it is no longer due. Moving an app into or out of a group moves it from its own line to the group's line or back. When the order changes (a new line, a changed budget), the lines re-sort at once, without animation; the new shortest line becomes the large top line. Lines that only count down keep their order. Example: the pill shows "Editor 8:00" (top) and "Paint 12:00"; the parent lowers Paint to 3 minutes left → within 15 seconds "Paint 3:00" is the large top line, "Editor 7:5x" small below it.
 
 ### B. Warning levels in the overlay (replaces the warning dialogs)
 
@@ -121,10 +134,10 @@ Proposed changes to `02_Implementation/docs/requirements/general-product-require
   - at or below the **final** level: **red**;
   - at **0:00**: steady red "0:00", until the service has closed the subject's apps.
 
-  Example with early 5 / final 1: "Games 0:42" red (top), "Break in 4:30" yellow, "Editor 42:05" white. After a close, the kid dialog with the budget text (or the break display text) appears as before (AC-13), and the line disappears (AC-6). The colour is never the only signal: the number, the pulse and the sound carry the same information.
+  Example with early 5 / final 1 and threshold 30: "Games 0:42" red (top), "Break in 4:30" yellow, "Editor 22:05" white. After a close, the kid dialog with the budget text (or the break display text) appears as before (AC-13), and the line disappears (AC-6). The colour is never the only signal: the number, the pulse and the sound carry the same information.
 - [ ] **AC-8**: **Signals** (OQ-17): when **any line** reaches the early level, the final level or 0:00, the **whole pill** pulses (quick pulse of about 3 seconds at the early level; slow pulse from the final level on, as long as at least one line is red and above 0:00) and the sound plays once (AC-11). Two levels reached within the same 5 seconds give **one** sound. Each level of a subject is signalled at most **once per subject and day**, and once per break occurrence for the break line, under the same rules as the US-006 and US-008 warnings (US-006 AC-24, AC-28; US-008 AC-26). **One end, one set of warnings** (US-006 AC-31): a line whose time is longer than the break line's takes its colour but gives **no** signal, because the break ends it first. When the parent raises a budget, the line's colour goes back to white or yellow; a level already signalled that day is not signalled again (US-006 plan Q-5).
 - [ ] **AC-9**: When a subject starts with its remaining time already at or below a level (US-006 AC-22, AC-30), its line appears directly in that level's colour and signals the level once. Example with early 5 / final 1: Notepad with 0:03 and nothing used → the line "Editor 2:59" appears yellow with pulse and sound, and turns red with the sound at "1:00".
-- [ ] **AC-10**: Break times (US-006 AC-28, AC-29): the break line (AC-3) turns yellow and red at the levels with the signals, and only while at least one limited app runs (feasibility Q-15, unchanged rule). Example with early 5 / final 1 and a break at 20:00, Paint running with 1:30:00 left: at 19:00 the break line appears and, being the shortest, becomes the large top line "Break in 59:59" ("Ruhezeit in 59:59"), with "Paint 1:30:00" small below; at 19:55 it turns yellow with the signal, at 19:59 red. When the break begins, the service closes all running apps and shows the break display text once (unchanged).
+- [ ] **AC-10**: Break times (US-006 AC-28, AC-29): the break line (AC-3) turns yellow and red at the levels with the signals, and only while at least one limited app runs (feasibility Q-15, unchanged rule). Example with early 5 / final 1, threshold 30, a break at 20:00 and Paint running with 1:30:00 left (not due, so no Paint line): at 19:30:01 the pill appears with the single line "Break in 29:59" ("Ruhezeit in 29:59"); at 19:55 it turns yellow with the signal, at 19:59 red. With the threshold 60 the break line appears at 19:00:01 ("Break in 59:59"). When the break begins, the service closes all running apps and shows the break display text once (unchanged).
 - [ ] **AC-11**: The **sound** is the Windows standard sound "Exclamation" ("Hinweis") at the system volume, on the default audio output. It plays at the early level, at the final level and at 0:00 (AC-7), only when the sound setting is on (AC-16). It also plays when the pill cannot be seen (true exclusive fullscreen, AC-23). With the system volume muted, nothing is heard; that is not a Fail.
 - [ ] **AC-12**: **Grace periods** (US-006 AC-32, AC-33; US-008 AC-32 to AC-34) open **no dialog** any more (OQ-3). When a parent change starts a grace period, the affected line (the app's or group's line, or the break line) shows, at the latest 10 seconds after the change takes effect, the grace time of the full final-warning minutes in **red**, moves to the top if it is now the shortest (AC-6), and the pill pulses with the sound, e.g. "Editor 0:59" or "Break in 0:59" ("Ruhezeit in 0:59"). A break grace period affects all running apps; their own lines keep their own times below the break line. When the grace period ends, the app is closed as before, with the kid dialog showing the budget text or the break display text. Example with final 1: Notepad runs with 4 minutes left; the parent sets 0:00 → within 15 seconds the pill turns red with "Editor 0:5x", pulse and sound; about 1 minute later Notepad is closed and the budget text dialog appears.
 
@@ -141,14 +154,15 @@ Proposed changes to `02_Implementation/docs/requirements/general-product-require
 - [ ] **AC-15**: The tray menu shows, from top to bottom (UI notes):
   - "Opacity" ("Deckkraft") ▸ "25 %", "50 %", "75 %", "100 %";
   - "Position" ("Position") ▸ "Top left" ("Oben links"), "Top right" ("Oben rechts"), "Bottom left" ("Unten links"), "Bottom right" ("Unten rechts");
+  - "Show from" ("Anzeigen ab") ▸ "60 min", "45 min", "30 min", "15 min" ("60 Min.", "45 Min.", "30 Min.", "15 Min."), the display threshold;
   - "Warning sound" ("Warnton"), a check item;
   - a separator;
   - "About" ("EagleEye – App Infos"), unchanged (US-001).
 
-  The current opacity and position carry a check mark; "Warning sound" carries a check mark when the sound is on. The menu opens with the **right and the left** mouse button on the tray icon (OQ-8). There is no item to hide the overlay (OQ-9).
-- [ ] **AC-16**: Defaults for an account that has never changed them: opacity **75 %**, position **top right**, warning sound **on**.
-- [ ] **AC-17**: **Opacity** sets how strongly the pill's dark background covers what is below it: 25 % lets most of the game shine through, 100 % is fully opaque. The time and the name stay fully readable at every step (OQ-6). **Position** moves the pill to that corner of the screen, measured from the screen edge, not from the taskbar (so it sits in the very corner of a fullscreen game). Both take effect at once: when a pill is visible, it changes within 1 second. With the sound off, there is no sound at the levels; the colours and the pulse stay.
-- [ ] **AC-18**: The overlay settings belong to the **Windows account** that sets them (OQ-7). They are kept when the user signs out and in again, after a restart of the PC, when the tray client is ended and started again, and when EagleEye is updated. `kid1`'s settings never change `kid2`'s. They can be changed while no pill is shown; the next pill uses them. They are not shown or changed in the parent apps.
+  The current opacity, position and display threshold carry a check mark; "Warning sound" carries a check mark when the sound is on. The menu opens with the **right and the left** mouse button on the tray icon (OQ-8). There is no item to hide the overlay (OQ-9).
+- [ ] **AC-16**: Defaults for an account that has never changed them: opacity **75 %**, position **top right**, display threshold **30 minutes**, warning sound **on**.
+- [ ] **AC-17**: **Opacity** sets how strongly the pill's dark background covers what is below it: 25 % lets most of the game shine through, 100 % is fully opaque. The time and the name stay fully readable at every step (OQ-6). **Position** moves the pill to that corner of the screen, measured from the screen edge, not from the taskbar (so it sits in the very corner of a fullscreen game). Both take effect at once: when a pill is visible, it changes within 1 second. **Show from** sets the display threshold (AC-3); a change takes effect within 1 second: lines that are now due appear, lines that are no longer due disappear, and the pill appears or disappears accordingly. Example: Notepad runs with 40:00 left and no pill is shown (threshold 30); the kid chooses "60 min" → "Editor 40:00" appears within 1 second; back to "30 min" → it disappears. With the sound off, there is no sound at the levels; the colours and the pulse stay.
+- [ ] **AC-18**: The overlay settings (opacity, position, display threshold, sound) belong to the **Windows account** that sets them (OQ-7). They are kept when the user signs out and in again, after a restart of the PC, when the tray client is ended and started again, and when EagleEye is updated. `kid1`'s settings never change `kid2`'s. They can be changed while no pill is shown; the next pill uses them. They are not shown or changed in the parent apps.
 - [ ] **AC-19**: Opening and using the tray menu never changes the remaining time, never pauses it and never affects enforcement. The tray menu can be used during a game, but it takes the focus while it is open (Windows behaviour); this is expected.
 
 ### E. Behaviour over games and robustness
@@ -198,6 +212,7 @@ Proposed changes to `02_Implementation/docs/requirements/general-product-require
 |---|---|---|
 | 2026-11-01 | Story created (draft, status `New`); requirements v1.10 amendment proposed; OQ-1 to OQ-16 open with proposed defaults | Michael's direction of 2026-11-01, the feasibility check, the spike and Michael's spike results; written by PRO |
 | 2026-11-01 | Michael answered OQ-1 to OQ-16: all proposals accepted, except OQ-4, replaced by his addition: the pill shows **one line per running ungrouped app, per group with a running app, and an approaching break**, sorted shortest first, top line large and the others in the spike's smaller size. Changed: Terms (line, top line, own remaining time), FR-TRAY-030 in the v1.10 proposal, AC-1, AC-3, AC-4, AC-6, AC-7, AC-8, AC-9, AC-10, AC-12, AC-25, UI notes, Out of Scope. New: OQ-17 to OQ-22 (proposed defaults). Status stays `New` until Michael approves the changed ACs; v1.10 stays proposed | Michael (via the Orchestrator), written by PRO |
+| 2026-11-01 | **Story approved by Michael** ("I agree to all, but the slight change that only times that are less than 30 minutes should be shown by default. So when a time budget is less than 30 mins or the break is closer than 30 mins. The time should be configurable with 4 options from the tray icon (so by the kid): 60 minutes, 45 minutes, 30 minutes, 15 minutes."). OQ-17 to OQ-22 resolved (proposals accepted). New **display threshold** ("Anzeigeschwelle", tray submenu "Show from" / "Anzeigen ab" ▸ 60 / 45 / 30 / 15 min, default 30, per Windows account): a line is shown only while it is due; the pill only while at least one line is due. This replaces OQ-2 ("always while a limited app runs") and OQ-19 (fixed 60 minutes for the break line). Changed: Terms (display threshold, due, overlay settings), FR-TRAY-030 and FR-TRAY-031, AC-1, AC-3, AC-4, AC-6, AC-7, AC-10, AC-15, AC-16, AC-17, AC-18, UI notes, Out of Scope. **Orchestrator/PRO interpretation; Michael may veto**: a line is also shown once it has reached the early-warning level, even above the threshold (e.g. early 45, threshold 15), so that a warning is never hidden (AC-3). Requirements v1.10 written into `02_Implementation/docs/requirements/general-product-requirements.md`, in effect | Michael (via the Orchestrator), written by PRO |
 
 ---
 
@@ -205,9 +220,9 @@ Proposed changes to `02_Implementation/docs/requirements/general-product-require
 
 ### The pill (AC-1, AC-3, AC-4, AC-7)
 
-Corner "top right", 75 % background, early 5 / final 1. Text colours as in the spike: white, yellow, red. The top line is large (spike main font), the others small (spike second-line size). Not to scale.
+Corner "top right", 75 % background, early 5 / final 1. Text colours as in the spike: white, yellow, red. The top line is large (spike main font), the others small (spike second-line size). Not to scale. The examples use the display threshold **60 min** so that more lines are due; with the default 30 min, "Editor 42:05" would not be shown. "Drawing 1:15:00" is never due (above 60 minutes) and is not shown.
 
-One app running:
+One app running (below the threshold):
 
 ```plantuml
 @startsalt
@@ -224,19 +239,17 @@ Example of AC-3 (Minecraft and Minecraft Launcher in "Games", Notepad ungrouped,
     <size:16><color:#E0B000><b>Games 4:12</color>
     <size:11>Break in 18:30
     <size:11>Editor 42:05
-    <size:11>Drawing 1:15:00
   }
   .
   {+
     <size:16><color:#E0B000><b>Break in 4:30</color>
     <size:11>Editor 28:05
-    <size:11>Drawing 1:01:00
   }
 }
 @endsalt
 ```
 
-In the second pill the "Games" line is gone: its time ran out, the service closed Minecraft and its launcher, and the kid saw the budget text dialog. The break line is now the shortest, so it is the large top line, yellow and signalled at 5:00. German: "Spiele 4:12", "Ruhezeit in 18:30", "Editor 42:05", "Malen 1:15:00". The group names are the parent's names and are not translated.
+In the second pill the "Games" line is gone: its time ran out, the service closed Minecraft and its launcher, and the kid saw the budget text dialog. The break line is now the shortest, so it is the large top line, yellow and signalled at 5:00. German: "Spiele 4:12", "Ruhezeit in 18:30", "Editor 42:05". The group names are the parent's names and are not translated.
 
 More than 5 lines (AC-4): the fifth line reads "+2 more" ("+2 weitere").
 
@@ -247,6 +260,7 @@ More than 5 lines (AC-4): the fifth line reads "+2 more" ("+2 weitere").
 {+
   {+ Opacity           | > }
   {+ Position          | > }
+  {+ Show from         | > }
   {+ ✓ Warning sound }
   ---
   {+ About }
@@ -254,7 +268,7 @@ More than 5 lines (AC-4): the fifth line reads "+2 more" ("+2 weitere").
 @endsalt
 ```
 
-German: "Deckkraft ▸", "Position ▸", "✓ Warnton", "EagleEye – App Infos". Submenus:
+German: "Deckkraft ▸", "Position ▸", "Anzeigen ab ▸", "✓ Warnton", "EagleEye – App Infos". Submenus (German "Anzeigen ab ▸ 60 Min. / 45 Min. / ✓ 30 Min. / 15 Min."):
 
 ```plantuml
 @startsalt
@@ -262,6 +276,8 @@ German: "Deckkraft ▸", "Position ▸", "✓ Warnton", "EagleEye – App Infos"
   {+ Opacity ▸ | 25 % | 50 % | ✓ 75 % | 100 % }
   .
   {+ Position ▸ | Top left | ✓ Top right | Bottom left | Bottom right }
+  .
+  {+ Show from ▸ | 60 min | 45 min | ✓ 30 min | 15 min }
 }
 @endsalt
 ```
@@ -304,7 +320,7 @@ Tray -> Kid : red, slow pulse, sound at 1:00
 Tray -> Kid : "0:00", sound
 Svc -> Svc : close gracefully; force after 20 s
 Svc -> Tray : kid dialog: budget text (unchanged, OK)
-Tray -> Kid : pill disappears (no limited app left)
+Tray -> Kid : pill disappears (no due line left)
 @enduml
 ```
 
@@ -316,7 +332,7 @@ Tray -> Kid : pill disappears (no limited app left)
 - The remaining-time summary on a tray click (FR-TRAY-011), times of apps that are not running, or minutes drawn into the tray icon. (The pill shows only running subjects and an approaching break.)
 - A kid option to hide the overlay, to move it freely (other than the four corners) or to change its size, font or colours (OQ-9).
 - Overlay settings set or locked by the parent, or shown in the parent apps (OQ-7).
-- A visibility setting ("always" / "only from the early warning") (OQ-2).
+- Display thresholds other than 60, 45, 30 and 15 minutes, a threshold set by the parent, or switching the overlay off.
 - A parent text, emoji or placeholder shown in the overlay; separate sounds per level; a custom sound file.
 - Graphics-API hooking or injection to cover true exclusive fullscreen (§10, feasibility option c); the Xbox Game Bar widget (option b); the `uiAccess` variant (a+) (not needed: the re-assert worked in the spike).
 - Showing the overlay to accounts that are not controlled, or for exempt programs.
@@ -326,12 +342,12 @@ Tray -> Kid : pill disappears (no limited app left)
 
 ---
 
-## Open Questions (OQ-1 to OQ-16 answered by Michael, 2026-11-01; OQ-17 to OQ-22 open, with PRO's proposed defaults)
+## Open Questions (all resolved by Michael, 2026-11-01)
 
 | ID | Question | Proposed default | Answer |
 |---|---|---|---|
 | OQ-1 | **Which texts are removed?** "The text configurations for the dialog boxes" could mean only the two warning texts, or also the budget text and the break display text. | Remove **only the early and final warning texts** (Settings, column "Display text"). The **budget text** and the **break display text** stay on the Rules page, because their dialogs stay (AC-13): they explain why a game was blocked or closed and appear only after it is gone (feasibility Q-6). *Alternative*: also replace those dialogs by an overlay message and remove their texts (larger story; the kid would then see no reason text). | Agreed. — **Resolved** (Michael, 2026-11-01): proposal accepted. |
-| OQ-2 | **When is the pill visible?** (feasibility Q-1) | **Always while a limited app runs**, as an FPS counter (Michael's trigger, the spike counted down from 15:00). No setting. *Alternative*: only from the early level on (fewer pixels on screen most of the time), or a third tray setting "Show: always / only near the end". | Agreed. — **Resolved** (Michael, 2026-11-01): proposal accepted. |
+| OQ-2 | **When is the pill visible?** (feasibility Q-1) | **Always while a limited app runs**, as an FPS counter (Michael's trigger, the spike counted down from 15:00). No setting. *Alternative*: only from the early level on (fewer pixels on screen most of the time), or a third tray setting "Show: always / only near the end". | Changed. — **Resolved** (Michael, 2026-11-01, at the approval): only lines below the **display threshold** are shown (default 30 min; the kid chooses 60, 45, 30 or 15 min in the tray menu); the pill is visible only while at least one line is due (AC-1, AC-3, AC-15). |
 | OQ-3 | **Grace periods**: today they open the dialog with the final warning text and a line "your parents changed the rules … closes in 1 minute". | **No dialog**: the pill turns red with the grace countdown, pulse and sound (AC-12). The final warning text is gone anyway. *Alternative*: keep a dialog for grace periods, with EagleEye's own line only (it takes the focus again). | Agreed. — **Resolved** (Michael, 2026-11-01): proposal accepted. |
 | OQ-4 | **What does the pill show, and in which format?** (feasibility Q-2, Q-3) | The **subject that ends first** among the running limited apps (group name for grouped apps), one pill only (AC-3). Format **m:ss** below one hour, **h:mm:ss** from one hour (AC-4), counting every second as in the spike. | Replaced. — **Resolved** (Michael, 2026-11-01): the pill shows **all** running subjects and an approaching break, one line each, shortest on top, top line large (AC-3, AC-4); the time format of the proposal stays. Details in OQ-17 to OQ-22. |
 | OQ-5 | **Label for a break**: | "Break in 4:59" ("Ruhezeit in 4:59"). | Agreed. — **Resolved** (Michael, 2026-11-01): proposal accepted. |
@@ -347,22 +363,22 @@ Tray -> Kid : pill disappears (no limited app left)
 | OQ-15 | **Sound** | The Windows standard sound "Exclamation" ("Hinweis") at the early level, the final level and 0:00, as in the spike (AC-11). | Agreed. — **Resolved** (Michael, 2026-11-01): proposal accepted. |
 | OQ-16 | **Stored warning texts on update** | Removed from the service's storage during the update to 0.10.0 (AC-35), so no unused parent data stays behind. *Alternative*: keep them unused. | Agreed. — **Resolved** (Michael, 2026-11-01): proposal accepted. |
 
-### New open questions from the multi-line pill (Michael's addition of 2026-11-01)
+### Questions from the multi-line pill (Michael's addition of 2026-11-01; resolved at the approval)
 
 | ID | Question | Proposed default | Answer |
 |---|---|---|---|
-| OQ-17 | **Colours and signals with several lines** | Each line takes the **colour of its own level** (white, yellow, red). When **any** line reaches a level, the **whole pill** pulses and the sound plays once; two levels within 5 seconds give one sound. A line that ends after the break line gives no signal, because the break ends it first (US-006 AC-31). (AC-7, AC-8) | |
-| OQ-18 | **Ties** (equal times to the second) | The break line first, then alphabetical by name. (AC-4) | |
-| OQ-19 | **When does the break line appear?** ("when a break is approaching") | When the next break begins within **60 minutes** and a limited app runs. *Alternative*: whenever a break is still to come today (then e.g. "Ruhezeit in 6:12:00" all afternoon). (AC-3) | |
-| OQ-20 | **Maximum number of lines** | **5**; with more, the fifth line reads "+N more" ("+N weitere") and the longest lines are hidden. (AC-4) | |
-| OQ-21 | **Apps with a very large budget** (e.g. 23:59; there is no "unlimited" budget, every limited app has an end) | They get a line like every other running limited app; it sits at the bottom because it is the longest. Exemptions get no line. (AC-3) | |
-| OQ-22 | **Appearing, disappearing, re-sorting** | Lines appear and disappear within 10 seconds of the app start or close. When the order changes, the lines re-sort at once without animation, and the new shortest line becomes the large top line; the pill grows away from its corner, so the top line stays in the corner. (AC-4, AC-6) | |
+| OQ-17 | **Colours and signals with several lines** | Each line takes the **colour of its own level** (white, yellow, red). When **any** line reaches a level, the **whole pill** pulses and the sound plays once; two levels within 5 seconds give one sound. A line that ends after the break line gives no signal, because the break ends it first (US-006 AC-31). (AC-7, AC-8) | Agreed. — **Resolved** (Michael, 2026-11-01): proposal accepted (the lines counted are the due lines, AC-3). |
+| OQ-18 | **Ties** (equal times to the second) | The break line first, then alphabetical by name. (AC-4) | Agreed. — **Resolved** (Michael, 2026-11-01): proposal accepted (the lines counted are the due lines, AC-3). |
+| OQ-19 | **When does the break line appear?** ("when a break is approaching") | When the next break begins within **60 minutes** and a limited app runs. *Alternative*: whenever a break is still to come today (then e.g. "Ruhezeit in 6:12:00" all afternoon). (AC-3) | Replaced. — **Resolved** (Michael, 2026-11-01): the break line follows the display threshold (break begins in less than 15/30/45/60 min, default 30) or the early-warning level (AC-3). |
+| OQ-20 | **Maximum number of lines** | **5**; with more, the fifth line reads "+N more" ("+N weitere") and the longest lines are hidden. (AC-4) | Agreed. — **Resolved** (Michael, 2026-11-01): proposal accepted (the lines counted are the due lines, AC-3). |
+| OQ-21 | **Apps with a very large budget** (e.g. 23:59; there is no "unlimited" budget, every limited app has an end) | They get a line like every other running limited app; it sits at the bottom because it is the longest. Exemptions get no line. (AC-3) | Agreed. — **Resolved** (Michael, 2026-11-01): proposal accepted (the lines counted are the due lines, AC-3). |
+| OQ-22 | **Appearing, disappearing, re-sorting** | Lines appear and disappear within 10 seconds of the app start or close. When the order changes, the lines re-sort at once without animation, and the new shortest line becomes the large top line; the pill grows away from its corner, so the top line stays in the corner. (AC-4, AC-6) | Agreed. — **Resolved** (Michael, 2026-11-01): proposal accepted (the lines counted are the due lines, AC-3). |
 
 ### Feasibility questions Q-1 to Q-15 (`feasibility-overlay.md` §8)
 
 | Q | Topic | Settled by | Result in this story |
 |---|---|---|---|
-| Q-1 | When visible | **Michael** (OQ-2) | Always while a limited app runs (AC-1) |
+| Q-1 | When visible | **Michael** (OQ-2, changed at the approval) | Only lines below the display threshold (15/30/45/60 min, default 30, tray menu), or at the early level (AC-1, AC-3) |
 | Q-2 | What it shows | **Michael's addition** (OQ-4) | One line per running ungrouped app, per group with a running app, and an approaching break; shortest on top, top line large (AC-3, AC-4; details OQ-17 to OQ-22) |
 | Q-3 | Format | **Michael** (OQ-4) | m:ss, h:mm:ss from one hour (AC-4) |
 | Q-4 | Position, size, transparency | **Michael's direction** + spike | Four corners and opacity in the tray menu (AC-15 to AC-17); size as the spike; steps 25/50/75/100 % (OQ-6) |
