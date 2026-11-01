@@ -1,10 +1,10 @@
 # ADR-014: Session-Bound Tray Connections and the Kid's Message Box
 
-**Status**: Accepted (approved by Michael with the US-005 implementation plan, 2026-10-10); US-006 amendment approved with the US-006 implementation plan, 2026-10-12
+**Status**: Accepted (approved by Michael with the US-005 implementation plan, 2026-10-10); US-006 amendment approved with the US-006 implementation plan, 2026-10-12; US-010 amendment (remaining-time push) approved with the US-010 implementation plan, 2026-11-01
 **Date**: 2026-10-10
 **Deciders**: ARC, Michael
 
-> **Amendment 2026-11-01 (US-010, ADR-022) — Proposed with the US-010 implementation plan, for Michael's approval**
+> **Amendment 2026-11-01 (US-010, ADR-022) — approved by Michael together with the US-010 implementation plan (2026-11-01)**
 >
 > 1. **New push `ITrayClientCallback.OnRemainingTime(RemainingTimeDto)`**: fire-and-forget (no client result), sent by the time-limit engine **every tick (5 s)** to the newest verified tray connection (§1, §2 binding unchanged) of each session of a controlled account, also when the model is empty. The model holds one line per running subject (app or group, own time without breaks), one break line, the warning minutes and the strongest signal of the tick (`None`, `Early`, `Final`, `Expired`). The tray counts down locally, hides the overlay after 15 s without a push, on disconnect and while the session is locked (ADR-022).
 > 2. **Warnings and grace periods no longer use `ShowKidMessage`**. The reasons `AppEarlyWarning`, `AppFinalWarning`, `BreakEarlyWarning`, `BreakFinalWarning`, `AppGracePeriod`, `BreakGracePeriod` and the field `KidMessageDto.Minutes` are removed. The kid dialog (§3) stays for blocked starts and enforced closes only (`AppNotAllowedToday`, `AppBudgetUsedUp`, `BreakTime`), unchanged.

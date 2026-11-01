@@ -1,6 +1,6 @@
 # ADR-022: Remaining-Time Overlay in the Tray Client
 
-**Status**: Proposed (with the US-010 implementation plan, 2026-11-01; for Michael's approval)
+**Status**: Accepted (approved by Michael with the US-010 implementation plan, 2026-11-01)
 **Date**: 2026-11-01
 **Deciders**: ARC, Michael
 

@@ -1,10 +1,10 @@
 # ADR-007: Two-Machine Development and Manual Acceptance Testing
 
-**Status**: Accepted (§2 "Distribution" superseded by ADR-009, 2026-10-04; machine roles and §2 "Role" amended by CR-001 / ADR-019, 2026-10-20; third, test-only machine and Windows parent client minimum OS amended by US-009, accepted 2026-10-31)
+**Status**: Accepted (§2 "Distribution" superseded by ADR-009, 2026-10-04; machine roles and §2 "Role" amended by CR-001 / ADR-019, 2026-10-20; third, test-only machine and Windows parent client minimum OS amended by US-009, accepted 2026-10-31; second test-only machine (gaming PC) amended by US-010, accepted 2026-11-01)
 **Date**: 2026-10-03
 **Deciders**: Michael (project owner)
 
-> **Amendment 2026-11-01 (US-010) — Proposed with the US-010 implementation plan, for Michael's approval**: a second **test-only machine**: the kid's **gaming PC 192.168.1.85** (Windows 11, one monitor, the kids' games; also the pilot service PC that the Mac app paired with in US-008). Like the Windows 10 test PC: no repo, no agent sessions, no builds; Michael copies the git-ignored installers from `03_Delivery/windows/` to it and runs the game test cases there. It is not the Windows Developer Machine `ZOCK-O-MAT-V3` (192.168.1.37). `02_Implementation/docs/dev-process/dev-environments.md` §1 gets the matching row (Orchestrator, after approval).
+> **Amendment 2026-11-01 (US-010) — approved by Michael together with the US-010 implementation plan (2026-11-01)**: a second **test-only machine**: the kid's **gaming PC 192.168.1.85** (Windows 11, one monitor, the kids' games; also the pilot service PC that the Mac app paired with in US-008). Like the Windows 10 test PC: no repo, no agent sessions, no builds; Michael copies the git-ignored installers from `03_Delivery/windows/` to it and runs the game test cases there. It is not the Windows Developer Machine `ZOCK-O-MAT-V3` (192.168.1.37). `02_Implementation/docs/dev-process/dev-environments.md` §1 gets the matching row (Orchestrator, after approval).
 
 > **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped (Michael, 2026-10-20). The two-machine setup and manual testing stay as decided. Changed:
 >
