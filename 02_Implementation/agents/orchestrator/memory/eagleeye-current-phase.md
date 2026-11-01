@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-10-31 US-009 step b: story approved (a4f2d5d, req. v1.9 in effect); ARC plan ce255d4 (6 steps, ADR-009/019/007 Proposed, Q-1..Q-4) awaits Michael's approval
+description: EagleEye workflow status — 2026-11-01 US-009 step c done on both machines (Step 5 Mac 228cad0, story Implemented, .dmg 0.9.0); awaiting Michael step-c approval → TES test plan on Windows
 metadata:
   type: project
 ---
+
+**Update 2026-11-01 (US-009 H4, MacBook): DEV Step 5 done 228cad0 (pushed): build/test 0 warnings, Shared 305 + ParentApp 1 109 green; no shared change from Windows (only #if WINDOWS in AppGroupsView.xaml.cs) → no Mac probe; `.dmg` 0.9.0 SHA-256 9f397006…c5fdde6, NOT installed (Mac app 0.8.0 = AC-32 start). Report §11 Mac + §6 final How to test; story Implemented. Step 6 not needed. Local cleanup: PRO worktree removed, local US-008 branch deleted, local main fast-forwarded. NEXT: Michael approves step c → Windows: TES step d test plan from report §6.**
 
 **Update 2026-10-31 (US-009 H3): Step 4 Win10 PC PASSED per Michael's summary ("installing and working on Windows 10"; no per-row detail), recorded 655329b. NEXT: MacBook DEV Step 5 (build/test, .dmg 0.9.0 not installed — AC-32 start stays 0.8.0, story → Implemented, H4), report §10 has the prompt; Step 6 only if Step 5 changes code; then step-c approval → TES.**
 
