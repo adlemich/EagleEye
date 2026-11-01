@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-11-01 US-010 ARC plan Draft b1d57b4, spike code removed; NEXT Michael approves plan → DEV Step 1 (Windows)
+description: EagleEye workflow status — 2026-11-01 US-010 Windows steps done (72b3d12, installers 0.10.0); NEXT Michael Step 5 live check, then MacBook Step 7, then .85 Step 9
 metadata:
   type: project
 ---
+
+**Update 2026-11-01 (US-010 step c, Windows parts DONE): Michael approved plan (c0b6d1a; no RAM/CPU run in Step 5 — AC-27 in pilot; Q-1..Q-3 defaults; ADR-022 + amendments Accepted; story Analyzed; arc42 update deferred to ARC). Orchestrator added .85 to dev-environments §1 (45e492d). DEV (subagent) did Steps 1–4 + 6: ba64076, aa38a55 (Steps 2+3 together, D-1), 0c6d672, 72b3d12. 3 096 tests green (Shared 314, Service 1 506, Tray 168, ParentApp 1 108), 0 warnings. Installers 0.10.0 in 03_Delivery/windows (service 49BC687C…5D5F, parent app BA87EBB8…DCA9), not installed. Migration 7 verified in tests + on a copied DB. Nothing visible checked by DEV (RDP session, no display). Q-DEV-1 bottom corners: large line at the corner (reverse order) default yes; Q-DEV-2 Step 5 uses Admin as controlled account with Debug service (offset 10000). R-2 tray published self-contained (bigger working set). NEXT: Michael Step 5 at .37 console (report §9, ~20 min), H1 MacBook Step 7 (report §10 prompt), Step 9 on .85.**
 
 **Update 2026-11-01 (US-010 step b, Windows): ARC plan Draft b1d57b4 + spike code removed 177813f (docs kept, Michael: only code + binaries go). Plan: Steps 1–6 Windows (Shared contracts 0.10.0; warning texts removed incl. DB migration 7 DROP COLUMN; service remaining-time push ITrayClientCallback.OnRemainingTime every 5 s tick; tray overlay; Step 5 Michael live check at .37 console + 1 h CPU run; installers), Step 7 MacBook (.dmg), Step 8 Windows if needed, Step 9 Michael 15-min game pre-check on .85; H1–H4. Tray settings in HKCU\Software\EagleEye\TrayClient (4 DWORDs). ADR-022 new + amendments ADR-007/011/014/015/016 (Proposed); after approval Orchestrator adds .85 row to dev-environments.md, ARC updates arc42. Q-1 pulse/sound up to 5 s after colour (accept), Q-2 install 0.9.0 on .37 first (yes), Q-3 pre-check on .85 (yes). Story delivery note on spike removal now outdated (PRO). NEXT: Michael approves plan → DEV Step 1.**
 
