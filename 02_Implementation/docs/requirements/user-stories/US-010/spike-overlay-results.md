@@ -19,13 +19,13 @@ The tray icon menu (right-click on the OverlaySpike icon in the notification are
 
 ## Preparation
 
-- [ ] **P-1** Parent app → *Regeln* → the kid's account: the games' group (e.g. *Spiele*) or each game has **at least 3:00 for today**, with today ticked. No *Ruhezeit* begins in the next 3 h. Write down the old values to set them back: ____________
-- [ ] **P-2** USB stick with `OverlaySpike.exe` (and `overlay-spike.json`) from `03_Delivery\spikes\US-010-overlay\` on the Windows Developer Machine.
-- [ ] **P-3** Sign in to the gaming PC as the **kid**. Copy the folder into *Downloads*: path ____________
-- [ ] **P-4** Double-click `OverlaySpike.exe`. If SmartScreen appears: **Weitere Informationen** → **Trotzdem ausführen**. Expected: no admin prompt; a pill **"Spiele 15:00"** at the top right; a new tray icon (maybe under the **^** arrow).
-- [ ] **P-5** Wait 1 minute. OverlaySpike is still running and no EagleEye message appeared. If EagleEye blocked it: fallback in the instructions §6.3 step 2, then note it here: ____________
-- [ ] **P-6** Tray icon → *Log-Ordner öffnen*: the log file `overlay-spike-….log` is there. Folder: ____________
-- [ ] **P-7** Phone ready (camera). For Fortnite: *Einstellungen* → *Video/Grafik* → **FPS anzeigen** switched on (label may differ slightly).
+- [x] **P-1** Parent app → *Regeln* → the kid's account: the games' group (e.g. *Spiele*) or each game has **at least 3:00 for today**, with today ticked. No *Ruhezeit* begins in the next 3 h. Write down the old values to set them back: ____________
+- [x] **P-2** USB stick with `OverlaySpike.exe` (and `overlay-spike.json`) from `03_Delivery\spikes\US-010-overlay\` on the Windows Developer Machine.
+- [x] **P-3** Sign in to the gaming PC as the **kid**. Copy the folder into *Downloads*: path ____________
+- [x] **P-4** Double-click `OverlaySpike.exe`. If SmartScreen appears: **Weitere Informationen** → **Trotzdem ausführen**. Expected: no admin prompt; a pill **"Spiele 15:00"** at the top right; a new tray icon (maybe under the **^** arrow).
+- [x] **P-5** Wait 1 minute. OverlaySpike is still running and no EagleEye message appeared. If EagleEye blocked it: fallback in the instructions §6.3 step 2, then note it here: ____________
+- [x] **P-6** Tray icon → *Log-Ordner öffnen*: the log file `overlay-spike-….log` is there. Folder: ____________
+- [x] **P-7** Phone ready (camera). For Fortnite: *Einstellungen* → *Video/Grafik* → **FPS anzeigen** switched on (label may differ slightly).
 
 ---
 
@@ -40,10 +40,10 @@ The tray icon menu (right-click on the OverlaySpike icon in the notification are
 - Step 2: no OverlaySpike button in the taskbar; not in Alt+Tab.
 - Step 3: each hotkey shows a small second line in the pill for 2 s (e.g. `Re-assert: AUS`); the pill moves through the 4 corners and back; **Editor keeps the focus** (the cursor still blinks in Editor).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Marker**: ____
 - **Observed**:
-- **Notes**:
+- **Notes**: I did not use the hotkeys but only left mouse on the tray icon to move the pill. did work
 
 ## SP-02: Levels and beep
 
@@ -54,9 +54,9 @@ The tray icon menu (right-click on the OverlaySpike icon in the notification are
 - Step 2: at 1:00 **red**, pulses slowly until 0:00, beep at 1:00 and at 0:00; then steady red `0:00`.
 - Photo of the yellow and the red pill: `sp-02-yellow.jpg`, `sp-02-red.jpg`.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
-- **Notes** (is the look readable? too big, too small, too transparent?):
+- **Notes** (is the look readable? too big, too small, too transparent?): Size, color, font - all good. Worked best with 75% opacity.
 
 ---
 
@@ -68,19 +68,19 @@ The tray icon menu (right-click on the OverlaySpike icon in the notification are
 
 Start Minecraft Java via the Minecraft Launcher; join a world in a normal window (not fullscreen).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Marker**: ____ · **Photo**: `sp-03-mc-java-window.jpg` · **Screenshot shows overlay?** [ ] yes [ ] no
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Marker**
 - **Observed**:
-- **Notes**:
+- **Notes**: No screenshot, but worked seamless
 
 ## SP-04: Minecraft Java — fullscreen (F11)
 
 In the world, press **F11** (or *Optionen* → *Grafikeinstellungen* → **Vollbild: AN**). *Vollbildauflösung* stays at its default (*Aktuell*).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Marker**: ____ · **Photo**: `sp-04-mc-java-f11.jpg` · **Screenshot shows overlay?** [ ] yes [ ] no
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Marker**: 
 - **Observed**:
-- **Notes**:
+- **Notes**: works!
 
 ## SP-05: Minecraft Java — fullscreen with a changed resolution
 
@@ -89,39 +89,39 @@ If the setting does not exist in this version: **Skipped**.
 
 *Expected: here the overlay may be missing (true exclusive mode). That is a finding, not a defect; tick **Fail** if not visible.*
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Marker**: ____ · **Resolution chosen**: ____ · **Photo**: `sp-05-mc-java-res.jpg`
+- **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Marker**: ____ · **Resolution chosen**: ____ 
 - **Observed** (visible? flicker? minimised?):
-- **Notes**:
+- **Notes**:  works! No problems. We tried several resolutions, all worked. Only when we select "exlusive fullscreen", the pill is not visible anymore. The same behavior as with Task-Manager. But this is ok.
 
 ## SP-06: Minecraft Bedrock — windowed and F11
 
 Start Minecraft (Bedrock, e.g. via the Minecraft Launcher or the Xbox app); join a world windowed, then **F11** (or *Einstellungen* → *Video* → **Vollbild**).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Marker**: ____ · **Photos**: `sp-06-mc-bedrock-window.jpg`, `sp-06-mc-bedrock-f11.jpg`
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Marker**: 
 - **Observed**:
-- **Notes**:
+- **Notes**:  works! No problems.
 
 ## SP-07: Fortnite (Easy Anti-Cheat) — Fenster-Vollbild
 
 Start Fortnite via the Epic Games Launcher (with OverlaySpike already running). *Einstellungen* → *Video/Grafik* → **Fenstermodus: Fenster-Vollbild** (Windowed Fullscreen). Play a match or the lobby/creative for about 3 min.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Marker**: ____ · **Photo**: `sp-07-fortnite-windowed-fs.jpg` · **Screenshot shows overlay?** [ ] yes [ ] no
-- **Easy Anti-Cheat** message or kick at start or during play? [ ] none [ ] yes: ____________
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Marker**: ____ 
+- **Easy Anti-Cheat** message or kick at start or during play? [X ] none [ ] yes: ____________
 - **Observed**:
-- **Notes**:
+- **Notes**:  works! No problems.
 
 ## SP-08: Fortnite — Vollbild
 
 **Fenstermodus: Vollbild** (Fullscreen) → apply. Play about 3 min. Note the rendering mode if you know it (*DirectX 11 / DirectX 12 / Performance*): ____
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Marker**: ____ · **Photo**: `sp-08-fortnite-fs.jpg` · **Screenshot shows overlay?** [ ] yes [ ] no
-- **Easy Anti-Cheat** message or kick? [ ] none [ ] yes: ____________
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Marker**: ____
+- **Easy Anti-Cheat** message or kick? [ X] none [ ] yes: ____________
 - **Observed** (visible? flicker? the game drops out of fullscreen when the pill changes?):
-- **Notes**:
+- **Notes**:  works! No problems.
 
 ## SP-09: Fortnite — 10 minutes of play, FPS with and without overlay
 
@@ -138,46 +138,46 @@ In the mode the kid normally uses (write it down: ____), same place in the game 
 | 1 | | |
 | 2 | | |
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [x ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Marker**: ____ · **Easy Anti-Cheat** during 10 min: [ ] nothing [ ] message/kick: ____
 - **Observed**:
-- **Notes** (did the kid / you feel any difference?):
+- **Notes** (did the kid / you feel any difference?):  works! No problems.
 
 ## SP-10: Chrome — F11 and fullscreen video
 
 1. Chrome, any page, **F11**. 2. F11 off; YouTube, play a video, press **f** (fullscreen).
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Marker**: ____ · **Photos**: `sp-10-chrome-f11.jpg`, `sp-10-youtube-fs.jpg`
+- **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Marker**: ____`
 - **Observed** (video smooth?):
-- **Notes**:
+- **Notes**: works! No problems.
 
 ## SP-11: Steam — Big Picture
 
 Steam → *Ansicht* → **Big-Picture-Modus** (or the controller icon top right). If a Steam game is installed, start it from there as well.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Marker**: ____ · **Photo**: `sp-11-steam-bp.jpg` · **Game tried**: ____
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Marker**: ____ ____
 - **Observed**:
-- **Notes**:
+- **Notes**:  works! No problems.
 
 ## SP-12: Xbox app
 
 Open the Xbox app, maximised. If a Game-Pass/Xbox game is installed, start it too.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Marker**: ____ · **Photo**: `sp-12-xbox.jpg` · **Game tried**: ____
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Marker**: ____
 - **Observed**:
-- **Notes**:
+- **Notes**: works! No problems.
 
 ## SP-13: Epic Games Launcher
 
 Open the Epic Games Launcher, maximised; click around the store and the library.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
-- **Marker**: ____ · **Photo**: `sp-13-epic.jpg`
+- **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Marker**: ____
 - **Observed**:
-- **Notes**:
+- **Notes**: works! No problems.
 
 ---
 
@@ -198,10 +198,10 @@ Open the Epic Games Launcher, maximised; click around the store and the library.
 | Xbox app | | |
 | Epic launcher | | |
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ x] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Markers**: ____ / ____
 - **Observed**:
-- **Notes**:
+- **Notes**:  works! No problems.
 
 ## SP-15: Lock and unlock
 
@@ -209,7 +209,7 @@ With a game or Chrome F11 in front: **Win+L**, wait 30 s, sign in again.
 
 **Expected**: the overlay is back after unlocking (still counting), over the same app; no error balloon.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ X] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -220,10 +220,10 @@ Only if the gaming PC has two monitors. Ideally they have different scaling (*Ei
 
 **Expected**: the overlay is always on the monitor of the window in front, within about 1 s; the text is sharp (not blurry) and the same physical size at both scales.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Photos**: `sp-16-mon1.jpg`, `sp-16-mon2.jpg`
 - **Observed**:
-- **Notes**:
+- **Notes**: we have only one monitor.
 
 ## SP-17: Sign-out
 
@@ -231,7 +231,7 @@ Note the time: ____. Start → user icon → **Abmelden**, with OverlaySpike run
 
 **Expected**: the sign-out is not delayed by OverlaySpike (no "Diese App verhindert das Abmelden" screen for it). The newest log ends with `session ending`.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ x] Skipped
 - **Observed**:
 - **Notes**:
 
@@ -245,7 +245,7 @@ Note the time: ____. Start → user icon → **Abmelden**, with OverlaySpike run
 
 **Expected**: the log's `CPU` lines show OverlaySpike mostly below 1 % CPU; the `END` line has the summary.
 
-- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
+- **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ x] Skipped
 - **Highest CPU % seen in the log** (DEV can fill in): ____
 - **Observed**:
 - **Notes**:
@@ -254,4 +254,4 @@ Note the time: ____. Start → user icon → **Abmelden**, with OverlaySpike run
 
 ## General Feedback
 
-<!-- Anything else: how the overlay looked over the games, what the kid said, ideas for position, size, colours, when it should be visible, whether the beep is useful or annoying. This goes to PRO as input for US-010 (feasibility §8). -->
+This worked nice. The spike is a success. For apps with exclusive full screen, the overlay is not on top, but that is no problem since most games run in full screen windows. CPU impact was not noticeable. 
