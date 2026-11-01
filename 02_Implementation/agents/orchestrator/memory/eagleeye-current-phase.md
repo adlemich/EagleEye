@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-11-01 US-009 CLOSED (known issue ISSUE-010) and merged into main; between stories, Michael wants to move on to other things
+description: EagleEye workflow status — 2026-11-01 US-010 (time overlay) pre-story: ARC feasibility 3de30c9 says feasible with limits (option a: tray click-through topmost window); Michael decides on a Windows spike before PRO writes the story
 metadata:
   type: project
 ---
+
+**Update 2026-11-01 (US-010 pre-story, MacBook): Michael wants a half-transparent always-on-top remaining-time overlay for the kid instead of the 5/1-min OK dialogs. Orchestrator created branch `feature/US-010-time-overlay` from main (no story yet, Michael wanted feasibility first). ARC (subagent, no internet) wrote `docs/requirements/user-stories/US-010/feasibility-overlay.md` (3de30c9): feasible with limits; recommended (a) layered click-through topmost no-activate window in the tray + new remaining-time push from service; Game Bar widget and injection rejected; exclusive fullscreen not covered; requirements already have FR-TRAY-030 / NFR-P-011; story M; spike ½–1 day on Windows proposed; Q-1..Q-15 product questions for PRO. NEXT: Michael decides spike before story.**
 
 **Update 2026-11-01 (US-009 CLOSED, MacBook): Michael ran test run 01 (49 Pass, 1 Fail TC-009-29, 21 Skipped, TC-009-45 no result). TES report 35e1726: 24/38 ACs verified, AC-6 failed (known issue), 13 not/partly verified (all of Session 5 two-apps-at-once skipped). ISSUE-010 (`docs/testing/US-009/issues/`, Medium, status New + decision: known issue under observation): Windows parent app status bar stays green when service stopped/suspended — status bar only follows SignalR Reconnecting/Closed; save errors (4 s write timeout) don't notify ConnectionCoordinator; no ServerTimeout/KeepAlive set (30 s default); Mac likely affected (shared Core). Michael closed US-009 and gave the go to merge; merged --no-ff into main, branch deleted. Unanswered TES points: TC-009-45 result, S-6 kid2 English, severity, report §11 regression additions. NEXT: between stories; Michael wants to move on to other things.**
 
