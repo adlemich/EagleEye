@@ -1,7 +1,7 @@
 # EagleEye — Product Coding Guidelines
 
 *Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); CR-001 amendment approved (2026-10-20); US-008 and US-009 amendments approved (2026-10-31)*
-*Maintainer: ARC Agent | Last Updated: 2026-10-31*
+*Maintainer: ARC Agent | Last Updated: 2026-11-07 (layout, tray overlay, file paths and test naming aligned with the code by the Orchestrator)*
 
 > **Amendment 2026-10-04 (US-002, ADR-008, ADR-009)**: §10.1, §10.2, §10.4 (`ParentApp.Core`, Shared `Communication/` and `Data/`), §12.2 (pairing code in a topmost window), §16.1 (packaging per ADR-009, token storage via DPAPI `ISecretStore`).
 
@@ -498,41 +498,43 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 02_Implementation/src/
 ├── EagleEye.Shared/              # Shared library — contracts, models, constants
 │   ├── Contracts/                # IParentHub, ITrayHub, IParentClientCallback, ITrayClientCallback
-│   ├── Models/                   # DTOs: UserConfigDto, AppRuleDto, TimeBudgetDto, ...
-│   ├── Constants/                # HubRoutes, ServiceDefaults, PairingRules
+│   ├── Models/                   # DTOs and enums: UserAccountDto, AppRuleDto, AppGroupDto, RemainingTimeDto, ...
+│   ├── Constants/                # HubRoutes, ServiceDefaults, PairingRules, BreakTimeRules, AppRuleRules, WarningRules, AppGroupNames, OverlayRules
 │   ├── Communication/            # ReconnectSchedule, ConnectBackoff (client reconnect timing)
 │   ├── Data/                     # SqliteDatabase base (pragmas, integrity check, migrations)
 │   ├── Logging/                  # RollingFileLoggerProvider (EagleEye file logging)
-│   ├── Resources/                # DefaultTexts (de neutral, en satellite): default kid texts, ADR-016 (US-006)
-│   └── Extensions/               # Shared extension methods
+│   └── Resources/                # DefaultTexts (de neutral, en satellite): default kid texts, ADR-016 (US-006)
 ├── EagleEye.Service/             # Windows service
-│   ├── Communication/            # ParentHub, TrayHub, connection management
+│   ├── Communication/            # ParentHub, TrayHub, connection registries, KidMessenger, OverlayPublisher (US-010)
 │   ├── SessionAgent/             # Agent mode (--session-agent): window scan, "Apps" rule, protocol (ADR-011)
-│   ├── Enforcement/              # Break-time gate, blocked-start sequence, kill set, process terminator (ADR-013, US-005)
+│   ├── Monitoring/               # Sessions, agent launcher and supervisor, process inspection, name resolution (US-004)
+│   ├── Enforcement/              # AppStartGate, CloseSequenceRunner, kill set, TimeLimitEngine, OverlayLineBuilder (ADR-013, ADR-015, ADR-022)
 │   ├── Groups/                   # AppGroupService (state owner AppGroups, AppGroupRules), snapshot, span union, group usage (US-008)
-│   ├── Rules/                    # BreakTimeService (state owner AccountRules), schedule evaluation, repository access (US-005)
-│   ├── Configuration/            # ConfigurationManager, YAML reader
+│   ├── Rules/                    # BreakTimeService, AppRuleService, WarningSettingsService (state owners), schedule evaluation
+│   ├── Configuration/            # Empty (.gitkeep): reserved for the YAML configuration, not built
 │   ├── Statistics/               # UsageTracker, UsageService (usage state areas), accounting loop, purge (ADR-012)
 │   ├── Certificates/             # CertificateManager, TLS setup
 │   ├── UserAccounts/             # Account source (Win32), inventory, UserAccountService (state owner)
 │   ├── Pairing/                  # PairingManager, token generation
-│   ├── AppDiscovery/             # InstalledAppScanner, display-name resolver
-│   ├── Logging/                  # Log configuration, level switching
-│   ├── Data/                     # SQLite connection, migrations, data access classes
-│   └── Program.cs                # Host builder, DI registration, startup
+│   ├── Diagnostics/              # Event Log pairing code, admin-only ACL of the logs folder
+│   ├── Data/                     # ServiceDatabase (migrations 1 to 7), repositories
+│   └── Program.cs                # Host builder, DI registration, logging setup, startup
 ├── EagleEye.TrayClient/          # Windows tray application
 │   ├── Communication/            # SignalR client connection to service
-│   ├── UI/                       # NotifyIcon, overlay, notifications
-│   ├── Data/                     # SQLite (optional cache), YAML reader
+│   ├── Overlay/                  # Remaining-time overlay (US-010, ADR-022): window, renderer, layout, clock, settings (HKCU)
+│   ├── UI/                       # NotifyIcon, tray menu, kid dialog, pairing code, About
 │   └── Program.cs
 ├── EagleEye.ParentApp.Core/      # Plain net10.0 library, all parent-app logic without MAUI (ADR-009)
 │   ├── Abstractions/             # ISecretStore, ISecretProtector, IThemeService, IDialogService, ...
 │   ├── Communication/            # SignalR client, certificate trust, ConnectionCoordinator, ParentHubGateway, StateReplica
 │   ├── Accounts/                 # Feature model of the state area UserAccounts (one folder per feature area)
+│   ├── Appearance/               # Heading bar colours (accent, contrast)
 │   ├── Groups/                   # Feature model of the global state area AppGroups, group name rules (US-008)
-│   ├── Rules/                    # Feature models of the state areas AccountRules (US-005) and AppRules (US-006)
+│   ├── Localization/             # UI culture policy (US-007)
+│   ├── Reports/                  # Feature model of the usage areas (US-004)
+│   ├── Rules/                    # Feature models of AccountRules (US-005), AppRules (US-006), AppGroupRules (US-008)
 │   ├── Settings/                 # Feature model of the global state area WarningSettings (US-006)
-│   ├── Data/                     # SQLite (pairing, settings, secrets), YAML reader
+│   ├── Data/                     # SQLite (pairing, settings, secrets)
 │   ├── ViewModels/               # MVVM view models
 │   └── Resources/                # AppTexts (de, en)
 ├── EagleEye.ParentApp/           # MAUI head: views and platform code
@@ -556,7 +558,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 - **`EagleEye.Shared` is the reuse vehicle.** All contracts, DTOs, constants, and shared utilities live here. Both client apps and the service reference this project.
 - **Do not duplicate code across projects.** If logic is needed by more than one component, extract it into `EagleEye.Shared`.
 - **Do not duplicate code within a project.** If a pattern appears three or more times, extract a shared method or class. Two occurrences are acceptable if the contexts differ enough that an abstraction would be forced.
-- **Shared data access patterns** (YAML parsing, SQLite connection setup, PRAGMA configuration) should be in `EagleEye.Shared` or a shared `Data/` utility, so all components configure their databases identically.
+- **Shared data access patterns** (SQLite connection setup, PRAGMA configuration; YAML parsing once it exists) should be in `EagleEye.Shared` or a shared `Data/` utility, so all components configure their databases identically.
 - **Do not add project references between `Service`, `TrayClient`, and `ParentApp`.** They communicate only via SignalR at runtime. All compile-time sharing goes through `EagleEye.Shared`. `EagleEye.ParentApp.Core` is part of the ParentApp component (`ParentApp → ParentApp.Core → Shared`, ADR-009); only the ParentApp head and its tests reference it.
 
 ### 10.3 Version Management
@@ -625,9 +627,9 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 
 - The TrayClient is a **WinForms** application, not a Windows service. It runs in the kid's user session.
 - Use `System.Windows.Forms.NotifyIcon` for the system tray icon. Set both `Icon` and `Visible = true`.
-- Use `NotifyIcon.ShowBalloonTip()` for popup notifications (budget warnings, enforcement notices).
+- No balloon tips: Focus Assist / "Do not disturb" can suppress them. Warnings go to the remaining-time overlay (US-010, ADR-022); blocked starts and enforced closes use the kid dialog (`UI/KidMessageDialog`, ADR-014).
 - **Pairing codes are never shown in a balloon tip**: Focus Assist / "Do not disturb" can suppress balloon tips. Show the code in a small `Form` with `TopMost = true` and `ShowInTaskbar = true` (`UI/PairingCodeDialog`), which closes itself when the code expires and is replaced when a newer code arrives (ADR-008 §6).
-- The optional overlay is a `Form` with `TopMost = true`, `FormBorderStyle = None`, `TransparencyKey` for see-through regions, and `ShowInTaskbar = false`.
+- The overlay (`Overlay/OverlayWindow`) is a borderless layered `Form` with `ShowWithoutActivation = true`, extended styles `WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW`, presented with `UpdateLayeredWindow` and per-pixel alpha (no `TransparencyKey`, no `Form.Opacity`); top-most is re-asserted on foreground changes (ADR-022). Every popup the tray creates without a taskbar button must be a tool window (FR-TRAY-032).
 - **Auto-start**: Registered in `HKLM\Software\Microsoft\Windows\CurrentVersion\Run` by the Inno Setup installer.
 - **No admin privileges required** — the TrayClient runs under the kid's standard-user account.
 - **UI thread marshalling**: All UI updates from SignalR callbacks must be marshalled to the UI thread via `Control.Invoke()` or `SynchronizationContext.Post()`. SignalR callbacks arrive on thread-pool threads.
@@ -638,7 +640,7 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 ### 12.3 Windows-Specific Security
 
 - Standard users cannot stop or uninstall the SYSTEM service (enforced by Windows SCM).
-- `%ProgramData%\EagleEye\` ACLs: SYSTEM full control, administrators full control, standard users read-only (except TrayClient log files and TrayClient database).
+- `%ProgramData%\EagleEye\` ACLs: SYSTEM full control, administrators full control, standard users read-only (the tray client writes nothing there; its settings are in `HKCU`, US-010).
 - Never log or display certificate private keys, pairing tokens, or auth credentials.
 
 ### 12.4 SYSTEM Code and Kid-Controlled Input *(US-004, ADR-011 Security Analysis; proposed with the US-004 plan)*
@@ -692,11 +694,8 @@ Everything the kid's programs control is **untrusted input** for the SYSTEM serv
 
 ### 13.2 macOS File Paths
 
-- Use `Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)` which resolves to `~/Library/Application Support/` on macOS.
-- All app files reside in `~/Library/Application Support/EagleEye/`:
-  - Database: `EagleEye.ParentApp.db`
-  - Config: `EagleEye.ParentApp.yaml`
-  - Logs: `EagleEye.ParentApp-NNN.log`
+- Resolve `~/Library/Application Support/` through `NSFileManager` (`ApplicationSupportDirectory`, ADR-020), as `Services/MauiAppDataPaths` does; Debug builds use the folder `EagleEye-Debug`.
+- App files in `~/Library/Application Support/EagleEye/`: the database `EagleEye.ParentApp.db`. The token is in the login Keychain. No YAML config and no log files (not built).
 
 ### 13.3 macOS Distribution
 
@@ -730,14 +729,14 @@ Everything the kid's programs control is **untrusted input** for the SYSTEM serv
 - **TLS trust**: as on macOS, accept the service's self-signed certificate programmatically (trust on first use, then the pinned thumbprint; `CertificateTrustPolicy` in `ParentApp.Core`, ADR-008 §3). Set the callback on both the HTTP handler and `ClientWebSocketOptions.RemoteCertificateValidationCallback`. Never install the certificate into the Windows certificate store.
 - **Secure storage**: store the pairing token via the Core abstraction `ISecretStore`, never in plain SQLite. On Windows, `ProtectedSecretStore` (Core) keeps the encrypted bytes in the `Secrets` table, and the platform class `Platforms/Windows/DpapiSecretProtector` (`ISecretProtector`) encrypts with DPAPI `DataProtectionScope.CurrentUser`. **Do not use MAUI `SecureStorage` on Windows**: it needs package identity, and the app is unpackaged (ADR-009). macOS uses `MauiSecureStorageSecretStore` (Keychain, §13.1).
 - **Role**: production platform, together with the macOS app (§13, ADR-019); both have the same features. Keep Windows-specific code to a minimum and put everything possible in `EagleEye.ParentApp.Core` (ADR-009), so the macOS app gets the same behaviour.
-- **Packaging** (ADR-009, supersedes copy deployment): unpackaged (`WindowsPackageType=None`), self-contained (`SelfContained`, `WindowsAppSDKSelfContained=true`), `win-x64`, no MSIX. Set `RuntimeIdentifier` and the self-contained properties **in the csproj for the Windows TFM only**; do not pass `-r` / `--self-contained` on the command line (while the project still had an Android target, this broke its restore; DEV may re-check once the Android target is removed, CR-001 §6.2). The publish output is packaged by `installer/windows/parentapp-setup.iss` (Inno Setup, **per user**, `PrivilegesRequired=lowest`, own `AppId`, default folder `%LocalAppData%\Programs\EagleEye Parent App`) into `03_Delivery/windows/EagleEye-ParentApp-Setup-<version>.exe`, built by `scripts/package-windows.ps1 -Target ParentApp`. Uninstall removes the program folder, the Start menu entry and `%LocalAppData%\EagleEye\`; repair/update keeps the app data.
+- **Packaging** (ADR-009, supersedes copy deployment): unpackaged (`WindowsPackageType=None`), self-contained (`SelfContained`, `WindowsAppSDKSelfContained=true`), `win-x64`, no MSIX. Set `RuntimeIdentifier` and the self-contained properties **in the csproj for the Windows TFM only**. Since CR-001 removed the Android target, `scripts/package-windows.ps1` also passes `--framework <windows TFM> --runtime win-x64` to `dotnet publish`, matching the csproj (with the Android target this had broken the restore). The publish output is packaged by `installer/windows/parentapp-setup.iss` (Inno Setup, **per user**, `PrivilegesRequired=lowest`, own `AppId`, default folder `%LocalAppData%\Programs\EagleEye Parent App`) into `03_Delivery/windows/EagleEye-ParentApp-Setup-<version>.exe`, built by `scripts/package-windows.ps1 -Target ParentApp`. Uninstall removes the program folder, the Start menu entry and `%LocalAppData%\EagleEye\`; repair/update keeps the app data.
 - **Same communication model** (FR-APP-091): the Windows app is an ordinary `ParentHub` client (TLS + pairing), whether it runs on the service PC or remotely. Never add a local shortcut such as direct SQLite access, named pipes or skipping pairing on `localhost`.
 - **Same-PC caveat**: if the parent app runs on the PC that hosts the service, it runs under the parent's admin account. Admin accounts are never monitored, so EagleEye does not enforce rules on the parent app itself.
 - *(US-005)* **Editable tables** (Rules page): `Grid` rows in a `BindableLayout` with fixed column widths (ISSUE-006 lesson); row view models are **merged by id**, never replaced on a snapshot (a replaced row loses the focus and the text being typed). WinUI's `CheckBox` has a default `MinWidth` of about 120: remove it for table cells with a handler mapping in `MauiProgram` (`#if WINDOWS`, `CheckBoxHandler.Mapper.AppendToMapping(…, (h, _) => h.PlatformView.MinWidth = 0)`). Times are typed in an `Entry` and parsed in Core (`TimeOfDayText`), not with `TimePicker` (no typing on Windows, 12/24 h by locale). Save on `Unfocused` and `Completed`, and flush explicitly before the page or the account selection changes (`Unfocused` does not fire when a view is removed). WinUI's `TextBox` (MAUI `Editor`) returns line breaks as `\r`: normalize in Core before comparing or sending. Icons that must work in light and dark mode use `AppThemeBinding` with two image variants.
 
 ### 16.2 Windows File Paths
 
-- `Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)` → `%LocalAppData%\EagleEye\` for the database, YAML config and logs.
+- `Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)` → `%LocalAppData%\EagleEye\` for the database (the token is a DPAPI-protected row in it). No YAML config and no log files (not built).
 
 ---
 

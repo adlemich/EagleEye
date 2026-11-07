@@ -6,6 +6,9 @@
 
 > **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped. The parent app runs on **Windows** (`%LocalAppData%\EagleEye\`, added with ADR-007/ADR-009, arc42 §7.1.1) and **macOS**. The iOS and Android rows below are void and struck through; the rest of the decision is unchanged.
 
+
+> **Implementation status (2026-11-07, recorded by the Orchestrator)**: SQLite and the service's rolling file log are built as decided (service file log since US-003, Information level). **The YAML configuration is not built** for any component: ports, timeouts and limits are constants, the warning minutes are stored in the service database (set by the parent), the overlay settings are in `HKCU` (US-010). The debug log mode and its runtime toggle are not built either, and the tray client and the parent apps write no log files. The decision stands as the plan for a later configuration story (arc42 §8.5).
+
 ---
 
 ## Context

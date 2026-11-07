@@ -1,7 +1,7 @@
 # EagleEye — System Architecture
 
 *Template: arc42 v8 | Status: Approved (2026-09-20, amended 2026-10-03, 2026-10-04, 2026-10-07); US-004 amendment proposed with the US-004 plan; US-005 amendment approved with the US-005 plan (2026-10-10); US-006 amendment approved with the US-006 plan (2026-10-12); CR-001 amendment approved (2026-10-20); US-007 amendment approved with the US-007 plan (2026-10-20; Revision 1 after first light approved 2026-10-20); US-008 amendment approved with the US-008 plan (2026-10-31); US-009 amendment approved with the US-009 plan (2026-10-31)*
-*Maintainer: ARC Agent | Last Updated: 2026-10-31*
+*Maintainer: ARC Agent | Last Updated: 2026-11-07 (US-010 amendment and implementation status, recorded by the Orchestrator)*
 
 > **Amendment 2026-10-03 (ADR-007)**: Windows desktop target added to the ParentApp; two-machine development; manual acceptance testing. Affected: §1.1, §2.1, §2.2, §3.2, §4.2, §5.5, §7, §8.10, §9. Amendments approved by the project owner on 2026-10-03.
 >
@@ -25,6 +25,10 @@
 >
 > **Amendment 2026-10-31 (US-009) — approved by the project owner together with the US-009 implementation plan (2026-10-31)**: the **Windows parent app** runs on **Windows 10 22H2 (build 19045) or newer, and Windows 11, x64** (requirements v1.9 §9.5, FR-APP-092); the parent app installer enforces it (`MinVersion=10.0.19045`). On Windows 10 it is always a remote parent app: the service and the tray client stay Windows 11 only (§9.1). No Windows-10-specific code. The Windows parent app reaches parity with the Mac app 0.8.0 (app groups); all four assets are 0.9.0. ADR-007 (third, test-only Windows 10 PC), ADR-009 and ADR-019 amended. Affected: §7, §7.4.
 
+>
+> **Amendment 2026-11-01 (US-010, ADR-022) — approved by the project owner together with the US-010 implementation plan (2026-11-01); written into this document on 2026-11-07**: the tray client shows a **remaining-time overlay** (a layered, click-through, top-most, never-activated pill with per-pixel alpha, in a corner of the foreground window's monitor) instead of the early and final warning dialogs. The service pushes one remaining-time model per controlled session and engine tick (`ITrayClientCallback.OnRemainingTime(RemainingTimeDto)`, fire-and-forget, `OverlayPublisher`, lines built by `OverlayLineBuilder`); the tray only counts down locally, colours, filters by the kid's display threshold, pulses and plays the sound. Overlay settings (opacity, corner, threshold, sound) live per Windows account in `HKCU\Software\EagleEye\TrayClient`. The kid dialog remains only for blocked starts and enforced closes. The warning **texts** are removed end to end (migration 7 drops `WarningSettings.EarlyText/FinalText`; `WarningSettingsDto` and the parent apps keep only the minutes). Affected: §5.2, §5.3, §5.4, §6.2.3, §7.1, §8.4, §8.9, §9, §11 R-4.
+>
+> **Implementation status (2026-11-07, recorded by the Orchestrator)**: parts of the original design (2026-09-20) were never built and are kept below only as design history: **no YAML configuration** exists for any component (§8.5; `YamlDotNet` is not referenced, ports and timeouts are constants, the warning minutes are set by the parent and stored in the service database); the tray client has **no database and no log file**, the parent apps write no log files; the service tables `UserConfig`, `UsageStatistics`, `AppNameCache` and `IgnoreList` do not exist (rules, usage and the ignore list are implemented as described in the US-004 to US-008 notes of §8.4 and §8.8); the three-tier classification by executable name (§8.8) is replaced by app records per program path with deny by default (ADR-013, ADR-015). Where a section and a dated note disagree, the note describes the implementation.
 ---
 
 ## 1. Introduction and Goals
@@ -192,7 +196,7 @@ end note
 |---------|----------|----------|-----------|
 | ParentApp → Service | SignalR (WebSocket over HTTPS), port 5443 | Self-signed TLS (pinned after pairing) + pairing-based auth token | Bidirectional (hub pattern) |
 | TrayClient → Service | SignalR (WebSocket over HTTP), `localhost:5080` | Loopback only (bound to the loopback endpoint, remote address checked); traffic never leaves the machine (ADR-008) | Bidirectional (hub pattern) |
-| Service → Local Storage | SQLite database + YAML config file | Windows ACLs (SYSTEM-owned) | Read/Write |
+| Service → Local Storage | SQLite database (YAML config file: planned, not built, §8.5) | Windows ACLs (SYSTEM-owned) | Read/Write |
 
 ---
 
@@ -208,7 +212,7 @@ end note
 | **Server-authoritative state** | The Windows service is the single source of truth for all state. Clients never cache state as authoritative. Every state mutation triggers a full-state broadcast to all connected clients. On connect/reconnect, the server pushes a complete state snapshot. No delta synchronization — full snapshots eliminate ordering bugs and stale-cache drift. |
 | **Localhost separation for TrayClient** | The TrayClient runs in the kid's unprivileged session and connects to the service on `localhost`. It is a display-only client — it cannot modify configuration. |
 | **SQLite persistence** | All application data (per-user configuration, statistics, pairing credentials, app-name cache) is stored in a SQLite database per component, located in the OS-standard application data directory. SQLite provides ACID transactions, schema evolution, and efficient queries without an external database server. |
-| **YAML application configuration** | Each application has exactly one YAML configuration file (named after the application) that provides all runtime parameters. YAML config files are also stored in the OS-standard application data directory. This separates deployment-time configuration (YAML, human-editable) from runtime application data (SQLite, machine-managed). |
+| **YAML application configuration** *(planned, not built, §8.5)* | Each application has exactly one YAML configuration file (named after the application) that provides all runtime parameters. YAML config files are also stored in the OS-standard application data directory. This separates deployment-time configuration (YAML, human-editable) from runtime application data (SQLite, machine-managed). |
 | **Graceful-then-force termination** | Applications are terminated with `WM_CLOSE` first, then `Process.Kill()` after a configurable timeout. This gives users time to save work. |
 | **Self-signed TLS, zero-touch** | The service generates a self-signed X.509 certificate on first run and stores it locally. All SignalR connections use HTTPS. No user action required. |
 
@@ -224,7 +228,7 @@ end note
 | Cross-platform UI | .NET MAUI (WinUI, Mac Catalyst) |
 | TrayClient UI | WinForms (`NotifyIcon`, `Form` for overlay) |
 | Data persistence | SQLite via `Microsoft.Data.Sqlite` (all application data) |
-| Application configuration | YAML via `YamlDotNet` (one file per application for runtime parameters) |
+| Application configuration | Planned: YAML via `YamlDotNet` (one file per application); not built, constants and the database instead (§8.5) |
 | Logging | `Microsoft.Extensions.Logging` with the EagleEye rolling file provider (`EagleEye.Shared/Logging`, §8.10) |
 | DI container | `Microsoft.Extensions.DependencyInjection` (built-in) |
 | Unit testing | xUnit + Moq |
@@ -270,8 +274,8 @@ TRAY ..> SHARED : uses
 | Component | Responsibility | Technology |
 |-----------|---------------|------------|
 | **EagleEye.Service** | Process monitoring, enforcement, configuration management, statistics collection, SignalR hub, TLS certificate management, user account discovery, pairing, logging | .NET 10 Windows Service (Kestrel + SignalR) |
-| **EagleEye.TrayClient** | System tray icon, remaining-time display, budget/pause notifications, optional overlay, pairing code display | .NET 10 WinForms |
-| **EagleEye.ParentApp** | Connection management, pairing flow, allow-list configuration, budget/pause configuration, statistics display, event feed | .NET 10 MAUI |
+| **EagleEye.TrayClient** | System tray icon and menu (overlay settings, About), remaining-time overlay (US-010), kid dialog for blocked starts and enforced closes, pairing code display | .NET 10 WinForms |
+| **EagleEye.ParentApp** | Connection management, pairing flow, accounts under parental control, break times, app and group rules (daily budget, weekdays), app groups, warning minutes, Reports | .NET 10 MAUI |
 | **EagleEye.Shared** | SignalR hub/client interface definitions, DTOs, domain models, shared constants, version info | .NET 10 class library (netstandard-compatible TFMs as needed) |
 
 ### 5.2 Level 2 — EagleEye.Service Internal Components
@@ -315,17 +319,17 @@ PAIR --> COMM : pushes pairing code to tray
 
 | Internal Component | Responsibility |
 |-------------------|---------------|
-| **Communication** | Hosts two SignalR hubs on Kestrel, each bound to its own endpoint (ADR-008): `ParentHub` (`/hubs/parent`, HTTPS port 5443) for parent apps and `TrayHub` (`/hubs/tray`, HTTP `localhost:5080`) for tray clients. A default-deny hub filter allows only `[AllowUnpaired]` methods for unpaired parent connections. Routes incoming queries and write commands to the state owner of the affected state area, returns results. Pushes events and full-state snapshots to connected clients via SignalR groups (`Parents`, `Tray:{userSid}`). Every stored change is broadcast as a full snapshot with a revision to all paired apps, including the sender (ADR-010). Clients fetch the full state themselves after every (re)connect; the service does not push on connect. |
+| **Communication** | Hosts two SignalR hubs on Kestrel, each bound to its own endpoint (ADR-008): `ParentHub` (`/hubs/parent`, HTTPS port 5443) for parent apps and `TrayHub` (`/hubs/tray`, HTTP `localhost:5080`) for tray clients. A default-deny hub filter allows only `[AllowUnpaired]` methods for unpaired parent connections. Routes incoming queries and write commands to the state owner of the affected state area, returns results. Pushes events and full-state snapshots to connected clients: parent apps via the SignalR group `Parents`; tray clients per verified session connection (ADR-014, which replaced the planned `Tray:{userSid}` groups). Every stored change is broadcast as a full snapshot with a revision to all paired apps, including the sender (ADR-010). Clients fetch the full state themselves after every (re)connect; the service does not push on connect. |
 | **Monitoring** | Observes the **apps** (Task Manager "Apps" group) in the sessions of accounts under parental control through a **session agent** per watched session: the service executable started in agent mode (`--session-agent`) as SYSTEM inside the session, scanning top-level windows about once per second and reporting `{pid, kind}` over an inherited anonymous pipe (ADR-011). Tracks session state ("in use": WTS `Active` and unlocked; SCM session and power events plus reconciliation). Resolves program path, owner and display name per process. *(US-004.)* Later: classifies processes as ignored/allowed/blocked (ADR-005) and detects pause-window and budget-expiry transitions. |
-| **Enforcement** | Terminates processes using the two-phase graceful-then-force pattern (ADR-006): sends `WM_CLOSE` first, waits up to the configurable timeout (default 30s), then calls `Process.Kill(entireProcessTree: true)`. Used for blocked-app kills (immediate, no warning), budget-expiry shutdowns (after budget warnings), and pause-window shutdowns (after pause warnings). Pushes enforcement events to all connected clients. *(US-005, ADR-013)* First enforcement: **break times at app start**. `BreakTimeGate` in the accounting loop decides blocked starts before usage accounting (start = creation of the app's first process, in-memory rules, local time of the service PC) and removes blocked processes from usage; `TimeChangeMonitor` logs and stores time-zone and clock changes (AC-37); `BlockedStartSequence` asks the tray client of the session to show the display text (ADR-014), has the **session agent** post `WM_CLOSE` to the app's windows, waits 20 s, then the **service** terminates the **kill set** (program path or process, plus descendants, minus ignore list, EagleEye, Explorer, frame host and other open apps) with `TerminateProcess`; history `BlockedStarts` and log. `Process.Kill(entireProcessTree: true)` is not used. *(US-006, ADR-015)* `AppStartGate` (was `BreakTimeGate`) checks the break first and then the **app rule** (deny by default). A blocked start creates the app record. `TimeLimitEngine` runs every 5 s after usage is credited (`TodayUsageLedger` = the Reports figure). It computes each running app's end (budget, not allowed today, midnight, next break), shows the two global warnings, starts grace periods after parent changes, and closes running apps with the same close sequence (`CloseSequenceRunner`). A break begin now closes running apps. |
-| **Configuration** | Reads and writes per-user configuration in the SQLite database (allow-lists, budgets, pause windows). Reads general settings from the YAML config file. Validates changes. Notifies other components on config update. *(US-005)* `BreakTimeService`: state owner of the state area `AccountRules:{sid}` (break-time entries and display text per account, ADR-010), with an in-memory snapshot used by the enforcement; purges the rules of deleted accounts. *(US-006)* `AppRuleService`: state owner of `AppRules:{sid}` (app records with daily budget and weekdays, budget text; no rule row = blocked). `WarningSettingsService`: state owner of the global `WarningSettings` (early and final level with texts). Default texts are stored as "no text" and rendered by the displaying app (ADR-016). |
+| **Enforcement** | Terminates apps using the two-phase graceful-then-force pattern (ADR-006 as amended): the session agent posts `WM_CLOSE`, the service waits the fixed 20 s, then terminates the kill set. Used for blocked starts (no warning) and for closes of running apps when a budget is used up or a break begins (after the early and final level, shown in the tray overlay since US-010). *(US-006 renamed `BreakTimeGate` → `AppStartGate`, `BlockedStartSequence` → `CloseSequenceRunner`.)* *(US-010)* The `TimeLimitEngine` also builds one remaining-time model per controlled session and tick (`OverlayLineBuilder`), which `Communication/OverlayPublisher` sends to the session's tray client. *(US-005, ADR-013)* First enforcement: **break times at app start**. `BreakTimeGate` in the accounting loop decides blocked starts before usage accounting (start = creation of the app's first process, in-memory rules, local time of the service PC) and removes blocked processes from usage; `TimeChangeMonitor` logs and stores time-zone and clock changes (AC-37); `BlockedStartSequence` asks the tray client of the session to show the display text (ADR-014), has the **session agent** post `WM_CLOSE` to the app's windows, waits 20 s, then the **service** terminates the **kill set** (program path or process, plus descendants, minus ignore list, EagleEye, Explorer, frame host and other open apps) with `TerminateProcess`; history `BlockedStarts` and log. `Process.Kill(entireProcessTree: true)` is not used. *(US-006, ADR-015)* `AppStartGate` (was `BreakTimeGate`) checks the break first and then the **app rule** (deny by default). A blocked start creates the app record. `TimeLimitEngine` runs every 5 s after usage is credited (`TodayUsageLedger` = the Reports figure). It computes each running app's end (budget, not allowed today, midnight, next break), shows the two global warnings, starts grace periods after parent changes, and closes running apps with the same close sequence (`CloseSequenceRunner`). A break begin now closes running apps. |
+| **Configuration** (implemented in `Rules/`; the folder `Configuration/` is empty) | Reads and writes per-account rules in the SQLite database, validates changes and notifies the other components (ADR-010). There is no YAML file (§8.5). *(US-005)* `BreakTimeService`: state owner of the state area `AccountRules:{sid}` (break-time entries and display text per account, ADR-010), with an in-memory snapshot used by the enforcement; purges the rules of deleted accounts. *(US-006)* `AppRuleService`: state owner of `AppRules:{sid}` (app records with daily budget and weekdays, budget text; no rule row = blocked). `WarningSettingsService`: state owner of the global `WarningSettings` (early and final level; the texts were removed with US-010). Default texts are stored as "no text" and rendered by the displaying app (ADR-016). |
 | **Groups** *(US-008, ADR-021)* | `AppGroupService`: state owner of `AppGroups` (groups, members by program path, listed apps) and `AppGroupRules:{sid}`; lock-free snapshot for the gate, the engine and Reports. Enforcement evaluates **limit subjects**: a grouped app is limited by its group's rule and the group's used time (union of the members' activity spans), all running members share warnings, grace period and one close message. |
 | **Statistics** | Keeps the app inventory per account (forever, while the account exists), the start/end history (90 days) and the daily usage **in seconds** (90 days). Credits active time every 5 s with the monotonic clock and splits it at local midnight (ADR-012). Persists every tick in one transaction. State owner of the usage state areas `UsageDay:{sid}:{day}` (ADR-010, ADR-012 §6): serves `GetAccountUsage`, broadcasts changed days at most every 5 s. Purges old data and all data of deleted accounts. *(US-004.)* | *(US-008, ADR-021)* Also records **activity spans** (when each app record was active, 90 days) and computes the per-day **group lines** for Reports as the union of the current members' spans.
 | **Certificates** | Generates a self-signed X.509 certificate on first run (ECDSA P-256, DPAPI-protected PFX, see §8.1). Loads and provides the certificate for the Kestrel HTTPS binding of the parent endpoint. |
 | **UserAccounts** | Keeps the inventory of local standard (non-admin, non-built-in, not the setup leftover `defaultuser0`) Windows accounts, read via Win32 (`NetUserEnum`, `NetUserGetLocalGroups`) and re-checked every 15 s; changes are broadcast at once. State owner of the state area `UserAccounts` (ADR-010): stores per SID whether the account is under parental control (`AccountSelections`), keeps the selection of accounts that temporarily become admins, forgets it when the SID is deleted (US-003). |
 | **Pairing** | Manages the pairing lifecycle: generates a 6-digit code on explicit request (`StartPairing`), binds it to the requesting connection, enforces 5-minute expiry and one guess per code, stores paired devices (token hash only) in SQLite. Sends the code to all tray clients, or to the Event Log when none is connected. Rejects unpaired clients. |
-| **AppDiscovery** | Scans installed applications (registry, Start Menu, file metadata). Resolves human-readable display names. Caches the name dictionary. Supports re-scan on demand. |
-| **Logging** | Configures the `Microsoft.Extensions.Logging` pipeline for file output with the EagleEye rolling file provider (`EagleEye.Shared/Logging`, §8.10; first used by the service in US-003). Supports runtime log-level switching (normal ↔ debug) via parent app command. Manages rolling log files (50 MB max, 3 files, 5 days) in the admin-only folder `%ProgramData%\EagleEye\logs\`. In debug mode, logs method traces with parameter values and full stack traces. Never logs sensitive data. |
+| **AppDiscovery** *(original plan, not built)* | Planned: scan installed applications and cache display names. Implemented instead: apps are recorded when first seen (ADR-011, ADR-012); `Monitoring/AppNameResolver` resolves the display name from the version resource or package manifest. |
+| **Logging** | Configures the `Microsoft.Extensions.Logging` pipeline for file output with the EagleEye rolling file provider (`EagleEye.Shared/Logging`, §8.10; first used by the service in US-003). Runtime log-level switching via a parent app command is planned, not built. Manages rolling log files (50 MB max, 3 files, 5 days) in the admin-only folder `%ProgramData%\EagleEye\logs\`. In debug mode, logs method traces with parameter values and full stack traces. Never logs sensitive data. |
 
 ### 5.3 Level 2 — EagleEye.Shared
 
@@ -392,19 +396,22 @@ skinparam componentStyle rectangle
 
 package "EagleEye.TrayClient" {
   component [Communication\n(SignalR Client)] as TC_COMM
-  component [UI\n(Tray Icon + Overlay)] as TC_UI
+  component [UI\n(Tray Icon, Menu, Dialogs)] as TC_UI
+  component [Overlay\n(Remaining-Time Pill)] as TC_OV
 }
 
-TC_COMM --> TC_UI : budget updates,\nwarnings,\npairing codes
-TC_UI --> TC_COMM : user clicks (About, etc.)
+TC_COMM --> TC_OV : OnRemainingTime\n(every 5 s)
+TC_COMM --> TC_UI : ShowKidMessage,\npairing codes
+TC_UI --> TC_OV : settings\n(tray menu)
+TC_UI --> TC_COMM : version query
 @enduml
 ```
 
 | Internal Component | Responsibility |
 |-------------------|---------------|
-| **Communication** | Connects to the service on `http://localhost:5080/hubs/tray`. Receives budget updates, warnings, pairing codes. Sends version query. Handles reconnect on disconnect (Shared `ReconnectSchedule`, `ConnectBackoff`). *(US-005, ADR-014)* The service binds the connection to the tray client's session itself (TCP owner process, installed path); the tray answers `ShowBreakTimeMessage` with a result (`Shown` / `AlreadyOpen`). |
-| **UI — break-time message** *(US-005, ADR-014)* | `BreakTimeMessageDialog`: topmost dialog with title "EagleEye", the account's display text (emojis monochrome) and "OK"; closes only with OK/Enter (not Esc/Alt+F4, never blocks sign-out); one at a time; tries to take the keyboard focus within Windows' foreground rules. |
-| **UI** | Manages the `NotifyIcon` (system tray), popup notifications (balloon tips), the pairing-code window (small topmost window, shown in the taskbar, closes at code expiry, replaced by a newer code; ADR-008 §6), remaining-time summary window, optional topmost overlay, About dialog, connection-status indicator. |
+| **Communication** | Connects to the service on `http://localhost:5080/hubs/tray` (`ServiceConnection`, reconnect with Shared `ReconnectSchedule`/`ConnectBackoff`). The service binds the connection to the tray client's session itself (TCP owner process, installed path; ADR-014). Receives `ShowKidMessage` (answered with `Shown`/`Replaced`), `OnRemainingTime` (US-010) and pairing codes; sends the version query. |
+| **Overlay** *(US-010, ADR-022)* | `OverlayController` (UI-thread glue), `OverlayWindow` (layered, `WS_EX_LAYERED`/`TRANSPARENT`/`TOPMOST`/`NOACTIVATE`/`TOOLWINDOW`, `UpdateLayeredWindow` with per-pixel alpha, re-asserts top-most on every foreground change and at most once per second), `PillRenderer`, `OverlayLayout` (due lines by display threshold or early level, shortest first, at most five, "+N weitere"), `RemainingTimeClock` (local countdown, hidden after 15 s without a push), `PillAnimation` (pulse, sound "Exclamation"), `ForegroundHook` (out-of-context WinEvent hook, monitor of the foreground window), `OverlaySettings` + `RegistryOverlaySettingsStore` (`HKCU\Software\EagleEye\TrayClient`: opacity, corner, threshold, sound). The process is PerMonitorV2. |
+| **UI** | `TrayApplicationContext`, `NotifyIcon` with connection status, `TrayMenu` (left and right button; Opacity, Position, Show from, Warning sound, About; all popups are tool windows, FR-TRAY-032), `PairingCodeDialog` (topmost, shown in the taskbar, closes at code expiry, ADR-008 §6), `AboutDialog`, kid dialog (`KidMessagePresenter`, `KidMessageDialog`, `KidMessageText`: topmost, "OK"/Enter only, one at a time, never blocks sign-out; since US-010 only for blocked starts and enforced closes). No balloon tips, no summary window. |
 
 ### 5.5 Level 2 — EagleEye.ParentApp
 
@@ -558,6 +565,8 @@ SEQ -> SEQ : log entry (outcome, message state)
 
 #### 6.2.3 Enforcement (later stories)
 
+> **Original design, superseded.** The sequence below is the plan of 2026-09-20. Implemented instead: blocked starts at app start (§6.2.2, ADR-013), closes of running apps by the tick-based `TimeLimitEngine` (ADR-015, groups ADR-021), warnings in the tray overlay (ADR-022), no allow-list tier by executable name (§8.8 note).
+
 ```plantuml
 @startuml Process Monitoring
 participant "Monitoring" as MON
@@ -690,8 +699,11 @@ TRAY -> SVC : SignalR connect (localhost)
 alt Service is running
   SVC -> TRAY : Connection established
   TRAY -> TRAY : Tray icon → green
-  SVC -> TRAY : Push current budgets\nfor this user
-  TRAY -> TRAY : Display remaining times
+  SVC -> SVC : Bind connection to the session\n(TCP owner PID + installed path, ADR-014)
+  loop every engine tick (5 s), US-010
+    SVC -> TRAY : OnRemainingTime(RemainingTimeDto)
+    TRAY -> TRAY : Overlay: due lines,\nlocal countdown, signal
+  end
 else Service not yet started
   TRAY -> TRAY : Retry with exponential backoff
   ... Service starts ...
@@ -701,7 +713,7 @@ else Service not yet started
 end
 
 note over TRAY
-  On disconnect: icon → red,
+  On disconnect: icon → red, overlay hidden,
   resume retry loop.
   Enforcement continues
   server-side regardless.
@@ -811,25 +823,22 @@ Both ports are constants (`ServiceDefaults`) until the service gets its YAML con
 
 | Path | Contents | Owner |
 |------|----------|-------|
-| `%ProgramFiles%\EagleEye\` | Service executable, TrayClient executable, shared DLLs, dependencies | Installer (admin) |
-| `%ProgramData%\EagleEye\EagleEye.Service.yaml` | Service runtime configuration (port, timeouts, warning thresholds, log level) | SYSTEM (r/w), admin (r/w) |
-| `%ProgramData%\EagleEye\EagleEye.TrayClient.yaml` | TrayClient runtime configuration (service URL, overlay preferences) | SYSTEM (r/w), admin (r/w) |
-| `%ProgramData%\EagleEye\EagleEye.Service.db` | SQLite database — paired devices, account selections, app inventory, usage history and daily usage (US-004); later per-user config | SYSTEM (r/w) |
-| `%ProgramData%\EagleEye\EagleEye.TrayClient.db` | SQLite database — cached display state (optional, lightweight) | Standard user (r/w) |
+| `%ProgramFiles%\EagleEye\Service\`, `%ProgramFiles%\EagleEye\TrayClient\` | Service and tray client, each self-contained with its own runtime files | Installer (admin) |
+| `%ProgramData%\EagleEye\EagleEye.Service.db` | SQLite database, schema version 7 — pairings, account selections, app inventory and usage, break times, app and group rules, warning minutes, activity spans, history (§8.4) | SYSTEM (r/w) |
+| `HKCU\Software\EagleEye\TrayClient` | Overlay settings of the signed-in account (four `REG_DWORD`, US-010) | That user |
 | `%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log` | Service rolling log files (50 MB max, 3 files, 5 days) | SYSTEM and Administrators only; folder `logs\` with inheritance removed, set by the installer and re-applied at every service start (US-003, FR-SVC-100) |
-| `%ProgramData%\EagleEye\EagleEye.TrayClient-NNN.log` | TrayClient rolling log files (50 MB max, 3 files) | Standard user (r/w) |
 | `%ProgramData%\EagleEye\certs\` | Auto-generated self-signed certificate `eagleeye.pfx` (DPAPI LocalMachine, §8.1) | SYSTEM and Administrators only (inheritance removed) |
 
 The service installer sets the ACLs with well-known SIDs (works on German Windows): `%ProgramData%\EagleEye\` SYSTEM and Administrators full control, Users read; `certs\` SYSTEM and Administrators only (ADR-008 §7). Uninstalling the service keeps `%ProgramData%\EagleEye\`, so a reinstall keeps the certificate and the pairings.
 
 ### 7.1.1 Parent App Data Locations
 
-Each parent app instance stores its YAML config and SQLite database in the OS-standard application data directory:
+Each parent app instance stores its SQLite database in the OS-standard application data directory (the YAML file of the original design was never built):
 
 | Platform | Config File | Database | Location |
 |----------|------------|----------|----------|
-| Windows | `EagleEye.ParentApp.yaml` | `EagleEye.ParentApp.db` | `%LocalAppData%\EagleEye\` (per parent user; removed by the parent app uninstaller) |
-| macOS | `EagleEye.ParentApp.yaml` (not used yet) | `EagleEye.ParentApp.db` | `~/Library/Application Support/EagleEye/` (resolved through `NSFileManager`, no App Sandbox, ADR-020). *(US-007)* Token in the login keychain (service `com.adlemich.eagleeye`, account `pairing-token`). Further system leftovers under the bundle ID `com.adlemich.eagleeye` (preferences, caches, saved state); all removed by the removal script in the `.dmg` (US-007 plan, "Data Locations"). |
+| Windows | — | `EagleEye.ParentApp.db` | `%LocalAppData%\EagleEye\` (per parent user; removed by the parent app uninstaller) |
+| macOS | — | `EagleEye.ParentApp.db` | `~/Library/Application Support/EagleEye/` (resolved through `NSFileManager`, no App Sandbox, ADR-020). *(US-007)* Token in the login keychain (service `com.adlemich.eagleeye`, account `pairing-token`). Further system leftovers under the bundle ID `com.adlemich.eagleeye` (preferences, caches, saved state); all removed by the removal script in the `.dmg` (US-007 plan, "Data Locations"). |
 
 ### 7.2 Windows Service Registration
 
@@ -840,7 +849,7 @@ Each parent app instance stores its YAML config and SQLite database in the OS-st
 
 ### 7.3 TrayClient Auto-Start
 
-- Registered via Inno Setup in `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` for each standard user, or via `HKLM` with a per-user launch mechanism
+- Registered by Inno Setup as the value `EagleEyeTrayClient` in `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run` (removed on uninstall), so it starts in every session
 - Starts automatically when a standard-user session begins
 - Does not require admin privileges to run
 - Also starts in admin sessions (HKLM Run key). The project owner's decision (2026-10-04): this stays, so a parent pairing at the service PC as admin sees the pairing code there. Admin sessions are still never monitored (§8.8).
@@ -948,31 +957,34 @@ All application data is stored in SQLite databases. Each EagleEye component has 
 
 **EagleEye.Service** (`EagleEye.Service.db`) tables include:
 
-- **UserConfig** — per-user allow-list, per-app time budgets (7 weekdays), pause windows (7 weekdays). Keyed by Windows SID (survives username renames).
+- *(original plan, not built; replaced by the rows below)* **UserConfig** — per-user allow-list, per-app time budgets (7 weekdays), pause windows (7 weekdays). Keyed by Windows SID (survives username renames).
 - **AppRecords**, **AppInstances**, **DailyUsage** *(US-004, migration 3, ADR-012)* — app inventory per account (identity: account SID + program path, kept forever while the account exists), start/end history (90 days, last-seen time for crash recovery) and seconds per app and local day (90 days). Foreign keys with `ON DELETE CASCADE` from `AppRecords`, so deleting an account's records purges everything. These replace the planned `UsageStatistics` table below; the `AppNameCache` is not needed (the display name is stored per app record).
 - **BreakTimeEntries**, **AccountDisplayTexts**, **BlockedStarts**, **TimeChangeFindings** *(US-005, migration 4, ADR-013)* — time-zone and clock changes found by the service (90 days, AC-37); break-time entries per account SID (on/off, start and end minute, weekday bit mask, creation order), the display text per account (no row = default text), and the history of blocked starts (time of start and detection, account, app, entry in effect, outcome, seconds until gone, message state; no foreign keys, 90 days). These are the first part of the planned **UserConfig**.
 - **AppRules**, **AccountBudgetTexts**, **WarningSettings** *(US-006, migration 5, ADR-015)*: the app rule per app record (daily budget in minutes 0..1439, weekday bit mask; `ON DELETE CASCADE` from `AppRecords`; **no row = 0:00, no day = blocked**); the budget text per account (no row = default text, ADR-016); one global row with the early and final warning minutes and texts (`CHECK early > final`; no row = 5 / 1 min, default texts). Migration 5 also rebuilds `BlockedStarts` with `Kind` (blocked start / running app), `Reason` (break time / not allowed today / budget used up), `AfterGrace`, app-rule columns and nullable break-entry columns. Together with the break-time tables they replace the planned **UserConfig** (the allow-list is dropped, requirements v1.6).
 - **AppGroups**, **AppGroupMembers**, **AppGroupRules**, **ActivitySpans** *(US-008, migration 6, ADR-021)*: groups (name, unique case-insensitive `NameKey`); members keyed by program path (one group per app, not tied to an account); group rule per group and account SID (**no row = 0:00, no day**; cascade on group delete; purged by SID); activity spans per app record (Unix ms UTC, local day, cascade from `AppRecords`, 90 days). `BlockedStarts` gets `GroupId` and `GroupName`.
-- *(original plan)* **UsageStatistics** — per-user, per-app daily usage minutes. Indexed by date. Rows older than 90 days are purged automatically during the midnight maintenance cycle.
+- *(US-010, migration 7)* **WarningSettings** loses `EarlyText` and `FinalText`; only the two minute values remain.
+- *(original plan, not built)* **UsageStatistics** — per-user, per-app daily usage minutes. Indexed by date. Rows older than 90 days are purged automatically during the midnight maintenance cycle.
 - **PairedDevices** — registered parent apps with device names and authentication credentials.
 - **AccountSelections** — per Windows SID whether the account is under parental control (US-003, FR-SVC-072 to FR-SVC-074). A row exists only for accounts the parent has ticked or unticked; no row = not under parental control. Rows of accounts that became admins are kept; rows of deleted SIDs are removed. The account inventory itself is not stored: it is read from Windows. State revisions (ADR-010) are not stored either.
-- **AppNameCache** — dictionary mapping executable names to resolved human-readable display names.
-- **IgnoreList** — shipped list of essential Windows process names (read-only at runtime, seeded by installer/migration).
+- *(original plan, not built; display names live in `AppRecords`)* **AppNameCache** — dictionary mapping executable names to resolved human-readable display names.
+- *(original plan, not built; the ignore list is the code list `EnforcementIgnoreList`, §8.8)* **IgnoreList** — shipped list of essential Windows process names (read-only at runtime, seeded by installer/migration).
 
 **EagleEye.ParentApp** (`EagleEye.ParentApp.db`) tables include:
 
 - **ServerConnections** — stored service endpoints (hostname/IP), device ID, device name, pinned certificate thumbprint (SHA-256) and pairing time. At most one row in US-002.
 - **AppSettings** — key/value settings (e.g. `appearance.theme`).
 - **Secrets** — the pairing token, encrypted. On Windows, `ProtectedSecretStore` (Core) stores the bytes returned by `ISecretProtector`, implemented by `DpapiSecretProtector` (DPAPI `CurrentUser`, platform code). MAUI `SecureStorage` is not used on Windows because it needs package identity and the app is unpackaged (ADR-009). macOS uses `MauiSecureStorageSecretStore` (Keychain) and does not use this table.
-- **CachedState** (planned) — last-known configuration and statistics for offline display.
+- **CachedState** (planned, not built) — last-known configuration and statistics for offline display.
 
 The service and the parent app derive their databases from the Shared `SqliteDatabase` base (§5.3).
 
-**EagleEye.TrayClient** (`EagleEye.TrayClient.db`) — optional, lightweight cache for display state.
+**EagleEye.TrayClient** has no database (original design: an optional display-state cache, never built); its only stored state is the overlay settings in `HKCU` (US-010).
 
 SQLite is accessed via `Microsoft.Data.Sqlite`. All write operations use transactions. WAL (Write-Ahead Logging) mode is enabled for concurrent read performance. Schema migrations are versioned and applied automatically on startup.
 
 ### 8.5 Application Configuration (YAML)
+
+> **Not built (2026-11-07).** No component reads a YAML file. Ports, timeouts and limits are constants (`ServiceDefaults`, `EndpointPorts`, `CloseSequenceRunner.GracefulTimeout` = 20 s); the warning minutes are set in the parent apps and stored in `WarningSettings`; the overlay settings are in `HKCU` (US-010); Debug builds read the `EAGLEEYE_DEV_*` environment variables. The design below is kept as the plan for a later configuration story.
 
 Each application has exactly one YAML configuration file, named after the application, that provides all runtime parameters. YAML files are stored in the OS-standard application data directory alongside the SQLite database.
 
@@ -1060,8 +1072,8 @@ All process terminations use a **two-phase graceful-then-force pattern**:
 
 | Phase | Mechanism | Timeout |
 |-------|-----------|---------|
-| 1. Graceful | `WM_CLOSE` to the process's main window (via `Process.CloseMainWindow()`) | Configurable (default: 30s, min: 5s, max: 120s) |
-| 2. Force | `Process.Kill(entireProcessTree: true)` — kills the process and all child processes | Immediate |
+| 1. Graceful | `WM_CLOSE` to every app window of the affected processes, posted by the session agent (US-005) | 20 s, fixed (FR-SVC-023 v1.5) |
+| 2. Force | `TerminateProcess` by the service on the kill set, at most 3 rounds (US-005, ADR-013) | Immediate |
 
 If the process has no main window, Phase 1 is skipped and Phase 2 executes immediately.
 
@@ -1069,13 +1081,11 @@ If the process has no main window, Phase 1 is skipped and Phase 2 executes immed
 
 | Trigger | Pre-termination Warnings | Termination |
 |---------|------------------------|-------------|
-| **Blocked app** (Tier 3) | None — immediate | Graceful-then-force on detection |
-| **Budget expired** | Early warning (default: 5 min before) + last warning (default: 1 min before) | Graceful-then-force when budget reaches zero |
-| **Pause window** | Early warning (default: 5 min before) + last warning (default: 1 min before) | Graceful-then-force when pause window begins |
+| **Blocked start** (not allowed today, budget used up, break time) | None; the kid dialog explains the block | Graceful-then-force at the start |
+| **Budget used up** (app or group) | Early and final level (defaults 5 and 1 min) in the overlay: colour, pulse, sound (US-010) | Graceful-then-force at 0:00 (after a grace period if a parent change caused it, ADR-015) |
+| **Break time begins** | Early and final level in the overlay's break line | Graceful-then-force when the break begins |
 
-Warning thresholds are independently configurable for budget and pause scenarios via `EagleEye.Service.yaml`. Warnings are advisory — they do not delay enforcement.
-
-The timeout is a global setting (`enforcement.graceful_shutdown_timeout_seconds` in `EagleEye.Service.yaml`), applied uniformly to all termination scenarios.
+The two warning levels are global (one pair of minutes for budgets and breaks), set by the parent in the parent apps (`WarningSettings`, US-006). Warnings are advisory: they do not delay enforcement. The graceful timeout is the fixed 20 s for all scenarios.
 
 ### 8.10 Logging Strategy
 
@@ -1088,7 +1098,7 @@ Diagnosability is a primary design principle: **every EagleEye component writes 
 
 #### Log Modes
 
-Each application supports two modes, controlled via its YAML configuration file (`logging.debug_mode: true|false`):
+*(Planned, not built: the service always logs at Information; the YAML switch and the runtime toggle below do not exist yet, and the tray client and parent apps write no log files.)* Each application supports two modes, controlled via its YAML configuration file (`logging.debug_mode: true|false`):
 
 | Mode | Levels Logged | Content |
 |------|--------------|---------|
@@ -1180,14 +1190,14 @@ All architectural decisions are recorded as ADRs in `02_Implementation/docs/arch
 | ADR-002 | SQLite for Data Persistence, YAML for Application Configuration, .NET Logging for Diagnosability | Accepted |
 | ADR-003 | SignalR Hub Design — Two Hubs, Three Communication Patterns, Server-Authoritative State | Accepted |
 | ADR-004 | Pairing-Based Authentication for Parent Apps | Accepted |
-| ADR-005 | Process Classification Strategy — Ignore, Allow, Block | Accepted (amendment for usage recording proposed with US-004) |
+| ADR-005 | Process Classification Strategy — Ignore, Allow, Block | Accepted (amendments with US-004 and US-005) |
 | ADR-006 | Graceful-Then-Force Process Termination Pattern | Accepted |
 | ADR-007 | Two-Machine Development and Manual Acceptance Testing | Accepted (§2 "Distribution" superseded by ADR-009) |
 | ADR-008 | Parent App Connectivity — Endpoints, TLS Trust and Pairing Protocol | Accepted |
 | ADR-009 | Windows Parent App Packaging and the ParentApp.Core Library | Accepted |
 | ADR-010 | Event-Driven State Propagation — Service Broadcasts with Revisions | Accepted |
-| ADR-011 | Session Agent for App Observation — a SYSTEM Helper per Watched Session | Proposed — approved with the US-004 implementation plan |
-| ADR-012 | Usage Accounting — Active Time, Clocks, Day Boundary, Persistence and Usage State Areas | Proposed — approved with the US-004 implementation plan |
+| ADR-011 | Session Agent for App Observation — a SYSTEM Helper per Watched Session | Accepted (approved with the US-004 implementation plan) |
+| ADR-012 | Usage Accounting — Active Time, Clocks, Day Boundary, Persistence and Usage State Areas | Accepted (approved with the US-004 implementation plan) |
 | ADR-013 | Break-Time Enforcement at App Start — Blocked Starts, Close Sequence and Kill Set | Accepted (approved with the US-005 implementation plan, 2026-10-10) |
 | ADR-014 | Session-Bound Tray Connections and the Kid's Message Box | Accepted (approved with the US-005 implementation plan, 2026-10-10) |
 | ADR-015 | Time Limits for Running Apps — End of Allowed Time, Warnings, Grace Periods and Enforced Closes | Accepted (approved with the US-006 implementation plan, 2026-10-12) |
@@ -1195,6 +1205,7 @@ All architectural decisions are recorded as ADRs in `02_Implementation/docs/arch
 | ADR-019 | Parent App Platforms — Windows and macOS Only, Unsigned Mac Distribution | Accepted (2026-10-20, CR-001); §4 amended by ADR-020 (2026-10-20) |
 | ADR-020 | macOS Platform Layer under Ad-hoc Signing — Keychain, TLS Handler, No App Sandbox, Language | Accepted (approved with the US-007 implementation plan, 2026-10-20); Revision 1 (§2 legacy Keychain API, after first light) approved 2026-10-20 |
 | ADR-021 | App Groups — Shared Budgets Computed from Activity Spans, Enforced per Limit Subject | Accepted (approved with the US-008 implementation plan, 2026-10-31) |
+| ADR-022 | Remaining-Time Overlay in the Tray Client | Accepted (approved with the US-010 implementation plan, 2026-11-01) |
 
 ADR-017 and ADR-018 are unused: they were drafts on the aborted US-007 iOS branch and never reached `main` (ADR-019 numbering note).
 
@@ -1203,6 +1214,8 @@ ADR-017 and ADR-018 are unused: they were drafts on the aborted US-007 iOS branc
 *(US-006)* Amendments marked in ADR-006 (two global warning levels, closes of running apps), ADR-012 (app record on blocked starts, ledger, tick order), ADR-013 (gate checks app rules, close requests, break begin closes running apps, history columns), ADR-014 (`ShowKidMessage`, newer message replaces, info line).
 
 *(CR-001, 2026-10-20)* Amendments marked in ADR-001 (MAUI targets Windows + macOS), ADR-002 (no iOS/Android storage rows), ADR-004 (example device name), ADR-007 (machine roles, Windows parent app is a production platform), ADR-008 (wording), ADR-009 (TFM list without Android), ADR-010 (note on "mobile apps").
+
+*(US-010)* Amendments marked in ADR-007 (kid's gaming PC as a test-only machine), ADR-011, ADR-014 (`OnRemainingTime`, the kid dialog only for blocks and closes), ADR-015 (warnings go to the overlay), ADR-016 (no warning texts).
 
 *(US-008)* Amendments marked in ADR-010 (state areas `AppGroups`, `AppGroupRules:{sid}`; usage refetch on a group change), ADR-012 (activity spans), ADR-015 (limit subjects: group or app).
 
@@ -1282,7 +1295,7 @@ maint --> maint3
 | QS-02 | Reliability | The parent app disconnects. The service continues enforcing all configured rules from local storage. | Zero enforcement gaps during disconnect |
 | QS-03 | Security | A child attempts to kill `EagleEye.Service` via Task Manager. | Operation denied (SYSTEM service, standard user has no permission) |
 | QS-04 | Security | An unauthenticated network client sends a configuration change. | Service rejects the request; no configuration modified |
-| QS-05 | Diagnosability | A bug is reported. The developer enables debug mode in the YAML config and reproduces the issue. Log files contain full stack traces with parameter values for every method in the call chain. | Root cause identifiable from log files alone without attaching a debugger |
+| QS-05 | Diagnosability | *(Planned; debug mode not built yet, §8.10.)* A bug is reported. The developer enables debug mode in the YAML config and reproduces the issue. Log files contain full stack traces with parameter values for every method in the call chain. | Root cause identifiable from log files alone without attaching a debugger |
 | QS-06 | Diagnosability | A credential-related flow is logged in debug mode. | No passwords, tokens, pairing codes, or private keys appear in any log file — all replaced with `***` |
 | QS-07 | Usability | A parent installs EagleEye, pairs their parent app (Windows or macOS), and configures one app rule. | Achievable in under 10 minutes with no CLI or certificate steps |
 | QS-08 | Performance | The service monitors processes while the child plays a game. | CPU usage from EagleEye ≤ 2% average; no perceptible impact on game FPS |
@@ -1298,7 +1311,7 @@ maint --> maint3
 | R-1 | ~~Self-signed certificate rejected by iOS/Android MAUI clients~~ **Void (CR-001, 2026-10-20)**: iOS and Android are dropped. Trust on first use and pinning work on Windows (US-002); the Mac Catalyst client is validated with the new US-007 (see R-3). | — | — | — |
 | R-2 | Process monitoring causes high CPU under heavy process churn | Low | Medium | Use efficient enumeration (snapshot-based, not per-process polling). Profile during first DEV iteration. Configurable poll interval as safety valve. |
 | R-3 | MAUI limitations on macOS Catalyst (window management, TLS trust callback on the WebSocket transport, Keychain via `SecureStorage`) | Medium | Medium | *(CR-001)* The macOS app is now a production platform: validate on real hardware in the new US-007 "macOS parent app parity". Known toolchain issue: the .NET Mac Catalyst pack may expect an older Xcode than installed (`ValidateXcodeVersion`, dev-environments §5). *(US-007)* ADR-020: managed HTTP handler, own Keychain store (spike decides login vs. data-protection keychain under ad-hoc signing), no sandbox; "first light" run at the start of US-007 makes UI gaps visible early. *(US-007 first light, ADR-020 Revision 1 — approved by the project owner 2026-10-20)* The `SecItem` API cannot write for an ad-hoc Mac Catalyst build (-34018); the Mac token store uses the **deprecated legacy `SecKeychain…` API** on the login keychain. **Residual risk**: Apple may remove that API in a future macOS; there is no supported alternative without a paid Apple Developer account (excluded by CR-001 Q-7). Effect: the Mac app could no longer read or save its pairing (clear Keychain message, nothing deleted); the Windows app is unaffected. Mitigation: store behind `ISecretStore`; check the Mac app on every macOS major release and Xcode/.NET workload update (dev-environments §5); the project owner then decides between a paid account and another secret mechanism. Also accepted: one Keychain prompt after each update (partition list keyed on the ad-hoc cdhash, story OQ-3). |
-| R-4 | WinForms topmost overlay z-order lost in some fullscreen games | Medium | Low | Documented as v1 limitation (no DirectX overlay). Use `WS_EX_TOPMOST` + timer-based re-assertion. |
+| R-4 | The overlay is not visible over true exclusive fullscreen; a game could cover it despite the re-assert *(US-010)* | Medium | Low | Accepted (ADR-022 §5): the sound plays at every level in every mode; top-most re-asserted on every foreground change and once per second; no injection. The spike found only Minecraft's explicit exclusive fullscreen hiding the pill. |
 | R-5 | SQLite database corruption on service crash | Very Low | High | SQLite WAL mode provides crash resilience out of the box. Regular `PRAGMA integrity_check` on startup. |
 | R-6 | Standard-user child kills TrayClient process | Low | Low | TrayClient is informational only; enforcement continues server-side. TrayClient restarts automatically. Consider process-protection techniques in later iterations. *(US-005)*: then the break-time message is not shown; the app is closed anyway and the log says "message not shown" (US-005 OQ-9, AC-33). |
 | R-7 | Clock manipulation by child to circumvent budget/pause | Low | Medium | Service uses monotonic timers for budget countdown (not wall-clock). Pause-window checks use wall clock but service runs as SYSTEM — standard user cannot change system time. *(Corrected with US-005)*: a standard user **cannot** change the clock, but **can change the time zone** by default (`SeTimeZonePrivilege` is granted to Users), which shifts the local time used for break times. See R-13. |
@@ -1312,7 +1325,7 @@ maint --> maint3
 | R-15 | **Deny by default after the upgrade** to 0.6: every app recorded before is blocked (0:00, no day) until the parent sets its rule (US-006 OQ-2) *(US-006)* | High (certain) | Medium | Accepted by the project owner. The parent configures the Rules page right after the upgrade. Start menu, Explorer, lock and sign-out are never blocked. |
 | R-16 | **App records per program path**: apps that install each update into a new folder get a new, blocked record after every update (US-006 OQ-12) *(US-006)* | Medium | Low | Accepted. The Rules row shows the path as a tooltip. Merging records is a later story. |
 | R-17 | *(US-008)* MAUI drag-and-drop on Mac Catalyst may be unreliable (scroll vs. drag, highlight repaint) | Medium | Medium | Spike at the start of US-008 with a decision rule; native `UIDragInteraction` fallback; "Move to …" menu on every entry always works. |
-| R-18 | *(US-008)* The Windows parent app compiles the shared group code but is not used or tested against the 0.8 service until US-009 | Certain | Low | Accepted by the project owner (no mixed versions); US-009 delivers all four assets as 0.9.0. |
+| R-18 | ~~*(US-008)* The Windows parent app compiles the shared group code but is not used or tested against the 0.8 service until US-009~~ **Closed with US-009 (0.9.0)**: all four assets ship together; the Windows parent app has groups. | — | — | — |
 
 ---
 
