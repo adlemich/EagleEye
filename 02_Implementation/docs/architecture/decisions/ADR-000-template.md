@@ -2,7 +2,7 @@
 
 **Status**: Proposed | Accepted | Deprecated | Superseded by ADR-XXX
 **Date**: YYYY-MM-DD
-**Deciders**: ARC, Michael
+**Deciders**: ARC, the project owner
 
 ---
 

@@ -1,26 +1,26 @@
 # ISSUE-006: Account list is hard to read — show it as a table with column headers
 
-**Status**: Verified/Closed (TC-003-36 Pass in `docs/testing/US-003/test-run-01.md`, build 0.3.1; closed by Michael, 2026-10-07)
+**Status**: Verified/Closed (TC-003-36 Pass in `docs/testing/US-003/test-run-01.md`, build 0.3.1; closed by the project owner, 2026-10-07)
 **User Story**: US-003
-**Found in**: Michael's functional check of build 0.3.0 before test run 01 (not a test-run case)
+**Found in**: the project owner's functional check of build 0.3.0 before test run 01 (not a test-run case)
 **Date**: 2026-10-07
 **Severity**: Low (usability; no function is affected)
-**Machine**: parent app on `LEOSERV`, paired with the service PC `ZOCK-O-MAT-V3`
+**Machine**: parent app on `PARENT-PC`, paired with the service PC `DEV-PC`
 **Build**: `03_Delivery/windows/EagleEye-ParentApp-Setup-0.3.0.exe` (parent app)
 **Evidence**: `docs/testing/US-003/evidence/issue_formatting_accounts.png`
 
 ## Description
 
-In *Einstellungen → Benutzerkonten auf dem EagleEye-PC*, each account row shows the account name on the left, the checkbox next to it, and the label "Unter Elternkontrolle" far to the right, repeated in every row (implementation report §6, "Row layout"). The label is separated from the checkbox it belongs to, and the list does not read as a list. Michael asks for a two-column table with column headers.
+In *Einstellungen → Benutzerkonten auf dem EagleEye-PC*, each account row shows the account name on the left, the checkbox next to it, and the label "Unter Elternkontrolle" far to the right, repeated in every row (implementation report §6, "Row layout"). The label is separated from the checkbox it belongs to, and the list does not read as a list. The project owner asks for a two-column table with column headers.
 
-Recorded by the Orchestrator from Michael's screenshot and instruction (2026-10-07). Michael wants the fix delivered as patch **0.3.1** before test run 01.
+Recorded by the Orchestrator from the project owner's screenshot and instruction (2026-10-07). The project owner wants the fix delivered as patch **0.3.1** before test run 01.
 
 ## Steps to Reproduce
 
 1. Parent app 0.3.0 paired and connected with a service that has at least one standard account.
 2. Open *Einstellungen*, scroll to *Benutzerkonten auf dem EagleEye-PC*.
 
-## Expected Result (Michael's screenshot, "Should be")
+## Expected Result (the project owner's screenshot, "Should be")
 
 A table with two columns:
 
@@ -67,4 +67,4 @@ AC-10 asks for "a checkbox *Under parental control*" per account. With the table
 | `03_Delivery/windows/EagleEye-Setup-0.3.1.exe` | 2026-10-07 12:59 | `6693dc9b362a60dd5fd7d30aa5e96e54ed50503ead11b66dc757df6c48434420` |
 | `03_Delivery/windows/EagleEye-ParentApp-Setup-0.3.1.exe` | 2026-10-07 13:00 | `d6e5efc5892825a0ad0c3ad9cac04a1d520f56d04cd7f7b114da52b5e8627918` |
 
-**Smoke check — not completed (visual layout, light/dark, 150 % and screenshot open)**: the parent app installer 0.3.1 installs (per user, file version 0.3.1.0) and the app starts. Before I could pair it with a console service, the EagleEye service 0.3.0 that Michael had installed in the meantime was holding ports 5443/5080, so the console service could not start. DEV did not pair against Michael's installed service. One attempt by mistake failed with a wrong code, so no device was registered. Its entries are in that service's log at 13:01:06 to 13:01:46: connect, pairing started, code sent to the tray, rejected WrongCode, disconnect. The app is uninstalled again. **Michael/TES**: check the table in light and dark mode and at 150 % with the 0.3.1 installers (a screenshot can go to `docs/testing/US-003/evidence/ISSUE-006-after-fix.png`).
+**Smoke check — not completed (visual layout, light/dark, 150 % and screenshot open)**: the parent app installer 0.3.1 installs (per user, file version 0.3.1.0) and the app starts. Before I could pair it with a console service, the EagleEye service 0.3.0 that the project owner had installed in the meantime was holding ports 5443/5080, so the console service could not start. DEV did not pair against the project owner's installed service. One attempt by mistake failed with a wrong code, so no device was registered. Its entries are in that service's log at 13:01:06 to 13:01:46: connect, pairing started, code sent to the tray, rejected WrongCode, disconnect. The app is uninstalled again. **The project owner/TES**: check the table in light and dark mode and at 150 % with the 0.3.1 installers (a screenshot can go to `docs/testing/US-003/evidence/ISSUE-006-after-fix.png`).

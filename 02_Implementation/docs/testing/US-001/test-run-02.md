@@ -2,7 +2,7 @@
 
 **Test plan**: `docs/testing/US-001/test-plan.md` (cases re-used; expected texts updated to German per ISSUE-001; AC-13 added per ISSUE-003)
 **Prepared by**: TES, 2026-10-03
-**Executed by**: Michael
+**Executed by**: the project owner
 **Execution date**: <!-- fill in -->
 **Build / installer version**: `EagleEye-Setup-0.1.1.exe`
 **Machine(s)**: Windows Developer Machine (German UI)
@@ -175,4 +175,4 @@ Only if you want to check the English side by hand (unit tests already cover it)
 |---|---|---|---|---|
 | 8 | 0 | 0 | 1 | 0 |
 
-Evaluated by TES on 2026-10-03. TC-001-R02 (optional English check) skipped; English texts are covered by unit tests. ISSUE-001, ISSUE-002 and ISSUE-003 verified. Michael: "ALL GOOD!"
+Evaluated by TES on 2026-10-03. TC-001-R02 (optional English check) skipped; English texts are covered by unit tests. ISSUE-001, ISSUE-002 and ISSUE-003 verified. The project owner: "ALL GOOD!"

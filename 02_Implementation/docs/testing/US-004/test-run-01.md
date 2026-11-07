@@ -2,10 +2,10 @@
 
 **Test plan**: `docs/testing/US-004/test-plan.md` (draft 2026-10-08, for approval)
 **Prepared by**: TES, 2026-10-08
-**Executed by**: Michael
+**Executed by**: the project owner
 **Execution date**: <!-- fill in -->
 **Build / installer version**: 0.4.0 — `03_Delivery/windows/EagleEye-Setup-0.4.0.exe` (file date: ________) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.4.0.exe` (file date: ________) <!-- verify against implementation report: dates, SHA-256 -->
-**Machine(s)**: Windows Developer Machine (service PC, `ZOCK-O-MAT-V3`) <!-- add Windows version --> · LEOSERV (App B) <!-- add Windows version / scaling -->
+**Machine(s)**: Windows Developer Machine (service PC, `DEV-PC`) <!-- add Windows version --> · PARENT-PC (App B) <!-- add Windows version / scaling -->
 
 > **Start this run only after DEV's handover** (`02_Implementation/docs/requirements/user-stories/US-004/implementation-report.md` present) and after TES has aligned the places marked `verify against implementation report`.
 >
@@ -19,7 +19,7 @@
 >
 > **Duration**: Setup ≈ 35 min · A ≈ 20 min · B ≈ 75 min · C ≈ 30 min · D ≈ 25 min (+15 optional) · E ≈ 45 min (+5 optional) · F ≈ 10 min (+≈ 90 optional; TC-004-33 at midnight, TC-004-34 next day).
 >
-> **Accounts**: **Admin** = you. **kid1** = `eagleeye-kid` (controlled). **kid2** = `ee-kid2` (not controlled). **kid3** = `ee-kid3` (controlled; deleted in TC-004-30). **Apps**: **App A** = parent app in your admin session; **App B** = parent app on **LEOSERV** (for watching while the kid's session is in front).
+> **Accounts**: **Admin** = you. **kid1** = `eagleeye-kid` (controlled). **kid2** = `ee-kid2` (not controlled). **kid3** = `ee-kid3` (controlled; deleted in TC-004-30). **Apps**: **App A** = parent app in your admin session; **App B** = parent app on **PARENT-PC** (for watching while the kid's session is in front).
 > **Terminal (Administrator)** = elevated terminal in your admin session (title "Administrator:"; a normal one is not enough). **K-TERM** = elevated terminal **inside the kid's session**, started with your admin credentials (S-13).
 >
 > **Rules** (test plan §2):
@@ -163,10 +163,10 @@ query user
 
 ## Block B — What is recorded and how much (core) · ≈ 75 min
 
-- [x] **S-14 App B on LEOSERV**: install `EagleEye-ParentApp-Setup-0.4.0.exe` on LEOSERV; start; green and *Gekoppelt* → done; else *Kopplung aufheben* (if offered), connect to `<host>`, pair as **LEOSERV** (code from the tray popup in your admin session). App B → **Berichte** → **Konto** `eagleeye-kid`. LEOSERV scaling ____ %. Not available today? → write it here; TC-004-05 is Blocked.
+- [x] **S-14 App B on PARENT-PC**: install `EagleEye-ParentApp-Setup-0.4.0.exe` on PARENT-PC; start; green and *Gekoppelt* → done; else *Kopplung aufheben* (if offered), connect to `<host>`, pair as **PARENT-PC** (code from the tray popup in your admin session). App B → **Berichte** → **Konto** `eagleeye-kid`. PARENT-PC scaling ____ %. Not available today? → write it here; TC-004-05 is Blocked.
 - [x] Switch to `eagleeye-kid`; open **K-TERM** and run LOG-WATCH in it.
 
-*Read the values in App B. Without LEOSERV, read them in App A after switching to Admin (switching stops the counting).*
+*Read the values in App B. Without PARENT-PC, read them in App A after switching to Admin (switching stops the counting).*
 
 ### TC-004-04: Accuracy: Notepad 10 minutes, with 3 minutes locked in between
 
@@ -190,7 +190,7 @@ query user
 
 ### TC-004-05: The open Reports page updates by itself within 15 s
 
-*Verifies AC-22, AC-13 · Service PC / kid1; LEOSERV / App B next to it · App B on Berichte → eagleeye-kid; Paint not used today. No LEOSERV → Blocked*
+*Verifies AC-22, AC-13 · Service PC / kid1; PARENT-PC / App B next to it · App B on Berichte → eagleeye-kid; Paint not used today. No PARENT-PC → Blocked*
 
 1. kid1: start **Paint**; stopwatch when its window appears. Do not touch App B.
 2. Note when the row **Paint** appears in App B.
@@ -832,7 +832,7 @@ query user
   }
   ```
 - [x] `eagleeye-kid` stays ticked (or untick, your choice).
-- [x] LEOSERV: App B stays installed and paired.
+- [x] PARENT-PC: App B stays installed and paired.
 
 ---
 

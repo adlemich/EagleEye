@@ -2,10 +2,10 @@
 
 **Test plan**: `02_Implementation/docs/testing/US-009/test-plan.md` (draft 2026-11-01, for approval)
 **Prepared by**: TES, 2026-11-01
-**Executed by**: Michael
+**Executed by**: the project owner
 **Execution date(s)**: <!-- fill in, one per session day -->
 **Build / installer version**: 0.9.0 — `03_Delivery/windows/EagleEye-Setup-0.9.0.exe` (SHA-256 `4F1EF797…CB1652`), `03_Delivery/windows/EagleEye-ParentApp-Setup-0.9.0.exe` (SHA-256 `780CE6CB…1D88F0`), `03_Delivery/macos/EagleEye-ParentApp-0.9.0.dmg` (SHA-256 `9f397006…c5fdde6`); full hashes in the test plan §2
-**Machine(s)**: Service PC (Windows Developer Machine, Windows 11, IP: <!-- fill in, expected 192.168.1.37 -->) · Windows 10 PC (winver: <!-- fill in -->) · MacBook (macOS <!-- fill in -->)
+**Machine(s)**: Service PC (Windows Developer Machine, Windows 11, IP: <!-- fill in, expected DEV-PC -->) · Windows 10 PC (winver: <!-- fill in -->) · MacBook (macOS <!-- fill in -->)
 **Accounts (S-5)**: kid1 = <!-- fill in --> · kid2 = <!-- fill in --> (English Windows: yes / no) · kid3 = <!-- fill in -->
 
 ---
@@ -76,8 +76,8 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 
 Patterns: `App groups loaded` · `app group|app moved|group rule` · `Test` · `Grace period` · `Blocked start` · `App closed`
 
-**Mac connection check** (Terminal on the MacBook; not ping): `nc -z -G 3 192.168.1.37 5443`
-**W10 connection check** (PowerShell on the W10 PC): `Test-NetConnection 192.168.1.37 -Port 5443`
+**Mac connection check** (Terminal on the MacBook; not ping): `nc -z -G 3 DEV-PC 5443`
+**W10 connection check** (PowerShell on the W10 PC): `Test-NetConnection DEV-PC -Port 5443`
 
 ---
 
@@ -85,13 +85,13 @@ Patterns: `App groups loaded` · `app group|app moved|group rule` · `Test` · `
 
 - [ ] **S-1 Installers**: hashes as in test plan §2 (service PC: `Get-FileHash …`; MacBook: `shasum -a 256 03_Delivery/macos/EagleEye-ParentApp-0.9.0.dmg`).
 - [ ] **S-2 Starting points**: service PC *Installierte Apps*: EagleEye ______ (expected **0.8.0**), EagleEye Parent App: ______ (expected **none**); service running · Mac app version ______ (expected **0.8.0**) · W10 PC: no EagleEye, no `%LocalAppData%\EagleEye`. Different → **stop**, tell TES.
-- [ ] **S-3 Service PC IPv4** (`ipconfig`): ______ (expected 192.168.1.37; otherwise use the real address everywhere).
-- [ ] **S-4 Copy to the W10 PC**: both `.exe`; `Get-FileHash` there matches; `Test-NetConnection 192.168.1.37 -Port 5443` → *TcpTestSucceeded: True*.
+- [ ] **S-3 Service PC IPv4** (`ipconfig`): ______ (expected DEV-PC; otherwise use the real address everywhere).
+- [ ] **S-4 Copy to the W10 PC**: both `.exe`; `Get-FileHash` there matches; `Test-NetConnection DEV-PC -Port 5443` → *TcpTestSucceeded: True*.
 - [ ] **S-5 Accounts**: kid1, kid2 controlled; kid3 not controlled (header). kid1 and kid2 have used Editor, Paint, Rechner at least once. New accounts created: ______
 - [ ] **S-6 kid2 English** (untick kid2 in the Mac app 0.8.0, change the display language as kid2, sign out/in, re-tick): done / not possible ______
 - [ ] **S-7 kid1 taskbar clock with seconds**.
 - [ ] **S-8 Terminal (Administrator)** open; a second one with LOG-WATCH.
-- [ ] **S-9 Warning levels** (Mac app 0.8.0): **Frühe Warnung 3**, **Finale Warnung 1**. Old values: ______ / ______
+- [ ] **S-9 Warning levels** (Mac app 0.8.0): **Früthey Warnung 3**, **Finale Warnung 1**. Old values: ______ / ______
 - [ ] **S-10 Baseline** (Mac app 0.8.0): group **Rechnen** with **Rechner**; kid1 Rechnen **0:30, MO–SO**; other groups kept: ______ ; kid1 used `calc` **2 minutes**; Berichte today **Rechnen 00:02**. Past-day group lines: ______ (or "none"). Screenshots `evidence/s10-appgroups-0.8.0.png`, `s10-grouprules-kid1-0.8.0.png`, `s10-reports-kid1-0.8.0.png`. **Mac app quit (Cmd+Q).**
 - [ ] **S-11 SmartScreen** understood (*Weitere Informationen* → *Trotzdem ausführen*).
 - [ ] **S-12 All kid accounts signed out.**
@@ -179,13 +179,13 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 **Precondition**: TC-009-03; the app is open for the first time
 
 1. Look at the window after the first start.
-2. Host dialog: `192.168.1.37` → **Verbinden**. Read the 6-digit code from the popup **"EagleEye – Eltern-App koppeln"** (or *Ereignisanzeige → Anwendung*, source EagleEye). *Gerätename dieses PCs* **Papas PC** → code → **Koppeln**.
+2. Host dialog: `DEV-PC` → **Verbinden**. Read the 6-digit code from the popup **"EagleEye – Eltern-App koppeln"** (or *Ereignisanzeige → Anwendung*, source EagleEye). *Gerätename dieses PCs* **Papas PC** → code → **Koppeln**.
 3. Close the app (window **X**). Start it again from the Start menu.
 
 **Expected**
 
 - Step 1: the app opens on **Einstellungen** with the host dialog; status bar red.
-- Step 2: no certificate warning or extra step; green **"Verbunden mit 192.168.1.37"**; *Gekoppelt*.
+- Step 2: no certificate warning or extra step; green **"Verbunden mit DEV-PC"**; *Gekoppelt*.
 - Step 3: green without a pairing code ≤ 30 s; the app opens on **Berichte**, with **Berichte** selected in the menu.
 
 - **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
@@ -306,7 +306,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 
 **Expected**
 
-- Step 1: red **"Nicht verbunden mit 192.168.1.37"** ≤ 30 s; the page shows **Keine Daten verfügbar** (no stale entries that look editable).
+- Step 1: red **"Nicht verbunden mit DEV-PC"** ≤ 30 s; the page shows **Keine Daten verfügbar** (no stale entries that look editable).
 - Step 2: green ≤ 60 s; the page shows **Wird geladen …** briefly, then the groups again.
 - Step 3: **"Keine Konten unter Elternkontrolle. Konten unter Einstellungen auswählen."**
 - Step 4: the page with groups and apps as before; kid1's and kid2's rules unchanged (glance at *Regeln*).
@@ -684,17 +684,17 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 
 **Precondition**: TC-009-27, host dialog open
 
-1. Host `192.168.1.250` (an address with no PC; or any unused one) → **Verbinden**. Wait up to 30 s.
-2. Host `192.168.1.37` → **Verbinden**. Read the status bar and the pairing form.
+1. Host `192.0.2.250` (an address with no PC; or any unused one) → **Verbinden**. Wait up to 30 s.
+2. Host `DEV-PC` → **Verbinden**. Read the status bar and the pairing form.
 3. *Gerätename dieses PCs* **Windows 10 PC**; enter the code from the service PC's popup with the **last digit changed** → **Koppeln**.
 4. Enter the right code → **Koppeln**.
 
 **Expected**
 
-- Step 1: a connection error that **names the host**, e.g. "Verbindungsfehler: Keine Verbindung zum EagleEye-Dienst unter 192.168.1.250 möglich."; red.
-- Step 2: no certificate warning, no extra step; pairing form with **Kopplungscode** and **Gerätename dieses PCs**; red **"Verbindung zu 192.168.1.37 wird hergestellt …"** (never "Verbunden" before pairing).
+- Step 1: a connection error that **names the host**, e.g. "Verbindungsfehler: Keine Verbindung zum EagleEye-Dienst unter 192.0.2.250 möglich."; red.
+- Step 2: no certificate warning, no extra step; pairing form with **Kopplungscode** and **Gerätename dieses PCs**; red **"Verbindung zu DEV-PC wird hergestellt …"** (never "Verbunden" before pairing).
 - Step 3: **"Der Kopplungscode ist falsch."** (or same meaning); not paired; red.
-- Step 4: green **"Verbunden mit 192.168.1.37"**, *Gekoppelt*.
+- Step 4: green **"Verbunden mit DEV-PC"**, *Gekoppelt*.
 
 - **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
@@ -713,7 +713,7 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 **Expected**
 
 - Step 1: green ≤ **30 s**, no pairing code; opens on **Berichte**.
-- Step 2: red **"Nicht verbunden mit 192.168.1.37"** ≤ **30 s**.
+- Step 2: red **"Nicht verbunden mit DEV-PC"** ≤ **30 s**.
 - Step 3: green ≤ **60 s** without any action.
 
 - **Result**: [ ] Pass  [X ] Fail  [ ] Blocked  [ ] Skipped
@@ -727,7 +727,7 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 **Precondition**: TC-009-29; the group **Games** exists (from Session 2) — if not, step 3 creates it
 
 1. **Einstellungen**: untick **kid2**, tick it again.
-2. **Einstellungen → Zeit-Ende Warnungen**: **Frühe Warnung** `4` → **Tab**; then back to `3` → **Tab**.
+2. **Einstellungen → Zeit-Ende Warnungen**: **Früthey Warnung** `4` → **Tab**; then back to `3` → **Tab**.
 3. **App Gruppen**: (if needed **Gruppe hinzufügen** `Games`); move **Paint** into **Games** by **dragging with the mouse**, back; with the **touchpad** (if the PC has one), back; with **≡**, back; with **right-click → Verschieben nach …**; leave it in Games.
 4. **Regeln** → kid1: **Games** **Stunden** `0`, **Minuten** `30`, tick today → **Tab**. *Ruhezeiten* → **Eintrag hinzufügen** (leave **An/Aus** off).
 5. **Berichte** → kid1: today.
@@ -873,13 +873,13 @@ The Mac cases are **quick re-confirms** of your 12-point check on 0.8.0 (US-008 
 1. Open `03_Delivery/macos/EagleEye-ParentApp-0.9.0.dmg` → drag **EagleEye Parent App** onto **Programme** → **Ersetzen**.
 2. Start the app. If macOS blocks it: *Systemeinstellungen → Datenschutz & Sicherheit → Dennoch öffnen*.
 3. If the app does not become green within 30 s: quit it (**Cmd+Q**), *Systemeinstellungen → Datenschutz & Sicherheit → Lokales Netzwerk* → switch **every EagleEye entry off and on again**, start the app. Answer a Keychain prompt with **Immer erlauben**. Write in Notes which of these steps were needed and how many Keychain prompts appeared.
-4. Terminal: `nc -z -G 3 192.168.1.37 5443` (not ping).
+4. Terminal: `nc -z -G 3 DEV-PC 5443` (not ping).
 5. Finder → *Programme* → EagleEye Parent App → **Informationen**. App menu **EagleEye Parent App → Über EagleEye Parent App**.
 
 **Expected**
 
-- Step 3 (or already step 2): green **"Verbunden mit 192.168.1.37"** without a new pairing code; the same device name as before; appearance as before. At most the Keychain prompts accepted in US-007 OQ-3 (one-time "Immer erlauben"); having to pair again = **Fail**.
-- Step 4: "succeeded" / "Connection to 192.168.1.37 port 5443 … succeeded!".
+- Step 3 (or already step 2): green **"Verbunden mit DEV-PC"** without a new pairing code; the same device name as before; appearance as before. At most the Keychain prompts accepted in US-007 OQ-3 (one-time "Immer erlauben"); having to pair again = **Fail**.
+- Step 4: "succeeded" / "Connection to DEV-PC port 5443 … succeeded!".
 - Step 5: both show **0.9.0**.
 
 - **Result**: [X ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
@@ -1100,7 +1100,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 
 **Expected**
 
-- Both green **"Verbunden mit 192.168.1.37"**.
+- Both green **"Verbunden mit DEV-PC"**.
 
 - **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
@@ -1182,7 +1182,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 3. *Ruhezeiten* **Anzeige Text:** W adds ` Test` → **Tab**; M removes it → **Tab**.
 4. *Applikations-Regeln*: M changes **Editor** minutes by +1 → **Tab**; W changes them back → **Tab**.
 5. *Anzeige Text wenn Budget aufgebraucht:* W adds ` X` → Tab; M removes it → Tab.
-6. **Einstellungen → Zeit-Ende Warnungen**: M **Frühe Warnung** `4` → Tab; W back to `3` → Tab. W types a text in the **Finale Warnung** text `Gleich Schluss`; M empties it (back to the default).
+6. **Einstellungen → Zeit-Ende Warnungen**: M **Früthey Warnung** `4` → Tab; W back to `3` → Tab. W types a text in the **Finale Warnung** text `Gleich Schluss`; M empties it (back to the default).
 
 **Expected**
 
@@ -1199,11 +1199,11 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 **Precondition**: both green
 
 1. M: **Einstellungen → Kopplung aufheben** (confirm). Watch W for 30 s; click through its pages.
-2. M: pair again: host `192.168.1.37` → **Verbinden** → code from the service PC → same device name → **Koppeln**.
+2. M: pair again: host `DEV-PC` → **Verbinden** → code from the service PC → same device name → **Koppeln**.
 
 **Expected**
 
-- Step 1: M is *Nicht gekoppelt*; W stays green **"Verbunden mit 192.168.1.37"** and works.
+- Step 1: M is *Nicht gekoppelt*; W stays green **"Verbunden mit DEV-PC"** and works.
 - Step 2: M green again (needed as the remote parent app in Session 6B).
 
 - **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
@@ -1226,7 +1226,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 
 **Expected**
 
-- Step 1: a connection error that **names 192.168.1.37**; red; on *Einstellungen* **Kopplung aufheben** disabled and the button **Kopplung auf diesem Gerät löschen** shown.
+- Step 1: a connection error that **names DEV-PC**; red; on *Einstellungen* **Kopplung aufheben** disabled and the button **Kopplung auf diesem Gerät löschen** shown.
 - Step 2: dialog **"Kopplung auf diesem Gerät löschen?"** with the explanation and **Kopplung auf diesem Gerät löschen** / **Abbrechen**; Abbrechen keeps the pairing.
 - Step 3: green ≤ 60 s without any action; the forget button disappears.
 
@@ -1248,7 +1248,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 **Expected**
 
 - Steps 1 to 3: each change stored ≤ 5 s (log line), the field keeps its value; no message.
-- Step 4: `0` → **"Bitte Minuten zwischen 1 und 59 eingeben."**; `3` → **"Die finale Warnung muss weniger Minuten vor dem Ende liegen als die frühe Warnung."**; `1` stored.
+- Step 4: `0` → **"Bitte Minuten zwischen 1 und 59 eingeben."**; `3` → **"Die finale Warnung muss weniger Minuten vor dem Ende liegen als die früthey Warnung."**; `1` stored.
 
 - **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [X ] Skipped
 - **Observed**:
@@ -1263,7 +1263,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - [ ] **P-1** W11 app (AC-27 needs the rule set in the **Windows app**): first **Regeln** → kid1 → *Applikations-Regeln*: note kid1's own rules for **Editor** and **Paint**, then set **Paint 0:00, no day** (US-008 AC-24 check) and **Editor** e.g. 0:30, all days. Then **App Gruppen** → **Gruppe hinzufügen** `Test` → move **Editor** and **Paint** into **Test**.
 - [ ] **P-2** W11 app → **Regeln** → kid1 → *App-Gruppen-Regeln*: **Test** **Stunden 0**, **Minuten 5**, **today ticked** only. kid2: Test stays **0:00, no day**.
 - [ ] **P-3** W11 app → **Regeln** → kid1 → *Applikations-Regeln*: Editor and Paint are no longer listed.
-- [ ] **P-4** *Einstellungen*: **Frühe Warnung 3**, **Finale Warnung 1**; kid1, kid2 ticked, kid3 not.
+- [ ] **P-4** *Einstellungen*: **Früthey Warnung 3**, **Finale Warnung 1**; kid1, kid2 ticked, kid3 not.
 - [ ] **P-5** Mac (M): **Berichte** → kid1: today shows **no** Editor and Paint usage, and no **Test** line (if it does, tell TES or shift all times by that amount). M stays on **Regeln** → kid1, *App-Gruppen-Regeln* visible.
 - [ ] **P-6** *Benutzer wechseln* → kid1. **K-TERM** with LOG-WATCH. No other app open. Stopwatch ready. **Stay in kid1's session; do not lock** during a timed case.
 
@@ -1612,10 +1612,10 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 | 6A–6D | 11 | 0 | 0 | 7 (TC-009-55, -56, -63, -66, -70, -71, -72) | 0 |
 | **Total** | **49** | **1** | **0** | **21** | **1** |
 
-*TES evaluation notes (2026-11-01; Michael's ticks and texts unchanged):*
+*TES evaluation notes (2026-11-01; the project owner's ticks and texts unchanged):*
 
 - Ticks with stray spaces (`[ X]`, `[X ]`) are read as ticked.
-- **TC-009-45: no result recorded.** The result line reads `X ] Pass` (no opening bracket), so no box is ticked. Counted as not executed; Michael to confirm the result in a later run or in chat.
+- **TC-009-45: no result recorded.** The result line reads `X ] Pass` (no opening bracket), so no box is ticked. Counted as not executed; the project owner to confirm the result in a later run or in chat.
 - **TC-009-29 Fail** and the **Observed note on TC-009-18** (ticked Pass) describe the same defect: `02_Implementation/docs/testing/US-009/issues/ISSUE-010.md`. TC-009-18's Pass is consistent with its expected results (save error text, page back to the stored state); the status bar was not part of them.
 - Not filled in: execution dates, service PC IP, winver, macOS version, account names (header); Session 0 (S-1 to S-12) and Session 6B preparation (P-1 to P-6) checkboxes. No evidence or service-log copies were committed (LOG-COPY after the Fail not done).
 - 12 of the 21 skipped cases are essential: TC-009-12, -26, -40, -49 to -56, -63. Evaluation: `02_Implementation/docs/testing/US-009/test-report.md`.

@@ -2,7 +2,7 @@
 
 The following describes the main intend and key use cases that shall be implemented by the Eagle-Eye project and software.
 
-> **Amendment 2026-10-20 (Michael's decision, CR-001)**: the iOS and Android mobile parent applications (module 2 below) are **dropped from the product**. The parent app ships only as the **Windows parent app** (own installer, added 2026-10-03/04) and the **Mac app** (module 3, Mac Catalyst, `.dmg`); both are production platforms. Wherever this document says "mobile parent application(s)" or "mobile app", read "parent app (Windows or Mac)". Reason and details: `02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`; binding requirements: `02_Implementation/docs/requirements/general-product-requirements.md` (v1.7).
+> **Amendment 2026-10-20 (the project owner's decision, CR-001)**: the iOS and Android mobile parent applications (module 2 below) are **dropped from the product**. The parent app ships only as the **Windows parent app** (own installer, added 2026-10-03/04) and the **Mac app** (module 3, Mac Catalyst, `.dmg`); both are production platforms. Wherever this document says "mobile parent application(s)" or "mobile app", read "parent app (Windows or Mac)". Reason and details: `02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`; binding requirements: `02_Implementation/docs/requirements/general-product-requirements.md` (v1.7).
 
 ## Parental Control for Windows
 

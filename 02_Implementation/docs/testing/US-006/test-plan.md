@@ -1,6 +1,6 @@
 # Test Plan: US-006 — App Time Budgets and Time-elapsed Warnings
 
-**Status**: Draft, for approval by Michael
+**Status**: Draft, for approval by the project owner
 **Date**: 2026-10-17
 **Author**: TES
 **User Story**: `02_Implementation/docs/requirements/user-stories/US-006/user-story.md` (39 ACs in groups A to J, approved 2026-10-12, OQ-1 to OQ-19 and plan Q-1 to Q-5 answered; status Implemented)
@@ -37,7 +37,7 @@
 |---|---|
 | Regression, US-005 re-test | Story runs contain no regression cases (`02_Implementation/docs/testing/README.md` §3, Rule 4). |
 | An account that **becomes an admin account** (AC-18, second bullet) | Needs a group change plus a sign-out and sign-in cycle. The untick path (same bullet) is tested in TC-006-37. Unit tests cover the rest. |
-| English **parent app** | Your Windows is German. Only optional TC-006-42, if a parent PC with English Windows exists (e.g. LEOSERV). |
+| English **parent app** | Your Windows is German. Only optional TC-006-42, if a parent PC with English Windows exists (e.g. PARENT-PC). |
 | Exclusive full-screen games (AC-34) | Known limit stated in the story (plan TI-16). The app is still closed on time. Not a Pass criterion. |
 | 90-day retention of the history (AC-37) | Cannot be waited for. Unit tests cover the purge. |
 | Log limiter (30 "Blocked start" lines per account and app per hour) | Needs dozens of blocked starts. Unit tests cover it. |
@@ -48,9 +48,9 @@
 
 | Item | Value |
 |---|---|
-| Service PC | **Windows Developer Machine** (Windows 11 Pro, German UI, `ZOCK-O-MAT-V3`). Current state: EagleEye **0.5.0** service running, App A paired. |
-| Parent PC | **LEOSERV** with **App B**. Needed to change rules **while the kid's session is in front** (Blocks B to E) and for two parent apps at once (TC-006-10). Used time only counts while the kid's session is in front, so switching users to change a rule would distort the timings. Without LEOSERV, TC-006-10 is **Blocked**, and the timing checks of Blocks C and D become weak. |
-| Parent apps | **App A** = parent app in your admin session on the service PC (device *Papas PC*). **App B** = parent app on LEOSERV (device *LEOSERV*). |
+| Service PC | **Windows Developer Machine** (Windows 11 Pro, German UI, `DEV-PC`). Current state: EagleEye **0.5.0** service running, App A paired. |
+| Parent PC | **PARENT-PC** with **App B**. Needed to change rules **while the kid's session is in front** (Blocks B to E) and for two parent apps at once (TC-006-10). Used time only counts while the kid's session is in front, so switching users to change a rule would distort the timings. Without PARENT-PC, TC-006-10 is **Blocked**, and the timing checks of Blocks C and D become weak. |
+| Parent apps | **App A** = parent app in your admin session on the service PC (device *Papas PC*). **App B** = parent app on PARENT-PC (device *PARENT-PC*). |
 | Accounts on the service PC | **Admin** = you. **kid1** = `eagleeye-kid` (standard, **controlled**, German). **ee-kid2** = new standard account, **controlled**, Windows display language **English** (the story's "kid2"; deleted in TC-006-37). **ee-kid3** = new standard account, **not controlled** (the story's "kid3"). *Careful: in US-005, `ee-kid2` was the uncontrolled one. Both accounts were removed in the US-005 cleanup and are created fresh here, with the story's roles.* |
 | Builds under test | `03_Delivery/windows/EagleEye-Setup-0.6.0.exe` (service + tray, admin; built 2026-10-12 13:48, SHA-256 `416E0A74A703A1A7728F541D83E5A40B3D21451A3C462467489507BEB1E03950`) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.6.0.exe` (parent app, per user; built 2026-10-12 13:49, SHA-256 `56500A6A4CBDE74301193FC40DA3E6D24A39851ADAE926AABFE2AEFC86ED34E5`). |
 | Expected versions | *Installierte Apps*: **EagleEye 0.6.0**, **EagleEye Parent App 0.6.0**. Tray *App Infos*: `EagleEye_v0.6`. |
@@ -92,7 +92,7 @@ DEV's suggestion, adjusted to the weekday. **Today = the weekday of your run** (
 | Rechner | 0 | 0 | none (default, do not touch) | blocked |
 | every other app | 0 | 0 | none (default) | blocked |
 
-**Warning levels** (Settings, global): **Frühe Warnung 2**, **Finale Warnung 1**. The texts stay at their defaults for the whole run, so the English check (TC-006-30) can show the English defaults.
+**Warning levels** (Settings, global): **Früthey Warnung 2**, **Finale Warnung 1**. The texts stay at their defaults for the whole run, so the English check (TC-006-30) can show the English defaults.
 
 The blocks change some rules on the way. Each block says which, in its precondition.
 
@@ -104,8 +104,8 @@ The blocks change some rules on the way. Each block says which, in its precondit
   |---|---|
   | Rules section | heading bar **Applikations-Regeln**; explanation "Lege hier fest, welche Applikationen an welchen Tagen für wie lange verwendet werden dürfen. … Es werden nur Applikationen angezeigt, die mindestens ein Mal vom Kind gestartet wurden."; columns **Applikation** · **Tägliches Zeit-Budget** (over **Stunden** · **Minuten**) · **MO DI MI DO FR SA SO**; label **Anzeige Text wenn Budget aufgebraucht:**; no apps: **Noch keine Applikationen aufgezeichnet.** |
   | Rules messages | **Bitte Stunden zwischen 0 und 23 eingeben.** · **Bitte Minuten zwischen 0 und 59 eingeben.** · **Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen.** |
-  | Settings section | heading bar **Zeit-Ende Warnungen**; explanation "Hier kannst du 2 Zeitpunkte einstellen, …"; columns **Zeitpunkt** · **Minuten vor Ende** · **Anzeigetext**; rows **Frühe Warnung**, **Finale Warnung** |
-  | Settings messages | **Bitte Minuten zwischen 1 und 59 eingeben.** · **Die finale Warnung muss weniger Minuten vor dem Ende liegen als die frühe Warnung.** |
+  | Settings section | heading bar **Zeit-Ende Warnungen**; explanation "Hier kannst du 2 Zeitpunkte einstellen, …"; columns **Zeitpunkt** · **Minuten vor Ende** · **Anzeigetext**; rows **Früthey Warnung**, **Finale Warnung** |
+  | Settings messages | **Bitte Minuten zwischen 1 und 59 eingeben.** · **Die finale Warnung muss weniger Minuten vor dem Ende liegen als die früthey Warnung.** |
   | Page states (US-005) | **Keine Daten verfügbar** · **Keine Konten unter Elternkontrolle. Konten unter Einstellungen auswählen.** · **Wird geladen …** |
   | Default budget text | "Du hast deine Zeit aufgebraucht! Leider ist jetzt Schluss." |
   | Default early warning | "Achtung, du hast nur noch 5 Minuten! Speichere deinen Fortschritt." *(says 5 although the level is 2: by design, OQ-8; the info line shows the real minutes)* |
@@ -193,8 +193,8 @@ Must **not** appear in this run: `Process … could not be terminated`, `could n
 
 | Block | Cases | Machine / accounts | Must / optional | Duration |
 |---|---|---|---|---|
-| Setup | S-1 to S-16 | Service PC, LEOSERV | — | ≈ 40 min (incl. two new accounts and the English language for `ee-kid2`) |
-| **A** Upgrade, Rules and Settings pages | TC-006-01 to -10 must, -11 optional | Service PC / Admin; LEOSERV | 10 must + 1 optional | ≈ 50 min (+ 5 min) |
+| Setup | S-1 to S-16 | Service PC, PARENT-PC | — | ≈ 40 min (incl. two new accounts and the English language for `ee-kid2`) |
+| **A** Upgrade, Rules and Settings pages | TC-006-01 to -10 must, -11 optional | Service PC / Admin; PARENT-PC | 10 must + 1 optional | ≈ 50 min (+ 5 min) |
 | **B** Start check and the first budget run | TC-006-12 to -17 | Service PC / kid1; App B | 6 must | ≈ 30 min |
 | **C** Changes during the day (grace) | TC-006-18 to -20 must, -21, -22 optional | Service PC / kid1; App B | 3 must + 2 optional | ≈ 20 min (+ 10 min) |
 | **D** Break times | TC-006-23 to -26 must, -27, -28 optional | Service PC / kid1; App B | 4 must + 2 optional | ≈ 35 min (+ 15 min) |
@@ -238,7 +238,7 @@ Must **not** appear in this run: `Process … could not be terminated`, `could n
 10. **S-10 Selection.** App A → *Einstellungen*: **eagleeye-kid** and **ee-kid2** ticked; **ee-kid3** and every other test account **unticked**.
 11. **S-11 SmartScreen** on the unsigned installers: *Weitere Informationen* → *Trotzdem ausführen* (expected).
 12. **S-12 K-TERM**: in a kid's session, Start → **Terminal** → right-click → **Als Administrator ausführen** → **your** admin user name and password. It runs as you, so it is never blocked or closed. Close it before you sign the kid out.
-13. **S-13 App B on LEOSERV** (after TC-006-02): install `EagleEye-ParentApp-Setup-0.6.0.exe` on LEOSERV over 0.5.0, start it; green and *Gekoppelt* with `<host>`, otherwise pair as **LEOSERV**. Not available today → write it in the run file (TC-006-10 Blocked).
+13. **S-13 App B on PARENT-PC** (after TC-006-02): install `EagleEye-ParentApp-Setup-0.6.0.exe` on PARENT-PC over 0.5.0, start it; green and *Gekoppelt* with `<host>`, otherwise pair as **PARENT-PC**. Not available today → write it in the run file (TC-006-10 Blocked).
 14. **S-14 Stopwatch** with lap times ready.
 15. **S-15 SQLite tool** (only for optional TC-006-41): `sqlite3.exe` on the PATH, or *DB Browser for SQLite*. None → skip TC-006-41.
 16. **S-16 All kid accounts signed out** (*Task-Manager → Benutzer*: only you).
@@ -363,12 +363,12 @@ The default texts live once, in a resource of `EagleEye.Shared`, with an English
 **Steps**
 
 1. **Einstellungen**. Scroll below **Benutzerkonten auf dem EagleEye-PC**. Read the new section.
-2. Try to edit the labels **Frühe Warnung** / **Finale Warnung**. Look for add, delete or account controls.
+2. Try to edit the labels **Früthey Warnung** / **Finale Warnung**. Look for add, delete or account controls.
 
 **Expected result**
 
 - Heading bar **Zeit-Ende Warnungen**; the explanation "Hier kannst du 2 Zeitpunkte einstellen, …", wrapped; a table **Zeitpunkt** · **Minuten vor Ende** · **Anzeigetext** with exactly two rows:
-  - **Frühe Warnung** · **5** · "Achtung, du hast nur noch 5 Minuten! Speichere deinen Fortschritt."
+  - **Früthey Warnung** · **5** · "Achtung, du hast nur noch 5 Minuten! Speichere deinen Fortschritt."
   - **Finale Warnung** · **1** · "Achtung!!! Nur noch 1 Minute – jetzt aber schnell speichern!"
 - The labels cannot be edited. No add or delete button, no account selection.
 
@@ -384,7 +384,7 @@ The default texts live once, in a resource of `EagleEye.Shared`, with an English
 2. Row **Editor**: tick **MO**, **DI**, **MI**, **DO**, **FR**, **SA**, **SO** one after the other.
 3. Row **Paint**: **Minuten** `30`, press **Enter**. Tick **SA** (on a Saturday: **SO**). Then tick **MO** and untick it again.
 4. Row **Rechner**: do not touch (default).
-5. **Einstellungen** → **Frühe Warnung** → **Minuten vor Ende** `2`, **Tab**.
+5. **Einstellungen** → **Früthey Warnung** → **Minuten vor Ende** `2`, **Tab**.
 
 **Expected result**
 
@@ -421,14 +421,14 @@ The default texts live once, in a resource of `EagleEye.Shared`, with an English
 
 **Steps**
 
-1. **Frühe Warnung** minutes: `0`, **Tab**. Then `60`, **Tab**. Then try `abc`, then `2.5`, then empty, each with **Tab**.
+1. **Früthey Warnung** minutes: `0`, **Tab**. Then `60`, **Tab**. Then try `abc`, then `2.5`, then empty, each with **Tab**.
 2. **Finale Warnung** minutes: `2`, **Tab**. Then `3`, **Tab**.
-3. **Frühe Warnung** minutes: `1`, **Tab**.
+3. **Früthey Warnung** minutes: `1`, **Tab**.
 
 **Expected result**
 
 - Step 1: each time the field returns to **2**; **Bitte Minuten zwischen 1 und 59 eingeben.**; no log line.
-- Steps 2 and 3: the field returns to the stored value (1, or 2); **Die finale Warnung muss weniger Minuten vor dem Ende liegen als die frühe Warnung.**; no log line.
+- Steps 2 and 3: the field returns to the stored value (1, or 2); **Die finale Warnung muss weniger Minuten vor dem Ende liegen als die früthey Warnung.**; no log line.
 - Afterwards still early **2**, final **1**.
 
 #### TC-006-07: Budget text and warning texts: line break, emojis, empty text, typed default *(must-run)*
@@ -493,11 +493,11 @@ The default texts live once, in a resource of `EagleEye.Shared`, with an English
 - In both modes: all texts, input fields, the seven checkbox columns and both heading bars are clearly visible; only the app's normal colours plus the accent bars (not the colours of the mockup).
 - At 150 %: no text cut off, column headers above their columns, the seven checkboxes do not overlap, the explanations wrap.
 
-#### TC-006-10: Two parent apps stay in sync; the last change wins *(must-run, needs LEOSERV)*
+#### TC-006-10: Two parent apps stay in sync; the last change wins *(must-run, needs PARENT-PC)*
 
 - **Verifies**: AC-17
-- **Machine / account**: Service PC / Admin (App A) and LEOSERV (App B) side by side
-- **Precondition**: S-13 done. Both apps on **Regeln** → `eagleeye-kid`. No LEOSERV → **Blocked**
+- **Machine / account**: Service PC / Admin (App A) and PARENT-PC (App B) side by side
+- **Precondition**: S-13 done. Both apps on **Regeln** → `eagleeye-kid`. No PARENT-PC → **Blocked**
 
 **Steps**
 
@@ -506,7 +506,7 @@ The default texts live once, in a resource of `EagleEye.Shared`, with an English
 3. A: untick that day again. Watch B.
 4. A and B at the same moment (count down): A types Paint **Minuten** `20`, B types `40`; both press **Enter** together. Wait 5 s.
 5. A: Paint **Stunden** `0`, **Minuten** `30`, **Tab** (back to 0:30).
-6. Both apps → **Einstellungen**. A: **Frühe Warnung** text `Gleich ist Schluss ⏰`, **Tab**. Watch B. A: empty it, **Tab**. Watch B.
+6. Both apps → **Einstellungen**. A: **Früthey Warnung** text `Gleich ist Schluss ⏰`, **Tab**. Watch B. A: empty it, **Tab**. Watch B.
 
 **Expected result**
 
@@ -534,7 +534,7 @@ The default texts live once, in a resource of `EagleEye.Shared`, with an English
 
 ### Block B — Start check and the first budget run (must-run)
 
-*Service PC, in kid1's session (`eagleeye-kid`); K-TERM with LOG-WATCH; App B on LEOSERV → **Regeln** → `eagleeye-kid`, table visible.*
+*Service PC, in kid1's session (`eagleeye-kid`); K-TERM with LOG-WATCH; App B on PARENT-PC → **Regeln** → `eagleeye-kid`, table visible.*
 
 > **Before Block B**: P-1 to P-5 (§3).
 
@@ -654,7 +654,7 @@ The default texts live once, in a resource of `EagleEye.Shared`, with an English
 
 ### Block C — Changes during the day: grace periods (TC-006-18 to -20 must-run)
 
-*Service PC, kid1's session in front; K-TERM; App B on LEOSERV → **Regeln** → `eagleeye-kid`. App B makes all changes; press **Tab** or **Enter** to send a field.*
+*Service PC, kid1's session in front; K-TERM; App B on PARENT-PC → **Regeln** → `eagleeye-kid`. App B makes all changes; press **Tab** or **Enter** to send a field.*
 
 #### TC-006-18: A change that leaves 20 seconds gives the full grace minute *(must-run)*
 
@@ -1129,7 +1129,7 @@ The default texts live once, in a resource of `EagleEye.Shared`, with an English
 #### TC-006-42 (optional): English parent app *(optional, only with an English parent PC)*
 
 - **Verifies**: AC-10, AC-14 (default texts in the parent app's language), parent-app `en` satellite (report D-16)
-- **Machine / account**: a parent PC with English Windows display language (e.g. LEOSERV, if English); otherwise **Skipped**
+- **Machine / account**: a parent PC with English Windows display language (e.g. PARENT-PC, if English); otherwise **Skipped**
 
 **Steps**
 
@@ -1157,13 +1157,13 @@ None (`02_Implementation/docs/testing/README.md` §3; story run only). Note for 
    }
    ```
 6. **Database copy** (TC-006-41): `Remove-Item C:\EETest -Recurse -Force`.
-7. **LEOSERV**: App B stays installed and paired.
+7. **PARENT-PC**: App B stays installed and paired.
 
-## 8. Notes and Open Questions for Michael
+## 8. Notes and Open Questions for the project owner
 
 | ID | Question | Proposed answer |
 |---|---|---|
-| Q-1 | **LEOSERV as App B**: needed to change rules while the kid's session is in front (Blocks B to E) and for TC-006-10. Available? | Yes. Without it TC-006-10 is Blocked, and the grace and break timings become weak (a user switch pauses the kid's used time). |
+| Q-1 | **PARENT-PC as App B**: needed to change rules while the kid's session is in front (Blocks B to E) and for TC-006-10. Available? | Yes. Without it TC-006-10 is Blocked, and the grace and break timings become weak (a user switch pauses the kid's used time). |
 | Q-2 | **New accounts with the story's roles**: `ee-kid2` controlled with English Windows (deleted in TC-006-37), `ee-kid3` not controlled. In US-005 the roles were the other way round. OK? | Yes. Both were removed after US-005, so they are new accounts. |
 | Q-3 | **English language pack** for `ee-kid2` (S-6): may need a download through Windows Settings. OK? | Yes. Without it TC-006-30 is Blocked and the English defaults stay unchecked (plan R-10). |
 | Q-4 | **Must-run vs. optional**: optional are TC-006-11, -21, -22, -27, -28, -38 to -42. Only AC-12 rests on an optional case alone. OK? | Yes. |
@@ -1175,4 +1175,4 @@ None (`02_Implementation/docs/testing/README.md` §3; story run only). Note for 
 
 | Date | Change | Reason |
 |---|---|---|
-| 2026-10-17 | Plan written after DEV's handover (0.6.0, approved by Michael on 2026-10-17). | Step d. |
+| 2026-10-17 | Plan written after DEV's handover (0.6.0, approved by the project owner on 2026-10-17). | Step d. |

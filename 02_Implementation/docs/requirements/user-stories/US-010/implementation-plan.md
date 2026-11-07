@@ -1,6 +1,6 @@
 # Implementation Plan: US-010 — Remaining-Time Overlay Replaces the Warning Dialogs (0.10.0)
 
-**Status**: Approved by Michael (2026-11-01), with Q-1 to Q-3 answered with the proposed defaults and one change: no CPU/memory run in Step 5 (AC-27 is verified by Michael in pilot operation); Step 5 kept short. ADR-022 and the amendments of ADR-007, ADR-011, ADR-014, ADR-015 and ADR-016 accepted. **Open for ARC**: the arc42 updates listed in "Architecture Changes" (deferred so DEV can start at once).
+**Status**: Approved by the project owner (2026-11-01), with Q-1 to Q-3 answered with the proposed defaults and one change: no CPU/memory run in Step 5 (AC-27 is verified by the project owner in pilot operation); Step 5 kept short. ADR-022 and the amendments of ADR-007, ADR-011, ADR-014, ADR-015 and ADR-016 accepted. **Open for ARC**: the arc42 updates listed in "Architecture Changes" (deferred so DEV can start at once).
 **Date**: 2026-11-01
 **Author**: ARC
 **User story**: `02_Implementation/docs/requirements/user-stories/US-010/user-story.md` (approved 2026-11-01, 38 ACs, OQ-1 to OQ-22 resolved, display threshold 15/30/45/60 min)
@@ -8,11 +8,11 @@
 **Branch**: `feature/US-010-time-overlay`
 **Inputs checked**: feasibility check and spike (`US-010/feasibility-overlay.md`, `US-010/spike-overlay.md` incl. the §2 evaluation written with this plan, `US-010/spike-overlay-results.md`), the spike code at commit **`24f6dea`**, ADR-011, ADR-014, ADR-015, ADR-016, ADR-021, the US-009 plan, and the code on this branch (= `main` 0.9.0 + story docs; no change under `src/` or `tests/`).
 
-**New ADR** (Accepted, approved by Michael with this plan, 2026-11-01): **ADR-022** "Remaining-time overlay in the tray client". **Amendments** (Accepted, 2026-11-01; text at the top of each ADR file): ADR-014, ADR-015, ADR-016, ADR-011, ADR-007. arc42 is still **open for ARC** (list in "Architecture Changes"); it does not block DEV.
+**New ADR** (Accepted, approved by the project owner with this plan, 2026-11-01): **ADR-022** "Remaining-time overlay in the tray client". **Amendments** (Accepted, 2026-11-01; text at the top of each ADR file): ADR-014, ADR-015, ADR-016, ADR-011, ADR-007. arc42 is still **open for ARC** (list in "Architecture Changes"); it does not block DEV.
 
-**Guidance for DEV (Michael, US-009, still valid)**: where the requirements allow either way, choose the option with **less code**. No mixed-version or compatibility handling: only the four 0.10.0 assets together are supported.
+**Guidance for DEV (the project owner, US-009, still valid)**: where the requirements allow either way, choose the option with **less code**. No mixed-version or compatibility handling: only the four 0.10.0 assets together are supported.
 
-**Host note**: the DEV session on the Windows Developer Machine has **no interactive input and no display** (spike `US-010/spike-overlay.md` §1.2: disconnected session, no input desktop, `SendInput` and screen capture fail). Everything that needs a look at the screen, a click, a key press or the sound is checked by **Michael**, guided by DEV (Step 5).
+**Host note**: the DEV session on the Windows Developer Machine has **no interactive input and no display** (spike `US-010/spike-overlay.md` §1.2: disconnected session, no input desktop, `SendInput` and screen capture fail). Everything that needs a look at the screen, a click, a key press or the sound is checked by **the project owner**, guided by DEV (Step 5).
 
 ---
 
@@ -27,7 +27,7 @@ The kid's warnings move from the "OK" dialog into a small, half-transparent, cli
 
 Version **0.10.0** for all four assets.
 
-**Order**: Windows block (Shared → service → tray → Windows parent app → on-screen check with Michael → installers), then the **MacBook** (Mac build, look check, `.dmg`), then Michael's pre-check on the **gaming PC 192.168.1.85**. The manual test run follows.
+**Order**: Windows block (Shared → service → tray → Windows parent app → on-screen check with the project owner → installers), then the **MacBook** (Mac build, look check, `.dmg`), then the project owner's pre-check on the **gaming PC PILOT-PC**. The manual test run follows.
 
 ---
 
@@ -42,17 +42,17 @@ Version **0.10.0** for all four assets.
 | **TI-3** | **End horizon of 60 minutes** (`AppEndCalculator.Horizon`). | AC-3 | Enough: a line is due only below the threshold (at most 60 min) or at the early level (at most 59 min). The service sends every subject whose own end is within the horizon; the tray filters by the threshold (Decision 2). A unit test guards `Horizon ≥ OverlayRules.MaxThresholdMinutes`. |
 | **TI-4** | **The display threshold is a tray setting** (per Windows account); the service does not know it. | AC-3, AC-17 | The service sends all lines within 60 minutes; the tray decides which are due (pure `OverlayLayout`), so a threshold change takes effect within 1 s without a service round trip. |
 | **TI-5** | **Signals are once per subject and day** (ledger in the service) and "one end, one set" across lines. A tray-side level-crossing detector would repeat them after a tray restart and could not know the break rule. | AC-8, AC-9, AC-12 | The service stays authoritative: the existing `WarningLedger` decides; the push carries the strongest new signal of the tick. The tray only colours by time and plays what the service signals (Decision 8). |
-| **TI-6** | **Signal vs colour timing.** The colour follows the tray's countdown (exact second); the signal comes with the next service tick, up to 5 s later. | AC-5, AC-8 | Within the 10-second bound of AC-5. **Q-1** asks Michael to accept the offset (default: accept). |
+| **TI-6** | **Signal vs colour timing.** The colour follows the tray's countdown (exact second); the signal comes with the next service tick, up to 5 s later. | AC-5, AC-8 | Within the 10-second bound of AC-5. **Q-1** asks the project owner to accept the offset (default: accept). |
 | **TI-7** | **The 0:00 line**: closing apps are excluded from the engine at once (`CloseRegistry.IsClosing`), so their line would vanish while the close takes up to 20 to 30 s. AC-7 wants a steady red "0:00" until the apps are closed. | AC-7 | The engine keeps an "expiring" line with 0 s while any app of the closed subject (or the break close) is still closing (Decision 2). |
 | **TI-8** | **The tray client is `SystemAware`** (`Program.cs`); the overlay must be sharp on any monitor scale. | AC-28 | Process-wide **PerMonitorV2** as in the spike (Decision 6). The existing dialogs (kid dialog, About, pairing code) are re-checked at 150 % in Step 5. |
 | **TI-9** | **D-10**: a plain `ContextMenuStrip` popup is a visible, unowned, non-tool top-level window; `AppWindowRule` classifies it as an app. The installed tray client is already never recorded (ADR-011 §5, by full path), but a tray started from elsewhere (Debug build) would be. | AC-26, FR-TRAY-032 | Two layers (Decision 9): the existing path rule, now explicitly unit-tested for the tray, plus tool-window menus, submenus and overlay, with a pure style rule and tests. |
 | **TI-10** | **Left mouse button**: `NotifyIcon` opens its `ContextMenuStrip` on the right button only. | AC-15 | On `MouseUp` with the left button the tray calls the same private `NotifyIcon.ShowContextMenu` that WinForms uses for the right button (identical foreground handling); fallback `menu.Show(Cursor.Position)`. A unit test fails if the method disappears in a .NET update (Decision 10). |
-| **TI-11** | **Working-set drift in the spike** (+0.25 MB/min over 16 min, GDI/USER flat; per-second `Bitmap`/`Font` allocations). | AC-27 | Fonts cached per DPI; render only when the content changed; reuse the bitmap when the size is unchanged. No measurement in this story: Michael verifies CPU and memory (AC-27) in pilot operation. |
+| **TI-11** | **Working-set drift in the spike** (+0.25 MB/min over 16 min, GDI/USER flat; per-second `Bitmap`/`Font` allocations). | AC-27 | Fonts cached per DPI; render only when the content changed; reuse the bitmap when the size is unchanged. No measurement in this story: the project owner verifies CPU and memory (AC-27) in pilot operation. |
 | **TI-12** | **Warning texts are stored** in `WarningSettings.EarlyText/FinalText` (migration 5). | AC-35 | Migration 7 drops both columns (SQLite ≥ 3.35 `ALTER TABLE … DROP COLUMN`; the bundled SQLite of Microsoft.Data.Sqlite 10 is newer). Minutes are kept (Decision 3). |
 | **TI-13** | **Enum and DTO changes on the wire** (`KidMessageReason` loses six values, `KidMessageDto` loses `Minutes`, `WarningSettingsDto` loses two fields, `SetWarningText` goes). | AC-38 | Service and tray ship in one installer; the parent apps are 0.10.0 too. No compatibility code (US-009 guidance). |
-| **TI-14** | **Test starting points**: AC-35 needs a 0.9.0 → 0.10.0 update, but `ZOCK-O-MAT-V3` (192.168.1.37) has service **0.8.0** and no accounts `kid1`/`kid2`/`kid3` (standard accounts `Micha`, `Sebastian`). The gaming PC 192.168.1.85 is the pilot service PC (version not recorded). | AC-35, test setup | DEV installs nothing on either PC (as US-009 TI-12). **Q-2**: Michael installs 0.9.0 on .37 before the test run; TES maps the accounts. |
-| **TI-15** | **No input/display in the DEV session.** | All visible ACs | Step 5: Michael at the console of .37, DEV guides with a check list. |
-| **TI-16** | **Pilot PC .85 and the Mac app**: the Mac app is paired with .85 (US-008). A 0.10.0 service with a 0.9.0 Mac app is a mixed version. | AC-38 | Michael updates .85 only after the `.dmg` 0.10.0 exists, or does not use the Mac app against .85 in between (H3). |
+| **TI-14** | **Test starting points**: AC-35 needs a 0.9.0 → 0.10.0 update, but `DEV-PC` has service **0.8.0** and no accounts `kid1`/`kid2`/`kid3` (standard accounts `UserA`, `UserB`). The gaming PC PILOT-PC is the pilot service PC (version not recorded). | AC-35, test setup | DEV installs nothing on either PC (as US-009 TI-12). **Q-2**: the project owner installs 0.9.0 on DEV-PC before the test run; TES maps the accounts. |
+| **TI-15** | **No input/display in the DEV session.** | All visible ACs | Step 5: the project owner at the console of DEV-PC, DEV guides with a check list. |
+| **TI-16** | **Pilot PC PILOT-PC and the Mac app**: the Mac app is paired with PILOT-PC (US-008). A 0.10.0 service with a 0.9.0 Mac app is a mixed version. | AC-38 | The project owner updates PILOT-PC only after the `.dmg` 0.10.0 exists, or does not use the Mac app against PILOT-PC in between (H3). |
 
 ---
 
@@ -61,11 +61,11 @@ Version **0.10.0** for all four assets.
 | Work | Machine |
 |---|---|
 | This plan, ADR-022, the ADR amendments, the spike evaluation (ARC) | Windows Developer Machine (done here) |
-| **Steps 1 to 6**: Shared contracts and version, warning texts removed end to end (incl. Windows parent app), service overlay model, tray client, on-screen check with Michael, installers 0.10.0 | **Windows Developer Machine** `ZOCK-O-MAT-V3` (192.168.1.37, Windows 11) |
+| **Steps 1 to 6**: Shared contracts and version, warning texts removed end to end (incl. Windows parent app), service overlay model, tray client, on-screen check with the project owner, installers 0.10.0 | **Windows Developer Machine** `DEV-PC` (DEV-PC, Windows 11) |
 | **Step 7**: Mac build and tests, Settings page look check, `.dmg` 0.10.0 | **MacBook** |
 | **Step 8** (only if Step 7 changed code): build and tests | Windows Developer Machine |
-| **Step 9**: pre-check of 0.10.0 over games (Michael, about 15 min) | **Gaming PC 192.168.1.85** (pilot service PC, kid's games, one monitor; test only: no repo, no agent, no build) |
-| Manual test run (Michael, guided by TES) | .37 (service, tray, Windows app; non-game ACs) + .85 (**[GAME]** ACs) + MacBook (AC-32, AC-34) |
+| **Step 9**: pre-check of 0.10.0 over games (the project owner, about 15 min) | **Gaming PC PILOT-PC** (pilot service PC, kid's games, one monitor; test only: no repo, no agent, no build) |
+| Manual test run (the project owner, guided by TES) | DEV-PC (service, tray, Windows app; non-game ACs) + PILOT-PC (**[GAME]** ACs) + MacBook (AC-32, AC-34) |
 
 **API first** (ADR-007): `EagleEye.Shared/Contracts/` and `Models/` change in Step 1, on Windows, before any consumer.
 
@@ -73,10 +73,10 @@ Version **0.10.0** for all four assets.
 
 | # | After | From → To | How |
 |---|---|---|---|
-| H1 | Step 6 | Windows → MacBook | Commit and push: Shared, service, tray, Core, shared XAML, report §Windows. Michael switches to the MacBook, `git pull`. The Windows installers stay on .37 (`03_Delivery/windows/`, git-ignored). |
+| H1 | Step 6 | Windows → MacBook | Commit and push: Shared, service, tray, Core, shared XAML, report §Windows. The project owner switches to the MacBook, `git pull`. The Windows installers stay on DEV-PC (`03_Delivery/windows/`, git-ignored). |
 | H2 | Step 7 | MacBook → Windows | Push: report §Mac, any Mac fix. The `.dmg` stays on the MacBook (git-ignored). Back on Windows: `git pull`; Step 8 only if Step 7 changed code. |
-| H3 | Step 8 (or H2) | Windows → gaming PC .85 | Michael copies `03_Delivery/windows/EagleEye-Setup-0.10.0.exe` to .85 (USB stick or share) and installs it over the installed version. Before that, the Mac app paired with .85 is updated to 0.10.0 or not used against .85 (TI-16). Check list for Step 9 is in the implementation report. |
-| H4 | Step 9 | gaming PC → Windows | Michael reports the result; DEV records it in the implementation report (and fixes a blocker: back to Steps 3/4, new installers). Story → `Implemented`. |
+| H3 | Step 8 (or H2) | Windows → gaming PC PILOT-PC | The project owner copies `03_Delivery/windows/EagleEye-Setup-0.10.0.exe` to PILOT-PC (USB stick or share) and installs it over the installed version. Before that, the Mac app paired with PILOT-PC is updated to 0.10.0 or not used against PILOT-PC (TI-16). Check list for Step 9 is in the implementation report. |
+| H4 | Step 9 | gaming PC → Windows | The project owner reports the result; DEV records it in the implementation report (and fixes a blocker: back to Steps 3/4, new installers). Story → `Implemented`. |
 
 ---
 
@@ -113,7 +113,7 @@ Version **0.10.0** for all four assets.
 | **ADR-015** amendment | **Accepted — US-010** (2026-11-01) | §4/§5: the ledger and grace logic are unchanged, but their result is an overlay signal plus a log entry, not a dialog; `MessageOutbox` (one message per tick) replaced by "strongest signal per tick"; the model's own-time lines (display only) and expiring lines; §8 warning texts removed (migration 7). |
 | **ADR-016** amendment | **Accepted — US-010** (2026-11-01) | The kinds `EarlyWarningText` and `FinalWarningText` and their defaults are removed; the mechanism stays for the break display text and the budget text. |
 | **ADR-011** amendment | **Accepted — US-010** (2026-11-01) | §5 "never recorded" explicitly covers every tray window (FR-TRAY-032), with a unit test; the tray's own popups are tool windows as defence in depth (D-10). |
-| **ADR-007** amendment | **Accepted — US-010** (2026-11-01) | A second test-only machine: the kid's gaming PC 192.168.1.85 (pilot service PC, Windows 11, kid's games). No repo, no agent, no build; installers are copied. `02_Implementation/docs/dev-process/dev-environments.md` §1 gets the row (Orchestrator, after approval). |
+| **ADR-007** amendment | **Accepted — US-010** (2026-11-01) | A second test-only machine: the kid's gaming PC PILOT-PC (pilot service PC, Windows 11, kid's games). No repo, no agent, no build; installers are copied. `02_Implementation/docs/dev-process/dev-environments.md` §1 gets the row (Orchestrator, after approval). |
 
 ---
 
@@ -412,7 +412,7 @@ note right of [OverlayLayout] : pure, unit-tested\n(due, sort, cap, text)
 
 ## Implementation Steps
 
-All steps on `feature/US-010-time-overlay`. Commit after each step (`US-010: …`) and push. Each step ends with **"Michael sees"**.
+All steps on `feature/US-010-time-overlay`. Commit after each step (`US-010: …`) and push. Each step ends with **"the project owner sees"**.
 
 | Step | Content | Machine |
 |---|---|---|
@@ -420,14 +420,14 @@ All steps on `feature/US-010-time-overlay`. Commit after each step (`US-010: …
 | 2 | Warning texts removed end to end: Shared, service, migration 7, tray kid texts, parent app Core and shared Settings XAML | Windows |
 | 3 | Service: overlay model, publisher, signals, log | Windows |
 | 4 | Tray client: overlay, layout, settings, menu, PerMonitorV2, FR-TRAY-032 | Windows |
-| 5 | On-screen check with **Michael** at the console of .37; CPU/memory hour | Windows (+ Michael) |
+| 5 | On-screen check with **the project owner** at the console of DEV-PC; CPU/memory hour | Windows (+ the project owner) |
 | 6 | Installers 0.10.0; implementation report §Windows | Windows |
-| — | **H1**: push; Michael switches to the MacBook | |
+| — | **H1**: push; the project owner switches to the MacBook | |
 | 7 | Mac build and tests, Settings look check, `.dmg` 0.10.0; report §Mac | **MacBook** |
 | — | **H2**: push; back to Windows | |
 | 8 | Only if Step 7 changed code: build and tests | Windows |
-| — | **H3**: Michael copies the service installer to the gaming PC | |
-| 9 | Pre-check over games (Michael, DEV's check list); story → `Implemented` after **H4** | **Gaming PC 192.168.1.85** |
+| — | **H3**: the project owner copies the service installer to the gaming PC | |
+| 9 | Pre-check over games (the project owner, DEV's check list); story → `Implemented` after **H4** | **Gaming PC PILOT-PC** |
 
 Every step leaves `build.ps1` and `test.ps1` green with 0 warnings: Step 1 only adds, and Step 2 removes each Shared item together with all its consumers.
 
@@ -439,7 +439,7 @@ Every step leaves `build.ps1` and `test.ps1` green with 0 warnings: Step 1 only 
 4. Shared.Tests: `OverlayRules.LevelFor` boundaries; JSON round trip (`System.Text.Json`, SignalR's protocol) of the new records.
 5. `build.ps1`, `test.ps1` green.
 
-**Michael sees**: nothing.
+**The project owner sees**: nothing.
 
 ### Step 2: Warning texts removed end to end (Windows)
 
@@ -449,7 +449,7 @@ Every step leaves `build.ps1` and `test.ps1` green with 0 warnings: Step 1 only 
 4. Parent app Core and shared XAML rows of Decision 3; `WarningsExplanation` de/en (AC-31); ParentApp.Tests (`WarningSettingsViewModelTests`, row minutes cases kept, text cases removed, `AppRulesModelTests`/`AppRuleRowViewModelTests` where they touch the removed texts, `AppTexts` keys).
 5. `build.ps1` (incl. the Windows app) and `test.ps1` green, 0 warnings.
 
-**Michael sees**: nothing yet (the Settings page is checked in Step 5).
+**The project owner sees**: nothing yet (the Settings page is checked in Step 5).
 
 ### Step 3: Service — overlay model and push (Windows)
 
@@ -459,7 +459,7 @@ Every step leaves `build.ps1` and `test.ps1` green with 0 warnings: Step 1 only 
 4. Unit tests (Unit Test Requirements, service).
 5. `build.ps1`, `test.ps1` green.
 
-**Michael sees**: nothing.
+**The project owner sees**: nothing.
 
 ### Step 4: Tray client (Windows)
 
@@ -470,16 +470,16 @@ Every step leaves `build.ps1` and `test.ps1` green with 0 warnings: Step 1 only 
 5. TrayClient.Tests (Unit Test Requirements, tray).
 6. `build.ps1` and `test.ps1`: all Windows projects green, **0 warnings**.
 
-**Michael sees**: nothing yet (no display in the DEV session).
-**Michael sees**: nothing yet.
+**The project owner sees**: nothing yet (no display in the DEV session).
+**The project owner sees**: nothing yet.
 
-### Step 5: Short on-screen check with Michael (Windows Developer Machine, Michael at the console, about 20 min)
+### Step 5: Short on-screen check with the project owner (Windows Developer Machine, the project owner at the console, about 20 min)
 
-Kept short (Michael, 2026-11-01): only the essentials; everything else is covered by the test run. **No CPU/memory run**: AC-27 (CPU, memory) is verified by Michael in pilot operation, not here and not in the test run. DEV prepares, Michael looks and reports; DEV records the result in the implementation report.
+Kept short (the project owner, 2026-11-01): only the essentials; everything else is covered by the test run. **No CPU/memory run**: AC-27 (CPU, memory) is verified by the project owner in pilot operation, not here and not in the test run. DEV prepares, the project owner looks and reports; DEV records the result in the implementation report.
 
-Setup: the Debug console service with its own data folder and port offset and the Debug tray client (US-005 D-5 dev setup; the Debug tray counts as verified, ADR-014 §1), in Michael's session, with the dev account source so Michael's account is controlled; short budgets (Notepad 0:03, Paint 0:35), early 2 / final 1. The installed service (0.8.0) is not touched (TI-14).
+Setup: the Debug console service with its own data folder and port offset and the Debug tray client (US-005 D-5 dev setup; the Debug tray counts as verified, ADR-014 §1), in the project owner's session, with the dev account source so the project owner's account is controlled; short budgets (Notepad 0:03, Paint 0:35), early 2 / final 1. The installed service (0.8.0) is not touched (TI-14).
 
-| # | Check (Michael looks) | Source |
+| # | Check (the project owner looks) | Source |
 |---|---|---|
 | 1 | Pill top right, "Editor 2:59" yellow with pulse and sound; red with slow pulse and sound at 1:00; "0:00" steady red; Notepad closed, budget text dialog; pill gone. Typing in Notepad never interrupted, click on the pill goes to Notepad | AC-5, AC-7 to AC-9, AC-11, AC-14, AC-20 |
 | 2 | Two lines (Notepad and Paint), order, top line large | AC-3, AC-4 |
@@ -489,32 +489,32 @@ Setup: the Debug console service with its own data folder and port offset and th
 
 Findings are fixed in Steps 2 to 4 and re-checked here.
 
-**Michael sees**: the pill over Notepad with real remaining time, its colours, pulse and sound, and the new tray menu.
+**The project owner sees**: the pill over Notepad with real remaining time, its colours, pulse and sound, and the new tray menu.
 
 ### Step 6: Installers 0.10.0 (Windows)
 
 1. `pwsh 02_Implementation/scripts/package-windows.ps1 -Target All` → `EagleEye-Setup-0.10.0.exe`, `EagleEye-ParentApp-Setup-0.10.0.exe`; file versions and SHA-256 in the report.
-2. **No installer is run** on .37 or .85 by DEV (TI-14).
+2. **No installer is run** on DEV-PC or PILOT-PC by DEV (TI-14).
 3. `implementation-report.md` §Windows (incl. Step 5 results and the Step 9 check list). Commit, push (**H1**).
 
-**Michael sees**: the two 0.10.0 installers in `03_Delivery/windows/`.
+**The project owner sees**: the two 0.10.0 installers in `03_Delivery/windows/`.
 
 ### Step 7: MacBook
 
 1. `git pull`; `build.ps1` and `test.ps1` (Shared, ParentApp): green, 0 warnings.
 2. Mac app Debug build; look check of the Settings page with the Mac probe/`screencapture` pattern of US-008 §8.3 (light and dark): the explanation text (AC-31) and, if a 0.10.0 service is reachable from the Mac, the two-column warnings table. No 0.10.0 service is installed anywhere at this point (TI-14), so the connected table is otherwise checked in the test run (AC-32); the XAML is shared, and Step 5 #5 already saw it on Windows.
-3. `pwsh 02_Implementation/scripts/package-macos.ps1` → `03_Delivery/macos/EagleEye-ParentApp-0.10.0.dmg`; SHA-256 in the report. DEV does not install it over Michael's Mac app (test starting point).
+3. `pwsh 02_Implementation/scripts/package-macos.ps1` → `03_Delivery/macos/EagleEye-ParentApp-0.10.0.dmg`; SHA-256 in the report. DEV does not install it over the project owner's Mac app (test starting point).
 4. Report §Mac; commit, push (**H2**).
 
-**Michael sees**: the `.dmg` 0.10.0 on the MacBook.
+**The project owner sees**: the `.dmg` 0.10.0 on the MacBook.
 
 ### Step 8: Windows close-out (only if Step 7 changed code)
 
 `git pull`; `build.ps1`, `test.ps1` (0 warnings, four projects); new installers if service/tray changed; push.
 
-### Step 9: Pre-check on the gaming PC 192.168.1.85 (Michael, about 15 min; Q-3)
+### Step 9: Pre-check on the gaming PC PILOT-PC (the project owner, about 15 min; Q-3)
 
-After **H3** (the Mac app paired with .85 is updated to 0.10.0 first, or not used against .85 until then, TI-16):
+After **H3** (the Mac app paired with PILOT-PC is updated to 0.10.0 first, or not used against PILOT-PC until then, TI-16):
 
 1. Install `EagleEye-Setup-0.10.0.exe` over the installed version; note the old version.
 2. Parent app (any 0.10.0) → the kid's account: games group with e.g. 0:20 left today, early 2 / final 1; no break in the next hour.
@@ -526,7 +526,7 @@ After **H3** (the Mac app paired with .85 is updated to 0.10.0 first, or not use
 
 DEV records the result; a blocker goes back to Steps 3/4 (new installers, H3 again). Story → `Implemented` when Step 9 passed.
 
-**Michael sees**: the real overlay over the kid's games with EagleEye 0.10.0.
+**The project owner sees**: the real overlay over the kid's games with EagleEye 0.10.0.
 
 ---
 
@@ -554,20 +554,20 @@ DEV records the result; a blocker goes back to Steps 3/4 (new installers, H3 aga
 | AC-18 per account, kept | 4 | store with fake registry abstraction / `Sanitize` | test run (two accounts) |
 | AC-19 menu never affects time | — | — | test run |
 | AC-20 no focus/input | 4 | `TrayWindowStyles` | Step 5 #1 |
-| AC-21 [GAME] game matrix | — | — | Step 9; test run on .85 |
+| AC-21 [GAME] game matrix | — | — | Step 9; test run on PILOT-PC |
 | AC-22 re-assert | 4 | — | test run |
-| AC-23 exclusive fullscreen limit | — | — | test run on .85 |
+| AC-23 exclusive fullscreen limit | — | — | test run on PILOT-PC |
 | AC-24 [GAME] EAC | — | — | Step 9; test run |
 | AC-25 lock, sign-out, fast user switching | 4 | clock clear on lock | test run |
 | AC-26 tray never an app | 4 | Decision 9 tests (both layers) | Step 9 #6; test run |
-| AC-27 performance | 4 | — | **Michael in pilot operation** (not Step 5, not the test run) |
+| AC-27 performance | 4 | — | **The project owner in pilot operation** (not Step 5, not the test run) |
 | AC-28 DPI, monitors | 4 | — | Step 5 #4; second monitor optional |
 | AC-29 not connected | 3, 4 | publisher states, clock staleness, disconnect clears | test run |
 | AC-30, AC-31 Windows Settings page | 2 | `WarningRowViewModel`, `AppTexts` | Step 5 #5 |
 | AC-32 Mac parity | 7 | same Core tests on the Mac | test run |
 | AC-33 Rules page unchanged | — | existing | test run |
 | AC-34 two apps, log entry | 2 | `WarningSettingsService` (no text path), change log | test run |
-| AC-35 update 0.9.0 → 0.10.0 | 2 | migration 7 tests | test run (.37 after Q-2) |
+| AC-35 update 0.9.0 → 0.10.0 | 2 | migration 7 tests | test run (DEV-PC after Q-2) |
 | AC-36 log entries | 3 | `EnforcementLog` texts | test run |
 | AC-37 enforcement regression | 2, 3 | all existing engine/gate/close tests green | test run |
 | AC-38 versions | 1, 6, 7 | — | all |
@@ -639,10 +639,10 @@ Removed: "early/final warning text changed / reset to the default" (AC-34); "not
 
 | What | Where / how |
 |---|---|
-| Artifacts | `03_Delivery/windows/EagleEye-Setup-0.10.0.exe` and `EagleEye-ParentApp-Setup-0.10.0.exe` (on .37; copy to .85), `03_Delivery/macos/EagleEye-ParentApp-0.10.0.dmg` (MacBook). All git-ignored. |
-| Machines | Non-game ACs on .37 `ZOCK-O-MAT-V3`; **[GAME]** ACs (AC-21, AC-23, AC-24); AC-27 (performance) is not in the test run: Michael verifies it in pilot operation on the gaming PC **192.168.1.85**; AC-32/AC-34 on the MacBook. |
-| Accounts on .37 | No `kid1`/`kid2`/`kid3`: standard accounts `Micha`, `Sebastian` exist (spike §1.2). TES maps: two controlled accounts are needed for AC-18 and AC-25 (fast user switching), one not controlled for AC-2 (an admin account also counts for AC-2). Michael ticks them in the parent app. On .85: the kid's real account. |
-| Starting points | DEV installed nothing. .37 has service 0.8.0 → **Q-2**: install 0.9.0 first for AC-35. Mac app 0.9.0 on the MacBook; Windows app 0.9.0 on .37 if installed in US-009's test run. |
+| Artifacts | `03_Delivery/windows/EagleEye-Setup-0.10.0.exe` and `EagleEye-ParentApp-Setup-0.10.0.exe` (on DEV-PC; copy to PILOT-PC), `03_Delivery/macos/EagleEye-ParentApp-0.10.0.dmg` (MacBook). All git-ignored. |
+| Machines | Non-game ACs on `DEV-PC`; **[GAME]** ACs (AC-21, AC-23, AC-24); AC-27 (performance) is not in the test run: the project owner verifies it in pilot operation on the gaming PC **PILOT-PC**; AC-32/AC-34 on the MacBook. |
+| Accounts on DEV-PC | No `kid1`/`kid2`/`kid3`: standard accounts `UserA`, `UserB` exist (spike §1.2). TES maps: two controlled accounts are needed for AC-18 and AC-25 (fast user switching), one not controlled for AC-2 (an admin account also counts for AC-2). The project owner ticks them in the parent app. On PILOT-PC: the kid's real account. |
+| Starting points | DEV installed nothing. DEV-PC has service 0.8.0 → **Q-2**: install 0.9.0 first for AC-35. Mac app 0.9.0 on the MacBook; Windows app 0.9.0 on DEV-PC if installed in US-009's test run. |
 | Timing | Engine tick 5 s; a push per tick. Expected delays: pill appears ≤ 10 s, parent change ≤ 15 s, connection loss ≤ 15 s; menu settings ≤ 1 s (tray-local). The pulse/sound may come up to 5 s after the colour change (Q-1). |
 | Short tests | Early 2 / final 1, budgets 0:03 (AC-5), threshold 15/30/60 to provoke lines. |
 | Where settings live | `HKCU\Software\EagleEye\TrayClient` (`OverlayOpacity`, `OverlayCorner`, `OverlayShowFromMinutes`, `OverlaySound`) of the signed-in account; optional regedit check for AC-18. |
@@ -667,13 +667,13 @@ Removed: "early/final warning text changed / reset to the default" (AC-34); "not
 
 ---
 
-## Open Questions for Michael (all answered 2026-11-01)
+## Open Questions for the project owner (all answered 2026-11-01)
 
 | ID | Question | Default (if no answer) | Answer |
 |---|---|---|---|
-| **Q-1** | **Signal timing** (TI-6): the line's colour changes exactly at the level second (tray countdown); the pulse and the sound come with the service's next tick, i.e. **0 to 5 seconds later**. Making both exactly simultaneous would need the tray to decide the signals itself, which breaks "once per subject and day" after a tray restart and the break rule. Accept the offset? | **Accept** (within AC-5's 10 s). | **Answered** (Michael, 2026-11-01): default accepted. |
-| **Q-2** | **Test starting point for the update (AC-35)**: .37 has service **0.8.0** (not 0.9.0). Should Michael install `EagleEye-Setup-0.9.0.exe` on .37 before the test run, so AC-35 tests 0.9.0 → 0.10.0 there? | **Yes**, Michael installs 0.9.0 on .37 before the test run (DEV installs nothing). .85 is updated from whatever it runs; that path is not an AC. | **Answered** (Michael, 2026-11-01): default accepted. |
-| **Q-3** | **Pre-check on the gaming PC** (Step 9, about 15 min) before the TES test plan, like the Windows 10 pre-check of US-009? | **Yes**: it finds a game-specific blocker before the whole test run. | **Answered** (Michael, 2026-11-01): default accepted. |
+| **Q-1** | **Signal timing** (TI-6): the line's colour changes exactly at the level second (tray countdown); the pulse and the sound come with the service's next tick, i.e. **0 to 5 seconds later**. Making both exactly simultaneous would need the tray to decide the signals itself, which breaks "once per subject and day" after a tray restart and the break rule. Accept the offset? | **Accept** (within AC-5's 10 s). | **Answered** (the project owner, 2026-11-01): default accepted. |
+| **Q-2** | **Test starting point for the update (AC-35)**: DEV-PC has service **0.8.0** (not 0.9.0). Should the project owner install `EagleEye-Setup-0.9.0.exe` on DEV-PC before the test run, so AC-35 tests 0.9.0 → 0.10.0 there? | **Yes**, the project owner installs 0.9.0 on DEV-PC before the test run (DEV installs nothing). PILOT-PC is updated from whatever it runs; that path is not an AC. | **Answered** (the project owner, 2026-11-01): default accepted. |
+| **Q-3** | **Pre-check on the gaming PC** (Step 9, about 15 min) before the TES test plan, like the Windows 10 pre-check of US-009? | **Yes**: it finds a game-specific blocker before the whole test run. | **Answered** (the project owner, 2026-11-01): default accepted. |
 
 ---
 
@@ -683,12 +683,12 @@ Removed: "early/final warning text changed / reset to the default" (AC-34); "not
 |---|---|---|---|---|
 | R-1 | PerMonitorV2 changes the look of the existing tray dialogs | Low–medium | Low | Step 5 #4 at 150 %; fix per dialog |
 | R-2 | The engine change breaks enforcement (AC-37) | Low | High | Warning/grace/close logic kept; only the output changes; all existing engine tests stay green |
-| R-3 | Working-set growth in long sessions | Low | Medium | Decision 5; Michael watches it in pilot operation (AC-27) |
+| R-3 | Working-set growth in long sessions | Low | Medium | Decision 5; the project owner watches it in pilot operation (AC-27) |
 | R-4 | A game covers the pill despite the re-assert | Low (spike) | Low | Unconditional re-assert; documented limit; `uiAccess` (a+) stays the fallback idea (ADR-022) |
 | R-5 | Anti-cheat reacts later (server side) | Low | High | No injection, no handles (S-10); AC-24 again with 0.10.0; residual risk named in ADR-022 |
 | R-6 | `NotifyIcon.ShowContextMenu` disappears in a .NET update | Low | Low | Fallback `menu.Show`; unit test flags it |
-| R-7 | Live checks impossible in the DEV session | Certain | Medium | Short Step 5 with Michael; Step 9 pre-check |
-| R-8 | Mixed versions on .85 during the rollout (Mac app 0.9.0 vs service 0.10.0) | Medium | Low | H3 order (TI-16) |
+| R-7 | Live checks impossible in the DEV session | Certain | Medium | Short Step 5 with the project owner; Step 9 pre-check |
+| R-8 | Mixed versions on PILOT-PC during the rollout (Mac app 0.9.0 vs service 0.10.0) | Medium | Low | H3 order (TI-16) |
 | R-9 | Three machines plus the gaming PC: many switches | Medium | Low | One Windows block, one MacBook block, one gaming-PC visit |
 
 ---

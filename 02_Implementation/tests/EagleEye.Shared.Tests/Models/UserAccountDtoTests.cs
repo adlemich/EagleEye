@@ -9,21 +9,21 @@ public sealed class UserAccountDtoTests
     // SignalR's JSON hub protocol uses System.Text.Json with the web defaults (camelCase, case-insensitive).
     private static readonly JsonSerializerOptions WebOptions = new(JsonSerializerDefaults.Web);
 
-    private static readonly UserAccountDto Max = new("S-1-5-21-1-2-3-1001", "max", "Max Adler", false, true);
+    private static readonly UserAccountDto Max = new("S-1-5-21-1-2-3-1001", "max", "Max Mustermann", false, true);
     private static readonly UserAccountDto Anna = new("S-1-5-21-1-2-3-1002", "anna", null, true, false);
 
     [Fact]
     public void UserAccountDto_Constructor_SetsProperties()
     {
         Assert.Equal(
-            ("S-1-5-21-1-2-3-1001", "max", "Max Adler", false, true),
+            ("S-1-5-21-1-2-3-1001", "max", "Max Mustermann", false, true),
             (Max.Sid, Max.UserName, Max.FullName, Max.IsDisabled, Max.IsUnderParentalControl));
     }
 
     [Fact]
     public void UserAccountDto_Equals_SameValues_ReturnsTrue()
     {
-        Assert.Equal(new UserAccountDto("S-1-5-21-1-2-3-1001", "max", "Max Adler", false, true), Max);
+        Assert.Equal(new UserAccountDto("S-1-5-21-1-2-3-1001", "max", "Max Mustermann", false, true), Max);
     }
 
     [Fact]

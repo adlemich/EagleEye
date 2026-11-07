@@ -6,11 +6,11 @@
 **Date**: 2026-10-03
 **Severity**: Low
 **Machine**: Windows Developer Machine
-**Routed to**: DEV (Michael approved the fix for 0.1.1)
+**Routed to**: DEV (the project owner approved the fix for 0.1.1)
 
 ## Description
 
-In *Einstellungen → Apps → Installierte Apps*, EagleEye is listed with the publisher "adlemich" (the GitHub account name). Michael expects "Michael Adler".
+In *Einstellungen → Apps → Installierte Apps*, EagleEye is listed with the publisher "adlemich" (the GitHub account name). The project owner expects "Michael Adler".
 
 ## Steps to Reproduce
 
@@ -37,4 +37,4 @@ The fix is one line in `installer/windows/setup.iss` (`AppPublisher`). The `Comp
 
 DEV, 2026-10-03: `AppPublisher` in `installer/windows/setup.iss` and `Company` in `Directory.Build.props` set to "Michael Adler". Build 0.1.1. Re-test: `docs/testing/US-001/test-run-02.md`, TC-001-R01.
 
-**Verified**: TES, 2026-10-03, in `docs/testing/US-001/test-run-02.md` (build 0.1.1). Closed by Michael.
+**Verified**: TES, 2026-10-03, in `docs/testing/US-001/test-run-02.md` (build 0.1.1). Closed by the project owner.

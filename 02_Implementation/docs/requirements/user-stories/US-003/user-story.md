@@ -1,8 +1,8 @@
 # US-003: Account Inventory and Selection of Accounts under Parental Control
 
-**Status**: Verified/Closed (closed by Michael, 2026-10-07, after `docs/testing/US-003/test-run-01.md`; see `docs/testing/US-003/test-report.md` for ACs not verified manually)
+**Status**: Verified/Closed (closed by the project owner, 2026-10-07, after `docs/testing/US-003/test-run-01.md`; see `docs/testing/US-003/test-report.md` for ACs not verified manually)
 **Created**: 2026-10-07
-**Approved**: by Michael, 2026-10-07 (status becomes `Analyzed` when the implementation plan is approved)
+**Approved**: by the project owner, 2026-10-07 (status becomes `Analyzed` when the implementation plan is approved)
 **Component(s)**: EagleEye.Service, EagleEye.ParentApp, EagleEye.Shared
 **Platform(s)**: Windows (service) · ParentApp Windows
 
@@ -18,7 +18,7 @@ As a **parent**, I want to see in the parent app the standard (non-admin) user a
 
 US-001 delivered the service and the tray client on the kid's PC, and US-002 delivered the trusted connection (pairing) between a Windows parent app and the service. Every rule the parent will configure later (allow-lists, budgets, pause windows, statistics) is per kid account (§6 Multi-User Requirements). This story builds the first configuration step on top of that connection: the service keeps an inventory of the standard user accounts on its PC, and the parent decides which of them are **under parental control**.
 
-Until now, the product requirements said that the service monitors **all** standard accounts automatically (FR-SVC-010, MU-013). Michael changed this on 2026-10-07: the parent selects the accounts. The general product requirements get a v1.3 amendment for it (see "Product requirement amendment" below).
+Until now, the product requirements said that the service monitors **all** standard accounts automatically (FR-SVC-010, MU-013). The project owner changed this on 2026-10-07: the parent selects the accounts. The general product requirements get a v1.3 amendment for it (see "Product requirement amendment" below).
 
 This story only stores the selection. Monitoring and enforcement themselves come in later stories; they will use this selection.
 
@@ -38,7 +38,7 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 
 ## Product requirement amendment (v1.3, proposed with this story)
 
-`02_Implementation/docs/requirements/general-product-requirements.md` gets a v1.3 amendment, to be approved by Michael together with this story:
+`02_Implementation/docs/requirements/general-product-requirements.md` gets a v1.3 amendment, to be approved by the project owner together with this story:
 
 - **FR-SVC-010** (changed): the service monitors only the standard accounts that the parent has placed under parental control, not all standard accounts.
 - **FR-SVC-070, FR-SVC-071** (made precise): the inventory contains standard accounts only; built-in accounts are excluded; the inventory follows changes of the accounts while the service runs.
@@ -52,7 +52,7 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 
 > **Language of UI texts** (NFR-L-010 to NFR-L-012): all UI texts quoted in these criteria and in the mockups are **English examples**, with the intended German wording in brackets. The parent app shows every text, including error messages, in the Windows display language of the user: German (default) or English. Differences in wording are notes, not Fails (US-002 Decision Q-11).
 
-> **Test setup**: the ACs assume a service PC with at least one admin account (the parent's) and, depending on the AC, zero, one or several standard accounts. Accounts are created, renamed, changed between "Standard user" and "Administrator", disabled and deleted by Michael with the normal Windows tools (*Settings → Accounts → Other users* or *Computer Management → Local Users and Groups*).
+> **Test setup**: the ACs assume a service PC with at least one admin account (the parent's) and, depending on the AC, zero, one or several standard accounts. Accounts are created, renamed, changed between "Standard user" and "Administrator", disabled and deleted by the project owner with the normal Windows tools (*Settings → Accounts → Other users* or *Computer Management → Local Users and Groups*).
 
 ### A. Account inventory on the service PC
 
@@ -69,7 +69,7 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 - [ ] **AC-8**: When the parent app is paired but not connected to the service (e.g. service stopped, PC off), the section shows no accounts and the text "No data available" ("Keine Daten verfügbar"). (See Open Question OQ-5.)
 - [ ] **AC-9**: When the parent app is connected and the service PC has no standard accounts (only admin and built-in accounts), the section shows the text "No non-admin accounts available" ("Keine Nicht-Administrator-Konten vorhanden").
 - [ ] **AC-10**: When the parent app is connected and the service PC has standard accounts, the section lists each of them in one row with its name (AC-11) and a checkbox "Under parental control" ("Unter Elternkontrolle"). The checkbox shows the selection currently stored in the service. The rows are sorted alphabetically by the shown name, ignoring upper and lower case.
-- [ ] **AC-11**: Each row shows the account's full name as set in Windows, followed by the user (logon) name in brackets, e.g. "Max Adler (max)". If the account has no full name, the row shows the user name only, e.g. "max". (See OQ-3.)
+- [ ] **AC-11**: Each row shows the account's full name as set in Windows, followed by the user (logon) name in brackets, e.g. "Max Mustermann (max)". If the account has no full name, the row shows the user name only, e.g. "max". (See OQ-3.)
 - [ ] **AC-12**: When the inventory contains disabled accounts (Windows "Account is disabled"), they are listed like other accounts, with the note "(disabled)" ("(deaktiviert)") after the name, and can be ticked. (See OQ-4.)
 - [ ] **AC-13**: When the parent opens the settings page, or the parent app (re)connects to the service while the settings page is open, the section shows the account list and ticks as currently stored in the service. While the data is being fetched, the section shows "Loading …" ("Wird geladen …").
 
@@ -99,14 +99,14 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
 
 | Date | Change | Source |
 |---|---|---|
-| 2026-10-07 | Story created; product requirements v1.3 amendment proposed | Michael's scope, written by PRO |
-| 2026-10-07 | Open questions OQ-1 to OQ-8 answered (proposed defaults accepted); ACs unchanged. Story and requirements v1.3 approved | Michael |
-| 2026-10-07 | AC-19 to AC-21: inventory changes are pushed by the service at once to all connected parent apps, which update their list on receipt; the 60-second limit is end-to-end (account change on the PC until the list has changed). Flow overview aligned. Story stays approved. | Michael, change request |
-| 2026-10-07 | AC-23, AC-24: selection changes always go through the service (store, then broadcast at once to all connected parent apps; apps update on receipt, never exchange data directly); 5-second limits are end-to-end. AC-14 (confirmed state, broadcast), flow overview, FR-SVC-072 and FR-APP-022 aligned. Story stays approved. | Michael, change request |
-| 2026-10-07 | AC-3: `defaultuser0` excluded (ARC Q-4). AC-14: service log moved to the admin-only folder `%ProgramData%\EagleEye\logs\` (ARC Q-2). Terms, FR-SVC-070 and FR-SVC-100 aligned. Story stays approved. | Michael, answers to ARC questions |
-| 2026-10-07 | Implementation plan approved; status `Analyzed` | Michael |
+| 2026-10-07 | Story created; product requirements v1.3 amendment proposed | The project owner's scope, written by PRO |
+| 2026-10-07 | Open questions OQ-1 to OQ-8 answered (proposed defaults accepted); ACs unchanged. Story and requirements v1.3 approved | The project owner |
+| 2026-10-07 | AC-19 to AC-21: inventory changes are pushed by the service at once to all connected parent apps, which update their list on receipt; the 60-second limit is end-to-end (account change on the PC until the list has changed). Flow overview aligned. Story stays approved. | The project owner, change request |
+| 2026-10-07 | AC-23, AC-24: selection changes always go through the service (store, then broadcast at once to all connected parent apps; apps update on receipt, never exchange data directly); 5-second limits are end-to-end. AC-14 (confirmed state, broadcast), flow overview, FR-SVC-072 and FR-APP-022 aligned. Story stays approved. | The project owner, change request |
+| 2026-10-07 | AC-3: `defaultuser0` excluded (ARC Q-4). AC-14: service log moved to the admin-only folder `%ProgramData%\EagleEye\logs\` (ARC Q-2). Terms, FR-SVC-070 and FR-SVC-100 aligned. Story stays approved. | The project owner, answers to ARC questions |
+| 2026-10-07 | Implementation plan approved; status `Analyzed` | The project owner |
 | 2026-10-07 | Implemented (version 0.3.0); see `US-003/implementation-report.md`; status `Implemented` | DEV |
-| 2026-10-07 | Implemented (0.3.0, patch 0.3.1 for ISSUE-006); test run 01 partly executed; closed by Michael as `Verified/Closed` | Michael |
+| 2026-10-07 | Implemented (0.3.0, patch 0.3.1 for ISSUE-006); test run 01 partly executed; closed by the project owner as `Verified/Closed` | The project owner |
 
 ---
 
@@ -135,9 +135,9 @@ References: FR-SVC-010 (v1.3), FR-SVC-030, FR-SVC-031, FR-SVC-053, FR-SVC-070 to
       ---
       "<b>User accounts on the EagleEye PC"
       "Tick the accounts that are under parental control."
-      [X] "Anna Adler (anna)"
+      [X] "Anna Mustermann (anna)"
       [ ] "Gaming (gaming)  (disabled)"
-      [X] "Max Adler (max)"
+      [X] "Max Mustermann (max)"
     }
   }
   ---
@@ -181,7 +181,7 @@ Parent -> AppA : open Settings
 AppA -> Svc : get accounts + selection
 Svc --> AppA : list (name, ticked)
 == tick ==
-Parent -> AppA : tick "Max Adler (max)"
+Parent -> AppA : tick "Max Mustermann (max)"
 AppA -> Svc : set under parental control = yes
 Svc -> Svc : store, write log entry
 Svc --> AppA : stored (confirmed state)
@@ -217,20 +217,20 @@ end note
 
 ---
 
-## Open Questions (answered by Michael, 2026-10-07)
+## Open Questions (answered by the project owner, 2026-10-07)
 
-Each question had a proposed default. Michael accepted all of them, so the ACs stay as written.
+Each question had a proposed default. The project owner accepted all of them, so the ACs stay as written.
 
 | ID | Question | Proposed default | Answer |
 |---|---|---|---|
-| OQ-1 | **How is a change saved?** Immediately on tick/untick, or with a "Save" button for the whole list? | Immediately on each tick/untick, no "Save" button (AC-14). Errors revert the checkbox (AC-16). | Answer (Michael, 2026-10-07): proposed default accepted |
-| OQ-2 | **Default for an account that appears for the first time.** Unticked (parent opts in) or ticked (safe side: a new kid account is controlled at once)? A kid cannot create accounts, so new accounts are created by a parent. | Unticked (AC-18). The parent decides explicitly. | Answer (Michael, 2026-10-07): proposed default accepted |
-| OQ-3 | **Which name is shown?** Accounts linked to a Microsoft account often have a cut-off user name (e.g. "micha") and a full name ("Michael Adler"). | Full name followed by the user name in brackets; user name only if there is no full name (AC-11). | Answer (Michael, 2026-10-07): proposed default accepted |
-| OQ-4 | **Disabled accounts.** Show them (marked "disabled") or hide them? | Show them with "(disabled)" and allow ticking (AC-12), so a temporarily disabled kid account keeps its setting. The built-in accounts are always hidden (AC-3). | Answer (Michael, 2026-10-07): proposed default accepted |
-| OQ-5 | **Paired but not connected.** Show "No data available" or the last known list (read-only)? | "No data available" (AC-8), so the app never shows outdated data. | Answer (Michael, 2026-10-07): proposed default accepted |
-| OQ-6 | **Account becomes admin and later standard again.** Should the service remember the earlier tick? | Yes, it remembers and restores the tick (AC-21). The account is not treated as under parental control while it is an admin account (AC-20, MU-014). | Answer (Michael, 2026-10-07): proposed default accepted |
-| OQ-7 | **Kid pairs their own parent app** (US-002 Decision Q-8, `01_Intend_and_Constraints/questions_and_answers.md` Q10.1: "revisit when configuration stories make it relevant"). This is the first story where a paired app changes configuration: a kid could untick their own account. | Keep it an accepted risk in this story, because the selection has no effect yet. Decide on a protection before the first enforcement story. | Answer (Michael, 2026-10-07): proposed default accepted |
-| OQ-8 | **Section name and checkbox label.** | Section "User accounts on the EagleEye PC" ("Benutzerkonten auf dem EagleEye-PC"), checkbox "Under parental control" ("Unter Elternkontrolle"). | Answer (Michael, 2026-10-07): proposed default accepted |
+| OQ-1 | **How is a change saved?** Immediately on tick/untick, or with a "Save" button for the whole list? | Immediately on each tick/untick, no "Save" button (AC-14). Errors revert the checkbox (AC-16). | Answer (the project owner, 2026-10-07): proposed default accepted |
+| OQ-2 | **Default for an account that appears for the first time.** Unticked (parent opts in) or ticked (safe side: a new kid account is controlled at once)? A kid cannot create accounts, so new accounts are created by a parent. | Unticked (AC-18). The parent decides explicitly. | Answer (the project owner, 2026-10-07): proposed default accepted |
+| OQ-3 | **Which name is shown?** Accounts linked to a Microsoft account often have a cut-off user name (e.g. "alex") and a full name ("Michael Adler"). | Full name followed by the user name in brackets; user name only if there is no full name (AC-11). | Answer (the project owner, 2026-10-07): proposed default accepted |
+| OQ-4 | **Disabled accounts.** Show them (marked "disabled") or hide them? | Show them with "(disabled)" and allow ticking (AC-12), so a temporarily disabled kid account keeps its setting. The built-in accounts are always hidden (AC-3). | Answer (the project owner, 2026-10-07): proposed default accepted |
+| OQ-5 | **Paired but not connected.** Show "No data available" or the last known list (read-only)? | "No data available" (AC-8), so the app never shows outdated data. | Answer (the project owner, 2026-10-07): proposed default accepted |
+| OQ-6 | **Account becomes admin and later standard again.** Should the service remember the earlier tick? | Yes, it remembers and restores the tick (AC-21). The account is not treated as under parental control while it is an admin account (AC-20, MU-014). | Answer (the project owner, 2026-10-07): proposed default accepted |
+| OQ-7 | **Kid pairs their own parent app** (US-002 Decision Q-8, `01_Intend_and_Constraints/questions_and_answers.md` Q10.1: "revisit when configuration stories make it relevant"). This is the first story where a paired app changes configuration: a kid could untick their own account. | Keep it an accepted risk in this story, because the selection has no effect yet. Decide on a protection before the first enforcement story. | Answer (the project owner, 2026-10-07): proposed default accepted |
+| OQ-8 | **Section name and checkbox label.** | Section "User accounts on the EagleEye PC" ("Benutzerkonten auf dem EagleEye-PC"), checkbox "Under parental control" ("Unter Elternkontrolle"). | Answer (the project owner, 2026-10-07): proposed default accepted |
 
 ---
 

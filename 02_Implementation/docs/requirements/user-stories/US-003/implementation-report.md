@@ -6,7 +6,7 @@
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-003/implementation-plan.md` (approved 2026-10-07, Q-1 to Q-7 answered), ADR-010
 **Machine(s) used**: Windows Developer Machine only (see §7)
 **Story status**: Implemented
-**Review**: implementation approved by Michael (2026-10-07). Usability issue `US-003/issues/ISSUE-006.md` (account list as a table) to be fixed in patch 0.3.1.
+**Review**: implementation approved by the project owner (2026-10-07). Usability issue `US-003/issues/ISSUE-006.md` (account list as a table) to be fixed in patch 0.3.1.
 
 ---
 
@@ -96,7 +96,7 @@ Coverage measured with coverlet (`dotnet test --collect:"XPlat Code Coverage"`),
 
 1. **Service installer not executed by DEV** (no admin rights, as in US-001/US-002). Not yet verified on the real system: the service as SYSTEM writes `%ProgramData%\EagleEye\logs\EagleEye.Service-001.log`; the `logs\` ACL set by the installer and re-applied by the service (owner Administrators — SYSTEM may set this owner because its token contains the Administrators group); the account inventory as SYSTEM; the upgrade 0.2.0 → 0.3.0 with migration 2 (unit-tested on a version-1 file).
 2. **If the service cannot apply the `logs\` ACL**, it writes a warning to the Event Log ("The log folder … could not be restricted …; no log file is written.") and runs without a log file. AC-14's log line is then only in the Event Log.
-3. **Inventory changes (AC-19 to AC-22) were not smoke-tested**: creating, renaming, disabling or deleting accounts needs admin rights. Covered by unit tests; Michael tests them manually.
+3. **Inventory changes (AC-19 to AC-22) were not smoke-tested**: creating, renaming, disabling or deleting accounts needs admin rights. Covered by unit tests; the project owner tests them manually.
 4. **AC-16 is hard to provoke on one PC** (see §6): on loopback the app notices a stopped service at once and switches to "Keine Daten verfügbar" before a click can land. Use the second PC (unplug its network, then tick) as the plan suggests.
 5. **OQ-7 (accepted risk)**: a kid who pairs an own app could untick their account. The selection has no effect yet.
 6. **Q-7**: only `defaultuser0` is excluded. If `defaultuser1` or similar shows up during testing, PRO extends AC-3 (one-line filter change).
@@ -133,8 +133,8 @@ Coverage measured with coverlet (`dotnet test --collect:"XPlat Code Coverage"`),
 | Not paired / not connected / fetch failed (AC-7, AC-8) | Keine Daten verfügbar | No data available |
 | Connected, no standard accounts (AC-9) | Keine Nicht-Administrator-Konten vorhanden | No non-admin accounts available |
 | While fetching (AC-13) | Wird geladen … | Loading … |
-| Row name (AC-11) | `Max Adler (max)`, or `max` without full name | same |
-| Disabled suffix (AC-12) | `Max Adler (max) (deaktiviert)` | `Max Adler (max) (disabled)` |
+| Row name (AC-11) | `Max Mustermann (max)`, or `max` without full name | same |
+| Disabled suffix (AC-12) | `Max Mustermann (max) (deaktiviert)` | `Max Mustermann (max) (disabled)` |
 | Error below the list (AC-16) | Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen. | The change could not be saved. Please try again. |
 
 Table layout (0.3.1, ISSUE-006): a header row with the bold column titles "Konto" and "Unter Elternkontrolle", then one row per account with the shown name in column 1 and the checkbox centred in column 2 under its header; no per-row label. The header is only shown together with at least one row (not with "Keine Daten verfügbar", "Keine Nicht-Administrator-Konten vorhanden" or "Wird geladen …"). Columns have fixed widths (360 and 200 device-independent units), so header and rows line up and scale with the display; long names wrap. Rows are sorted by the shown name (German/English culture, ignoring case). While a row's change is pending (normally well below 1 s, at most 4 s), its checkbox is disabled; other rows stay usable. The error text stays until the next successful change or the next connect/disconnect.
@@ -156,11 +156,11 @@ Table layout (0.3.1, ISSUE-006): a header row with the bold column titles "Konto
 ### DEV smoke check (Windows Developer Machine, 2026-10-07, non-elevated)
 
 - Service (Debug, console, `EAGLEEYE_DATA_DIR` = `02_Implementation/artifacts/smoke-us003`): NetApi enumeration works unelevated; log file `logs\EagleEye.Service-001.log` created; "Account inventory loaded: 1 standard accounts, 0 under parental control." — `eagleeye-kid` only, matching `Get-LocalUser` / `Get-LocalGroupMember` (German group name).
-- **Installed** parent app 0.3.0 (`/VERYSILENT`, per user, file version 0.3.0.0), driven through UI Automation: unpaired → section "Benutzerkonten auf dem EagleEye-PC" with "Keine Daten verfügbar"; paired with `localhost` (code from Event Log event 1000) → instruction text and row `eagleeye-kid` with an unticked checkbox, green "Verbunden mit localhost". Tick → log line `under parental control = yes (set by parent device ZOCK-O-MAT-V3, …, revision 2)`. Service stopped → "Keine Daten verfügbar", "Nicht verbunden mit localhost". Service restarted → "loaded: 1 standard accounts, 1 under parental control", app reconnected by itself and showed the tick (persistence). Untick → `= no`.
+- **Installed** parent app 0.3.0 (`/VERYSILENT`, per user, file version 0.3.0.0), driven through UI Automation: unpaired → section "Benutzerkonten auf dem EagleEye-PC" with "Keine Daten verfügbar"; paired with `localhost` (code from Event Log event 1000) → instruction text and row `eagleeye-kid` with an unticked checkbox, green "Verbunden mit localhost". Tick → log line `under parental control = yes (set by parent device DEV-PC, …, revision 2)`. Service stopped → "Keine Daten verfügbar", "Nicht verbunden mit localhost". Service restarted → "loaded: 1 standard accounts, 1 under parental control", app reconnected by itself and showed the tick (persistence). Untick → `= no`.
 - Broadcast to a second app: the Debug build of the parent app ran next to the installed one (same user data, same pairing); a tick in the installed app showed up in the Debug app within 1 s.
 - AC-16 could not be provoked on loopback (see §5.4).
 - **Not done:** service installer (admin), service as SYSTEM, `logs\` ACL on the real folder, account changes (admin), second PC.
-- Clean-up: both apps closed, the parent app uninstalled (program folder and `%LocalAppData%\EagleEye` gone), no EagleEye process running. Left behind (git-ignored): `02_Implementation/artifacts/smoke-us003*` (smoke data folder, console output), `artifacts/us003-build.txt`, `artifacts/us003-test.txt`; a test certificate key in the user key store (console mode, US-002 D-1); the service registered device "ZOCK-O-MAT-V3" only in the smoke database.
+- Clean-up: both apps closed, the parent app uninstalled (program folder and `%LocalAppData%\EagleEye` gone), no EagleEye process running. Left behind (git-ignored): `02_Implementation/artifacts/smoke-us003*` (smoke data folder, console output), `artifacts/us003-build.txt`, `artifacts/us003-test.txt`; a test certificate key in the user key store (console mode, US-002 D-1); the service registered device "DEV-PC" only in the smoke database.
 
 ---
 
@@ -183,4 +183,4 @@ Table layout (0.3.1, ISSUE-006): a header row with the bold column titles "Konto
 | Tests | +7 (ParentApp 444); `UserAccountItemViewModel`, `UserAccountsViewModel`, `AppTexts` at 100 % line and branch coverage. `build.ps1` 0 warnings (Windows + Android), `test.ps1` 928 passed. |
 | Installers | `03_Delivery/windows/EagleEye-Setup-0.3.1.exe` (12:59, `6693dc9b…48434420`), `03_Delivery/windows/EagleEye-ParentApp-Setup-0.3.1.exe` (13:00, `d6e5efc5…b8627918`) |
 | Deviation | None from ISSUE-006. Column widths are fixed (360 / 200 device-independent units) so that header and rows line up; MAUI has no shared column sizing across separate grids. |
-| Smoke check | Not completed: Michael's installed service 0.3.0 held ports 5443/5080, so the console service could not start; DEV did not pair against the installed service (one mistaken attempt was rejected with a wrong code, no device registered; see ISSUE-006). Visual check in light/dark mode and at 150 % plus the screenshot `docs/testing/US-003/evidence/ISSUE-006-after-fix.png` are left to Michael/TES. |
+| Smoke check | Not completed: the project owner's installed service 0.3.0 held ports 5443/5080, so the console service could not start; DEV did not pair against the installed service (one mistaken attempt was rejected with a wrong code, no device registered; see ISSUE-006). Visual check in light/dark mode and at 150 % plus the screenshot `docs/testing/US-003/evidence/ISSUE-006-after-fix.png` are left to the project owner/TES. |

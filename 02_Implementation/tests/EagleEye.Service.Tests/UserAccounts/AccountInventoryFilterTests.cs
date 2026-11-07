@@ -70,17 +70,17 @@ public sealed class AccountInventoryFilterTests
             new($"{Machine}-501", "Gast", null, true, false),
             new($"{Machine}-503", "DefaultAccount", null, true, false),
             new($"{Machine}-504", "WDAGUtilityAccount", null, true, false),
-            new($"{Machine}-1000", "papa", "Michael Adler", false, true),
+            new($"{Machine}-1000", "papa", "Erika Mustermann", false, true),
             new($"{Machine}-1001", "defaultuser0", null, false, false),
-            new($"{Machine}-1002", "max", "Max Adler", false, false),
-            new($"{Machine}-1003", "micha", "Michael Adler", false, false), // Microsoft-linked standard account
+            new($"{Machine}-1002", "max", "Max Mustermann", false, false),
+            new($"{Machine}-1003", "erika", "Erika Mustermann", false, false), // Microsoft-linked standard account
             new($"{Machine}-1004", "gaming", null, true, false),
             new($"{Machine}-501", "Renamed guest", null, false, false),
         ];
 
         var standard = AccountInventoryFilter.Standard(accounts);
 
-        Assert.Equal(["max", "micha", "gaming"], standard.Select(a => a.UserName));
+        Assert.Equal(["max", "erika", "gaming"], standard.Select(a => a.UserName));
     }
 
     [Fact]

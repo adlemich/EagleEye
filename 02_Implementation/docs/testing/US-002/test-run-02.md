@@ -2,9 +2,9 @@
 
 **Test plan**: `docs/testing/US-002/test-plan.md` (approved 2026-10-04, updated after run 01, see its §9 Change Log)
 **Prepared by**: TES, 2026-10-04
-**Executed by**: Michael
+**Executed by**: the project owner
 **Execution date**: completed by 2026-10-07
-**Result (recorded by the Orchestrator, 2026-10-07)**: Michael reported run 02 as completed with **all cases passed** and approved closing the story. Setup, block-setup and cleanup steps are ticked below; the per-case result boxes were left empty, the result rests on Michael's report.
+**Result (recorded by the Orchestrator, 2026-10-07)**: the project owner reported run 02 as completed with **all cases passed** and approved closing the story. Setup, block-setup and cleanup steps are ticked below; the per-case result boxes were left empty, the result rests on the project owner's report.
 **Build / installer version**: 0.2.0 — `03_Delivery/windows/EagleEye-Setup-0.2.0.exe` (service + tray, **rebuilt** with the ISSUE-004 fix, file dated 04.10.2026 20:53) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.2.0.exe` (parent app, **unchanged** since run 01)
 **Machine(s)**: Windows Developer Machine (service PC) <!-- add Windows version (winver) --> · PC2 (Block C) <!-- add name / Windows version / display language -->
 
@@ -138,7 +138,7 @@
 
 - **Result**: [X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
-- **Notes**: Prefilled device name: _ZOCK-O-MAT-V3___________
+- **Notes**: Prefilled device name: _DEV-PC___________
 
 ---
 

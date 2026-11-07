@@ -2,15 +2,15 @@
 
 **Instructions**: `02_Implementation/docs/requirements/user-stories/US-010/spike-overlay-instructions.md`
 **Feasibility**: `02_Implementation/docs/requirements/user-stories/US-010/feasibility-overlay.md`
-**Results template (Michael)**: `02_Implementation/docs/requirements/user-stories/US-010/spike-overlay-results.md`
+**Results template (the project owner)**: `02_Implementation/docs/requirements/user-stories/US-010/spike-overlay-results.md`
 **Branch**: `feature/US-010-time-overlay`
-**Status**: Closed. §1 written by DEV (2026-11-01). §2 evaluation written by ARC (2026-11-01) after Michael's run on the kid's gaming PC. The spike code was removed from the repo after the evaluation (§2.6).
+**Status**: Closed. §1 written by DEV (2026-11-01). §2 evaluation written by ARC (2026-11-01) after the project owner's run on the kid's gaming PC. The spike code was removed from the repo after the evaluation (§2.6).
 
 ---
 
 ## 1. Build and DEV checks
 
-**Author**: DEV · **Date**: 2026-11-01 · **Host**: Windows Developer Machine `ZOCK-O-MAT-V3` (Windows 11 Pro 26H2, build 26300.9818, AMD Radeon RX 9070 XT)
+**Author**: DEV · **Date**: 2026-11-01 · **Host**: Windows Developer Machine `DEV-PC` (Windows 11 Pro 26H2, build 26300.9818, a current gaming GPU)
 
 ### 1.1 Build
 
@@ -26,12 +26,12 @@
 
 ### 1.2 What this host could and could not check (read first)
 
-- **The agent session cannot simulate a person.** DEV ran in Michael's Admin session (session 2, not elevated). That session was **disconnected** (`query user`: "Getr."). Its only display is the virtual `WinDisc` 1440x1234 @ 96 DPI. There is no input desktop: `SendInput` returns 0 with error 5, `GetForegroundWindow` is 0, and screen capture (`CopyFromScreen`) fails. So nothing that needs a real keyboard, mouse, focus or a look at the screen could be checked here. DEV did not try to work around this with `runas` or a scheduled task.
+- **The agent session cannot simulate a person.** DEV ran in the project owner's Admin session (session 2, not elevated). That session was **disconnected** (`query user`: "Getr."). Its only display is the virtual `WinDisc` 1440x1234 @ 96 DPI. There is no input desktop: `SendInput` returns 0 with error 5, `GetForegroundWindow` is 0, and screen capture (`CopyFromScreen`) fails. So nothing that needs a real keyboard, mouse, focus or a look at the screen could be checked here. DEV did not try to work around this with `runas` or a scheduled task.
 - What DEV could exercise for real: the app's logic, by posting `WM_HOTKEY` to its message-only hotkey window and by posting the tray callback message, which opens the real tray menu, then driving the menu with posted keys; its windows and their styles; the log; CPU and memory; and the classification of its windows by **EagleEye's own `AppWindowRule`/`WindowEnumerator`**, loaded from the installed service's dll.
 - **Differences from the instructions on this PC** [R, checked 2026-11-01]:
-  - The installed service is **0.8.0** (`EagleEye.Service.dll` 0.8.0+8b62c07, US-008 step 6), not 0.9.0. `AppWindowRule.cs`, `WindowEnumerator.cs` and `WindowInfo.cs` are unchanged between `8b62c07` and `24f6dea` (`git log` is empty). DEV also classified with the freshly built 0.9.0 service dll, with the same result. The 0.9.0 installer is in `03_Delivery/windows/EagleEye-Setup-0.9.0.exe` if Michael wants 0.9.0 installed first.
-  - The local accounts **`eagleeye-kid` and `ee-kid2` do not exist** on this PC. The standard accounts are **`Micha`** and **`Sebastian`**; the administrators are Admin and the disabled Administrator. Which of them EagleEye controls is not visible without elevation, so Michael picks (steps in §1.6).
-  - The GPU is an RX 9070 XT, so this PC may itself be "the kid's gaming PC" (open question Q-A of the instructions §8).
+  - The installed service is **0.8.0** (`EagleEye.Service.dll` 0.8.0+8b62c07, US-008 step 6), not 0.9.0. `AppWindowRule.cs`, `WindowEnumerator.cs` and `WindowInfo.cs` are unchanged between `8b62c07` and `24f6dea` (`git log` is empty). DEV also classified with the freshly built 0.9.0 service dll, with the same result. The 0.9.0 installer is in `03_Delivery/windows/EagleEye-Setup-0.9.0.exe` if the project owner wants 0.9.0 installed first.
+  - The local accounts **`eagleeye-kid` and `ee-kid2` do not exist** on this PC. The standard accounts are **`UserA`** and **`UserB`**; the administrators are Admin and the disabled Administrator. Which of them EagleEye controls is not visible without elevation, so the project owner picks (steps in §1.6).
+  - The GPU is a current gaming GPU, so this PC may itself be "the kid's gaming PC" (open question Q-A of the instructions §8).
 
 ### 1.3 Results D-1 to D-11
 
@@ -39,14 +39,14 @@
 |---|---|---|
 | D-1 | **Pass** | `build.ps1`: 4 projects built, 0 warnings, 0 errors, "Build SUCCEEDED". `test.ps1`: 305 + 1493 + 95 + 1109 = **3002 passed, 0 failed**. Neither output mentions OverlaySpike. The branch has no diff to `origin/main` (e65f03e = merge-base) under `src/`, `tests/`, `scripts/`, `installer/`, the sln and `Directory.Build.props`, so the result is the same as on `main` |
 | D-2 | **Pass** | One exe. (a) Copy in `%USERPROFILE%\Downloads\OverlaySpike-devcheck\`: starts, log written next to the exe, settings source `(file)`. A second start logs `another OverlaySpike is already running in this session - exiting silently` and exits with code 0. (b) Folder where creating files is denied (`icacls /deny (WD,AD)`): starts, log in `%LOCALAPPDATA%\OverlaySpike\`, first lines `log folder: …\AppData\Local\OverlaySpike (fallback: exe folder not writable)`. Tray *Beenden* → `END` summary, **exit code 0**. Copies and logs were removed afterwards |
-| D-3 | **Open – needs Michael** | No `ee-kid2` on this PC, and DEV cannot sign in to another account. Partial: the process runs non-elevated (`elevated=False`) from the default `asInvoker` manifest; the `START` lines are complete (version + commit, Windows build with UBR, user, session, settings with source, monitors with DPI/refresh/primary). Exception: the **display adapter list is empty** in this disconnected session (`EnumDisplayDevices` returns nothing). Check it in a real session (step M-2) |
-| D-4 | **Open – needs Michael** | No input desktop here (see §1.2). Static: the overlay's exstyle is `0x080900A8` = `NOACTIVATE \| LAYERED \| CONTROLPARENT \| TOOLWINDOW \| TRANSPARENT \| TOPMOST`; `WM_NCHITTEST` → `HTTRANSPARENT`; `WM_MOUSEACTIVATE` → `MA_NOACTIVATE`. Owned by WinForms' hidden taskbar-owner window (`ShowInTaskbar=false`) |
-| D-5 | **Partly Pass (logic); Open – needs Michael (keyboard, focus, look, sound)** | Posted `WM_HOTKEY` for all 8 ids → `KEY` lines `mark -> MARK 1`, `jump -> Sprung 5:10`, `reassert -> Re-assert: AUS/AN`, `beep -> Ton: AUS/AN`, `corner -> Ecke: Unten rechts / Unten links / Oben links / Oben rechts`, `overlay -> AUS`, `overlay -> Overlay: AN`, `jump -> Sprung 1:10`; then `LEVEL Warn at 5:00: colour=yellow, beep=yes` and `LEVEL Critical at 1:00: colour=red, beep=yes`. In the 16-min run, `LEVEL … Expired at 0:00` followed. Tray menu with posted keys: `MENU alpha -> Alpha: einheitlich` (window re-created), `MENU opacity -> Deckkraft: 70 %`, `MARK #1 (via MENU)`, *Beenden*. All 8 hotkeys registered (`all 8 hotkeys registered`). Not checked: real key presses, Notepad keeping the focus, colours, pulse, second line, audible beep, *Log-Ordner öffnen* |
-| D-6 | **Open – needs Michael** | Needs a display, Chrome and YouTube (internet) |
-| D-7 | **Open – needs Michael** | Needs a person to place and click Task Manager. Only the start state was logged (`COVER not covered`) |
-| D-8 | **Open – needs Michael** (only if a second monitor is connected) | This session has one virtual display |
-| D-9 | **Open – needs Michael** | Lock and sign-out need a person |
-| D-10 | **Fail found and fixed. Static Pass after the fix; live run Open – needs Michael** | **Found:** with the tray menu open, the WinForms `ContextMenuStrip` popup (class `WindowsForms10.Window.20808…`, 340x286, exstyle `0x00010008` = TOPMOST \| CONTROLPARENT, **no** `WS_EX_TOOLWINDOW`, no owner, visible) was classified by the installed service's `AppWindowRule.Classify` as **`AgentApp { Kind = Window }`**. So in a controlled account, opening the tray menu would have made EagleEye record and block OverlaySpike. **Fix (in `24f6dea`):** the context menu and all three submenus (*Ecke*, *Deckkraft*, *Alpha*) use subclasses that add `WS_EX_TOOLWINDOW` (`ToolWindowMenus.cs`). **After the fix:** all OverlaySpike windows → `app=no`, with the service's classifier (0.8.0 installed and 0.9.0 built): the overlay (per-pixel and uniform), the menu (`0x00010088`), an open submenu (`0x00010088`), `SysShadow` (tool window), and the hidden helper windows (taskbar owner, NotifyIcon window, GDI+ hook, `.NET-BroadcastEventWindow`, IME). The hotkey window is message-only and is not enumerated. Service data, read-only: `C:\ProgramData\EagleEye\EagleEye.Service.db` (+ `-wal`) has **0** occurrences of "OverlaySpike" after all runs. The service log folder `C:\ProgramData\EagleEye\logs` needs elevation and was **not** read. No live run in a controlled account was possible (the session agent runs only in sessions of controlled accounts, ADR-011, so the Admin session proves nothing). Not checked: a balloon tip; it belongs to the shell, not to OverlaySpike, and only appears on an error |
+| D-3 | **Open – needs the project owner** | No `ee-kid2` on this PC, and DEV cannot sign in to another account. Partial: the process runs non-elevated (`elevated=False`) from the default `asInvoker` manifest; the `START` lines are complete (version + commit, Windows build with UBR, user, session, settings with source, monitors with DPI/refresh/primary). Exception: the **display adapter list is empty** in this disconnected session (`EnumDisplayDevices` returns nothing). Check it in a real session (step M-2) |
+| D-4 | **Open – needs the project owner** | No input desktop here (see §1.2). Static: the overlay's exstyle is `0x080900A8` = `NOACTIVATE \| LAYERED \| CONTROLPARENT \| TOOLWINDOW \| TRANSPARENT \| TOPMOST`; `WM_NCHITTEST` → `HTTRANSPARENT`; `WM_MOUSEACTIVATE` → `MA_NOACTIVATE`. Owned by WinForms' hidden taskbar-owner window (`ShowInTaskbar=false`) |
+| D-5 | **Partly Pass (logic); Open – needs the project owner (keyboard, focus, look, sound)** | Posted `WM_HOTKEY` for all 8 ids → `KEY` lines `mark -> MARK 1`, `jump -> Sprung 5:10`, `reassert -> Re-assert: AUS/AN`, `beep -> Ton: AUS/AN`, `corner -> Ecke: Unten rechts / Unten links / Oben links / Oben rechts`, `overlay -> AUS`, `overlay -> Overlay: AN`, `jump -> Sprung 1:10`; then `LEVEL Warn at 5:00: colour=yellow, beep=yes` and `LEVEL Critical at 1:00: colour=red, beep=yes`. In the 16-min run, `LEVEL … Expired at 0:00` followed. Tray menu with posted keys: `MENU alpha -> Alpha: einheitlich` (window re-created), `MENU opacity -> Deckkraft: 70 %`, `MARK #1 (via MENU)`, *Beenden*. All 8 hotkeys registered (`all 8 hotkeys registered`). Not checked: real key presses, Notepad keeping the focus, colours, pulse, second line, audible beep, *Log-Ordner öffnen* |
+| D-6 | **Open – needs the project owner** | Needs a display, Chrome and YouTube (internet) |
+| D-7 | **Open – needs the project owner** | Needs a person to place and click Task Manager. Only the start state was logged (`COVER not covered`) |
+| D-8 | **Open – needs the project owner** (only if a second monitor is connected) | This session has one virtual display |
+| D-9 | **Open – needs the project owner** | Lock and sign-out need a person |
+| D-10 | **Fail found and fixed. Static Pass after the fix; live run Open – needs the project owner** | **Found:** with the tray menu open, the WinForms `ContextMenuStrip` popup (class `WindowsForms10.Window.20808…`, 340x286, exstyle `0x00010008` = TOPMOST \| CONTROLPARENT, **no** `WS_EX_TOOLWINDOW`, no owner, visible) was classified by the installed service's `AppWindowRule.Classify` as **`AgentApp { Kind = Window }`**. So in a controlled account, opening the tray menu would have made EagleEye record and block OverlaySpike. **Fix (in `24f6dea`):** the context menu and all three submenus (*Ecke*, *Deckkraft*, *Alpha*) use subclasses that add `WS_EX_TOOLWINDOW` (`ToolWindowMenus.cs`). **After the fix:** all OverlaySpike windows → `app=no`, with the service's classifier (0.8.0 installed and 0.9.0 built): the overlay (per-pixel and uniform), the menu (`0x00010088`), an open submenu (`0x00010088`), `SysShadow` (tool window), and the hidden helper windows (taskbar owner, NotifyIcon window, GDI+ hook, `.NET-BroadcastEventWindow`, IME). The hotkey window is message-only and is not enumerated. Service data, read-only: `C:\ProgramData\EagleEye\EagleEye.Service.db` (+ `-wal`) has **0** occurrences of "OverlaySpike" after all runs. The service log folder `C:\ProgramData\EagleEye\logs` needs elevation and was **not** read. No live run in a controlled account was possible (the session agent runs only in sessions of controlled accounts, ADR-011, so the Admin session proves nothing). Not checked: a balloon tip; it belongs to the shell, not to OverlaySpike, and only appears on an error |
 | D-11 | **Pass, with a note** | Published exe, 16 min 19 s (12:47:28–13:03:48), CPU line every 30 s, through both pulse phases (10 Hz redraw at 5:00 and from 1:00 to 0:00). **CPU** 0.000–0.010 % per interval after the first one (0.073 % at start, includes menu use), max 0.073 %. **GDI 28 / USER 27**, constant from the 2nd line to the end. Handles 373–388, no trend. **Working set** 135.6 → 139.5 MB, private bytes 63.5 → 66.5 MB (about +0.25 MB/min, peak 140.9 MB). That is a slight drift, not "no growth". With GDI/USER/handles flat it looks like managed-heap growth from the per-second bitmap and font allocations, not a GDI leak. The SP-18 run over a game afternoon will show whether it levels off. About 136 MB at start is the decompressed single-file runtime (the uncompressed Debug build: 50 MB). Caveat: measured in a disconnected session; DWM composition on a real display may cost more (SP-09 measures that) |
 
 ### 1.4 Deviations from the instructions
@@ -67,7 +67,7 @@ No other deviations. No unit tests (as instructed). Nothing under `src/`, `tests
 
 The dev-check logs are `*.log` and git-ignored, so they are not committed; the quotes above come from them. They were deleted after the checks, together with the Downloads copy, the `%LOCALAPPDATA%\OverlaySpike\` folder and the helper scripts. One file stays outside the repo: the .NET single-file host extracts its native files once into `%TEMP%\.net\OverlaySpike\…` (normal for `IncludeNativeLibrariesForSelfExtract`, instructions §4).
 
-### 1.6 Steps for Michael (open DEV checks), on `ZOCK-O-MAT-V3`, about 25 min
+### 1.6 Steps for the project owner (open DEV checks), on `DEV-PC`, about 25 min
 
 Do these **before or together with** the gaming-PC run. Record the results in this section (one line per check: Pass/Fail plus what you saw), or tell DEV. If this PC is itself the gaming PC (Q-A), M-1 and M-2 overlap with P-1 to SP-02 of `spike-overlay-results.md`.
 
@@ -85,7 +85,7 @@ Exe: `03_Delivery\spikes\US-010-overlay\OverlaySpike.exe` in the repo folder. It
 
 **M-2: the controlled standard account (D-3, D-10, D-9), about 10 min**
 
-`eagleeye-kid` / `ee-kid2` do not exist on this PC. Use the standard account (**Micha** or **Sebastian**) that EagleEye **controls**. Optional first: install 0.9.0 (`03_Delivery\windows\EagleEye-Setup-0.9.0.exe`) to match the instructions; the app classification is the same in 0.8.0.
+`eagleeye-kid` / `ee-kid2` do not exist on this PC. Use the standard account (**UserA** or **UserB**) that EagleEye **controls**. Optional first: install 0.9.0 (`03_Delivery\windows\EagleEye-Setup-0.9.0.exe`) to match the instructions; the app classification is the same in 0.8.0.
 
 1. As Admin, copy the folder `03_Delivery\spikes\US-010-overlay` to `C:\Users\Public\Downloads\OverlaySpike` (all interactive users may write there, so the log lands next to the exe). In the parent app, make sure that account has time left today and no break time in the next 15 min.
 2. Sign in as the controlled account. Double-click `C:\Users\Public\Downloads\OverlaySpike\OverlaySpike.exe`. **D-3**: expect no UAC prompt, the pill "Spiele 15:00" top right, the tray icon.
@@ -103,20 +103,20 @@ Afterwards, delete `C:\Users\Public\Downloads\OverlaySpike` or keep it for the g
 
 ## 2. Evaluation
 
-**Author**: ARC · **Date**: 2026-11-01 · **Host**: Windows Developer Machine `ZOCK-O-MAT-V3` (documentation only)
-**Inputs**: §1 above (DEV), `02_Implementation/docs/requirements/user-stories/US-010/spike-overlay-results.md` (Michael's run), `02_Implementation/docs/requirements/user-stories/US-010/feasibility-overlay.md` §4 and §6.
-**Machine of Michael's run**: the kid's gaming PC, **192.168.1.85** (Michael, 2026-11-01, answer to Q-A). It is also the pilot service PC that the Mac app paired with in US-008. It has **one monitor**. The Windows Developer Machine `ZOCK-O-MAT-V3` (192.168.1.37) is a different PC. The results template's header fields (date, build, GPU, account) were not filled in; the facts above come from Michael's answers.
+**Author**: ARC · **Date**: 2026-11-01 · **Host**: Windows Developer Machine `DEV-PC` (documentation only)
+**Inputs**: §1 above (DEV), `02_Implementation/docs/requirements/user-stories/US-010/spike-overlay-results.md` (the project owner's run), `02_Implementation/docs/requirements/user-stories/US-010/feasibility-overlay.md` §4 and §6.
+**Machine of the project owner's run**: the kid's gaming PC, **PILOT-PC** (the project owner, 2026-11-01, answer to Q-A). It is also the pilot service PC that the Mac app paired with in US-008. It has **one monitor**. The Windows Developer Machine `DEV-PC` is a different PC. The results template's header fields (date, build, GPU, account) were not filled in; the facts above come from the project owner's answers.
 
 ### 2.1 Result per case
 
 | Case | Result | Summary |
 |---|---|---|
 | P-1 to P-7 | Done | Spike started in the kid's account without an admin prompt; EagleEye did not block it. |
-| SP-01 desktop, click-through | **Pass** | Michael moved the pill with the **tray icon (left mouse button)**, not with the hotkeys. Click-through and focus behaviour worked. |
+| SP-01 desktop, click-through | **Pass** | The project owner moved the pill with the **tray icon (left mouse button)**, not with the hotkeys. Click-through and focus behaviour worked. |
 | SP-02 levels, beep | **Pass** | Size, colours (white, yellow, red) and font good. **75 % opacity worked best.** |
 | SP-03 Minecraft Java windowed | **Pass** | |
 | SP-04 Minecraft Java F11 | **Pass** | |
-| SP-05 Minecraft Java changed fullscreen resolution | **Pass** | Several resolutions tried, all visible. **Only the explicit "exclusive fullscreen" option hides the pill**, the same as Task Manager. Michael accepts this. |
+| SP-05 Minecraft Java changed fullscreen resolution | **Pass** | Several resolutions tried, all visible. **Only the explicit "exclusive fullscreen" option hides the pill**, the same as Task Manager. The project owner accepts this. |
 | SP-06 Minecraft Bedrock windowed and F11 | **Pass** | |
 | SP-07 Fortnite *Fenster-Vollbild* | **Pass** | No Easy Anti-Cheat message or kick. |
 | SP-08 Fortnite *Vollbild* | **Pass** | No Easy Anti-Cheat message or kick. |
@@ -131,7 +131,7 @@ Afterwards, delete `C:\Users\Public\Downloads\OverlaySpike` or keep it for the g
 | SP-17 sign-out | Skipped | |
 | SP-18 wrap-up (logs, CPU) | Skipped | No spike logs from the gaming PC; the CPU and memory figures are DEV's (§1.3 D-11). |
 
-Michael's summary: "This worked nice. The spike is a success. For apps with exclusive full screen, the overlay is not on top, but that is no problem since most games run in full screen windows. CPU impact was not noticeable."
+The project owner's summary: "This worked nice. The spike is a success. For apps with exclusive full screen, the overlay is not on top, but that is no problem since most games run in full screen windows. CPU impact was not noticeable."
 
 ### 2.2 Feasibility §4 game matrix: confirmed or corrected
 
@@ -155,9 +155,9 @@ Anti-cheat (feasibility OV-3): no immediate reaction of Easy Anti-Cheat in about
 
 Steps 1 to 6 passed, and the only failing mode is a true exclusive mode (Minecraft Java's "exclusive fullscreen"). By the decision rule this gives:
 
-> **Option (a)**: a layered, click-through, top-most, non-activating tool window drawn by the tray client, with **per-pixel alpha**, the top-most **re-assert**, and the **warning sound** as the fallback that also works in exclusive fullscreen. **True exclusive fullscreen is a documented limit** (accepted by Michael, 2026-11-01).
+> **Option (a)**: a layered, click-through, top-most, non-activating tool window drawn by the tray client, with **per-pixel alpha**, the top-most **re-assert**, and the **warning sound** as the fallback that also works in exclusive fullscreen. **True exclusive fullscreen is a documented limit** (accepted by the project owner, 2026-11-01).
 
-Not needed (rule rows 3 to 5): Fortnite and EAC passed, so no "use Windowed Fullscreen" limit; the re-assert was enough, so **no `uiAccess` follow-up spike (a+)**; no frame drops felt, so no smaller overlay or uniform-alpha fallback. The **uniform-alpha variant** of the spike is dropped; production uses per-pixel alpha only (Michael's look at 75 %).
+Not needed (rule rows 3 to 5): Fortnite and EAC passed, so no "use Windowed Fullscreen" limit; the re-assert was enough, so **no `uiAccess` follow-up spike (a+)**; no frame drops felt, so no smaller overlay or uniform-alpha fallback. The **uniform-alpha variant** of the spike is dropped; production uses per-pixel alpha only (the project owner's look at 75 %).
 
 The decision is implemented by US-010 and recorded in ADR-022 (Proposed with the US-010 implementation plan).
 
@@ -170,11 +170,11 @@ The decision is implemented by US-010 and recorded in ADR-022 (Proposed with the
 | Fast user switching | Not in the spike | Test run **AC-25** (two controlled accounts signed in at once) |
 | SP-16 / D-8 multi-monitor and mixed DPI | One monitor on the gaming PC; one virtual display in DEV's session | Plan Decision 6 (follow the foreground window's monitor, PerMonitorV2); test run **AC-28** (second monitor optional, otherwise Skipped); 150 % scaling on one monitor is tested |
 | SP-18 logs, CPU on the gaming PC | Skipped | DEV's D-11 figures (§1.3) plus the production measurement in plan Step 5; test run **AC-27** |
-| D-3 non-elevated start in a controlled account, adapter list | No controlled account on `ZOCK-O-MAT-V3`; Michael's run started it in the kid's account without a prompt (P-4), which covers the start | Production tray is installed and started by the Run key, as since US-001; nothing new to check |
-| D-4 click-through, no taskbar/Alt+Tab, focus | DEV had no input desktop | Michael's SP-01 (Pass); test run **AC-20** |
-| D-5 real hotkeys, focus while keys are pressed, audible beep | DEV had no input desktop; Michael used the tray menu instead of hotkeys | Production has **no hotkeys** (the story uses the tray menu, AC-15); levels and beep passed in SP-02; test run **AC-7, AC-8, AC-11** |
-| D-6 Chrome F11 and YouTube | Needed a display and internet | Michael's SP-10 (Pass); test run **AC-21** |
-| D-7 Task Manager "always on top" vs re-assert | Needed a person | Michael's SP-14 (Pass with re-assert on); test run **AC-22** |
+| D-3 non-elevated start in a controlled account, adapter list | No controlled account on `DEV-PC`; the project owner's run started it in the kid's account without a prompt (P-4), which covers the start | Production tray is installed and started by the Run key, as since US-001; nothing new to check |
+| D-4 click-through, no taskbar/Alt+Tab, focus | DEV had no input desktop | The project owner's SP-01 (Pass); test run **AC-20** |
+| D-5 real hotkeys, focus while keys are pressed, audible beep | DEV had no input desktop; the project owner used the tray menu instead of hotkeys | Production has **no hotkeys** (the story uses the tray menu, AC-15); levels and beep passed in SP-02; test run **AC-7, AC-8, AC-11** |
+| D-6 Chrome F11 and YouTube | Needed a display and internet | The project owner's SP-10 (Pass); test run **AC-21** |
+| D-7 Task Manager "always on top" vs re-assert | Needed a person | The project owner's SP-14 (Pass with re-assert on); test run **AC-22** |
 | D-10 live: tray menu in a controlled account | No controlled account in DEV's session | Production: the installed tray client is never recorded (ADR-011 §5, by path) **and** its menus and the overlay are tool windows (plan Decision 9, FR-TRAY-032); unit tests; test run **AC-26** |
 | D-11 working-set drift (+0.25 MB/min in 16 min) | Not followed up over a game afternoon (SP-18 skipped) | Plan Decision 5 (fonts cached per DPI, no per-second allocations when nothing changed); DEV measures one hour in Step 5; test run **AC-27** |
 | SP-14 "re-assert off" table | Not recorded | Not needed: production always re-asserts |

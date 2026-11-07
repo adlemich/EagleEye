@@ -1,6 +1,6 @@
 # Implementation Plan: US-001 — Basic Service Installation and Tray Client Connectivity
 
-**Status**: Approved (2026-09-20; amendment of 2026-10-03 approved by Michael 2026-10-03)
+**Status**: Approved (2026-09-20; amendment of 2026-10-03 approved by the project owner 2026-10-03)
 **Date**: 2026-09-20, amended 2026-10-03
 
 > **Amendment 2026-10-03 (ADR-007)**: adapted to the two-machine setup and manual testing. Changed: Impact table (solution/scripts already exist), new "Machine Assignment" section, Step 0, Step 4 (test project locations), Step 5 (installer path), Step 6 (smoke check + manual testing), new "Manual Verification Notes". The design itself (contracts, classes, behaviour) is unchanged.
@@ -495,7 +495,7 @@ DEV must follow these steps in order. Steps within the same numbered group may b
 
 1. DEV, on the Windows Developer Machine: run `build.ps1` and `test.ps1`, build the installer, install it, and confirm that the service starts and the tray icon appears for the admin session (smoke check only).
 2. DEV writes the implementation report including the **"How to test"** section (installer path, version, service name `EagleEyeService`, Run-key name, log locations, how to uninstall).
-3. TES writes `docs/testing/US-001/test-plan.md` covering AC-1 to AC-12. Michael executes it on the Windows Developer Machine using his admin account and a standard test account.
+3. TES writes `docs/testing/US-001/test-plan.md` covering AC-1 to AC-12. The project owner executes it on the Windows Developer Machine using their admin account and a standard test account.
 
 ---
 
@@ -511,7 +511,7 @@ DEV must follow these steps in order. Steps within the same numbered group may b
 
 ### What Is NOT Unit-Tested in US-001
 
-The following are verified by Michael's manual test run (TES test plan) rather than by automated unit tests:
+The following are verified by the project owner's manual test run (TES test plan) rather than by automated unit tests:
 
 - **WinForms UI** (`TrayApplicationContext`, `AboutDialog`): These depend on `System.Windows.Forms`, which requires a Windows desktop environment.
 - **SignalR client connection** (`ServiceConnection`): Integration-level behavior (connecting to a real hub, reconnecting) is verified manually. The `IServiceConnection` interface enables mocking for any future consumer tests.

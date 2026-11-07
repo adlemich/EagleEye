@@ -1,9 +1,9 @@
 # EagleEye — Manual Testing
 
 *Status: Active (introduced 2026-10-03, see ADR-007)*
-*Owner: TES agent | Executed by: Michael*
+*Owner: TES agent | Executed by: the project owner*
 
-All acceptance and end-to-end testing for EagleEye is **manual**. Michael executes every test. The TES agent prepares the test plans, guides the test session, and evaluates the results. There are no automated E2E tests.
+All acceptance and end-to-end testing for EagleEye is **manual**. The project owner executes every test. The TES agent prepares the test plans, guides the test session, and evaluates the results. There are no automated E2E tests.
 
 ---
 
@@ -12,7 +12,7 @@ All acceptance and end-to-end testing for EagleEye is **manual**. Michael execut
 | Who | Does |
 |---|---|
 | **TES** | Derives test cases from the user story's acceptance criteria (black box), writes the test plan and the test-run checklist, writes setup instructions, evaluates the recorded results, writes the test report and the issues |
-| **Michael** | Reviews the test plan, executes the checklist, records results and observations, approves the test report |
+| **The project owner** | Reviews the test plan, executes the checklist, records results and observations, approves the test report |
 | **DEV** | Before handing over, checks that the build installs and starts on the Windows machine (smoke check). Fixes issues. |
 
 ---
@@ -26,7 +26,7 @@ All acceptance and end-to-end testing for EagleEye is **manual**. Michael execut
 
 ### Test accounts on the Windows machine
 
-- **Michael's admin account**: used to install EagleEye and for the parent apps. Admin accounts are never monitored, so EagleEye does not interfere with development work.
+- **The project owner's admin account**: used to install EagleEye and for the parent apps. Admin accounts are never monitored, so EagleEye does not interfere with development work.
 - **A local standard (non-admin) test account** (e.g. `eagleeye-kid`): the "kid". Use *Switch user* to move between the two accounts without logging off.
 
 > Caution: the service enforces rules for every standard account on the machine. Do not use a standard account for anything you care about while EagleEye is installed.
@@ -36,25 +36,25 @@ All acceptance and end-to-end testing for EagleEye is **manual**. Michael execut
 ## 3. Workflow per User Story
 
 ```
-1. TES writes  docs/testing/US-XXX/test-plan.md           → Michael reviews/approves
+1. TES writes  docs/testing/US-XXX/test-plan.md           → the project owner reviews/approves
 2. TES creates docs/testing/US-XXX/test-run-01.md         (checklist, from template)
-3. Michael executes the checklist and fills in results     (Pass/Fail/Blocked/Skipped + notes)
-4. Michael tells TES: "test run 01 for US-XXX is done"
+3. The project owner executes the checklist and fills in results     (Pass/Fail/Blocked/Skipped + notes)
+4. The project owner tells TES: "test run 01 for US-XXX is done"
 5. TES evaluates → writes docs/testing/US-XXX/test-report.md
                  → writes issues in docs/requirements/user-stories/US-XXX/issues/ISSUE-XXX.md
 6. After fixes: TES creates test-run-02.md (failed, blocked and not-executed cases) → repeat 3–5
-7. Michael approves the test report → story can be closed (by Michael only)
+7. The project owner approves the test report → story can be closed (by the project owner only)
 ```
 
 Story test runs contain **no regression cases**. The **regression checklist** (`docs/testing/regression-checklist.md`) covers all previously closed user stories; TES adds a story's key cases to it when the story is closed.
 
-**Regression testing happens only when Michael explicitly requests it, before a major version release.** TES then creates `docs/testing/regression/regression-run-<version>.md` from all sections of the checklist. Michael executes and records it like any test run (§4), and TES evaluates it. A failure becomes an issue under the story that owns the case.
+**Regression testing happens only when the project owner explicitly requests it, before a major version release.** TES then creates `docs/testing/regression/regression-run-<version>.md` from all sections of the checklist. The project owner executes and records it like any test run (§4), and TES evaluates it. A failure becomes an issue under the story that owns the case.
 
 ---
 
 ## 4. Recording Results (Feedback Mechanism)
 
-Michael records results **directly in the test-run file** in VSCode. This works on either machine. Each test case has this block:
+The project owner records results **directly in the test-run file** in VSCode. This works on either machine. Each test case has this block:
 
 ```markdown
 - **Result**: [ ] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
@@ -66,8 +66,8 @@ Michael records results **directly in the test-run file** in VSCode. This works 
 - **Observed**: required for Fail or Blocked. What actually happened.
 - **Notes**: optional. Remarks, ideas, or "unclear what to expect here". TES forwards these to PRO as requirement feedback.
 - **Evidence**: put screenshots and log excerpts in `docs/testing/US-XXX/evidence/` and reference them by file name (e.g. `evidence/tc-03-tray-red.png`).
-- **Service log files** (from US-003 / build 0.3.0, Michael's decision 2026-10-07): at the end of every test run, and right after any Fail, copy the service log files into `docs/testing/US-XXX/evidence/run-NN-service-logs/`. The `logs\` folder is admin-only, so use an **elevated** terminal: `Copy-Item "$env:ProgramData\EagleEye\logs\*.log" "<repo>\02_Implementation\docs\testing\US-XXX\evidence\run-NN-service-logs\"`. TES puts this step into every test-run checklist (cleanup and the Fail instructions) and uses the logs in the evaluation. The repository is on GitHub: before committing, check the copies for anything that must not be published (the service never logs secrets or pairing codes).
-- **Free-form feedback**: anything that does not fit a test case goes in the "General Feedback" section at the end of the run file. Michael can also just tell TES in chat; TES then writes it into the run file so it is not lost.
+- **Service log files** (from US-003 / build 0.3.0, the project owner's decision 2026-10-07): at the end of every test run, and right after any Fail, copy the service log files into `docs/testing/US-XXX/evidence/run-NN-service-logs/`. The `logs\` folder is admin-only, so use an **elevated** terminal: `Copy-Item "$env:ProgramData\EagleEye\logs\*.log" "<repo>\02_Implementation\docs\testing\US-XXX\evidence\run-NN-service-logs\"`. TES puts this step into every test-run checklist (cleanup and the Fail instructions) and uses the logs in the evaluation. The repository is on GitHub: before committing, check the copies for anything that must not be published (the service never logs secrets or pairing codes).
+- **Free-form feedback**: anything that does not fit a test case goes in the "General Feedback" section at the end of the run file. The project owner can also just tell TES in chat; TES then writes it into the run file so it is not lost.
 
 Partial runs are fine. Unticked cases count as "not executed".
 
@@ -93,9 +93,9 @@ docs/testing/
 │   ├── test-run-template.md
 │   └── test-report-template.md
 └── US-XXX/
-    ├── test-plan.md                ← TES, approved by Michael
+    ├── test-plan.md                ← TES, approved by the project owner
     ├── test-run-01.md, -02.md …    ← executed checklists; never overwritten
-    ├── test-report.md              ← TES evaluation, approved by Michael
+    ├── test-report.md              ← TES evaluation, approved by the project owner
     └── evidence/                   ← screenshots, log excerpts
 ```
 

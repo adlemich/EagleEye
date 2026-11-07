@@ -1,7 +1,7 @@
 # EagleEye — Development Environments
 
 *Status: Active (introduced 2026-10-03, see ADR-007)*
-*Audience: Michael, Orchestrator, PRO, ARC, DEV, TES*
+*Audience: the project owner, Orchestrator, PRO, ARC, DEV, TES*
 *Owner: Orchestrator*
 
 > **Amendment 2026-10-20 (CR-001, ADR-019; written by ARC)**: the iOS and Android parent apps are dropped. The Windows machine has no Android target, APK, emulator, `maui-android` workload or Android SDK; the MacBook has no iOS target and needs Xcode for Mac Catalyst only. Both parent apps (Windows, macOS) are production platforms. DEV removed the Android target and the `-SkipAndroid` switch from the code and scripts (CR-001 §6.2). Added: MacBook lessons (repo outside iCloud Drive, Xcode version check).
@@ -22,9 +22,20 @@ EagleEye is developed on **two machines that share one git repository** (`https:
 | **Manual testing** | Service, TrayClient, Windows parent app | macOS parent app, connecting over the LAN to the service on the Windows machine |
 | **Shell** | PowerShell 7.6 (`pwsh`), Git Bash available | PowerShell 7.6 (`pwsh`), zsh |
 
-**Third machine, test only (since US-009, ADR-007 amendment 2026-10-31):** Michael's **Windows 10 test PC** (Windows 10 22H2, build 19045+, x64, same LAN as the service PC). It has no repo, no agents and no builds. Michael copies the git-ignored installers from `03_Delivery/windows/` to it by hand and runs the Windows parent app checks there. The parent app on Windows 10 always connects to the service on another PC; the service installer refuses Windows 10.
+**Third machine, test only (since US-009, ADR-007 amendment 2026-10-31):** the project owner's **Windows 10 test PC** (Windows 10 22H2, build 19045+, x64, same LAN as the service PC). It has no repo, no agents and no builds. The project owner copies the git-ignored installers from `03_Delivery/windows/` to it by hand and runs the Windows parent app checks there. The parent app on Windows 10 always connects to the service on another PC; the service installer refuses Windows 10.
 
-**Fourth machine, test only (since US-010, ADR-007 amendment 2026-11-01):** the **kid's gaming PC** (`192.168.1.85`, Windows 11 x64, same LAN). It is the pilot service PC with EagleEye service + tray installed and the kid's controlled account; the Mac app is paired with it. It has no repo, no agents and no builds. Michael copies the git-ignored installers from `03_Delivery/windows/` to it by hand and runs the game checks there (Minecraft, Fortnite with Easy Anti-Cheat, launchers). DEV installs nothing on it.
+**Fourth machine, test only (since US-010, ADR-007 amendment 2026-11-01):** the **kid's gaming PC** (`PILOT-PC`, Windows 11 x64, same LAN). It is the pilot service PC with EagleEye service + tray installed and the kid's controlled account; the Mac app is paired with it. It has no repo, no agents and no builds. The project owner copies the git-ignored installers from `03_Delivery/windows/` to it by hand and runs the game checks there (Minecraft, Fortnite with Easy Anti-Cheat, launchers). DEV installs nothing on it.
+
+**Machine placeholders.** The docs never name real IP addresses, host names or personal account names of the home network. They use these placeholders instead:
+
+| Placeholder | Machine |
+|---|---|
+| `DEV-PC` | The Windows Developer Machine (service + tray for development checks) |
+| `PILOT-PC` | The kid's gaming PC, also the pilot service PC |
+| `PARENT-PC` | A further Windows PC that only runs the Windows parent app (US-003 to US-006 checks) |
+| `UserA`, `UserB` | Personal standard Windows accounts on `DEV-PC` (not EagleEye test accounts) |
+
+The real addresses belong only on the local machines, never in a tracked file. Agents must use the placeholders in every doc, report and test record.
 
 `EagleEye.Shared` is built on both machines; it is the only component that both machines change. Changes to `EagleEye.Shared/Contracts/` (API-first) should be made on the Windows machine, because that is where both ends of the contract (service and clients) can be built and tested together.
 
@@ -42,8 +53,8 @@ Every agent session must determine its host **before doing any work**:
 
 Do not attempt it (for example, building Mac Catalyst on Windows or Inno Setup on macOS). Instead:
 
-1. Tell Michael plainly: *"This step needs the MacBook / the Windows machine."*
-2. Make sure everything needed for the handoff is committed (and pushed, if Michael wants that).
+1. Tell the project owner plainly: *"This step needs the MacBook / the Windows machine."*
+2. Make sure everything needed for the handoff is committed (and pushed, if the project owner wants that).
 3. State exactly what to run on the other machine and which document to read there.
 
 Documentation-only work (requirements, architecture, plans, test plans) can be done on either machine.
@@ -129,6 +140,6 @@ The `EagleEye.ParentApp.csproj` selects its target frameworks by host OS (Window
 
 ## 7. Testing Model
 
-All acceptance and end-to-end testing is **manual**, executed by Michael, primarily on the Windows Developer Machine. TES prepares the test plans and checklists, and evaluates the results. See `02_Implementation/docs/testing/README.md`.
+All acceptance and end-to-end testing is **manual**, executed by the project owner, primarily on the Windows Developer Machine. TES prepares the test plans and checklists, and evaluates the results. See `02_Implementation/docs/testing/README.md`.
 
 DEV still writes automated **unit tests**, which run via `test.ps1` on the machine that owns the component.

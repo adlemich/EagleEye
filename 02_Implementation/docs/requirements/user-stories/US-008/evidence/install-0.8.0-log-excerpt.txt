@@ -1,7 +1,7 @@
-# US-008 Step 7 / H2 — service 0.8.0 installed by Michael on the Windows service PC, 2026-10-31.
+# US-008 Step 7 / H2 — service 0.8.0 installed by the project owner on the Windows service PC, 2026-10-31.
 # Excerpt (lines 1303-1318, today's entries) of %ProgramData%\EagleEye\logs\EagleEye.Service-001.log; full log kept locally (git-ignored).
 # Proof of migration 6: 'App groups loaded: 0 groups with 0 apps, 0 group rules.' No WRN/ERR/FTL entries today.
-# Michael: regression REG-001-01..05 OK; tray App Infos reports 0.8.
+# Project owner: regression REG-001-01..05 OK; tray App Infos reports 0.8.
 
 2026-10-31 12:21:40.034 +01:00 [INF] EagleEye.Service.UserAccounts.UserAccountService: Account inventory loaded: 2 standard accounts, 1 under parental control.
 2026-10-31 12:21:40.056 +01:00 [INF] EagleEye.Service.Rules.AppRuleService: App rules loaded: 4 rules of 20 apps of 1 accounts, 0 changed budget texts.

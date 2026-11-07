@@ -2,7 +2,7 @@
 
 **Test plan**: `docs/testing/US-001/test-plan.md`
 **Prepared by**: TES, 2026-10-03
-**Executed by**: Michael
+**Executed by**: the project owner
 **Execution date**: <!-- fill in -->
 **Build / installer version**: `EagleEye-Setup-0.1.0.exe`
 **Machine(s)**: Windows Developer Machine <!-- add Windows version, e.g. 11 Pro 25H2 -->

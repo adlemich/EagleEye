@@ -8,7 +8,7 @@
 
 ## 1. Overview
 
-EagleEye follows a gate-driven, agent-based development process. No code is written without approved requirements and an approved implementation plan. Every artifact passes through Michael's review before downstream work begins.
+EagleEye follows a gate-driven, agent-based development process. No code is written without approved requirements and an approved implementation plan. Every artifact passes through the project owner's review before downstream work begins.
 
 This document defines the rules, workflows, and conventions the DEV agent must follow when implementing user stories.
 
@@ -23,7 +23,7 @@ This document defines the rules, workflows, and conventions the DEV agent must f
 | **DEV** (Developer) | Production code, unit tests, build scripts | `src/`, `tests/`, `scripts/` |
 | **TES** (Manual Test Lead) | Manual test plans and checklists, result evaluation, test reports, issues | `docs/testing/`, `docs/requirements/user-stories/US-XXX/issues/` |
 
-Agents communicate exclusively through files under `02_Implementation/docs/`. There is no direct agent-to-agent communication. Each handoff requires Michael's explicit approval.
+Agents communicate exclusively through files under `02_Implementation/docs/`. There is no direct agent-to-agent communication. Each handoff requires the project owner's explicit approval.
 
 Development happens on two machines (Windows Developer Machine and MacBook). Which machine does what is defined in `02_Implementation/docs/dev-process/dev-environments.md` (ADR-007).
 
@@ -34,12 +34,12 @@ Development happens on two machines (Windows Developer Machine and MacBook). Whi
 Each user story progresses through these stages:
 
 ```
-PRO writes User Story (US-XXX)                    -> Michael approves
-ARC writes Implementation Plan (US-XXX)           -> Michael approves
-DEV implements + unit tests + smoke check         -> Michael approves
-TES writes manual test plan                       -> Michael approves
-Michael executes test run(s), records results
-TES evaluates, writes test report + issues        -> Michael approves, closes story
+PRO writes User Story (US-XXX)                    -> the project owner approves
+ARC writes Implementation Plan (US-XXX)           -> the project owner approves
+DEV implements + unit tests + smoke check         -> the project owner approves
+TES writes manual test plan                       -> the project owner approves
+The project owner executes test run(s), records results
+TES evaluates, writes test report + issues        -> the project owner approves, closes story
 ```
 
 **Status values**: `New` -> `Analyzed` -> `Implemented` -> `Verified/Closed`
@@ -48,9 +48,9 @@ TES evaluates, writes test report + issues        -> Michael approves, closes st
 
 Before DEV writes any code for a user story, ALL of the following must be true:
 
-1. Phase 2 (Foundation Architecture) is fully approved by Michael.
-2. The user story (`US-XXX/user-story.md`) is approved by Michael.
-3. The implementation plan (`US-XXX/implementation-plan.md`) is approved by Michael.
+1. Phase 2 (Foundation Architecture) is fully approved by the project owner.
+2. The user story (`US-XXX/user-story.md`) is approved by the project owner.
+3. The implementation plan (`US-XXX/implementation-plan.md`) is approved by the project owner.
 
 **ABSOLUTE RULE: DEV must not write any production code until the implementation plan is approved.**
 
@@ -72,14 +72,14 @@ Before DEV presents work as complete:
 
 ## 4. Git Workflow: One Feature Branch per User Story
 
-*Binding for PRO, ARC, DEV and TES since 2026-10-03 (Michael's decision). US-001 predates this rule and was done on `main`.*
+*Binding for PRO, ARC, DEV and TES since 2026-10-03 (the project owner's decision). US-001 predates this rule and was done on `main`.*
 
 ### 4.1 The Rule
 
 - **Every user story is developed on its own feature branch**, named after the story:
   `feature/US-XXX-<short-title>`: the story ID plus a short kebab-case title, e.g. `feature/US-002-app-allow-list`.
 - **All artifacts of the story** are committed on that branch, from PRO to TES: user story, implementation plan, ADRs and architecture updates, code, unit tests, scripts, implementation report, test plan, test runs, test report, issues.
-- **`main` only receives a story once it is complete**, i.e. when Michael has set it to `Verified/Closed`. Nothing of an open story is committed to `main`.
+- **`main` only receives a story once it is complete**, i.e. when the project owner has set it to `Verified/Closed`. Nothing of an open story is committed to `main`.
 - **One story at a time**: at most one open feature branch.
 - The branch is pushed to `origin`, so that the Windows machine and the MacBook work on the same branch.
 
@@ -90,14 +90,14 @@ Before DEV presents work as complete:
 | 1. Start story | **PRO**, before writing `user-story.md` | `git switch main` → `git pull` → `git switch -c feature/US-XXX-<short-title>` → (write and commit the story) → `git push -u origin feature/US-XXX-<short-title>` |
 | 2. Work on story | **ARC, DEV, TES** (and PRO for story changes), on either machine | `git fetch` → `git switch feature/US-XXX-<short-title>` → `git pull` → work → commit → `git push` |
 | 3. Switch machines | whoever is working | Commit and push on the branch; on the other machine `git switch` to the branch and `git pull` |
-| 4. Story closed | Michael sets `Verified/Closed` (TES records it on the branch) | — |
-| 5. Merge | **Orchestrator**, only with Michael's explicit go | `git switch main` → `git pull` → `git merge --no-ff feature/US-XXX-<short-title> -m "Merge US-XXX: <title>"` → `git push` → delete the branch locally (`git branch -d …`) and on `origin` (`git push origin --delete …`) |
+| 4. Story closed | The project owner sets `Verified/Closed` (TES records it on the branch) | — |
+| 5. Merge | **Orchestrator**, only with the project owner's explicit go | `git switch main` → `git pull` → `git merge --no-ff feature/US-XXX-<short-title> -m "Merge US-XXX: <title>"` → `git push` → delete the branch locally (`git branch -d …`) and on `origin` (`git push origin --delete …`) |
 
 ### 4.3 Rules for Every Agent
 
-1. **Check the branch before any story work.** If the current branch is not the story's feature branch, stop and switch (or ask Michael). Never commit story work to `main`.
+1. **Check the branch before any story work.** If the current branch is not the story's feature branch, stop and switch (or ask the project owner). Never commit story work to `main`.
 2. **If `main` changes while a story branch is open** (process or setup changes), bring it in with `git merge main` on the feature branch. **Do not rebase**: the branch is shared between two machines.
-3. **Work that does not belong to a user story** (process, setup or documentation fixes requested by Michael) is committed directly to `main` by the Orchestrator.
+3. **Work that does not belong to a user story** (process, setup or documentation fixes requested by the project owner) is committed directly to `main` by the Orchestrator.
 4. **Merge conflicts** are resolved on the feature branch, never on `main`.
 
 ### 4.4 Commit Conventions
@@ -281,16 +281,16 @@ A user story may only be set to `Verified/Closed` when **all** of the following 
 ### 12.2 Testing
 
 - All unit tests pass (`pwsh scripts/test.ps1`) on every machine involved.
-- TES has written a test plan (`docs/testing/US-XXX/test-plan.md`) approved by Michael, covering every acceptance criterion.
-- Michael has executed the manual test run(s) (`docs/testing/US-XXX/test-run-NN.md`). Regression is not part of a story's Definition of Done. It runs only on Michael's explicit request before a major version release (`docs/testing/README.md`).
+- TES has written a test plan (`docs/testing/US-XXX/test-plan.md`) approved by the project owner, covering every acceptance criterion.
+- The project owner has executed the manual test run(s) (`docs/testing/US-XXX/test-run-NN.md`). Regression is not part of a story's Definition of Done. It runs only on the project owner's explicit request before a major version release (`docs/testing/README.md`).
 - TES's test report (`docs/testing/US-XXX/test-report.md`) shows every AC passed and no open Critical/High issues.
 
 ### 12.3 Human Acceptance
 
-- Michael has approved the test report.
-- Michael has explicitly approved the user story as complete.
+- The project owner has approved the test report.
+- The project owner has explicitly approved the user story as complete.
 
-**No agent may close a user story. Only Michael can.**
+**No agent may close a user story. Only the project owner can.**
 
 ---
 

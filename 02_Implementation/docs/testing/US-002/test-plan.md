@@ -1,10 +1,10 @@
 # Test Plan: US-002 — Windows Parent App: Installation, Connection and Pairing
 
-**Status**: Approved (Michael, 2026-10-04); updated after test run 01, see §9 Change Log
+**Status**: Approved (the project owner, 2026-10-04); updated after test run 01, see §9 Change Log
 **Date**: 2026-10-04 (last change 2026-10-04)
 **Author**: TES
 **User Story**: `02_Implementation/docs/requirements/user-stories/US-002/user-story.md` (30 ACs)
-**Inputs used**: the user story, `02_Implementation/docs/requirements/general-product-requirements.md`, the "How to test" section of `02_Implementation/docs/requirements/user-stories/US-002/implementation-report.md` (artifacts, setup, German UI labels), "Manual Verification Notes" and "Open Points for Michael" of `02_Implementation/docs/requirements/user-stories/US-002/implementation-plan.md`. Black box: no source code was read.
+**Inputs used**: the user story, `02_Implementation/docs/requirements/general-product-requirements.md`, the "How to test" section of `02_Implementation/docs/requirements/user-stories/US-002/implementation-report.md` (artifacts, setup, German UI labels), "Manual Verification Notes" and "Open Points for the project owner" of `02_Implementation/docs/requirements/user-stories/US-002/implementation-plan.md`. Black box: no source code was read.
 
 ---
 
@@ -27,7 +27,7 @@
 | Item | Reason |
 |---|---|
 | AC-4 update to a **newer** version | Only build 0.2.0 exists. This run checks repair (same version). The update path is checked with the next parent app build (TES proposes it for the regression checklist). |
-| English UI texts | Michael's Windows is German. The English texts are covered by unit tests. If the second PC has an English display language, Block C records the English texts as a bonus (Notes). |
+| English UI texts | The project owner's Windows is German. The English texts are covered by unit tests. If the second PC has an English display language, Block C records the English texts as a bonus (Notes). |
 | Certificate change on the service while an app runs (DEV report §5.4) | Not specified by the story. Not provoked. |
 | Two pairings started at the same moment (DEV report §5.5) | Not specified by the story. The plan pairs one app at a time. |
 
@@ -37,7 +37,7 @@
 |---|---|
 | Service PC | **Windows Developer Machine** (Windows 11 Pro, German UI). Called `<host>` below = its computer name (`hostname`); `<ip>` = its LAN IPv4 address (`ipconfig`). |
 | Second PC (**Block C only**) | Another **Windows 11 PC in the same LAN and subnet**, with **no .NET runtime** installed, called **PC2**. Any local account works (the parent app installer needs no admin rights). |
-| Accounts on the service PC | **Admin**: Michael's administrator account (parent). **Kid**: local standard account `eagleeye-kid`. **Parent 2** (**Block D only**): local standard account `eagleeye-parent2`, created in setup S-11. |
+| Accounts on the service PC | **Admin**: the project owner's administrator account (parent). **Kid**: local standard account `eagleeye-kid`. **Parent 2** (**Block D only**): local standard account `eagleeye-parent2`, created in setup S-11. |
 | Builds under test | `03_Delivery/windows/EagleEye-Setup-0.2.0.exe` (service + tray, admin) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.2.0.exe` (parent app, per user) |
 | Expected versions | Service installer 0.2.0 → tray *App Infos* shows `EagleEye_v0.2`. Parent app: *Installierte Apps* "EagleEye Parent App", 0.2.0, Michael Adler |
 | Tools | Stopwatch (phone), **Terminal (Administrator)** = an **elevated** terminal (see S-8) for starting/stopping the service and for the folder checks, Event Viewer (`eventvwr.msc`), `wf.msc`, Microsoft Edge |
@@ -52,16 +52,16 @@
 | **C** Second PC: clean PC install, LAN reachability, two apps | TC-002-33 to TC-002-40 (8) | PC2 + service PC / Admin + Kid | **yes** |
 | **D** Second parent app on the service PC (second Windows account) | TC-002-41 to TC-002-43 (3) | Service PC / Admin + Parent 2 | no |
 
-Blocks A and B run in this order in one session. Michael has a second Windows PC (confirmed 2026-10-04), so Block C is part of the run; it can run later than A and B. Only if PC2 cannot be used on the day, mark Block C **Blocked** with the reason; this does not block Blocks A, B and D. Block D also runs: it adds a same-PC, second-account check of AC-1, AC-5 and AC-29.
+Blocks A and B run in this order in one session. The project owner has a second Windows PC (confirmed 2026-10-04), so Block C is part of the run; it can run later than A and B. Only if PC2 cannot be used on the day, mark Block C **Blocked** with the reason; this does not block Blocks A, B and D. Block D also runs: it adds a same-PC, second-account check of AC-1, AC-5 and AC-29.
 
 ### Conventions for expected results
 
-- **UI texts.** The German texts in the expected results are the texts of the build (DEV handover). A different wording with the same meaning goes into **Notes**, not Fail (agreed with Michael, 2026-10-04). If you want a text changed, write the wanted text into **Notes**; TES routes it to PRO. Exceptions, where the wording was agreed in the story and is a Pass criterion: *Einstellungen*, *Darstellung*, *Serververbindung*, *Hell* / *Dunkel*, *Verbunden mit <host>*, *Kopplung aufheben*.
+- **UI texts.** The German texts in the expected results are the texts of the build (DEV handover). A different wording with the same meaning goes into **Notes**, not Fail (agreed with the project owner, 2026-10-04). If you want a text changed, write the wanted text into **Notes**; TES routes it to PRO. Exceptions, where the wording was agreed in the story and is a Pass criterion: *Einstellungen*, *Darstellung*, *Serververbindung*, *Hell* / *Dunkel*, *Verbunden mit <host>*, *Kopplung aufheben*.
 - **`<host>` in texts** is exactly what was typed (hostname or IP address, AC-10).
 - **Colours.** Green / red = the connection indicator in the status bar of the parent app (bottom of the window).
 - **Timing.** Take times with a stopwatch. Bounds from the story: green within 30 s after app start (AC-21), red within 30 s after the service stops, green within 60 s after it starts again (AC-22). Where the story gives no bound (e.g. connection error, AC-12), a slow result is a Note, not a Fail.
 - **Certificate prompts (AC-7).** In every case of this plan: if the parent app ever shows anything about a certificate (warning, question, import), write it into **Observed** of the current case and mark it Fail.
-- **Pairing code popup in the admin session.** The tray client also runs in admin sessions (open point 2 of the implementation plan; Michael decided on 2026-10-04 that it stays that way). After TC-002-12 you may read further codes from the popup in your admin session, which saves switching users.
+- **Pairing code popup in the admin session.** The tray client also runs in admin sessions (open point 2 of the implementation plan; the project owner decided on 2026-10-04 that it stays that way). After TC-002-12 you may read further codes from the popup in your admin session, which saves switching users.
 - **Unspecified behaviour** that you notice (e.g. a message you did not expect) is a Note; TES routes it to PRO.
 
 ## 3. Setup Instructions
@@ -715,7 +715,7 @@ All 30 ACs have at least one case. **AC-2, AC-6 (LAN part), AC-23 (other-PC part
 
 ### Block C — Second PC (PC2)
 
-*Needs the second Windows 11 PC in the LAN (setup S-9, S-10; Michael has one). If it cannot be used on the day, mark the cases Blocked with the reason. Pair one app at a time.*
+*Needs the second Windows 11 PC in the LAN (setup S-9, S-10; the project owner has one). If it cannot be used on the day, mark the cases Blocked with the reason. Pair one app at a time.*
 
 #### TC-002-33: On a PC without .NET the app installs and starts without further steps
 
@@ -902,7 +902,7 @@ All 30 ACs have at least one case. **AC-2, AC-6 (LAN part), AC-23 (other-PC part
 
 ## 6. Regression
 
-None. Story test runs contain **no regression cases** (`02_Implementation/docs/testing/README.md`, TES rule 4). Regression runs only when Michael explicitly requests it before a major version release, as a separate run built from `02_Implementation/docs/testing/regression-checklist.md`.
+None. Story test runs contain **no regression cases** (`02_Implementation/docs/testing/README.md`, TES rule 4). Regression runs only when the project owner explicitly requests it before a major version release, as a separate run built from `02_Implementation/docs/testing/regression-checklist.md`.
 
 ## 7. Cleanup
 
@@ -921,21 +921,21 @@ After the run (keep EagleEye service 0.2.0 installed; later stories build on it)
 6. **Kid**: sign out `eagleeye-kid`.
 7. **Orphaned pairings** stay on the service (Q-2: uninstalled and replayed apps). That is expected. A full service reset (stop the service, delete `%ProgramData%\EagleEye`, start the service) also invalidates the Admin app's pairing; do it only if needed, then reinstall the parent app.
 
-## 8. Notes for Michael and PRO
+## 8. Notes for the project owner and PRO
 
 Found while writing this plan; none blocks the test run.
 
 1. **Story text (PRO).** `user-story.md` contains a second, older *Decisions* table after the approved one (rows Q-1 to Q-5 starting with `---|---|---|`). Its Q-4 says "try the existing pairing at the new address", which contradicts AC-25 and the approved Q-4. TES tests against AC-25. PRO should delete the stale rows.
-2. **Tray popup in admin sessions** (implementation plan, open point 2): decided by Michael on 2026-10-04: the tray client keeps running in admin sessions. TC-002-12 only records whether the code also appears in the Admin session.
-3. **A kid can pair their own app** (open point 1): accepted risk for now (Michael, 2026-10-04), no technical protection required; not a Fail (the story allows it, Q-1). Block D shows that a standard account can install and pair a parent app. This matters as soon as a parent app can change settings.
+2. **Tray popup in admin sessions** (implementation plan, open point 2): decided by the project owner on 2026-10-04: the tray client keeps running in admin sessions. TC-002-12 only records whether the code also appears in the Admin session.
+3. **A kid can pair their own app** (open point 1): accepted risk for now (the project owner, 2026-10-04), no technical protection required; not a Fail (the story allows it, Q-1). Block D shows that a standard account can install and pair a parent app. This matters as soon as a parent app can change settings.
 4. **AC-4 "newer version"** can only be checked with a later parent app build (see §1).
 5. **AC-20, server side:** a black-box test can show "never green" and "removed pairing refused" (TC-002-25). That the service refuses every other call from an unpaired app is only covered by DEV's unit tests.
 6. **App behaviour when the service no longer knows its pairing** (TC-002-25), **whether a code stays valid after a rejected empty device name** (TC-002-13), and **what happens to the pairing form during a 5-minute wait** (TC-002-27) are not specified by the story. They are recorded as observations for PRO.
-7. **Second PC** (open point 3): confirmed by Michael on 2026-10-04. Block C is executable; AC-2, AC-6 (LAN part), AC-23 (other-PC part) and AC-24 get their result there.
+7. **Second PC** (open point 3): confirmed by the project owner on 2026-10-04. Block C is executable; AC-2, AC-6 (LAN part), AC-23 (other-PC part) and AC-24 get their result there.
 
 ## 9. Change Log
 
 | Date | Change | Reason |
 |---|---|---|
-| 2026-10-04 | Plan written and approved by Michael. | — |
-| 2026-10-04 | S-8 and TC-002-02: the terminal must be **elevated** (*Als Administrator ausführen*, title bar "Administrator:"); §2 *Tools* points to S-8. TC-002-01: "service running" added to the expected result (until now checked only through REG-001-02). TC-002-12: "all texts fully readable" (Kid popup and, if shown, Admin popup; the Admin popup is no longer observation-only) and a scaling note added. §6: no regression in story runs; REG references removed from TC-002-01, TC-002-03 and the Kid switch; Block A time 50 → 40 min. | ISSUE-005 (run 01 used a non-elevated terminal; Michael, 2026-10-04). ISSUE-004 (clipping at 150 %). New regression policy (`02_Implementation/docs/testing/README.md`, commit 236fbbf). |
+| 2026-10-04 | Plan written and approved by the project owner. | — |
+| 2026-10-04 | S-8 and TC-002-02: the terminal must be **elevated** (*Als Administrator ausführen*, title bar "Administrator:"); §2 *Tools* points to S-8. TC-002-01: "service running" added to the expected result (until now checked only through REG-001-02). TC-002-12: "all texts fully readable" (Kid popup and, if shown, Admin popup; the Admin popup is no longer observation-only) and a scaling note added. §6: no regression in story runs; REG references removed from TC-002-01, TC-002-03 and the Kid switch; Block A time 50 → 40 min. | ISSUE-005 (run 01 used a non-elevated terminal; the project owner, 2026-10-04). ISSUE-004 (clipping at 150 %). New regression policy (`02_Implementation/docs/testing/README.md`, commit 236fbbf). |

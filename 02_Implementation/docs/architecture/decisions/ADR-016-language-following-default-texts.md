@@ -1,10 +1,10 @@
 # ADR-016: Default Kid Texts Are Rendered in the Language of the Displaying App
 
-**Status**: Accepted (approved by Michael with the US-006 implementation plan, 2026-10-12; §5 reflects his answer to Q-1); US-010 amendment (warning texts removed) approved with the US-010 implementation plan, 2026-11-01
+**Status**: Accepted (approved by the project owner with the US-006 implementation plan, 2026-10-12; §5 reflects their answer to Q-1); US-010 amendment (warning texts removed) approved with the US-010 implementation plan, 2026-11-01
 **Date**: 2026-10-12
-**Deciders**: ARC, Michael
+**Deciders**: ARC, the project owner
 
-> **Amendment 2026-11-01 (US-010) — approved by Michael together with the US-010 implementation plan (2026-11-01)**: the early and the final **warning texts are removed** (requirements v1.10, FR-APP-054: the parent sets only the minutes; the warnings appear in the remaining-time overlay, ADR-022). `DefaultTextKind.EarlyWarningText` and `FinalWarningText` and their entries in `DefaultTexts.resx` / `DefaultTexts.en.resx` are deleted; the service drops the stored texts (migration 7). The mechanism of this ADR stays unchanged for the **break display text** and the **budget text**, whose dialogs remain (US-010 AC-13).
+> **Amendment 2026-11-01 (US-010) — approved by the project owner together with the US-010 implementation plan (2026-11-01)**: the early and the final **warning texts are removed** (requirements v1.10, FR-APP-054: the parent sets only the minutes; the warnings appear in the remaining-time overlay, ADR-022). `DefaultTextKind.EarlyWarningText` and `FinalWarningText` and their entries in `DefaultTexts.resx` / `DefaultTexts.en.resx` are deleted; the service drops the stored texts (migration 7). The mechanism of this ADR stays unchanged for the **break display text** and the **budget text**, whose dialogs remain (US-010 AC-13).
 
 ---
 
@@ -24,7 +24,7 @@ In US-005, the break display text default was a German constant in `EagleEye.Sha
    - the parent app shows the default in the edit box in the parent's language;
    - the tray client shows the default in the kid dialog in the kid's language. The service sends only the message reason and the parent's text or `null` (`KidMessageDto`, ADR-014 amendment).
 4. **A text equal to the default of any supported language is stored as the default.** This applies to empty text, white space only, or exactly the German or the English default after line-break normalization. The text then keeps following the language. Editing the default by even one character makes it the parent's own text, shown exactly as entered (AC-10).
-5. **Break display text (US-005)**: the mechanism also applies to it (Michael, plan Q-1). The German default is unchanged. The English default replaces US-005 OQ-14 ("German in every language"): "Hi! Unfortunately, your parents have set a PC break for this time. You can't use this program right now. Sorry. How about using the time to read a book? 😊" (US-006 AC-10, FR-APP-052).
+5. **Break display text (US-005)**: the mechanism also applies to it (the project owner, plan Q-1). The German default is unchanged. The English default replaces US-005 OQ-14 ("German in every language"): "Hi! Unfortunately, your parents have set a PC break for this time. You can't use this program right now. Sorry. How about using the time to read a book? 😊" (US-006 AC-10, FR-APP-052).
 6. The service log never contains the texts (US-005 AC-12, US-006 AC-11). History records do not store them either.
 
 ---

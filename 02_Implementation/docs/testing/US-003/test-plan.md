@@ -1,6 +1,6 @@
 # Test Plan: US-003 — Account Inventory and Selection of Accounts under Parental Control
 
-**Status**: Approved by Michael (2026-10-07); Q-1 to Q-9 answered (§8). Installer references to be updated to patch 0.3.1 (ISSUE-006) before test run 01.
+**Status**: Approved by the project owner (2026-10-07); Q-1 to Q-9 answered (§8). Installer references to be updated to patch 0.3.1 (ISSUE-006) before test run 01.
 **Date**: 2026-10-07
 **Author**: TES
 **User Story**: `02_Implementation/docs/requirements/user-stories/US-003/user-story.md` (24 ACs, approved 2026-10-07; status `Implemented`)
@@ -29,7 +29,7 @@
 |---|---|
 | AC-2 "admin through another group" (nested group) | On a workgroup PC (no domain) Windows does not allow a local group inside the local group *Administratoren*, so indirect membership cannot be set up. Covered by DEV's design (`LG_INCLUDE_INDIRECT`); see §8 Q-6. |
 | Built-in accounts that are **enabled** or **renamed** (implementation plan, Manual Verification Notes) | Not required by AC-3. Enabling *Gast* would weaken the PC's security. The test relies on this: the built-in accounts are disabled, and disabled standard accounts *are* listed (AC-12). So if they are missing from the list, they were excluded as built-ins. |
-| English UI texts | Michael's Windows is German. English texts are covered by DEV's unit tests. If PC2 runs Windows in English, Block E records them as a bonus (Notes). |
+| English UI texts | The project owner's Windows is German. English texts are covered by DEV's unit tests. If PC2 runs Windows in English, Block E records them as a bonus (Notes). |
 | Log retention (3 files, 5 days, 50 MB) | Not an AC of this story (Q-1, FR-SVC-103). It would need days or 150 MB of log. DEV's unit tests cover it. |
 | Regression | Story runs contain no regression cases (`02_Implementation/docs/testing/README.md` §3, TES rule 4). |
 
@@ -38,11 +38,11 @@
 | Item | Value |
 |---|---|
 | Service PC | **Windows Developer Machine** (Windows 11 Pro, German UI), called *service PC*. `<host>` = its computer name (`hostname`). |
-| Second PC (**Block E only**) | **PC2**, the second Windows 11 PC from US-002 (same LAN and subnet). Michael confirmed it (implementation plan Q-6). |
-| Parent apps | **App A** = the parent app in Michael's admin account on the service PC, paired as **Papas PC** (end state of US-002). **App B** = the parent app on PC2, paired in Block E as **PC2**. |
-| Accounts on the service PC | **Admin** = Michael's administrator account. **Kid** = `eagleeye-kid` (standard, exists since US-001). Test accounts created in setup S-12 (table below). |
+| Second PC (**Block E only**) | **PC2**, the second Windows 11 PC from US-002 (same LAN and subnet). The project owner confirmed it (implementation plan Q-6). |
+| Parent apps | **App A** = the parent app in the project owner's admin account on the service PC, paired as **Papas PC** (end state of US-002). **App B** = the parent app on PC2, paired in Block E as **PC2**. |
+| Accounts on the service PC | **Admin** = the project owner's administrator account. **Kid** = `eagleeye-kid` (standard, exists since US-001). Test accounts created in setup S-12 (table below). |
 | Builds under test | `03_Delivery/windows/EagleEye-Setup-0.3.1.exe` (service + tray, admin; built 2026-10-07 12:59, SHA-256 `6693dc9b…48434420`) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.3.1.exe` (parent app, per user; built 2026-10-07 13:00, SHA-256 `d6e5efc5…b8627918`). Patch 0.3.1 = 0.3.0 plus the ISSUE-006 fix (account list as a table); service and tray code are unchanged, only the version number differs (implementation report §8, `US-003/issues/ISSUE-006.md` Resolution). |
-| Starting builds (upgrade path) | `03_Delivery/windows/EagleEye-Setup-0.2.0.exe` and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.2.0.exe` (the US-002 builds), installed and paired in setup S-2/S-3. The upgrade under test is **0.2.0 → 0.3.1**. At the last check, **service 0.3.0** was installed on the service PC (Michael's quick check of 0.3.0); S-2 removes it first. |
+| Starting builds (upgrade path) | `03_Delivery/windows/EagleEye-Setup-0.2.0.exe` and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.2.0.exe` (the US-002 builds), installed and paired in setup S-2/S-3. The upgrade under test is **0.2.0 → 0.3.1**. At the last check, **service 0.3.0** was installed on the service PC (the project owner's quick check of 0.3.0); S-2 removes it first. |
 | Expected versions | *Installierte Apps*: **EagleEye 0.3.1** and **EagleEye Parent App 0.3.1**, publisher Michael Adler. Tray *App Infos*: `EagleEye_v0.3` (the service reports major.minor, as `EagleEye_v0.2` for 0.2.0; if it shows `EagleEye_v0.3.1`, that is a Note, not a Fail). |
 | Tools | Stopwatch (phone). **Terminal (Administrator)** (elevated, S-6) for every account change, service command and log-folder check. A second elevated terminal as **log monitor** (S-7). `lusrmgr.msc` (*Lokale Benutzer und Gruppen*), *Einstellungen → Konten → Andere Benutzer*, *Ressourcenmonitor* (`resmon`, only for the TC-003-23 alternative). |
 | Time needed | Setup incl. removing 0.3.0, 0.2.0 install and pairing ≈ 25 min · Block A ≈ 30 min · Block B ≈ 40 min · Block C ≈ 40 min (contains a reboot) · Block D ≈ 35 min · Block E ≈ 50 min (includes the AC-16 case). Total ≈ 4 h; blocks can run on different days, in this order. |
@@ -78,7 +78,7 @@ All test accounts except `eagleeye-kid` are **never logged on** (AC-1). Later ca
 
 ### Conventions for expected results
 
-- **UI texts.** Michael's Windows is German, so the expected results quote the German texts. The story gives English examples with the German wording in brackets. A different wording with the same meaning is a **Note**, not a Fail (story, "Language of UI texts"; US-002 Decision Q-11). If you want a text changed, write the wanted text in Notes; TES routes it to PRO. **Exceptions**, agreed in the story (OQ-8, AC-6) and therefore Pass criteria: the section title **Benutzerkonten auf dem EagleEye-PC**, the checkbox label **Unter Elternkontrolle**, and the single menu entry **Einstellungen**. See §8 Q-3.
+- **UI texts.** The project owner's Windows is German, so the expected results quote the German texts. The story gives English examples with the German wording in brackets. A different wording with the same meaning is a **Note**, not a Fail (story, "Language of UI texts"; US-002 Decision Q-11). If you want a text changed, write the wanted text in Notes; TES routes it to PRO. **Exceptions**, agreed in the story (OQ-8, AC-6) and therefore Pass criteria: the section title **Benutzerkonten auf dem EagleEye-PC**, the checkbox label **Unter Elternkontrolle**, and the single menu entry **Einstellungen**. See §8 Q-3.
 - **Windows labels** are those of a German Windows 11 (*Lokale Benutzer und Gruppen*, *Vollständiger Name*, *Konto ist deaktiviert*, *Kontotyp ändern*, *Standardbenutzer*, *Administratoren*, *Zugriff verweigert*). If a label differs on your build, use the equivalent and write it in Notes.
 - **Timing.**
   - *Account changes on the service PC* (AC-19 to AC-21): start the stopwatch when the change is done (the PowerShell command has returned, or you clicked *OK* / *Übernehmen* in the Windows dialog). Stop it when the account list in the parent app shows the change. **Limit 60 s.** The design checks every 15 s, so expect about 1 to 16 s; anything up to 60 s is a Pass. Over 60 s is a Fail. Do not touch the parent app while timing.
@@ -155,7 +155,7 @@ If `Get-LocalGroupMember` fails with "Failed to compare two elements…" (a know
 
 ## 3. Setup Instructions
 
-**Before Block A** (service PC, Admin). Block A tests the **upgrade** 0.2.0 → 0.3.1. So the start state must be: service **0.2.0** installed and running, and App A (**0.2.0**) installed in your Admin account and paired as **Papas PC** with `<host>`. At the last check (Orchestrator, 2026-10-07), **EagleEye service 0.3.0** was installed and running on the service PC from Michael's quick check, with a parent app 0.3.0 on **LEOSERV** paired to it. S-2 and S-3 build the start state from whatever you find. Open the Terminal (Administrator) of S-6 and note `<host>` (S-9) **first**; S-2 and S-3 need both.
+**Before Block A** (service PC, Admin). Block A tests the **upgrade** 0.2.0 → 0.3.1. So the start state must be: service **0.2.0** installed and running, and App A (**0.2.0**) installed in your Admin account and paired as **Papas PC** with `<host>`. At the last check (Orchestrator, 2026-10-07), **EagleEye service 0.3.0** was installed and running on the service PC from the project owner's quick check, with a parent app 0.3.0 on **PARENT-PC** paired to it. S-2 and S-3 build the start state from whatever you find. Open the Terminal (Administrator) of S-6 and note `<host>` (S-9) **first**; S-2 and S-3 need both.
 
 1. **S-1 Installers present.** PowerShell in the repo root:
    ```powershell
@@ -168,7 +168,7 @@ If `Get-LocalGroupMember` fails with "Failed to compare two elements…" (a know
 
    | Found | Do |
    |---|---|
-   | **EagleEye 0.3.0 or 0.3.1** (expected: service 0.3.0 from Michael's quick check) | (a) **Uninstall** it: *Installierte Apps* → **EagleEye** → *…* → *Deinstallieren*. If **EagleEye Parent App** 0.3.x is installed on the service PC, close it and uninstall it too. (b) Then continue exactly as in row **"Nothing"**, steps (1) to (4). Step (1) **must** delete `%ProgramData%\EagleEye` here (§8 Q-8, answered yes): its database already has the 0.3 schema, and 0.2.0 must start from a clean folder. **LEOSERV**: its 0.3.0 app loses its pairing with the deletion. Either remove the pairing there / uninstall it, or just leave it closed; it plays no role in this run. Keep it closed during the run, so that it does not appear as a third parent app. |
+   | **EagleEye 0.3.0 or 0.3.1** (expected: service 0.3.0 from the project owner's quick check) | (a) **Uninstall** it: *Installierte Apps* → **EagleEye** → *…* → *Deinstallieren*. If **EagleEye Parent App** 0.3.x is installed on the service PC, close it and uninstall it too. (b) Then continue exactly as in row **"Nothing"**, steps (1) to (4). Step (1) **must** delete `%ProgramData%\EagleEye` here (§8 Q-8, answered yes): its database already has the 0.3 schema, and 0.2.0 must start from a clean folder. **PARENT-PC**: its 0.3.0 app loses its pairing with the deletion. Either remove the pairing there / uninstall it, or just leave it closed; it plays no role in this run. Keep it closed during the run, so that it does not appear as a third parent app. |
    | **Nothing** | (1) Terminal (Administrator): `Test-Path "$env:ProgramData\EagleEye"`. If **True**, delete the leftovers of earlier installations (uninstall keeps this folder; it holds only the old certificate and pairings of apps that no longer exist, §8 Q-8): `Remove-Item "$env:ProgramData\EagleEye" -Recurse -Force`. (2) Close every parent app; PowerShell: `Test-Path "$env:LOCALAPPDATA\EagleEye"` → if **True**: `Remove-Item "$env:LOCALAPPDATA\EagleEye" -Recurse -Force`. (3) Run `03_Delivery\windows\EagleEye-Setup-0.2.0.exe` with default settings. If no EagleEye tray icon appears in your Admin session: Start menu → **EagleEye Tray**. (4) Run `03_Delivery\windows\EagleEye-ParentApp-Setup-0.2.0.exe` with default settings. |
    | **EagleEye 0.2.0** and **EagleEye Parent App 0.2.0** | Keep both. Continue with S-3. |
    | Only one of the two, in **0.2.0** | Install the missing one from the 0.2.0 installer (row "Nothing", step 3 or 4; do **not** delete any folder). |
@@ -970,7 +970,7 @@ How the failure is provoked: PC2 loses its network. App B does not notice this a
 
 ## 6. Regression
 
-None. Story test runs contain **no regression cases** (`02_Implementation/docs/testing/README.md` §3, TES rule 4). Regression runs only when Michael explicitly requests it before a major version release, as a separate run built from `02_Implementation/docs/testing/regression-checklist.md`.
+None. Story test runs contain **no regression cases** (`02_Implementation/docs/testing/README.md` §3, TES rule 4). Regression runs only when the project owner explicitly requests it before a major version release, as a separate run built from `02_Implementation/docs/testing/regression-checklist.md`.
 
 ## 7. Cleanup
 
@@ -989,7 +989,7 @@ After the run (keep EagleEye 0.3.1 installed; later stories build on it):
 6. **PC2**: App B stays installed and paired (useful for later two-app stories). If you prefer a clean PC2: *Kopplung aufheben* → confirm, uninstall, delete the copied installer.
 7. **Display scaling**: back to your usual value if you changed it (S-5).
 
-## 8. Notes and Open Questions for Michael
+## 8. Notes and Open Questions for the project owner
 
 Found while writing this plan. Each has a proposed answer; none blocks the plan.
 
@@ -1005,13 +1005,13 @@ Found while writing this plan. Each has a proposed answer; none blocks the plan.
 | Q-8 | **Leftover `%ProgramData%\EagleEye` before the 0.2.0 install** (S-2, row "Nothing"). Nothing of EagleEye is installed, but uninstalling keeps this folder: an old certificate and the pairings of apps that no longer exist. Delete it for a clean start? | Yes, delete it. The 0.2.0 installer then creates a fresh certificate and database, and App A is paired fresh in S-3. Nothing of value is lost, because no app is paired with the old data any more. |
 | Q-9 | **Network cable on PC2** (TC-003-23). The main method for AC-16 needs PC2 on a cable that you can unplug. With Wi-Fi, Windows may report the lost network at once, and then the error cannot be provoked. Is PC2 on a cable, or can it be for the test? | Connect PC2 by cable for Block E. If that is not possible, try Wi-Fi off first, then the process-pause alternative. If neither provokes the error, mark TC-003-23 **Blocked**; AC-16 is then covered only by DEV's unit tests until a later run. |
 
-**Answers (Michael, 2026-10-07)**: Q-1 to Q-7: proposed answers accepted (test plan approved as a whole). Q-8: yes. Q-9: yes.
+**Answers (the project owner, 2026-10-07)**: Q-1 to Q-7: proposed answers accepted (test plan approved as a whole). Q-8: yes. Q-9: yes.
 
 ## 9. Change Log
 
 | Date | Change | Reason |
 |---|---|---|
-| 2026-10-07 | Plan written (in parallel with DEV); places that depend on the implementation marked for checking against the implementation report after DEV's handover. | Step d started early at Michael's request. |
+| 2026-10-07 | Plan written (in parallel with DEV); places that depend on the implementation marked for checking against the implementation report after DEV's handover. | Step d started early at the project owner's request. |
 | 2026-10-07 | Aligned with `implementation-report.md`. All 9 kinds of marked places are resolved and the markers removed: installer names, dates and SHA-256 (S-1); UI texts (instruction, "Wird geladen …", "(deaktiviert)", the error text below the list, row disabled while saving); log line formats; `logs\` ACL and its repair at every start. Setup S-2/S-3 rewritten: nothing is installed on the service PC at the moment, so the setup first installs and pairs 0.2.0 (robust for any state found) to keep the upgrade path testable. TC-003-23 (AC-16) moved to Block E: the PC2 network cable is now the main method, process pause the alternative (DEV §5.4). New: "If there is no log file" (Event Log warning, DEV §5.2); unexpected error text (D-6); no log line for admin-only changes (D-3, TC-003-10). Block durations updated. New questions Q-8 and Q-9. | DEV handover (commits 8037215, 4c1b1ca, c5e419e, 02372b1); Orchestrator facts 2026-10-07. |
-| 2026-10-07 | Approved by Michael; Q-1 to Q-9 answered. | Michael |
-| 2026-10-07 | Updated for patch **0.3.1** (ISSUE-006): installers `EagleEye-Setup-0.3.1.exe` (12:59) and `EagleEye-ParentApp-Setup-0.3.1.exe` (13:00) with full SHA-256 checks in S-1; upgrade path 0.2.0 → 0.3.1; tray version note. S-2: new row for "0.3.0/0.3.1 installed" (uninstall it, delete `%ProgramData%\EagleEye` and `%LOCALAPPDATA%\EagleEye`, then install 0.2.0; the LEOSERV app's pairing becomes invalid). New case **TC-003-36** (table layout, light/dark, 150 %, screenshot `evidence/ISSUE-006-after-fix.png`) in Block B after TC-003-13. TC-003-08 and TC-003-19 also expect no table header. Row wording changed from layout-neutral to the table layout. Durations: setup ≈ 25 min, Block B ≈ 40 min, 36 cases. | ISSUE-006 fixed by DEV (commit 2dac544); service PC state reported by the Orchestrator. |
+| 2026-10-07 | Approved by the project owner; Q-1 to Q-9 answered. | The project owner |
+| 2026-10-07 | Updated for patch **0.3.1** (ISSUE-006): installers `EagleEye-Setup-0.3.1.exe` (12:59) and `EagleEye-ParentApp-Setup-0.3.1.exe` (13:00) with full SHA-256 checks in S-1; upgrade path 0.2.0 → 0.3.1; tray version note. S-2: new row for "0.3.0/0.3.1 installed" (uninstall it, delete `%ProgramData%\EagleEye` and `%LOCALAPPDATA%\EagleEye`, then install 0.2.0; the PARENT-PC app's pairing becomes invalid). New case **TC-003-36** (table layout, light/dark, 150 %, screenshot `evidence/ISSUE-006-after-fix.png`) in Block B after TC-003-13. TC-003-08 and TC-003-19 also expect no table header. Row wording changed from layout-neutral to the table layout. Durations: setup ≈ 25 min, Block B ≈ 40 min, 36 cases. | ISSUE-006 fixed by DEV (commit 2dac544); service PC state reported by the Orchestrator. |

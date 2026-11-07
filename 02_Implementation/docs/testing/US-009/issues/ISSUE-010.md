@@ -10,11 +10,11 @@
 
 ## Decision
 
-**Known issue, under observation; not fixed in US-009 (decided by Michael 2026-11-01).** US-009 is closed with this issue open. The issue stays `New` until it is picked up (DEV analysis, step c of a later story or patch). It is **not** `Verified/Closed`.
+**Known issue, under observation; not fixed in US-009 (decided by the project owner 2026-11-01).** US-009 is closed with this issue open. The issue stays `New` until it is picked up (DEV analysis, step c of a later story or patch). It is **not** `Verified/Closed`.
 
 ## Description
 
-When the EagleEye service is stopped (Windows 10, TC-009-29) or does not respond (Windows 11, service process suspended, TC-009-18), the status bar at the bottom of the Windows parent app stays **green** with **"Verbunden mit 192.168.1.37"**. AC-6 (US-002 AC-10, AC-22) asks for red **"Nicht verbunden mit 192.168.1.37"** within 30 s after the service stops. In TC-009-18 the page correctly showed **"Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen."**, so the page and the status bar contradict each other.
+When the EagleEye service is stopped (Windows 10, TC-009-29) or does not respond (Windows 11, service process suspended, TC-009-18), the status bar at the bottom of the Windows parent app stays **green** with **"Verbunden mit DEV-PC"**. AC-6 (US-002 AC-10, AC-22) asks for red **"Nicht verbunden mit DEV-PC"** within 30 s after the service stops. In TC-009-18 the page correctly showed **"Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen."**, so the page and the status bar contradict each other.
 
 The same case on Windows 11 with the app on the service PC itself (TC-009-10 step 1, `Stop-Service`) passed: red within 30 s. The failure was seen with the app on a **remote** PC (Windows 10) after a service stop, and on Windows 11 while the service process was suspended.
 
@@ -22,7 +22,7 @@ The same case on Windows 11 with the app on the service PC itself (TC-009-10 ste
 
 **A: service stopped (TC-009-29, Windows 10 PC, remote)**
 
-1. Windows app 0.9.0 on the Windows 10 PC, paired with the service PC `192.168.1.37`, status bar green.
+1. Windows app 0.9.0 on the Windows 10 PC, paired with the service PC `DEV-PC`, status bar green.
 2. On the service PC, in Terminal (Administrator): `Stop-Service -DisplayName "EagleEye Service"`; start a stopwatch.
 3. Watch the status bar of the app on the Windows 10 PC for at least 30 s.
 
@@ -35,15 +35,15 @@ The same case on Windows 11 with the app on the service PC itself (TC-009-10 ste
 
 ## Expected Result
 
-- A: red **"Nicht verbunden mit 192.168.1.37"** within **30 s** after the service stops; green again within 60 s after `Start-Service` (AC-6, US-002 AC-10, AC-21, AC-22).
-- B: the save error text and the page returning to the stored state (AC-18; observed as expected). The status bar must not claim "Verbunden" while the app cannot reach the service. *Note for PRO/ARC:* the story gives no time limit for a **suspended** (not stopped) service; Michael expects the bar to turn red as soon as a change fails because the service is down. Whether a failed save should turn the bar red at once, or only after the connection timeout, is a requirement decision.
+- A: red **"Nicht verbunden mit DEV-PC"** within **30 s** after the service stops; green again within 60 s after `Start-Service` (AC-6, US-002 AC-10, AC-21, AC-22).
+- B: the save error text and the page returning to the stored state (AC-18; observed as expected). The status bar must not claim "Verbunden" while the app cannot reach the service. *Note for PRO/ARC:* the story gives no time limit for a **suspended** (not stopped) service; the project owner expects the bar to turn red as soon as a change fails because the service is down. Whether a failed save should turn the bar red at once, or only after the connection timeout, is a requirement decision.
 
 ## Actual Result
 
 - TC-009-29 (Fail), Observed: "The status bar in the App on Windows 10 stayed green."
 - TC-009-18 (ticked Pass), Observed: "Even though that the text "...konnte nicht gespeichert werden..." is shown, the status line in the windows parent app still showed green (and connected text). This is a mismatch, the status bar should show red when the server is down."
 
-Not recorded: how long Michael watched in TC-009-29, and the results of TC-009-29 steps 1 and 3 (green ≤ 30 s after app start, green ≤ 60 s after `Start-Service`).
+Not recorded: how long the project owner watched in TC-009-29, and the results of TC-009-29 steps 1 and 3 (green ≤ 30 s after app start, green ≤ 60 s after `Start-Service`).
 
 ## Affected Platforms
 

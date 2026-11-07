@@ -1,6 +1,6 @@
 # Implementation Report: US-001 — Basic Service Installation and Tray Client Connectivity
 
-**Author**: DEV (run in the orchestrator session at Michael's request, following `agents/dev/CLAUDE.md`)
+**Author**: DEV (run in the orchestrator session at the project owner's request, following `agents/dev/CLAUDE.md`)
 **Date**: 2026-10-03
 **Machine(s) used**: Windows Developer Machine only (as assigned by the plan)
 **Story status**: Implemented
@@ -138,17 +138,17 @@ Not unit-tested, per the plan (verified manually): `TrayApplicationContext`, `Ab
 - `<NeutralLanguage>de</NeutralLanguage>`: the Windows display language of the signed-in user selects the texts. English UI → English; any other language → German.
 - `<SatelliteResourceLanguages>en</SatelliteResourceLanguages>`: only the English satellite assembly is shipped (folder `TrayClient\en\`).
 - `UI/TrayTexts` is now a typed accessor over the `ResourceManager`. `AboutDialog` and `TrayApplicationContext` are unchanged apart from that.
-- German texts: tooltip `EagleEye — Verbunden` / `EagleEye — Verbindungsfehler`, menu `App Infos`, dialog title `EagleEye – App Infos`, `Server-Version: {0}`, `nicht verfügbar`, `OK`. The first three are Michael's wording; the rest follow the same style.
+- German texts: tooltip `EagleEye — Verbunden` / `EagleEye — Verbindungsfehler`, menu `App Infos`, dialog title `EagleEye – App Infos`, `Server-Version: {0}`, `nicht verfügbar`, `OK`. The first three are the project owner's wording; the rest follow the same style.
 - New unit tests `tests/EagleEye.TrayClient.Tests/UI/TrayTextsTests.cs` (18): every text in German and English, fallback to German for other languages, the same keys in both languages, and the missing-key guard. Total unit tests: 52, all passing. Build: 0 warnings.
 - Version bumped to `0.1.1` so the re-test build can be told apart. The service still reports `EagleEye_v0.1` (MAJOR.MINOR).
 
-**Deviation D-11**: AC-11 names the menu entry "About". On a German system it is now "App Infos" at Michael's direction. TES report §6 asks PRO to align the AC wording.
+**Deviation D-11**: AC-11 names the menu entry "About". On a German system it is now "App Infos" at the project owner's direction. TES report §6 asks PRO to align the AC wording.
 
-**Not fixed (outside "language findings")**: ISSUE-002 (publisher name, awaiting Michael's go) and ISSUE-003 (PRO feedback).
+**Not fixed (outside "language findings")**: ISSUE-002 (publisher name, awaiting the project owner's go) and ISSUE-003 (PRO feedback).
 
 ---
 
-## 8. Further Fixes in 0.1.1 (2026-10-03, Michael's decision)
+## 8. Further Fixes in 0.1.1 (2026-10-03, the project owner's decision)
 
 **ISSUE-002, publisher name.** `AppPublisher` in `installer/windows/setup.iss` and `Company` in `Directory.Build.props` changed to **Michael Adler**. Verified: the installer's file metadata shows CompanyName "Michael Adler".
 

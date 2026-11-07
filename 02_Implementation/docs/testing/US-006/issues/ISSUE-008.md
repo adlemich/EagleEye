@@ -2,10 +2,10 @@
 
 **Status**: Implemented (patch **0.6.1**, installers built 2026-10-17)
 **User Story**: US-006
-**Found in**: `docs/testing/US-006/test-run-01.md` (Michael's first live use, step e)
+**Found in**: `docs/testing/US-006/test-run-01.md` (the project owner's first live use, step e)
 **Date**: 2026-10-17
 **Severity**: Medium (values are stored and enforced correctly but cannot be read or checked in the parent app)
-**Machine**: parent app on `LEOSERV`, paired with the service PC `ZOCK-O-MAT-V3`
+**Machine**: parent app on `PARENT-PC`, paired with the service PC `DEV-PC`
 **Build**: `03_Delivery/windows/EagleEye-ParentApp-Setup-0.6.0.exe`
 **Evidence**: `Screenshot 2026-10-17 um 10.49.59.png` (Settings), `Screenshot 2026-10-17 um 11.04.24.png` (Rules); after the fix: `ISSUE-008-after-*.png` (this folder)
 
@@ -13,7 +13,7 @@
 
 In the Windows parent app the numeric Entry fields are empty although values are stored:
 
-- Settings → "Zeit-Ende Warnungen": the fields "Minuten vor Ende" of *Frühe Warnung* and *Finale Warnung*. The text editors next to them show their texts.
+- Settings → "Zeit-Ende Warnungen": the fields "Minuten vor Ende" of *Früthey Warnung* and *Finale Warnung*. The text editors next to them show their texts.
 - Rules → "Applikations-Regeln": every *Stunden* and *Minuten* field. The day checkboxes are correct.
 
 The break-time fields *Start-Zeit* / *End-Zeit* (US-005) display correctly.
@@ -52,11 +52,11 @@ The orchestrator's hypothesis (alignment, padding and the delete-button column) 
 - `ISSUE-008-after-rules-dark.png`: Editor 1 / 30, Minecraft 23 / 59, Paint 0 / 0 visible (two-digit values not cut off);
 - `ISSUE-008-after-settings-light.png`, `ISSUE-008-after-rules-light.png`: the same in light mode.
 
-**Not verified by DEV**: 150 % (this PC is at 200 %; the fix does not depend on the scaling). Please check on `LEOSERV`.
+**Not verified by DEV**: 150 % (this PC is at 200 %; the fix does not depend on the scaling). Please check on `PARENT-PC`.
 
-**Side observation (reported, not changed)**: in the Rules screenshot from `LEOSERV`, unticked checkboxes are drawn with a "–" glyph: filled in the break table, faint in the app-rules table. On `ZOCK-O-MAT-V3` the same view (Debug build, dark and light mode, 200 %) shows unticked boxes as plain empty boxes in both tables (`ISSUE-008-after-rules-*.png`). The account checkboxes on the Settings page in the same `LEOSERV` screenshot look normal, and they use the same handler mapping (`CheckBox MinWidth = 0`, US-005). So the "–" look is not reproducible here and is not caused by this defect. A WinUI rendering difference on `LEOSERV` (Windows build, remote session) is possible. Next step: Michael compares the installed 0.6.0/0.6.1 on `ZOCK-O-MAT-V3` with `LEOSERV`.
+**Side observation (reported, not changed)**: in the Rules screenshot from `PARENT-PC`, unticked checkboxes are drawn with a "–" glyph: filled in the break table, faint in the app-rules table. On `DEV-PC` the same view (Debug build, dark and light mode, 200 %) shows unticked boxes as plain empty boxes in both tables (`ISSUE-008-after-rules-*.png`). The account checkboxes on the Settings page in the same `PARENT-PC` screenshot look normal, and they use the same handler mapping (`CheckBox MinWidth = 0`, US-005). So the "–" look is not reproducible here and is not caused by this defect. A WinUI rendering difference on `PARENT-PC` (Windows build, remote session) is possible. Next step: the project owner compares the installed 0.6.0/0.6.1 on `DEV-PC` with `PARENT-PC`.
 
-**Blocker for the installers (resolved)**: since 2026-10-12, NuGet audit reports the high-severity advisory GHSA-334f-vvp4-7g6p for `Microsoft.AspNetCore.SignalR.Common` 10.0.12 (pulled in by `Microsoft.AspNetCore.SignalR.Client` 10.0.12 in `EagleEye.ParentApp.Core` and `EagleEye.TrayClient`). With warnings as errors, the restore now fails, so `build.ps1`, `test.ps1` and `package-windows.ps1` fail on this PC. No patched version is in the local package cache. Michael decides: (a) grant internet access to update the SignalR client packages to the patched version, or (b) suppress the advisory temporarily (`NuGetAuditSuppress`). DEV builds the 0.6.1 installers after the decision. For the checks above, DEV built locally with `NuGetAudit=false` set only in the shell environment (not committed). **Resolution**: Michael chose (a). All Microsoft 10.0.x packages were updated to 10.0.13 (`docs/dev-process/dependency-log.md`, implementation report §10 D-18). With audit on, the build passes with 0 warnings. Smoke check after the update: `ISSUE-008-smoke-0.6.1-signalr-10.0.13.png`.
+**Blocker for the installers (resolved)**: since 2026-10-12, NuGet audit reports the high-severity advisory GHSA-334f-vvp4-7g6p for `Microsoft.AspNetCore.SignalR.Common` 10.0.12 (pulled in by `Microsoft.AspNetCore.SignalR.Client` 10.0.12 in `EagleEye.ParentApp.Core` and `EagleEye.TrayClient`). With warnings as errors, the restore now fails, so `build.ps1`, `test.ps1` and `package-windows.ps1` fail on this PC. No patched version is in the local package cache. The project owner decides: (a) grant internet access to update the SignalR client packages to the patched version, or (b) suppress the advisory temporarily (`NuGetAuditSuppress`). DEV builds the 0.6.1 installers after the decision. For the checks above, DEV built locally with `NuGetAudit=false` set only in the shell environment (not committed). **Resolution**: the project owner chose (a). All Microsoft 10.0.x packages were updated to 10.0.13 (`docs/dev-process/dependency-log.md`, implementation report §10 D-18). With audit on, the build passes with 0 warnings. Smoke check after the update: `ISSUE-008-smoke-0.6.1-signalr-10.0.13.png`.
 
 **Artifacts**:
 

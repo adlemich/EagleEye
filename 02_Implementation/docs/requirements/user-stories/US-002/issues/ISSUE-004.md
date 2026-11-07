@@ -10,7 +10,7 @@
 
 ## Description
 
-TC-002-12 checks that the pairing code appears in the tray client popup on the service PC (AC-14). The popup **"EagleEye – Eltern-App koppeln"** appeared, but its content area is too narrow for its text. The code line shows only the first two digits ("Kopplungscode: 22"), and the instruction line is cut off ("Geben Sie diesen Code in der EagleEye-Eltern-"). The window cannot be used to read the code, so pairing could not be completed and Michael aborted the run at this case.
+TC-002-12 checks that the pairing code appears in the tray client popup on the service PC (AC-14). The popup **"EagleEye – Eltern-App koppeln"** appeared, but its content area is too narrow for its text. The code line shows only the first two digits ("Kopplungscode: 22"), and the instruction line is cut off ("Geben Sie diesen Code in der EagleEye-Eltern-"). The window cannot be used to read the code, so pairing could not be completed and the project owner aborted the run at this case.
 
 **Severity justification (Critical):** pairing is the core flow of US-002, and every later case (TC-002-13 to TC-002-43) depends on a paired app. There is no practical workaround. The Event Log path (AC-15) only applies when **no** tray client is connected. The tray client also runs in admin sessions (Q-7), so a parent who is signed in at the service PC always gets the clipped popup instead of an Event Log entry.
 
@@ -44,7 +44,7 @@ The window's height is sufficient; only the width is too small for the content.
 
 - `docs/testing/US-002/evidence/Screenshot 2026-10-04 203157.png`
 
-## Open Information (TES asks Michael, for DEV)
+## Open Information (TES asks the project owner, for DEV)
 
 - Display scaling of the service PC (*Einstellungen → System → Bildschirm → Skalierung*, e.g. 100 % / 125 % / 150 %). The clipping looks like a fixed window size that does not adapt to the text or to DPI scaling. DEV should make sure that it works at the common scaling levels.
 - In which session the screenshot was taken (Kid or Admin). Not recorded in the run file (TC-002-12 Notes are empty).
@@ -53,7 +53,7 @@ The window's height is sufficient; only the width is too small for the content.
 
 Re-run TC-002-11 (as the trigger) and TC-002-12, followed by the pairing cases that were not executed (see `docs/testing/US-002/test-report.md` §1).
 
-## Answers (Michael, 2026-10-04)
+## Answers (the project owner, 2026-10-04)
 
 - Session: **admin session**, tray client running there.
 - Display scaling: **150 %**.
@@ -97,4 +97,4 @@ The US-001 *App Infos* dialog (`02_Implementation/src/EagleEye.TrayClient/UI/Abo
 
 Install `03_Delivery/windows/EagleEye-Setup-0.2.0.exe` again over the installed 0.2.0 (it ends the tray client; it comes back at the next sign-in or via Start menu *EagleEye Tray*). Then re-run TC-002-11 and TC-002-12, ideally at 150 % and at least one other scaling level, in an admin and the kid session. The parent app installer did not change.
 
-**Verified**: TC-002-11 and TC-002-12 passed in `docs/testing/US-002/test-run-02.md` (build 0.2.0, rebuilt service installer). Closed by Michael, 2026-10-07.
+**Verified**: TC-002-11 and TC-002-12 passed in `docs/testing/US-002/test-run-02.md` (build 0.2.0, rebuilt service installer). Closed by the project owner, 2026-10-07.

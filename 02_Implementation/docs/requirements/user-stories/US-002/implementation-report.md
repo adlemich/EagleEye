@@ -47,7 +47,7 @@ US-002 is implemented as planned in Steps 0 to 9. The service opens a TLS endpoi
 | D-13 | Mac Catalyst not part of US-002 | Mac Catalyst platform files added from the .NET 10 MAUI template (`AppDelegate`, `SceneDelegate`, `Program`, `Info.plist`, `Entitlements.plist` with outgoing network access) | The head now has shared code and must build on the MacBook once the workload is installed. **Not built or verified** (needs the MacBook with the MAUI workload). |
 | D-14 | Parent app installer as in the plan | Additionally: the uninstaller ends running parent app processes of the current user (`taskkill`) and also deletes `{app}`; the Start-menu entry is directly in *Programme* (no folder); an optional "launch now" checkbox at the end | Otherwise a running app keeps its files and database locked and uninstall would leave them behind (AC-5). |
 
-No other deviations. The plan's "Open Points for Michael" are implemented with their defaults (tray client unchanged in admin sessions; product name "EagleEye Parent App"), see §5.
+No other deviations. The plan's "Open Points for the project owner" are implemented with their defaults (tray client unchanged in admin sessions; product name "EagleEye Parent App"), see §5.
 
 ---
 
@@ -106,11 +106,11 @@ Coverage measured with coverlet (`dotnet test --collect:"XPlat Code Coverage"`),
 
 ## 5. Open Questions and Risks
 
-1. **Open points of the plan (answered by Michael 2026-10-04, see user story Q-7 to Q-11; the implemented defaults stand):**
+1. **Open points of the plan (answered by the project owner 2026-10-04, see user story Q-7 to Q-11; the implemented defaults stand):**
    - The tray client still starts in **admin** sessions (HKLM Run key). A parent pairing at the service PC as admin sees the code there. Accepted (Q-7).
    - Product name in Start menu and *Installierte Apps*: **"EagleEye Parent App"** (one `#define` in `parentapp-setup.iss`). Kept (Q-10).
    - A kid can pair their own app: no technical protection for now, accepted risk (Q-8, arc42 R-8). A second Windows PC is available for AC-2, AC-6, AC-23 and AC-24 (Q-9).
-2. **Service installer not executed by DEV.** The DEV session has no admin rights. ACLs, the firewall rule, the service running as SYSTEM with `MachineKeySet`, and the Event Log source/event 1000 are verified for the first time in Michael's test run.
+2. **Service installer not executed by DEV.** The DEV session has no admin rights. ACLs, the firewall rule, the service running as SYSTEM with `MachineKeySet`, and the Event Log source/event 1000 are verified for the first time in the project owner's test run.
 3. **Event Log path (AC-15) not smoke-tested.** In console mode a tray client was always connected. Without admin rights, writing the Event Log source fails and is logged as an error (by design, D-1 context); as SYSTEM it is expected to work.
 4. **Pin mismatch during an automatic reconnect** shows "Not connected to <host>" instead of the "identity has changed" message. The message appears on the next connect loop (app start, or after the server closes the connection). Only relevant if the service certificate changes while the app runs.
 5. **Pending code and other connections:** per the plan, *every* failed submission clears the pending code, also one from another connection. A second unpaired app on the LAN could thereby invalidate a code that is being typed (the parent requests a new one).
@@ -205,4 +205,4 @@ Coverage measured with coverlet (`dotnet test --collect:"XPlat Code Coverage"`),
 - **No deviation** from the plan's behavior (AC-14 texts, topmost, taskbar, 5-minute auto-close, replacement by a new code are unchanged). Process DPI mode stays `SystemAware` (see the issue for why `PerMonitorV2` was not adopted).
 - **No new unit tests:** the change is pure WinForms layout, which the plan keeps out of unit tests; verified by rendering instead (see the issue). `build.ps1`: 0 warnings, 0 errors. `test.ps1`: 318/318 passed.
 - **Artifacts (version stays 0.2.0):** only `03_Delivery/windows/EagleEye-Setup-0.2.0.exe` (service + tray client) was rebuilt (`package-windows.ps1 -Target Service`). `03_Delivery/windows/EagleEye-ParentApp-Setup-0.2.0.exe` was **not** rebuilt and is unchanged (no parent app code changed). Re-running `EagleEye-Setup-0.2.0.exe` over the installed 0.2.0 replaces the tray client (same version; Inno Setup overwrites the files, `ignoreversion`). The installer ends the tray client in all sessions; it comes back at the next sign-in, or via Start menu *EagleEye Tray* (or the installer's last-page checkbox in the installing session).
-- **Known, not fixed (same pattern, other dialog):** the US-001 *App Infos* dialog (`AboutDialog`) also uses fixed pixel sizes. At 150 % it is still readable (the OK button is tight, see `issues/ISSUE-004-evidence/`); at 200 % the connection-error text fills the window and touches the OK button. Fixing it needs the same per-dialog layout change, not a process-wide one, so it was left out (no unsolicited refactoring). Suggest a separate issue if TES or Michael sees it clipped.
+- **Known, not fixed (same pattern, other dialog):** the US-001 *App Infos* dialog (`AboutDialog`) also uses fixed pixel sizes. At 150 % it is still readable (the OK button is tight, see `issues/ISSUE-004-evidence/`); at 200 % the connection-error text fills the window and touches the OK button. Fixing it needs the same per-dialog layout change, not a process-wide one, so it was left out (no unsolicited refactoring). Suggest a separate issue if TES or the project owner sees it clipped.

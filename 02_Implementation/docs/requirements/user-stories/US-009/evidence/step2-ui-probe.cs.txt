@@ -96,7 +96,7 @@ public static class UiProbe
 
     private sealed class FakeCoordinator : IConnectionCoordinator
     {
-        public ConnectionState State { get; } = new(ConnectionStatus.PairedConnected, "192.168.1.37", "Windows probe", ConnectionMessage.None);
+        public ConnectionState State { get; } = new(ConnectionStatus.PairedConnected, "DEV-PC", "Windows probe", ConnectionMessage.None);
         public event Action<ConnectionState>? StateChanged { add { } remove { } }
         public Task<ConnectionState> InitializeAsync() => Task.FromResult(State);
         public Task BeginPairingAsync(string? hostInput) => Task.CompletedTask;

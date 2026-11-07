@@ -25,7 +25,7 @@ public sealed class RulesViewModelTests
     private AccountsLoadState _accountsState = AccountsLoadState.Ready;
     private UserAccountListDto _accountList = new(1, null,
     [
-        new UserAccountDto(Kid, "max", "Max Adler", false, true),
+        new UserAccountDto(Kid, "max", "Max Mustermann", false, true),
         new UserAccountDto(Anna, "anna", null, false, true),
         new UserAccountDto("S-1-5-21-1-2-3-1005", "tom", null, false, false),
     ]);
@@ -51,7 +51,7 @@ public sealed class RulesViewModelTests
     {
         var vm = Create();
 
-        Assert.Equal(["anna", "Max Adler (max)"], vm.Accounts.Select(a => a.DisplayName));
+        Assert.Equal(["anna", "Max Mustermann (max)"], vm.Accounts.Select(a => a.DisplayName));
         Assert.Equal(Anna, vm.SelectedAccount!.Sid);
         _rules.Verify(r => r.SelectAccount(Anna), Times.Once);
     }

@@ -1,8 +1,8 @@
 # ADR-008: Parent App Connectivity — Endpoints, TLS Trust and Pairing Protocol
 
-**Status**: Accepted (approved by Michael with the US-002 implementation plan, 2026-10-04; wording amended by CR-001, 2026-10-20)
+**Status**: Accepted (approved by the project owner with the US-002 implementation plan, 2026-10-04; wording amended by CR-001, 2026-10-20)
 **Date**: 2026-10-04
-**Deciders**: ARC, Michael
+**Deciders**: ARC, the project owner
 
 > **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped. The endpoints, TLS trust and pairing protocol apply unchanged to the two parent apps, Windows and macOS (FR-APP-091, FR-APP-111). Only the consequence "ready for the mobile and macOS apps" is reworded.
 
@@ -112,9 +112,9 @@ ADR-004 stays valid. US-002 makes it concrete:
 
 - If the service certificate is lost (e.g. `%ProgramData%\EagleEye` deleted), paired apps refuse to connect until they are re-paired. In US-002 that means reinstalling the app.
 - Two ports instead of one (5080 loopback, 5443 LAN).
-- The pairing code is visible in the kid's tray session (accepted by Michael for US-002, see the US-002 story, Decision Q-1).
-- **Security consequence, accepted risk (Michael, 2026-10-04):** because the code reaches the kid's session and the parent app installer needs no admin rights, a kid can pair their own parent app (on the same PC or another device). Once configuration stories exist, such an app could change the kid's own rules. Michael decided: **no technical protection for now**; revisit before or with the first configuration story. Tracked as arc42 §11 R-8.
-- The tray client keeps running in admin sessions (Michael, 2026-10-04), so a parent pairing at the service PC as admin sees the code there.
+- The pairing code is visible in the kid's tray session (accepted by the project owner for US-002, see the US-002 story, Decision Q-1).
+- **Security consequence, accepted risk (the project owner, 2026-10-04):** because the code reaches the kid's session and the parent app installer needs no admin rights, a kid can pair their own parent app (on the same PC or another device). Once configuration stories exist, such an app could change the kid's own rules. The project owner decided: **no technical protection for now**; revisit before or with the first configuration story. Tracked as arc42 §11 R-8.
+- The tray client keeps running in admin sessions (the project owner, 2026-10-04), so a parent pairing at the service PC as admin sees the code there.
 
 ### Neutral
 

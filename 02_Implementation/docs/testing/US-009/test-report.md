@@ -1,24 +1,24 @@
 # Test Report: US-009 — Windows Parent App on Windows 10, and Windows Parent App Parity (0.9.0)
 
-**Status**: Accepted by Michael on 2026-11-01 by closing US-009 with ISSUE-010 as a known issue (under observation) and the open gaps as listed; the open points TES raised in its hand-back (TC-009-45 result, S-6 for kid2, severity Medium, §11 regression additions) were not answered separately
+**Status**: Accepted by the project owner on 2026-11-01 by closing US-009 with ISSUE-010 as a known issue (under observation) and the open gaps as listed; the open points TES raised in its hand-back (TC-009-45 result, S-6 for kid2, severity Medium, §11 regression additions) were not answered separately
 **Date**: 2026-11-01
 **Author**: TES
-**Test runs evaluated**: `02_Implementation/docs/testing/US-009/test-run-01.md` (results as committed by Michael in `87a6cc5`)
+**Test runs evaluated**: `02_Implementation/docs/testing/US-009/test-run-01.md` (results as committed by the project owner in `87a6cc5`)
 **Test plan**: `02_Implementation/docs/testing/US-009/test-plan.md`
 
 ---
 
 ## 1. Verdict
 
-**Not ready to close by the TES rule (one AC failed, 13 ACs not or only partly verified). Michael's decision (2026-11-01): close US-009 with ISSUE-010 as a known issue under observation, without a DEV fix.**
+**Not ready to close by the TES rule (one AC failed, 13 ACs not or only partly verified). The project owner's decision (2026-11-01): close US-009 with ISSUE-010 as a known issue under observation, without a DEV fix.**
 
-No Critical or High issue is open. The one defect (ISSUE-010, Medium) is a wrong status-bar display; saving, the save error message and enforcement work. The core risks of this story passed: the first release run of the Windows app on Windows 11 and Windows 10, the service update with data kept, and the first live group enforcement in a kid session (US-008 retest). The coverage gaps are listed in §4 and §5. Michael accepts them when he closes the story (§10).
+No Critical or High issue is open. The one defect (ISSUE-010, Medium) is a wrong status-bar display; saving, the save error message and enforcement work. The core risks of this story passed: the first release run of the Windows app on Windows 11 and Windows 10, the service update with data kept, and the first live group enforcement in a kid session (US-008 retest). The coverage gaps are listed in §4 and §5. The project owner accepts them when they close the story (§10).
 
 ## 2. Environment
 
 | Item | Value |
 |---|---|
-| Machine(s) | Service PC = Windows Developer Machine (Windows 11, `192.168.1.37` as used in all cases; S-3 not filled in); Windows 10 PC (22H2 per plan; winver not filled in); MacBook (macOS version not filled in) |
+| Machine(s) | Service PC = Windows Developer Machine (Windows 11, `DEV-PC` as used in all cases; S-3 not filled in); Windows 10 PC (22H2 per plan; winver not filled in); MacBook (macOS version not filled in) |
 | Accounts | kid1, kid2, kid3 as in the plan; real names not filled in (S-5). kid2's English display language (S-6) is not ticked, but TC-009-60 passed without the "kid2 not English" note. |
 | Build / installer version | 0.9.0: `03_Delivery/windows/EagleEye-Setup-0.9.0.exe` (SHA-256 `4F1EF797…CB1652`), `03_Delivery/windows/EagleEye-ParentApp-Setup-0.9.0.exe` (`780CE6CB…1D88F0`), `03_Delivery/macos/EagleEye-ParentApp-0.9.0.dmg` (`9f397006…c5fdde6`); full hashes in the test plan §2 |
 | Execution dates | Not filled in (run committed 2026-11-01) |
@@ -40,7 +40,7 @@ No Critical or High issue is open. The one defect (ISSUE-010, Medium) is a wrong
 | **Total** | **72** | **49** | **1** | **0** | **21** (12 essential, 9 optional) | **1** |
 
 - Optional cases executed and passed: TC-009-15, -18, -64, -65.
-- **TC-009-45, no result recorded**: the line reads `X ] Pass` without the opening bracket, so no box is ticked. TES does not guess the result (TES rule 6). Michael should confirm it.
+- **TC-009-45, no result recorded**: the line reads `X ] Pass` without the opening bracket, so no box is ticked. TES does not guess the result (TES rule 6). The project owner should confirm it.
 - **Tick inconsistency, flagged (not changed):** TC-009-18 is ticked **Pass**, but its Observed note describes the same status-bar defect as the Fail of TC-009-29. TC-009-18's own expected results (the save error text, the page back to the stored state) were met, so the Pass stands. The note is filed as the Windows 11 occurrence of ISSUE-010.
 - Notes and General Feedback: no other notes were written.
 
@@ -78,13 +78,13 @@ Legend: **Verified** = every essential case passed. **Failed** = a case failed. 
 | AC-26 existing settings sync both directions | TC-009-53 | **Not verified** | Rests only on a skipped case. US-007 AC-33 therefore stays unverified too |
 | AC-27 group rule from the Windows app takes effect | TC-009-57 | Verified | |
 | AC-28 texts de/en, same as the Mac | TC-009-06, -09, -13, -16, -18, -19, -21, -23, -32, -39; *-25, -47 (opt)* | Verified | German on W11 and the word-by-word comparison with the Mac (TC-009-39) passed, English on W10 passed. W11 English and the Mac English reference were optional and skipped |
-| AC-29 kid texts naming a group, de/en | TC-009-57, -58, -60 | Verified | English rests on TC-009-60 Pass with no "kid2 not English" note (S-6 not ticked). Michael please confirm kid2 was English |
+| AC-29 kid texts naming a group, de/en | TC-009-57, -58, -60 | Verified | English rests on TC-009-60 Pass with no "kid2 not English" note (S-6 not ticked). The project owner please confirm kid2 was English |
 | AC-30 versions 0.9.0 | TC-009-01, -02, -03, -27, -37 | Verified | |
 | AC-31 service update keeps data; REG-001 | TC-009-01, -02, -05 | Verified | |
 | AC-32 Mac update keeps pairing, appearance | TC-009-37 | Verified | |
 | AC-33 fresh install on W11, pairing | TC-009-03, -04 | Verified | |
 | AC-34 Windows app regression spot checks | TC-009-55, -56, -24 | **Not verified (partly)** | Only "Reports today's usage" verified (TC-009-24). Connection error naming the host, "Kopplung auf diesem Gerät löschen", tick, break time, app rule, budget text, warning validation rest on the skipped TC-009-55, -56 (ticks, a break entry and a warning value were exercised on W10 in TC-009-30) |
-| AC-35 Mac = 0.8.0; US-008 Mac ACs in full | TC-009-38 to -48, -59 | **Not verified (partly)** | Open: US-008 AC-7 to AC-10, D-16, D-19 on the Mac (TC-009-40 skipped); US-008 AC-35, AC-36 on the Mac (TC-009-45 no result; partly seen in TC-009-58 and -62 on the Mac's Berichte); AC-14 error path (TC-009-44 optional). All of these passed in Michael's 12-point check on 0.8.0 (US-008 report §3), and the Mac code is unchanged |
+| AC-35 Mac = 0.8.0; US-008 Mac ACs in full | TC-009-38 to -48, -59 | **Not verified (partly)** | Open: US-008 AC-7 to AC-10, D-16, D-19 on the Mac (TC-009-40 skipped); US-008 AC-35, AC-36 on the Mac (TC-009-45 no result; partly seen in TC-009-58 and -62 on the Mac's Berichte); AC-14 error path (TC-009-44 optional). All of these passed in the project owner's 12-point check on 0.8.0 (US-008 report §3), and the Mac code is unchanged |
 | AC-36 service and tray = 0.8.0 | TC-009-01, -02, -57 | Verified | |
 | AC-37 US-008 retest (service) | TC-009-57 to -70 | **Not verified (partly)** | See §4.1. Open: US-008 AC-30 and the delete part of AC-32 (TC-009-63 skipped), the locked part of AC-20 (TC-009-66 optional) |
 | AC-38 optional pilot checks | *TC-009-71 (opt)* | **Not verified** | Skipped. "Not tested" does not block closing (story) |
@@ -145,7 +145,7 @@ Legend: **Verified** = every essential case passed. **Failed** = a case failed. 
 
 | Issue | Severity | Status | Test case |
 |---|---|---|---|
-| `02_Implementation/docs/testing/US-009/issues/ISSUE-010.md`: Windows parent app: status bar stays green ("Verbunden mit …") when the service is stopped or not responding | Medium (TES proposal) | New, **known issue, under observation; not fixed in US-009 (decided by Michael 2026-11-01)** | TC-009-29 (Fail, W10), TC-009-18 (Observed note on a Pass, W11) |
+| `02_Implementation/docs/testing/US-009/issues/ISSUE-010.md`: Windows parent app: status bar stays green ("Verbunden mit …") when the service is stopped or not responding | Medium (TES proposal) | New, **known issue, under observation; not fixed in US-009 (decided by the project owner 2026-11-01)** | TC-009-29 (Fail, W10), TC-009-18 (Observed note on a Pass, W11) |
 
 **Known issues shipped with 0.9.0:** ISSUE-010. It is confirmed on Windows 10 (remote app, service stopped) and on Windows 11 (service process suspended). The Mac is not tested, and the shared code suggests it is affected too. A plain service stop with the W11 app on the service PC turned red as expected (TC-009-10). The DEV pointer (status bar fed only by SignalR lifecycle events, save error path separate, default SignalR timeouts) is in the issue.
 
@@ -153,14 +153,14 @@ Legend: **Verified** = every essential case passed. **Failed** = a case failed. 
 
 | ID | Topic | Resolution from run 01 |
 |---|---|---|
-| Q-1 | Account roles; kid2 English | Real names not recorded (S-5). TC-009-60 passed with no "kid2 not English" note, so the English part of AC-29 is taken as seen; Michael please confirm |
+| Q-1 | Account roles; kid2 English | Real names not recorded (S-5). TC-009-60 passed with no "kid2 not English" note, so the English part of AC-29 is taken as seen; the project owner please confirm |
 | Q-2 | Baseline group with the Mac app 0.8.0 | Used: TC-009-05 passed (groups, rules, today's line kept). S-10 not ticked; no screenshots committed; past-day lines not recorded |
 | Q-3 | English on W11 | As proposed: fully on W10 (TC-009-32 Pass); W11 English optional and skipped (TC-009-25) |
 | Q-4 | Mac AC-35 depth | Run as quick re-confirms. TC-009-40 skipped and TC-009-45 without a result leave AC-35 partly open (§4) |
 | Q-5 | Live "≤ 15 s" checks on W11 | As proposed: switch-back on W11 (TC-009-24, -59 Pass), timed on the Mac (TC-009-58, -59 Pass) |
 | Q-6 | US-008 AC-6 not testable | Recorded as not testable (§4.1) |
 | Q-7 | Uninstall on W10 while paired | Done (TC-009-34 Pass). The orphan device entry "Windows 10 PC" stays on the service (accepted, US-007 F-4) |
-| Q-8 | Service PC address | Not written in S-3; every case used `192.168.1.37` and passed, so that is taken as the address |
+| Q-8 | Service PC address | Not written in S-3; every case used `DEV-PC` and passed, so that is taken as the address |
 | Q-9 | Save error only in optional cases | TC-009-18 was run and passed; it revealed the status-bar side of ISSUE-010. TC-009-44 (Mac) skipped |
 | Q-10 | Session 6B on a fresh day | Met in effect: TC-009-57 passed with the expected group timings |
 | Q-11 | 72 cases, ≈ 8 h | Partial run: 49 Pass, 21 Skipped, 1 without a result |
@@ -169,31 +169,31 @@ Legend: **Verified** = every essential case passed. **Failed** = a case failed. 
 
 | # | Feedback | To |
 |---|---|---|
-| FB-1 | Michael expects the status bar to turn red **as soon as** the service is down, also when a save fails (TC-009-18 note). The story only gives "red ≤ 30 s after the service stops" (US-002 AC-22) and nothing for a service that hangs. Decide whether a failed save (timeout or connection error) should turn the bar red at once. Part of ISSUE-010 | PRO, then ARC |
+| FB-1 | The project owner expects the status bar to turn red **as soon as** the service is down, also when a save fails (TC-009-18 note). The story only gives "red ≤ 30 s after the service stops" (US-002 AC-22) and nothing for a service that hangs. Decide whether a failed save (timeout or connection error) should turn the bar red at once. Part of ISSUE-010 | PRO, then ARC |
 | FB-2 | Detection time of a lost connection on a remote parent app (SignalR server timeout vs. the 30 s limit) is a design point for ARC when ISSUE-010 is picked up | ARC |
 
 ## 9. Follow-ups
 
 | # | Follow-up | Owner | When |
 |---|---|---|---|
-| F-1 | **ISSUE-010** (known issue): keep under observation in pilot use, on the Windows apps and on the Mac. Pick up in a later story or patch: analysis by DEV, a decision on FB-1, then a re-run of TC-009-29 and TC-009-18 (+ a Mac service-stop check) with a stopwatch, screenshots and LOG-COPY | Michael (observation), PRO / ARC / DEV | when Michael schedules it |
-| F-2 | **Two parent apps at once not verified** (AC-24 to AC-26, US-007 AC-25, AC-33; Session 5, TC-009-49 to -54). Run them in a later run or with the next story that touches the parent apps | TES / Michael | next parent-app story or pilot |
-| F-3 | Other essential cases not executed: TC-009-12 (create, name rules on W11), TC-009-26 (service installer refuses W10), TC-009-40 (Mac create/rename/delete), TC-009-45 (Mac Reports, no result), TC-009-55, -56 (W11 regression spot checks), TC-009-63 (group delete with a running app; US-008 AC-30, AC-32 delete). Candidates for a `test-run-02.md` if Michael wants one, or for the regression checklist | TES / Michael | Michael's choice |
-| F-4 | Confirm TC-009-45's result and that kid2 was English in TC-009-60 (chat is enough; TES then records it in a new run, the run file stays as is) | Michael | at closure |
-| F-5 | Optional, unchanged from the plan: AC-4 (older Windows), AC-38 / US-008 AC-41 performance and the live group smoke (pilot), US-008 AC-20 locked time | Michael (pilot) | pilot operation |
-| F-6 | Evidence habit: no service-log copies or screenshots were committed in run 01 (also none after the Fail). For the re-test of ISSUE-010, use LOG-COPY | Michael / TES | next run |
+| F-1 | **ISSUE-010** (known issue): keep under observation in pilot use, on the Windows apps and on the Mac. Pick up in a later story or patch: analysis by DEV, a decision on FB-1, then a re-run of TC-009-29 and TC-009-18 (+ a Mac service-stop check) with a stopwatch, screenshots and LOG-COPY | The project owner (observation), PRO / ARC / DEV | when the project owner schedules it |
+| F-2 | **Two parent apps at once not verified** (AC-24 to AC-26, US-007 AC-25, AC-33; Session 5, TC-009-49 to -54). Run them in a later run or with the next story that touches the parent apps | TES / the project owner | next parent-app story or pilot |
+| F-3 | Other essential cases not executed: TC-009-12 (create, name rules on W11), TC-009-26 (service installer refuses W10), TC-009-40 (Mac create/rename/delete), TC-009-45 (Mac Reports, no result), TC-009-55, -56 (W11 regression spot checks), TC-009-63 (group delete with a running app; US-008 AC-30, AC-32 delete). Candidates for a `test-run-02.md` if the project owner wants one, or for the regression checklist | TES / the project owner | The project owner's choice |
+| F-4 | Confirm TC-009-45's result and that kid2 was English in TC-009-60 (chat is enough; TES then records it in a new run, the run file stays as is) | The project owner | at closure |
+| F-5 | Optional, unchanged from the plan: AC-4 (older Windows), AC-38 / US-008 AC-41 performance and the live group smoke (pilot), US-008 AC-20 locked time | The project owner (pilot) | pilot operation |
+| F-6 | Evidence habit: no service-log copies or screenshots were committed in run 01 (also none after the Fail). For the re-test of ISSUE-010, use LOG-COPY | The project owner / TES | next run |
 
-## 10. Recommendation and Decisions for Michael
+## 10. Recommendation and Decisions for the project owner
 
-**TES recommendation.** Normally a failed AC goes back to DEV (step c). Here, closing with a known issue is acceptable to TES: ISSUE-010 is Medium, the page tells the parent that a change was not saved, no data is lost, and enforcement on the service PC is not affected. **Michael has decided accordingly (2026-11-01): ISSUE-010 is a known issue under observation, US-009 closes without a DEV fix.** TES records this. Only Michael closes the story; TES does not change the story status.
+**TES recommendation.** Normally a failed AC goes back to DEV (step c). Here, closing with a known issue is acceptable to TES: ISSUE-010 is Medium, the page tells the parent that a change was not saved, no data is lost, and enforcement on the service PC is not affected. **The project owner has decided accordingly (2026-11-01): ISSUE-010 is a known issue under observation, US-009 closes without a DEV fix.** TES records this. Only the project owner closes the story; TES does not change the story status.
 
-**What Michael accepts by closing:**
+**What the project owner accepts by closing:**
 
 1. AC-6 failed, with ISSUE-010 as a known issue (decided).
 2. The 13 ACs not or only partly verified (§4). The biggest gap is the two-apps-at-once sync (AC-24 to AC-26, Session 5), which was also open in US-007. Also open: AC-5, AC-34 and parts of AC-1, AC-15, AC-21, AC-23, AC-35, AC-37. Please confirm explicitly that these are accepted as not verified (F-2, F-3), or ask for a `test-run-02.md` with these cases before closing.
 3. TC-009-45 (no result) and kid2 English (F-4).
 
-## 11. Regression Checklist Update (proposal, after Michael closes the story)
+## 11. Regression Checklist Update (proposal, after the project owner closes the story)
 
 Add to `02_Implementation/docs/testing/regression-checklist.md` (a new section for the Windows app 0.9.0 and app groups):
 

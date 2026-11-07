@@ -33,7 +33,7 @@ public sealed class UserAccountItemViewModel : ObservableObject
     /// <summary>The account's SID.</summary>
     public string Sid { get; }
 
-    /// <summary>The shown name, e.g. "Max Adler (max)".</summary>
+    /// <summary>The shown name, e.g. "Max Mustermann (max)".</summary>
     public string DisplayName
     {
         get => _displayName;

@@ -5,7 +5,7 @@
 **Branch**: `feature/US-004-app-usage-tracking`
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-004/implementation-plan.md` (approved 2026-10-07, Q-1 to Q-9 answered), ADR-011 (incl. Security Analysis), ADR-012, ADR-005 amendment, ADR-010
 **Machine(s) used**: Windows Developer Machine only (see §9)
-**Story status**: Verified/Closed (Michael, 2026-10-10)
+**Story status**: Verified/Closed (the project owner, 2026-10-10)
 
 ---
 
@@ -36,8 +36,8 @@ US-004 is implemented as planned in Steps 0 to 11. The service starts a hardened
 | D-1 | Agent protocol kinds `Window`, `FileExplorer` (ADR-011 §3) | Two more kinds: `StoreApp` with `host` (the frame's PID), and `ExplorerWindow` | The service must check the frame's process path (real `ApplicationFrameHost`, ADR-011 §5); without the frame PID it cannot. `ExplorerWindow` closes a gap: the agent recognises `explorer.exe` by name, so a game **renamed** to `explorer.exe` would never have counted. Now the service drops such windows only for the real `%SystemRoot%\explorer.exe` and counts them for any other program (T-10). |
 | D-2 | Windows version API for files in `%SystemRoot%`, `%ProgramFiles%`, `%ProgramFiles(x86)%` | Additionally the file's **owner** must be SYSTEM, Administrators or TrustedInstaller; otherwise the managed `VersionResourceReader` is used | Some folders below `%SystemRoot%` are writable by standard users (e.g. `C:\Windows\Temp`). Stricter than planned; no function lost (Windows files are owned by TrustedInstaller). |
 | D-3 | User SID via `WTSQueryUserToken` + `GetTokenInformation(TokenUser)` | Via `WTSUserName`/`WTSDomainName` translated to the SID (`NTAccount.Translate`) | Works as SYSTEM and unelevated (console smoke check). `WTSQueryUserToken` is still used for the impersonation in `Win32AppMetadataSource`. |
-| D-4 | "DEV verifies in Step 3 whether the agent starts under the write-restricted token" | Automatic fallback (`WriteRestrictionPolicy`): if the first 2 agents exit before their first report and no agent has ever worked with the restriction, later agents start without it; logged as Warning. The agent's diagnostic line shows the variant. | DEV has no SYSTEM rights, so the check is Michael's (§7, check A). The fallback keeps everything else (no privileges, Administrators deny-only, System integrity, no windows), as Q-9 allows. |
-| D-5 | Smoke check with the installed 0.4.0 parent app paired with a console service on `localhost` | Debug-only switch `EAGLEEYE_DEV_PORT_OFFSET` (service: both ports and `HubEndpointGuard`; parent app: `HostAddress`); smoke check with the **Debug** parent app on 15443 | Michael's 0.3.1 service holds 5443/5080 on this PC and must not be touched or paired with. Release builds do not contain the switch (checked in the published DLLs, §5). |
+| D-4 | "DEV verifies in Step 3 whether the agent starts under the write-restricted token" | Automatic fallback (`WriteRestrictionPolicy`): if the first 2 agents exit before their first report and no agent has ever worked with the restriction, later agents start without it; logged as Warning. The agent's diagnostic line shows the variant. | DEV has no SYSTEM rights, so the check is the project owner's (§7, check A). The fallback keeps everything else (no privileges, Administrators deny-only, System integrity, no windows), as Q-9 allows. |
+| D-5 | Smoke check with the installed 0.4.0 parent app paired with a console service on `localhost` | Debug-only switch `EAGLEEYE_DEV_PORT_OFFSET` (service: both ports and `HubEndpointGuard`; parent app: `HostAddress`); smoke check with the **Debug** parent app on 15443 | The project owner's 0.3.1 service holds 5443/5080 on this PC and must not be touched or paired with. Release builds do not contain the switch (checked in the published DLLs, §5). |
 | D-6 | `EAGLEEYE_DEV_WATCH_SID`: "that SID is treated as controlled" | The SID's account is reported as a **standard** account (Debug-only `DevLocalAccountSource`) and is then ticked in the app | DEV's own account is an admin and would otherwise never appear (US-003). The real US-003 path (tick → controlled) is exercised. |
 | D-7 | `UsageTracker` writes the start/end log entries | `UsageService` writes them (`UsageHistoryLog` + `InstanceLogLimiter`) | The log line names the database instance id, which exists only after the insert. Templates and the limit are unchanged. |
 | D-8 | `UsageService` methods `RecordAppAsync`, `StartInstanceAsync`, `EndInstanceAsync`, `ApplyTickAsync` | One entry point `ApplyAsync(TrackerOutput, userNames, isTick)` | The tracker produces starts, ends and credits together; one call per event keeps the order and the lock simple. Same behaviour (records/starts/ends written at once, usage once per tick in one transaction). |
@@ -55,23 +55,23 @@ The plan's own story interpretations D-1 to D-9 (one database, instance = contin
 
 | Measure | Where | Unit-tested | Verified |
 |---|---|---|---|
-| Token: `CreateRestrictedToken` with `DISABLE_MAX_PRIVILEGE`, Administrators deny-only, `WRITE_RESTRICTED` (S-1-5-12), fallback per D-4; `TokenSessionId`; System integrity kept | `SessionAgentLauncher`, `WriteRestrictionPolicy` | policy | Michael (check A) |
-| Process/thread DACL: SYSTEM full; Administrators `QUERY_LIMITED|TERMINATE|SYNCHRONIZE` (process) / `QUERY_LIMITED|TERMINATE|SYNCHRONIZE` (thread); protected; nobody else; owner SYSTEM | `AgentStartSpec` (`O:SYD:P(A;;GA;;;SY)(A;;0x101001;;;BA)`, thread `0x100801`), launcher | `AgentStartSpecTests` (parsed SDDL) | Michael (check B) |
+| Token: `CreateRestrictedToken` with `DISABLE_MAX_PRIVILEGE`, Administrators deny-only, `WRITE_RESTRICTED` (S-1-5-12), fallback per D-4; `TokenSessionId`; System integrity kept | `SessionAgentLauncher`, `WriteRestrictionPolicy` | policy | The project owner (check A) |
+| Process/thread DACL: SYSTEM full; Administrators `QUERY_LIMITED|TERMINATE|SYNCHRONIZE` (process) / `QUERY_LIMITED|TERMINATE|SYNCHRONIZE` (thread); protected; nobody else; owner SYSTEM | `AgentStartSpec` (`O:SYD:P(A;;GA;;;SY)(A;;0x101001;;;BA)`, thread `0x100801`), launcher | `AgentStartSpecTests` (parsed SDDL) | The project owner (check B) |
 | Minimal environment (`SystemRoot`, `windir`, `SystemDrive`, `TEMP`/`TMP` = `%SystemRoot%\Temp`, `PATH` = System32, `DOTNET_EnableDiagnostics=0`), absolute application name, fixed argument, current directory = install folder | `AgentStartSpec` | yes | — |
-| `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` with exactly the 3 pipe ends; `CREATE_NO_WINDOW|CREATE_UNICODE_ENVIRONMENT|EXTENDED_STARTUPINFO_PRESENT`; desktop `WinSta0\Default` | `SessionAgentLauncher` | — (Win32) | Michael (check A: the agent starts) |
+| `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` with exactly the 3 pipe ends; `CREATE_NO_WINDOW|CREATE_UNICODE_ENVIRONMENT|EXTENDED_STARTUPINFO_PRESENT`; desktop `WinSta0\Default` | `SessionAgentLauncher` | — (Win32) | The project owner (check A: the agent starts) |
 | `SetDefaultDllDirectories(SYSTEM32|APPLICATION_DIR)` first; startup hooks disabled | `SessionAgentHost`; csproj `StartupHookSupport=false` | — | DEV: published `runtimeconfig.json` has `"System.StartupHookProvider.IsSupported": false` |
 | No window, hooks, message loop, COM, shell, UIA, DPI API; only non-messaging window functions; no titles; ≤ 20 000 windows, `truncated` | `WindowEnumerator`, `SessionAgentHost` | rule/scanner | DEV: code review (the agent additionally opens processes with `PROCESS_QUERY_LIMITED_INFORMATION` to read the image name for the `explorer.exe` decision; no window function, no messages) |
-| Agent diagnostic line (user, integrity, privileges, write-restricted) logged at Information | `AgentDiagnostics`, supervisor | supervisor (level) | DEV console: line appears; SYSTEM values: Michael (check A) |
+| Agent diagnostic line (user, integrity, privileges, write-restricted) logged at Information | `AgentDiagnostics`, supervisor | supervisor (level) | DEV console: line appears; SYSTEM values: the project owner (check A) |
 | Reports untrusted: 64 KB lines, ≤ 1 000 entries, strict schema (unknown/duplicate properties, depth, types), PID → session, owner, creation time; latest-only queue per session | `BoundedLineReader`, `AgentProtocol`, `AgentReportProcessor`, `UsageEventQueue` | yes | — |
-| Paths: only local fixed drives; UNC, `\\?\UNC\`, devices, network, removable never opened; final path checked | `ProgramPathPolicy`, `Win32AppMetadataSource` | policy | Michael (check C) |
-| File access impersonating the session user (`WTSQueryUserToken` + `RunImpersonated`); as SYSTEM without token nothing is read | `Win32AppMetadataSource` | — | Michael (check C) |
+| Paths: only local fixed drives; UNC, `\\?\UNC\`, devices, network, removable never opened; final path checked | `ProgramPathPolicy`, `Win32AppMetadataSource` | policy | The project owner (check C) |
+| File access impersonating the session user (`WTSQueryUserToken` + `RunImpersonated`); as SYSTEM without token nothing is read | `Win32AppMetadataSource` | — | The project owner (check C) |
 | Untrusted files only via managed `VersionResourceReader` (RT_VERSION ≤ 64 KB, files ≤ 512 MB); version API only for protected paths with trusted owner (D-2); no icons/shell/COM/LoadLibrary | `VersionResourceReader`, `Win32AppMetadataSource` | reader (synthetic PE files, malformed structures) | DEV: "Windows-Explorer" (MUI) and "Visual Studio Code" (user-writable path) resolved |
 | Manifest: `XmlReader` DTD prohibited, no resolver, ≤ 1 MB; only service-built `@{FullName?ms-resource://…}` to `SHLoadIndirectString`; raw `@…` never passed | `PackageManifestReader`, `Win32AppMetadataSource` | yes | DEV: "Rechner", "Snipping Tool", "Terminal", "Einstellungen" |
 | Names sanitized (control/format/bidi, ≤ 256, no split surrogates) | `DisplayNameSanitizer` | yes | — |
-| 5 s merge of reopened apps; ≤ 30 start/end entries per app and hour + summary | `UsageTracker`, `InstanceLogLimiter`, `UsageHistoryLog` | yes | Michael (check E) |
-| Missing heartbeat 15 s / exit / protocol error → pause (no credit), restart 1/5/30 s, Warning; Error after 3 failed restarts | `SessionAgentSupervisor` | yes | Michael (check B, end the agent as admin) |
-| EagleEye's own programs excluded by install path, not name; Explorer/frame host verified by path | `ProgramPathPolicy`, `AgentReportProcessor` | yes | Michael (check D) |
-| Debug helpers only in Debug | `#if DEBUG` | Debug tests | DEV: Release `EagleEye.Service.dll` and `EagleEye.ParentApp.Core.dll` contain no `EAGLEEYE_DEV_*` strings and no `DevSessionAgentLauncher`/`DevLocalAccountSource`; Michael (check F) |
+| 5 s merge of reopened apps; ≤ 30 start/end entries per app and hour + summary | `UsageTracker`, `InstanceLogLimiter`, `UsageHistoryLog` | yes | The project owner (check E) |
+| Missing heartbeat 15 s / exit / protocol error → pause (no credit), restart 1/5/30 s, Warning; Error after 3 failed restarts | `SessionAgentSupervisor` | yes | The project owner (check B, end the agent as admin) |
+| EagleEye's own programs excluded by install path, not name; Explorer/frame host verified by path | `ProgramPathPolicy`, `AgentReportProcessor` | yes | The project owner (check D) |
+| Debug helpers only in Debug | `#if DEBUG` | Debug tests | DEV: Release `EagleEye.Service.dll` and `EagleEye.ParentApp.Core.dll` contain no `EAGLEEYE_DEV_*` strings and no `DevSessionAgentLauncher`/`DevLocalAccountSource`; the project owner (check F) |
 
 No measure was weakened or left out. Coding guidelines §12.4 notes: all rules above apply to `SessionAgent/`, `SessionAgentLauncher` and `Win32AppMetadataSource` and are met as listed.
 
@@ -113,17 +113,17 @@ coverlet, line and branch: **100 % / 100 %** for every class marked **unit** in 
 
 ## 6. Open Questions and Risks
 
-1. **SYSTEM-only parts are verified by Michael** (§7): agent start in another session as SYSTEM, write-restricted token or fallback, process DACL, impersonation, Event Log/SCM events (lock, switch user, sleep). DEV ran the agent only as a normal child process in DEV's own session (Debug launcher).
+1. **SYSTEM-only parts are verified by the project owner** (§7): agent start in another session as SYSTEM, write-restricted token or fallback, process DACL, impersonation, Event Log/SCM events (lock, switch user, sleep). DEV ran the agent only as a normal child process in DEV's own session (Debug launcher).
 2. **Write restriction (Q-9)**: unknown until check A. If the fallback is used, the log shows the Warning of D-4 and `write-restricted no` in the agent's diagnostic line.
 3. **Apps rule vs Task Manager** (ADR-011 known limits, arc42 R-10): on this PC the agent's list matched the windowed processes (pwsh/Terminal, File Explorer, mstsc, VS Code, iCloud, a game, Steam, Calculator, Settings, Notepad, Character Map, System Information, Snipping Tool, the parent app).
 4. **Names come from the service PC's language** (German Windows: "Editor", "Rechner", "Windows-Explorer", "Zeichentabelle", "Systeminformationen", "Einstellungen"). Windows Terminal hosts console programs: `cmd`/`pwsh` windows count as the app "Terminal".
-5. **Lock, switch user and sleep** were not smoke-tested by DEV (locking would have locked Michael's workstation). Covered by unit tests; Michael tests them.
+5. **Lock, switch user and sleep** were not smoke-tested by DEV (locking would have locked the project owner's workstation). Covered by unit tests; the project owner tests them.
 6. **AC-22 lag**: the Reports page follows the service's 5 s tick; the service's own value includes unpersisted seconds only after the next tick (≤ 5 s).
 7. US-003's push ACs were not verified manually (Q-5); a Reports page that does not follow account changes may come from there.
 
 ---
 
-## 7. Checks for Michael (admin / SYSTEM) — exact steps
+## 7. Checks for the project owner (admin / SYSTEM) — exact steps
 
 Preparation (admin account): install `03_Delivery/windows/EagleEye-Setup-0.4.0.exe` over 0.3.1, then `EagleEye-ParentApp-Setup-0.4.0.exe` on the parent PC. Tick `kid1` in *Einstellungen*. Sign in as `kid1` (switch user). Service log: `%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log` (admin; e.g. `Get-Content -Wait` in an elevated PowerShell).
 
@@ -163,7 +163,7 @@ Preparation (admin account): install `03_Delivery/windows/EagleEye-Setup-0.4.0.e
 | No controlled account (AC-20) | Keine Konten unter Elternkontrolle. Konten unter Einstellungen auswählen. | No accounts under parental control. Select accounts under Settings. |
 | While fetching (AC-20) | Wird geladen … | Loading … |
 
-Layout: page header, then "Konto" with a drop-down of the accounts under parental control (names as in Settings, e.g. "Max Adler (max)"), then per day a heading bar (0.4.1, ISSUE-007: full width, accent colour background, see §10) and a two-column table (360 / 160 units, usage right-aligned; header row only when the day has rows). Usage is rounded down to minutes ("00:00" below one minute).
+Layout: page header, then "Konto" with a drop-down of the accounts under parental control (names as in Settings, e.g. "Max Mustermann (max)"), then per day a heading bar (0.4.1, ISSUE-007: full width, accent colour background, see §10) and a two-column table (360 / 160 units, usage right-aligned; header row only when the day has rows). Usage is rounded down to minutes ("00:00" below one minute).
 
 ### Log entries (service log, Information unless noted)
 
@@ -197,7 +197,7 @@ Warning: The session agent in session 2 found more than 20000 windows; its repor
 | Database | `%ProgramData%\EagleEye\EagleEye.Service.db`: `AppRecords`, `AppInstances`, `DailyUsage` (seconds per app and day). |
 | Other notes | The Manual Verification Notes of the plan apply unchanged (locking, switch user, sleep, clock change, service stop/kill, CPU). |
 
-### DEV smoke check (Windows Developer Machine, 2026-10-08, non-elevated, next to Michael's running 0.3.1 service)
+### DEV smoke check (Windows Developer Machine, 2026-10-08, non-elevated, next to the project owner's running 0.3.1 service)
 
 - Agent mode by hand (`EagleEye.Service.exe --session-agent` in DEV's session): JSON lines on stdout matching the windowed processes; diagnostic line on stderr; EOF on stdin ends it with code 0; any other argument → exit code 2.
 - Console service (Debug, `EAGLEEYE_DATA_DIR=artifacts/smoke-us004`, `EAGLEEYE_DEV_WATCH_SID=<DEV's SID>`, `EAGLEEYE_DEV_PORT_OFFSET=10000` → 15080/15443) and the **Debug** parent app with the same offset, paired with `localhost` (code from Event Log 1000). Ticking DEV's account in Settings started the agent (`Usage recording started … in session 1`, diagnostic line `integrity Medium, privileges SeChangeNotifyPrivilege, write-restricted no` — DEV's own token, as expected in Debug).
@@ -206,8 +206,8 @@ Warning: The session agent in session 2 found more than 20000 windows; its repor
 - Killing the console service → the agent exited by itself within 3 s; at restart all open instances were ended at their last seen time with `(service stopped unexpectedly)` and new instances started.
 - Found and fixed during the smoke check: Snipping Tool was named "SnippingTool" (resource key `AppName/Text`); fixed in `PackageManifestReader` (now "Snipping Tool").
 - **CPU (Step 10)**, 10 recorded apps, 60 s, 20 logical CPUs: service **0.016 %**, agent **0.005 %** of total CPU (together 0.021 %); agent memory 21 MB private / 38 MB working set; service 37 MB private (AC-25 bound: 2 %).
-- **Not done** (needs admin/SYSTEM or would disturb Michael's session): installer, SYSTEM agent, lock/switch user/sleep, §7 checks.
-- Clean-up: all processes started by DEV were closed (Explorer windows and Windows Terminal left open because they host Michael's shell and tabs). Michael's service, tray client and data were not touched; no pairing with his service. Left behind (git-ignored): `02_Implementation/artifacts/smoke-us004*` (data folder with a test certificate and a pairing of the Debug app), `artifacts/us004-cpu.txt`; the Debug parent app's data in `%LocalAppData%\EagleEye` (pairing with the console service only).
+- **Not done** (needs admin/SYSTEM or would disturb the project owner's session): installer, SYSTEM agent, lock/switch user/sleep, §7 checks.
+- Clean-up: all processes started by DEV were closed (Explorer windows and Windows Terminal left open because they host the project owner's shell and tabs). The project owner's service, tray client and data were not touched; no pairing with their service. Left behind (git-ignored): `02_Implementation/artifacts/smoke-us004*` (data folder with a test certificate and a pairing of the Debug app), `artifacts/us004-cpu.txt`; the Debug parent app's data in `%LocalAppData%\EagleEye` (pairing with the console service only).
 
 ---
 
@@ -231,4 +231,4 @@ Warning: The session agent in session 2 found more than 20000 windows; its repor
 | Tests | +19 (ParentApp 545): `Appearance/HeadingBarPaletteTests` (fallback, Windows blue, dark and light accents, the 4.5 boundary on both sides, luminance, contrast ratio), `MainViewModelTests` (paired → Reports with one change notification, not paired → Settings, paired after the menu wrote back Settings → Reports). `HeadingBarPalette`, `RgbColor`, `MainViewModel` at 100 % line and branch coverage. `build.ps1` 0 warnings (Windows + Android), `test.ps1` 1 513 passed. |
 | Installers | `03_Delivery/windows/EagleEye-Setup-0.4.1.exe` (10:31, `2565b31e…cd41fbe`), `03_Delivery/windows/EagleEye-ParentApp-Setup-0.4.1.exe` (10:32, `274d82fc…b74ed472`); full hashes in §8 |
 | Deviation | Two layout points beyond the issue text: the outer page stacks on both pages now fill the content area (needed for the full-width bar of the mockup); long texts (instruction, error text) can therefore use the full width. The headings lost their bold weight to match the mockup; switching back to bold is one setter in `Styles.xaml`. |
-| Smoke check | Windows Developer Machine (`ZOCK-O-MAT-V3`, 150 % scaling, dark mode, orange-red accent colour), Michael's installed service 0.4.0 not touched. (a) Debug parent app paired with the Debug console service on the offset ports (as in §8, `EAGLEEYE_DEV_PORT_OFFSET=10000`): opens on *Berichte*, menu entry selected, day bars "Heute, 10.10.2026" / "08.10.2026" full width in the accent colour with white text; *Einstellungen* shows the three bars. The first attempt still opened on *Einstellungen*: the menu's two-way binding writes the first entry back when it loads, and a guard "keep the user's choice" took that as a user choice; the guard was removed before the commit. (b) `EagleEye-ParentApp-Setup-0.4.1.exe` installed per user (file version 0.4.1.0, product version `0.4.1+4327f60…`), started with the Debug app data set aside (unpaired: *Einstellungen*, host entry, bars shown), uninstalled; the Debug app data was put back. Not checked by DEV: light mode, changing the accent colour while the app runs, Android, LEOSERV. |
+| Smoke check | Windows Developer Machine (`DEV-PC`, 150 % scaling, dark mode, orange-red accent colour), the project owner's installed service 0.4.0 not touched. (a) Debug parent app paired with the Debug console service on the offset ports (as in §8, `EAGLEEYE_DEV_PORT_OFFSET=10000`): opens on *Berichte*, menu entry selected, day bars "Heute, 10.10.2026" / "08.10.2026" full width in the accent colour with white text; *Einstellungen* shows the three bars. The first attempt still opened on *Einstellungen*: the menu's two-way binding writes the first entry back when it loads, and a guard "keep the user's choice" took that as a user choice; the guard was removed before the commit. (b) `EagleEye-ParentApp-Setup-0.4.1.exe` installed per user (file version 0.4.1.0, product version `0.4.1+4327f60…`), started with the Debug app data set aside (unpaired: *Einstellungen*, host entry, bars shown), uninstalled; the Debug app data was put back. Not checked by DEV: light mode, changing the accent colour while the app runs, Android, PARENT-PC. |

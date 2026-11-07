@@ -11,7 +11,7 @@ Use model: `claude-opus-5`
 ## Scope Constraints
 
 - The shared rules in the root `CLAUDE.md` ("Rules for All Agents", "Where You Run") apply: stay inside the git repo root, use repo-relative paths, no secrets, no internet unless granted.
-- **ABSOLUTE RULE**: Do not write any production code until the ARC implementation plan for the current user story is approved by Michael
+- **ABSOLUTE RULE**: Do not write any production code until the ARC implementation plan for the current user story is approved by the project owner
 
 ## Host Machine Rules
 
@@ -22,9 +22,9 @@ Read `02_Implementation/docs/dev-process/dev-environments.md` at the start of ev
 | **Windows Developer Machine** | `EagleEye.Shared`, `EagleEye.Service`, `EagleEye.TrayClient`, `EagleEye.ParentApp` (shared code + Windows target), installer |
 | **MacBook** | `EagleEye.ParentApp` (shared code + Mac Catalyst target), `.dmg` packaging. Change `EagleEye.Shared` only if the plan explicitly assigns it to the MacBook. |
 
-- Only implement plan steps assigned to your host (see the plan's "Machine Assignment" section). For steps on the other machine: stop, commit, and tell Michael what to run there.
+- Only implement plan steps assigned to your host (see the plan's "Machine Assignment" section). For steps on the other machine: stop, commit, and tell the project owner what to run there.
 - Shared ParentApp code (ViewModels, Communication, Views) can be written on either machine, but it must build on the host you are on before you commit.
-- Pull before you start; commit before you hand over. Never leave work uncommitted when Michael switches machines.
+- Pull before you start; commit before you hand over. Never leave work uncommitted when the project owner switches machines.
 
 ## Primary Inputs
 
@@ -57,7 +57,7 @@ Read `02_Implementation/docs/dev-process/dev-environments.md` at the start of ev
 
 ## Absolute Rules
 
-1. **No code before approval**: Do not write any production code until the implementation plan is approved by Michael.
+1. **No code before approval**: Do not write any production code until the implementation plan is approved by the project owner.
 2. **Follow the dev process**: Adhere to `02_Implementation/docs/dev-process/dev-process.md` — entry/exit criteria, git workflow, Definition of Done.
 3. **100% branch coverage**: Every branch in every production class you write must have a corresponding unit test.
 4. **One story at a time**: Fully complete the current user story before starting the next.
@@ -71,15 +71,15 @@ Read `02_Implementation/docs/dev-process/dev-environments.md` at the start of ev
 
 - **One feature branch per user story**: `feature/US-XXX-<short-title>`, created by PRO (`02_Implementation/docs/dev-process/dev-process.md` §4).
 - **Before writing any code**: `git fetch` → `git switch feature/US-XXX-<short-title>` → `git pull`. If you are on `main`, stop. Never commit story work to `main`.
-- Both machines work on the same branch: push before Michael switches machines; pull after switching.
+- Both machines work on the same branch: push before the project owner switches machines; pull after switching.
 - If `main` changed meanwhile, `git merge main` into the feature branch. Do not rebase (the branch is shared).
 - Commit messages reference the user story: `US-XXX: <what changed and why>`.
 - Commit incrementally as implementation progresses, and push the branch.
-- DEV never merges into `main`. The Orchestrator merges after Michael has closed the story.
+- DEV never merges into `main`. The Orchestrator merges after the project owner has closed the story.
 
 ## Handover to Manual Testing
 
-There are no automated E2E tests; Michael tests manually (see `02_Implementation/docs/testing/README.md`). Before presenting a story as implemented, DEV on the Windows machine must:
+There are no automated E2E tests; the project owner tests manually (see `02_Implementation/docs/testing/README.md`). Before presenting a story as implemented, DEV on the Windows machine must:
 
 1. Run `pwsh scripts/build.ps1` and `pwsh scripts/test.ps1` (zero warnings, all green).
 2. Produce the testable artifact (e.g. the installer via `scripts/package-windows.ps1`, or a runnable parent-app build) and do a **smoke check**: it installs or starts and the main screen or tray icon appears. This is not a substitute for TES's test plan.
@@ -87,7 +87,7 @@ There are no automated E2E tests; Michael tests manually (see `02_Implementation
 
 ## Implementation Report
 
-DEV must produce an implementation report for every user story at `02_Implementation/docs/requirements/user-stories/US-XXX/implementation-report.md`. The report documents how the story was actually implemented and serves as the primary record for Michael's review.
+DEV must produce an implementation report for every user story at `02_Implementation/docs/requirements/user-stories/US-XXX/implementation-report.md`. The report documents how the story was actually implemented and serves as the primary record for the project owner's review.
 
 The report must contain:
 
@@ -98,7 +98,7 @@ The report must contain:
    - The deviation must be grounded in concrete skills or existing code, not subjective preference.
 3. **Files created or modified** — full paths.
 4. **Unit test coverage** — which test classes were added, what scenarios they cover.
-5. **Open questions or risks** — anything Michael should be aware of.
+5. **Open questions or risks** — anything the project owner should be aware of.
 6. **How to test** — see "Handover to Manual Testing" above.
 7. **Machine(s) used** — which steps were done on Windows and which on the MacBook.
 
@@ -145,5 +145,5 @@ If there are no deviations, state so explicitly. The report is a required delive
 - Use Moq for all external dependencies and interfaces
 - No test depends on another test's state
 - Unit tests must run without any external services, files, network, or Windows-specific APIs (mock those)
-- Run `pwsh scripts/test.ps1` to verify all tests pass before presenting work to Michael. The script runs the test projects that belong to the current host.
+- Run `pwsh scripts/test.ps1` to verify all tests pass before presenting work to the project owner. The script runs the test projects that belong to the current host.
 - Unit tests are the only automated tests. Do not create E2E or UI automation tests.

@@ -1,6 +1,6 @@
 # Test Plan: US-005 — Break Times (Ruhezeiten)
 
-**Status**: Draft, for approval by Michael
+**Status**: Draft, for approval by the project owner
 **Date**: 2026-10-11
 **Author**: TES
 **User Story**: `02_Implementation/docs/requirements/user-stories/US-005/user-story.md` (37 ACs, approved 2026-10-10, OQ-1 to OQ-18 answered)
@@ -39,9 +39,9 @@
 
 | Item | Value |
 |---|---|
-| Service PC | **Windows Developer Machine** (Windows 11 Pro, German UI, `ZOCK-O-MAT-V3`). `<host>` = its computer name. Current state: EagleEye **0.4.0** (or 0.4.1) service running, App A paired. |
-| Parent PC | **LEOSERV**, parent app **App B**. Needed to change rules **while the kid's session is in front** (Blocks B and D) and for two parent apps at once (TC-005-23). Without LEOSERV, TC-005-23 is **Blocked**; elsewhere use App A and switch users (switching takes longer than 5 s, so the "within 5 s" checks are then only weak). |
-| Parent apps | **App A** = parent app in your admin session on the service PC (device *Papas PC*). **App B** = parent app on LEOSERV (device *LEOSERV*). |
+| Service PC | **Windows Developer Machine** (Windows 11 Pro, German UI, `DEV-PC`). `<host>` = its computer name. Current state: EagleEye **0.4.0** (or 0.4.1) service running, App A paired. |
+| Parent PC | **PARENT-PC**, parent app **App B**. Needed to change rules **while the kid's session is in front** (Blocks B and D) and for two parent apps at once (TC-005-23). Without PARENT-PC, TC-005-23 is **Blocked**; elsewhere use App A and switch users (switching takes longer than 5 s, so the "within 5 s" checks are then only weak). |
+| Parent apps | **App A** = parent app in your admin session on the service PC (device *Papas PC*). **App B** = parent app on PARENT-PC (device *PARENT-PC*). |
 | Accounts on the service PC (as in US-004) | **Admin** = you. **kid1** = `eagleeye-kid` (standard, **controlled**). **kid2** = `ee-kid2` (standard, **not controlled**). **kid3** = `ee-kid3` (standard, **controlled**, deleted in TC-005-30). *Careful: the story's test setup names them differently* (story "kid2, controlled" = our `ee-kid3`; story "kid3, not controlled" = our `ee-kid2`). This plan always uses the user names. |
 | Builds under test | `03_Delivery/windows/EagleEye-Setup-0.5.0.exe` (service + tray, admin; built 2026-10-10 22:47, SHA-256 `83bf5c55f924f46137d4a006692bd8e4e5fd1f449c0fb8912c5fe43924151830`) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.5.0.exe` (parent app, per user; built 2026-10-10 22:48, SHA-256 `a03245d558bbce88be72f5a203a19a08608744b5c3144eb2534c12644cb217a1`). TES checked both hashes against the files on 2026-10-11. |
 | Expected versions | *Installierte Apps*: **EagleEye 0.5.0**, **EagleEye Parent App 0.5.0**. Tray *App Infos*: `EagleEye_v0.5`. |
@@ -70,11 +70,11 @@
 
 | Block | Cases | Machine / accounts | Core / optional | Duration |
 |---|---|---|---|---|
-| Setup | S-1 to S-13 | Service PC, LEOSERV | — | ≈ 30 min (+ 15 min if `ee-kid2`/`ee-kid3` must be created) |
+| Setup | S-1 to S-13 | Service PC, PARENT-PC | — | ≈ 30 min (+ 15 min if `ee-kid2`/`ee-kid3` must be created) |
 | **A** Upgrade and the Regeln page | TC-005-01 to -10 (10) | Service PC / Admin | core | ≈ 40 min |
-| **B** Blocking at start and the kid's dialog | TC-005-11 to -17 (7) | Service PC / kid1; LEOSERV | core | ≈ 45 min |
+| **B** Blocking at start and the kid's dialog | TC-005-11 to -17 (7) | Service PC / kid1; PARENT-PC | core | ≈ 45 min |
 | **C** Other accounts and exemptions | TC-005-18 to -20 (3) | Service PC / kid1, ee-kid3, ee-kid2, Admin | core | ≈ 30 min |
-| **D** Boundaries, tray, two parent apps, re-install | TC-005-21 to -25 (5) | Service PC / kid1, Admin; LEOSERV | core | ≈ 45 min |
+| **D** Boundaries, tray, two parent apps, re-install | TC-005-21 to -25 (5) | Service PC / kid1, Admin; PARENT-PC | core | ≈ 45 min |
 | **E** Security | TC-005-26 to -28 core, -29 optional (4) | Service PC / kid1, Admin | core (security) + optional | ≈ 25 min core, + 10 min optional |
 | **F** Account deletion and optional checks | TC-005-30 core, -31 to -35 optional (6) | Service PC / Admin, kid1 | core + optional | ≈ 10 min core, + ≈ 60 min optional |
 
@@ -182,12 +182,12 @@ Must **not** appear in this run: `Warning: Process … could not be terminated`,
 9. **S-9 Selection.** App A → *Einstellungen*: **eagleeye-kid** and **ee-kid3** ticked; **ee-kid2** and every other account **unticked**.
 10. **S-10 SmartScreen** on the unsigned installers: *Weitere Informationen* → *Trotzdem ausführen* (expected).
 11. **S-11 K-TERM** (as in US-004): in the kid's session, Start → **Terminal** → right-click → **Als Administrator ausführen** → enter **your admin** user name and password. It runs as you, so it is neither recorded nor blocked. Open it while the break is **off**. Close it before you sign the kid out.
-12. **S-12 App B on LEOSERV** (can be done now or before Block B): after TC-005-02, install `EagleEye-ParentApp-Setup-0.5.0.exe` on LEOSERV over the old version, start it; green and *Gekoppelt* with `<host>` → done; otherwise pair as **LEOSERV**. Not available today → note it; TC-005-23 is then Blocked.
+12. **S-12 App B on PARENT-PC** (can be done now or before Block B): after TC-005-02, install `EagleEye-ParentApp-Setup-0.5.0.exe` on PARENT-PC over the old version, start it; green and *Gekoppelt* with `<host>` → done; otherwise pair as **PARENT-PC**. Not available today → note it; TC-005-23 is then Blocked.
 13. **S-13 SQLite tool** (only for optional TC-005-34): `sqlite3.exe` on the PATH, or *DB Browser for SQLite*. None → skip TC-005-34.
 
 **Before Block B** (prepare kid1's session; ≈ 10 min):
 
-- **P-1** App B (LEOSERV) → **Regeln** → **Konto** `eagleeye-kid`. Create **E1** (§2), An/Aus **unticked**. Without LEOSERV: do it in App A.
+- **P-1** App B (PARENT-PC) → **Regeln** → **Konto** `eagleeye-kid`. Create **E1** (§2), An/Aus **unticked**. Without PARENT-PC: do it in App A.
 - **P-2** *Benutzer wechseln* → `eagleeye-kid`.
 - **P-3** Seconds in the clock: *Einstellungen → Personalisierung → Taskleiste → Verhalten der Taskleiste* → **Sekunden in der Uhr der Taskleiste anzeigen** ✓.
 - **P-4** **P-KID**: Start → **Terminal** (normal, not as administrator). Keep it open for the whole run.
@@ -435,7 +435,7 @@ All 37 ACs have at least one core case. Security and robustness checks without a
 
 ### Block B — Blocking at start and the kid's dialog (core)
 
-*Service PC, in kid1's session (`eagleeye-kid`); K-TERM with LOG-WATCH; P-KID open; Edge maximised. App B on LEOSERV on Regeln → `eagleeye-kid` (E1 created, off).*
+*Service PC, in kid1's session (`eagleeye-kid`); K-TERM with LOG-WATCH; P-KID open; Edge maximised. App B on PARENT-PC on Regeln → `eagleeye-kid` (E1 created, off).*
 
 > **Before Block B**: P-1 to P-7 (§3). Then do not close P-KID, K-TERM or Edge until Block C.
 
@@ -699,8 +699,8 @@ All 37 ACs have at least one core case. Security and robustness checks without a
 #### TC-005-23: Two parent apps: changes appear in the other app within 5 s; deleted meanwhile → message
 
 - **Verifies**: AC-19, AC-18, AC-5
-- **Machine / account**: Service PC / Admin (App A) and LEOSERV (App B) side by side
-- **Precondition**: both apps on **Regeln** → `eagleeye-kid`. No LEOSERV → **Blocked**
+- **Machine / account**: Service PC / Admin (App A) and PARENT-PC (App B) side by side
+- **Precondition**: both apps on **Regeln** → `eagleeye-kid`. No PARENT-PC → **Blocked**
 
 **Steps**
 
@@ -755,7 +755,7 @@ All 37 ACs have at least one core case. Security and robustness checks without a
 
 *Implementation plan Q-8 and Manual Verification Notes; implementation report §6 and §7. No AC (except TC-005-28: AC-37); a Fail is filed as an issue of US-005 with severity by impact.*
 
-> **Before Block E**: start App B on LEOSERV again (closed in TC-005-25) → Regeln → `eagleeye-kid`. kid1 in front with P-KID and K-TERM.
+> **Before Block E**: start App B on PARENT-PC again (closed in TC-005-25) → Regeln → `eagleeye-kid`. kid1 in front with P-KID and K-TERM.
 
 #### TC-005-26: Which restricted SYSTEM token the agent runs with (US-004 TC-004-23, rerun)
 
@@ -965,13 +965,13 @@ None (`02_Implementation/docs/testing/README.md` §3; story run only).
      if (Get-LocalUser -Name $n -ErrorAction SilentlyContinue) { Remove-LocalUser -Name $n }
    }
    ```
-7. **LEOSERV**: App B stays installed and paired.
+7. **PARENT-PC**: App B stays installed and paired.
 
-## 8. Notes and Open Questions for Michael
+## 8. Notes and Open Questions for the project owner
 
 | ID | Question | Proposed answer |
 |---|---|---|
-| Q-1 | **LEOSERV as App B**: needed to switch breaks on and off while the kid's session is in front (Blocks B, D) and for TC-005-23. Available? | Yes. Without it: TC-005-23 Blocked; elsewhere App A plus user switches (the 5 s checks become weak). |
+| Q-1 | **PARENT-PC as App B**: needed to switch breaks on and off while the kid's session is in front (Blocks B, D) and for TC-005-23. Available? | Yes. Without it: TC-005-23 Blocked; elsewhere App A plus user switches (the 5 s checks become weak). |
 | Q-2 | **Force case via a stopped service** (TC-005-16): Paint with an unsaved drawing, started while the service is stopped, instead of "Notepad with typed text" (a fresh start is closed before anything can be typed). OK? | Yes. It tests the 20 s force step, the termination across sessions and the "caught afterwards" rule in one case. |
 | Q-3 | **Time-zone change by the kid** (TC-005-28): `tzutil /s "UTC"` as `eagleeye-kid`, reset right after. OK? | Yes; reset in the case itself and checked in cleanup. |
 | Q-4 | **Core vs. optional**: optional are TC-005-29 and TC-005-31 to -35. No AC rests only on them. OK? | Yes. |

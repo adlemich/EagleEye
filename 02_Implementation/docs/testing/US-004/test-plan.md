@@ -1,6 +1,6 @@
 # Test Plan: US-004 — App Usage Tracking and Daily Usage Report
 
-**Status**: Draft, for approval by Michael
+**Status**: Draft, for approval by the project owner
 **Date**: 2026-10-08
 **Author**: TES
 **User Story**: `02_Implementation/docs/requirements/user-stories/US-004/user-story.md` (27 ACs, approved 2026-10-07, OQ-1 to OQ-11 answered)
@@ -12,7 +12,7 @@
 
 ## 1. Scope
 
-**In scope** (only the new US-004 features, Michael's decision Q-5):
+**In scope** (only the new US-004 features, the project owner's decision Q-5):
 
 - Upgrade of the service and the parent app from 0.3.1 to 0.4.0, keeping pairing and selections (supporting)
 - The session agent: runs only in sessions of controlled accounts, cannot be ended by the kid (AC-1, ADR-011)
@@ -29,36 +29,36 @@
 
 | Item | Reason |
 |---|---|
-| US-003 cases skipped in US-003 run 01 | Michael, implementation plan Q-5: **no** US-003 re-test in this run. If the Reports page does not follow account changes (AC-23), note it; it may be the same US-003 push mechanism (implementation plan, "US-003 dependency"). |
+| US-003 cases skipped in US-003 run 01 | The project owner, implementation plan Q-5: **no** US-003 re-test in this run. If the Reports page does not follow account changes (AC-23), note it; it may be the same US-003 push mechanism (implementation plan, "US-003 dependency"). |
 | Regression | Story runs contain no regression cases (`02_Implementation/docs/testing/README.md` §3). |
-| English UI texts and English Windows app names | Michael's Windows is German. English texts are covered by DEV's unit tests. App names come from the service PC's Windows language (plan D-7): German names are expected. |
+| English UI texts and English Windows app names | The project owner's Windows is German. English texts are covered by DEV's unit tests. App names come from the service PC's Windows language (plan D-7): German names are expected. |
 | Waiting 90 days (AC-11) | Not possible. TC-004-32 (optional) shortens it by back-dating rows with a SQLite tool; otherwise unit tests cover it. |
 
 ## 2. Test Environment
 
 | Item | Value |
 |---|---|
-| Service PC | **Windows Developer Machine** (Windows 11 Pro, German UI, `ZOCK-O-MAT-V3`). `<host>` = its computer name. Current state (Orchestrator, 2026-10-08): **EagleEye 0.3.1** service installed and running, App A paired. |
-| Parent PC | **LEOSERV** (the second Windows PC, ISSUE-006), parent app **App B**. Needed for the live checks (AC-22), because the parent app on the service PC is not visible while the kid's session is in front. Without LEOSERV, TC-004-05 is **Blocked**; everything else works with App A. |
-| Parent apps | **App A** = parent app in Michael's admin account on the service PC (device *Papas PC*). **App B** = parent app on LEOSERV (device *LEOSERV*), upgraded and paired in S-14. |
-| Accounts on the service PC | **Admin** = Michael's administrator account (parent). **kid1** = `eagleeye-kid` (standard, exists, **controlled**). **kid2** = `ee-kid2` (new, standard, **not controlled**). **kid3** = `ee-kid3` (new, standard, **controlled**; second controlled account for AC-26, deleted in TC-004-30). |
+| Service PC | **Windows Developer Machine** (Windows 11 Pro, German UI, `DEV-PC`). `<host>` = its computer name. Current state (Orchestrator, 2026-10-08): **EagleEye 0.3.1** service installed and running, App A paired. |
+| Parent PC | **PARENT-PC** (the second Windows PC, ISSUE-006), parent app **App B**. Needed for the live checks (AC-22), because the parent app on the service PC is not visible while the kid's session is in front. Without PARENT-PC, TC-004-05 is **Blocked**; everything else works with App A. |
+| Parent apps | **App A** = parent app in the project owner's admin account on the service PC (device *Papas PC*). **App B** = parent app on PARENT-PC (device *PARENT-PC*), upgraded and paired in S-14. |
+| Accounts on the service PC | **Admin** = the project owner's administrator account (parent). **kid1** = `eagleeye-kid` (standard, exists, **controlled**). **kid2** = `ee-kid2` (new, standard, **not controlled**). **kid3** = `ee-kid3` (new, standard, **controlled**; second controlled account for AC-26, deleted in TC-004-30). |
 | Builds under test | `03_Delivery/windows/EagleEye-Setup-0.4.0.exe` (service + tray, admin) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.4.0.exe` (parent app, per user). <!-- verify against implementation report: dates, SHA-256 --> |
 | Expected versions | *Installierte Apps*: **EagleEye 0.4.0**, **EagleEye Parent App 0.4.0**. Tray *App Infos*: `EagleEye_v0.4`. |
 | Tools | Stopwatch (phone). **Terminal (Administrator)** in the admin session (S-6). **K-TERM** = an elevated terminal *inside the kid's session* (S-13). `services.msc`, Task Manager (*Task-Manager*), Explorer. Optional: a SQLite tool (TC-004-32). |
 
 ### Test blocks — core first, optional last
 
-Michael closes stories after partial runs. The blocks are therefore ordered by importance: **Blocks A to C hold the core AC checks** (what is and is not recorded, stopwatch accuracy AC-24, the Reports page, live update). Optional cases are marked **(optional)** in the title; skipping them does not leave a core AC unchecked except the ones listed under "Optional coverage" below.
+The project owner closes stories after partial runs. The blocks are therefore ordered by importance: **Blocks A to C hold the core AC checks** (what is and is not recorded, stopwatch accuracy AC-24, the Reports page, live update). Optional cases are marked **(optional)** in the title; skipping them does not leave a core AC unchecked except the ones listed under "Optional coverage" below.
 
 | Block | Cases | Machine / accounts | Core / optional | Duration |
 |---|---|---|---|---|
-| Setup | S-1 to S-14 | Service PC, LEOSERV | — | ≈ 35 min (two first sign-ins) |
+| Setup | S-1 to S-14 | Service PC, PARENT-PC | — | ≈ 35 min (two first sign-ins) |
 | **A** Upgrade and first look | TC-004-01 to -03 (3) | Service PC / Admin, kid1 | core | ≈ 20 min |
-| **B** What is recorded and how much | TC-004-04 to -13 (10) | Service PC / kid1, kid2, kid3, Admin; LEOSERV | core | ≈ 75 min |
+| **B** What is recorded and how much | TC-004-04 to -13 (10) | Service PC / kid1, kid2, kid3, Admin; PARENT-PC | core | ≈ 75 min |
 | **C** Reports page states and account changes | TC-004-14 to -17 (4) | Service PC / Admin, kid2 | core | ≈ 30 min |
 | **D** Sessions and service lifecycle | TC-004-18 to -20 core, -21, -22 optional (5) | Service PC / kid1, Admin | core + optional | ≈ 25 min core, + 15 min optional |
 | **E** Security checks | TC-004-23 to -28 core, -29 optional (7) | Service PC / kid1, Admin | core (security) + optional | ≈ 45 min core, + 5 min optional |
-| **F** Account deletion and long checks | TC-004-30 core, -31 to -35 optional (6) | Service PC / Admin, kid1; LEOSERV | core + optional | ≈ 10 min core, + ≈ 90 min optional (TC-004-33 needs midnight, TC-004-34 the next day) |
+| **F** Account deletion and long checks | TC-004-30 core, -31 to -35 optional (6) | Service PC / Admin, kid1; PARENT-PC | core + optional | ≈ 10 min core, + ≈ 90 min optional (TC-004-33 needs midnight, TC-004-34 the next day) |
 
 35 cases: 27 core, 8 optional. Run the blocks in this order; breaks between blocks are fine.
 
@@ -66,7 +66,7 @@ Michael closes stories after partial runs. The blocks are therefore ordered by i
 
 ### Conventions for expected results
 
-- **UI texts** are German (Michael's Windows). Wording differences are **Notes**, not Fails (story, "Language of UI texts"). Pass criteria are only the menu entry **Berichte**, the label **Konto**, the column headers **App** and **Nutzung (HH:MM)**, and the text **Heute keine Nutzung aufgezeichnet** (story AC-17 to AC-19). Dates appear in the Windows short date format (e.g. `08.10.2026`); format differences are Notes.
+- **UI texts** are German (the project owner's Windows). Wording differences are **Notes**, not Fails (story, "Language of UI texts"). Pass criteria are only the menu entry **Berichte**, the label **Konto**, the column headers **App** and **Nutzung (HH:MM)**, and the text **Heute keine Nutzung aufgezeichnet** (story AC-17 to AC-19). Dates appear in the Windows short date format (e.g. `08.10.2026`); format differences are Notes.
 - **App names** are those of the service PC's German Windows: *Editor* (Notepad), *Paint*, *Microsoft Edge*, *Rechner* (Calculator), *Snipping Tool*, *Task-Manager*, *Windows-Explorer*. A different name of the same program is a Note; a host name instead of the app (e.g. *Application Frame Host*) is a **Fail** (AC-3).
 - **HH:MM** (AC-24, story test setup): a shown value is correct when it equals the stopwatch time rounded **down** to whole minutes, with a tolerance of **one minute**. Example: stopwatch 10:20 → "00:10"; "00:09" to "00:11" pass.
 - **Measuring usage by difference.** Several cases use the same app (Notepad = *Editor*). Before each measurement note the shown value **V0**; after it, **V1**. Expected **V1 − V0** = stopwatch minutes ±1.
@@ -166,9 +166,9 @@ End reasons in "App ended": `closed`, `monitoring stopped`, `session ended`, `se
 12. **S-12 SmartScreen** on the unsigned installers: *Weitere Informationen* → *Trotzdem ausführen* (expected).
 13. **S-13 K-TERM (elevated terminal in the kid's session).** Several cases need an elevated terminal **while the kid's session is in front** (log monitor, service commands). In the kid's session: Start → **Terminal** → right-click → **Als Administrator ausführen** → UAC asks for an administrator: enter **your admin user name and password**. The title bar starts with "Administrator:". It runs with your admin rights, so it is not recorded for the kid (Q-4 of the plan: other credentials are out of scope); ignore it in the report and in Task Manager comparisons. Close it before you sign the kid out.
 
-**Before Block B** (LEOSERV):
+**Before Block B** (PARENT-PC):
 
-14. **S-14 App B on LEOSERV.** On LEOSERV install `EagleEye-ParentApp-Setup-0.4.0.exe` (over an older version if present). Start it. If it is green and *Gekoppelt* with `<host>`: done. Otherwise (its pairing became invalid in US-003): *Kopplung aufheben* if offered, then connect to `<host>` and pair with device name **LEOSERV** (code from the tray popup in your admin session on the service PC). Note LEOSERV's scaling and display language. If LEOSERV is not available today: write it here; TC-004-05 is then **Blocked**.
+14. **S-14 App B on PARENT-PC.** On PARENT-PC install `EagleEye-ParentApp-Setup-0.4.0.exe` (over an older version if present). Start it. If it is green and *Gekoppelt* with `<host>`: done. Otherwise (its pairing became invalid in US-003): *Kopplung aufheben* if offered, then connect to `<host>` and pair with device name **PARENT-PC** (code from the tray popup in your admin session on the service PC). Note PARENT-PC's scaling and display language. If PARENT-PC is not available today: write it here; TC-004-05 is then **Blocked**.
 
 ## 4. Acceptance Criteria Coverage
 
@@ -275,7 +275,7 @@ All 27 ACs have at least one case. Security checks (no AC, implementation plan D
 
 ### Block B — What is recorded and how much (core)
 
-*Service PC, mostly in the session of `eagleeye-kid` (kid1), with K-TERM (S-13) running LOG-WATCH in that session. App B on LEOSERV (S-14) shows "Berichte" → Konto `eagleeye-kid`. Without LEOSERV, read the values in App A after switching back to Admin (switching stops the counting, so the values stay stable).*
+*Service PC, mostly in the session of `eagleeye-kid` (kid1), with K-TERM (S-13) running LOG-WATCH in that session. App B on PARENT-PC (S-14) shows "Berichte" → Konto `eagleeye-kid`. Without PARENT-PC, read the values in App A after switching back to Admin (switching stops the counting, so the values stay stable).*
 
 > **Before Block B**: S-14 done. Switch to `eagleeye-kid`; open K-TERM (S-13) and run LOG-WATCH in it.
 
@@ -301,8 +301,8 @@ All 27 ACs have at least one case. Security checks (no AC, implementation plan D
 #### TC-004-05: The open Reports page updates by itself within 15 s
 
 - **Verifies**: AC-22, AC-13
-- **Machine / account**: Service PC / kid1; **LEOSERV / App B** (place it next to the service PC)
-- **Precondition**: App B green on *Berichte*, **Konto** `eagleeye-kid`; Paint not yet used today. If LEOSERV is not available: **Blocked**.
+- **Machine / account**: Service PC / kid1; **PARENT-PC / App B** (place it next to the service PC)
+- **Precondition**: App B green on *Berichte*, **Konto** `eagleeye-kid`; Paint not yet used today. If PARENT-PC is not available: **Blocked**.
 
 **Steps**
 
@@ -542,7 +542,7 @@ All 27 ACs have at least one case. Security checks (no AC, implementation plan D
 
 ### Block D — Sessions and service lifecycle
 
-*Service PC. kid1's session with K-TERM (S-13) and LOG-WATCH in it. App B on LEOSERV on "Berichte" → `eagleeye-kid` (or App A afterwards).*
+*Service PC. kid1's session with K-TERM (S-13) and LOG-WATCH in it. App B on PARENT-PC on "Berichte" → `eagleeye-kid` (or App A afterwards).*
 
 #### TC-004-18: After "Benutzer wechseln" the kid's open apps stop counting
 
@@ -925,7 +925,7 @@ DEV's check F sets the variables machine-wide with `setx /M`. A machine-wide var
 
 ## 6. Regression
 
-None. No regression cases and no US-003 re-test (Michael, implementation plan Q-5; `02_Implementation/docs/testing/README.md` §3).
+None. No regression cases and no US-003 re-test (the project owner, implementation plan Q-5; `02_Implementation/docs/testing/README.md` §3).
 
 ## 7. Cleanup
 
@@ -942,16 +942,16 @@ None. No regression cases and no US-003 re-test (Michael, implementation plan Q-
    }
    ```
 7. **Selection**: `eagleeye-kid` stays ticked (recording continues; §8 Q-5), unless you prefer to untick it.
-8. **LEOSERV**: App B stays installed and paired.
+8. **PARENT-PC**: App B stays installed and paired.
 
-## 8. Notes and Open Questions for Michael
+## 8. Notes and Open Questions for the project owner
 
 | ID | Question | Proposed answer |
 |---|---|---|
-| Q-1 | **LEOSERV as App B** for the live checks (TC-004-05) and for watching while the kid's session is in front. Is it available for the run? | Yes. Without it, TC-004-05 (AC-22) is Blocked; all other cases work with App A after switching back to Admin. |
+| Q-1 | **PARENT-PC as App B** for the live checks (TC-004-05) and for watching while the kid's session is in front. Is it available for the run? | Yes. Without it, TC-004-05 (AC-22) is Blocked; all other cases work with App A after switching back to Admin. |
 | Q-2 | **SQLite tool for TC-004-32** (optional: older days, 90-day purge). Is `sqlite3.exe` or *DB Browser for SQLite* available on the service PC? | If not, skip TC-004-32; AC-11 then rests on DEV's unit tests, and the older-day display on TC-004-34 (next day). |
 | Q-3 | **K-TERM**: an elevated terminal with your admin credentials inside the kid's session (S-13), for the log monitor and service commands while the kid's session is in front. OK? | Yes. It runs with admin rights, so it is not recorded (plan Q-4) and does not affect the kid's data. |
-| Q-4 | **Temporary SMB share** `\\localhost\eetest` on the service PC (TC-004-25), read access for everyone, removed in cleanup. OK? | Yes. Alternative: a share on LEOSERV (then the kid needs LEOSERV credentials). |
+| Q-4 | **Temporary SMB share** `\\localhost\eetest` on the service PC (TC-004-25), read access for everyone, removed in cleanup. OK? | Yes. Alternative: a share on PARENT-PC (then the kid needs PARENT-PC credentials). |
 | Q-5 | **After the run**: keep `eagleeye-kid` ticked (the service keeps recording its apps)? | Yes, keep it ticked; it is the intended product use. |
 | Q-6 | **Accounts**: kid1 = existing `eagleeye-kid`, kid2 = new `ee-kid2`, kid3 = new `ee-kid3` (with a password, one first sign-in each in S-10; kid3 is deleted in TC-004-30). OK? | Yes. |
 | Q-7 | **Core vs. optional**: optional are TC-004-21, -22, -29, -31 to -35. Their ACs (AC-11, AC-14, AC-16, AC-25, partly AC-18) would rest on unit tests if skipped. OK? | Yes. |
@@ -960,4 +960,4 @@ None. No regression cases and no US-003 re-test (Michael, implementation plan Q-
 
 | Date | Change | Reason |
 |---|---|---|
-| 2026-10-08 | Plan written (in parallel with DEV); places marked `<!-- verify against implementation report -->` to be aligned after DEV's handover. | Step d started early at Michael's request. |
+| 2026-10-08 | Plan written (in parallel with DEV); places marked `<!-- verify against implementation report -->` to be aligned after DEV's handover. | Step d started early at the project owner's request. |

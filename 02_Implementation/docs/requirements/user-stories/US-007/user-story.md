@@ -2,7 +2,7 @@
 
 **Status**: Verified/Closed
 **Created**: 2026-10-20
-**Approved**: by Michael, 2026-10-20, with his answers to OQ-1 to OQ-4 (change in OQ-2); implementation plan approved 2026-10-20 (status `Analyzed`)
+**Approved**: by the project owner, 2026-10-20, with their answers to OQ-1 to OQ-4 (change in OQ-2); implementation plan approved 2026-10-20 (status `Analyzed`)
 **Component(s)**: EagleEye.ParentApp (incl. EagleEye.ParentApp.Core). EagleEye.Service, EagleEye.TrayClient and EagleEye.Shared: no behaviour change expected (regression only, group I)
 **Platform(s)**: ParentApp macOS (new, MacBook) · ParentApp Windows (unchanged, regression) · Windows (service/tray, unchanged, regression)
 
@@ -16,11 +16,11 @@ As a **parent**, I want to install the EagleEye parent app on my Mac from a `.dm
 
 ## Background
 
-CR-001 (`02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`) removed the iOS and Android parent apps. The parent app now ships as two production apps: the **Windows parent app** (own installer) and the **macOS parent app** (Mac Catalyst, `.dmg`, ADR-019). Michael decided that the Mac app must reach **full parity** with the Windows parent app (CR-001 Q-6, requirements §11.1 Q-6, FR-APP-082, FR-APP-110). This story closes that gap. The number US-007 is reused: the aborted iOS US-007 never reached `main`.
+CR-001 (`02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`) removed the iOS and Android parent apps. The parent app now ships as two production apps: the **Windows parent app** (own installer) and the **macOS parent app** (Mac Catalyst, `.dmg`, ADR-019). The project owner decided that the Mac app must reach **full parity** with the Windows parent app (CR-001 Q-6, requirements §11.1 Q-6, FR-APP-082, FR-APP-110). This story closes that gap. The number US-007 is reused: the aborted iOS US-007 never reached `main`.
 
-US-002 to US-006 were built and tested in the Windows parent app only. The Mac Catalyst target compiles from the same code on `main`, but it has not been built, run or tested on a Mac since US-001. Mac-specific gaps are therefore unknown. Candidates named by Michael and in arc42 risk R-3: window and menu behaviour, secure storage in the Keychain, TLS and WebSocket on the Mac, localization, light/dark appearance and `.dmg` packaging (`02_Implementation/scripts/package-macos.ps1` is still a stub).
+US-002 to US-006 were built and tested in the Windows parent app only. The Mac Catalyst target compiles from the same code on `main`, but it has not been built, run or tested on a Mac since US-001. Mac-specific gaps are therefore unknown. Candidates named by the project owner and in arc42 risk R-3: window and menu behaviour, secure storage in the Keychain, TLS and WebSocket on the Mac, localization, light/dark appearance and `.dmg` packaging (`02_Implementation/scripts/package-macos.ps1` is still a stub).
 
-The Mac app is **not distributed**. It runs on Michael's MacBook only. The `.dmg` is ad-hoc signed only, with no Developer-ID signature and no notarisation, and Michael allows it once in the macOS settings (CR-001 Q-7, ADR-019 §3, requirements §9.4).
+The Mac app is **not distributed**. It runs on the project owner's MacBook only. The `.dmg` is ad-hoc signed only, with no Developer-ID signature and no notarisation, and the project owner allows it once in the macOS settings (CR-001 Q-7, ADR-019 §3, requirements §9.4).
 
 From this story on, **every parent-app story names both apps** (CR-001 Q-6).
 
@@ -51,7 +51,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-015 (own device only, as in US-002)
 
 - *Mac app*: the EagleEye parent app for macOS built by this story (Mac Catalyst).
 - *Windows app*: the EagleEye parent app for Windows (US-002 to US-006, build 0.6.2 or the build of this story).
-- *Mac*: a Mac with Apple Silicon and macOS 26 or newer (§9.4). For the tests: Michael's MacBook.
+- *Mac*: a Mac with Apple Silicon and macOS 26 or newer (§9.4). For the tests: the project owner's MacBook.
 - *Service PC*, *account*, *controlled account*, *app*, *app rule*, *break time entry*, *display text*, *budget text*, *warning levels*, *kid dialog*: as in US-003 to US-006.
 - *Parity rule*: AC-1 below.
 
@@ -61,7 +61,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-015 (own device only, as in US-002)
 
 > **Language of UI texts** (NFR-L-010 to NFR-L-012): all UI texts quoted in these criteria are **English examples**, with the German wording in brackets where it exists in the Windows app. The Mac app shows every text, including error messages, in the language of macOS (AC-13): German (default) or English. The parent's own texts are never translated. Differences in wording are notes, not Fails (US-002 Decision Q-11). Test manuals use the German UI labels.
 
-> **Test setup**: the service PC at the IPv4 address `192.168.1.37` (Windows 11, EagleEye service and tray client of this story's build) with the parent's admin account, the standard accounts `kid1` and `kid2` (under parental control) and `kid3` (not under parental control); the Mac app on Michael's MacBook in the same LAN; a Windows app paired with the same service as the second parent app (on the service PC or on the second Windows PC). Names ending in `.local` do not resolve on Michael's network, so the tests use the IP address. Short budgets and warning levels keep the tests short, as in US-006.
+> **Test setup**: the service PC at the IPv4 address `DEV-PC` (Windows 11, EagleEye service and tray client of this story's build) with the parent's admin account, the standard accounts `kid1` and `kid2` (under parental control) and `kid3` (not under parental control); the Mac app on the project owner's MacBook in the same LAN; a Windows app paired with the same service as the second parent app (on the service PC or on the second Windows PC). Names ending in `.local` do not resolve on the project owner's network, so the tests use the IP address. Short budgets and warning levels keep the tests short, as in US-006.
 
 > **Service log**: entries are checked in the admin-only log folder `%ProgramData%\EagleEye\logs\` on the service PC (US-003 AC-14).
 
@@ -115,10 +115,10 @@ References: FR-APP-010 to FR-APP-014, FR-APP-015 (own device only, as in US-002)
 
 ### E. Connection, TLS and pairing (FR-APP-010 to FR-APP-015, FR-APP-111, CN-010 to CN-014)
 
-- [ ] **AC-17**: When the Mac app starts unpaired, it shows the host dialog of US-002 AC-11. Entering the IPv4 address `192.168.1.37` connects and continues with pairing. A host name works as well when it resolves on the Mac (this depends on the home network's name service; not required on Michael's network). When the host cannot be reached, the app shows the connection error that names the host (US-002 AC-12, e.g. "Connection error: could not connect to the EagleEye service at 192.168.1.37"), the indicator stays red, and the parent can correct the input.
+- [ ] **AC-17**: When the Mac app starts unpaired, it shows the host dialog of US-002 AC-11. Entering the IPv4 address `DEV-PC` connects and continues with pairing. A host name works as well when it resolves on the Mac (this depends on the home network's name service; not required on the project owner's network). When the host cannot be reached, the app shows the connection error that names the host (US-002 AC-12, e.g. "Connection error: could not connect to the EagleEye service at DEV-PC"), the indicator stays red, and the parent can correct the input.
 - [ ] **AC-18**: If macOS asks whether "EagleEye Parent App" may find and connect to devices on the local network, then after "Allow" the connection works and macOS does not ask again. If the parent denies it, the app shows the connection error of AC-17 (red indicator) and works once the parent allows the app under *System Settings → Privacy & Security → Local Network*. The install instructions describe this.
 - [ ] **AC-19**: The connection is TLS-encrypted, and at no point does the Mac app or macOS show a certificate warning or ask the parent to accept, import, trust or manage a certificate, also not in the Keychain (US-002 AC-7, CN-013). After pairing, the app accepts only the service it was paired with: when the service's identity changes, the app refuses the connection with the "identity changed" message of the Windows app (US-002 AC-12, ISSUE-009).
-- [ ] **AC-20**: Pairing works as in US-002 AC-13 to AC-20: the 6-digit code appears in the tray client on the service PC (or in its Event Log when no tray client is connected); the parent enters the code and a device name (e.g. "Michael's MacBook"); the correct code within 5 minutes pairs the app ("Connected to 192.168.1.37", green; Settings shows "paired", host and device name); an empty device name, a wrong code and an expired code are rejected with the Windows app's messages, and a new attempt gets a new code. While unpaired, the app never shows green.
+- [ ] **AC-20**: Pairing works as in US-002 AC-13 to AC-20: the 6-digit code appears in the tray client on the service PC (or in its Event Log when no tray client is connected); the parent enters the code and a device name (e.g. "The project owner's MacBook"); the correct code within 5 minutes pairs the app ("Connected to DEV-PC", green; Settings shows "paired", host and device name); an empty device name, a wrong code and an expired code are rejected with the Windows app's messages, and a new attempt gets a new code. While unpaired, the app never shows green.
 - [ ] **AC-21**: The status bar shows the states and texts of US-002 AC-10 (green "Connected to <host>", red "Connecting to <host> …", red "Not connected to <host>"). A paired Mac app connects on its own within 30 seconds after start (US-002 AC-21). When the service is stopped, the indicator turns red within 30 seconds; when it is started again, the app reconnects without user action and shows green within 60 seconds (US-002 AC-22).
 - [ ] **AC-22**: Mac-specific reconnect: when the Mac wakes from sleep, or when its network connection returns (e.g. Wi-Fi switched off and on again), the app shows red while there is no connection and reconnects without user action, showing green at the latest 60 seconds after the network is available again. Pages that showed "No data available" meanwhile show the current data again (US-003 AC-13, US-004 AC-21, US-005 AC-5).
 - [ ] **AC-23**: While paired, the host is read-only (US-002 AC-25). "Remove pairing" ("Kopplung aufheben") works as in US-002 AC-26 to AC-30 (confirmation, only while connected, the service no longer accepts the Mac app, the app returns to unpaired, a new code is needed, another paired app is not affected). "Forget pairing on this device" ("Kopplung auf diesem Gerät löschen") works as in ISSUE-009 (offered only when paired, not connected, and the last attempt failed with "identity changed" or "unreachable"; confirmation; afterwards unpaired with the host pre-filled and the info text).
@@ -129,7 +129,7 @@ References: FR-APP-010 to FR-APP-014, FR-APP-015 (own device only, as in US-002)
 
 - [ ] **AC-26**: The Settings page of the Mac app has the sections of the Windows app, in this order, each with its heading bar (AC-10): "Visual appearance" ("Darstellung"), "Server connection" ("Serververbindung"), "User accounts on the EagleEye PC" ("Benutzerkonten auf dem EagleEye-PC") and "Time-elapsed warnings" ("Zeit-Ende Warnungen").
 - [ ] **AC-27**: The account section behaves as in US-003 AC-7 to AC-18 and ISSUE-006: table with the column headers "Account" / "Under parental control" ("Konto" / "Unter Elternkontrolle"); states "No data available", "No non-admin accounts available", "Loading …"; names as "Full Name (username)", "(disabled)" marker, sorted alphabetically; a tick or untick is saved at once, the app shows the state confirmed by the service, and a failed save shows "The change could not be saved. Please try again." and reverts the tick.
-- [ ] **AC-28**: The time-elapsed warnings section behaves as in US-006 AC-13 to AC-16: two fixed rows "Early warning" / "Final warning" ("Frühe Warnung" / "Finale Warnung"), defaults 5 and 1 minutes with the default texts (AC-14), minutes 1 to 59 with early greater than final, the validation messages of US-006 AC-15, saved when the parent leaves the field or presses Return.
+- [ ] **AC-28**: The time-elapsed warnings section behaves as in US-006 AC-13 to AC-16: two fixed rows "Early warning" / "Final warning" ("Früthey Warnung" / "Finale Warnung"), defaults 5 and 1 minutes with the default texts (AC-14), minutes 1 to 59 with early greater than final, the validation messages of US-006 AC-15, saved when the parent leaves the field or presses Return.
 
 ### G. Rules and Reports pages (US-004 group D, US-005 groups A and B, US-006 groups A and B)
 
@@ -155,10 +155,10 @@ References: FR-APP-010 to FR-APP-014, FR-APP-015 (own device only, as in US-002)
 
 | Date | Change | Source |
 |---|---|---|
-| 2026-10-20 | Story created (status `New`) | Michael's scope (CR-001 Q-6, Orchestrator brief 2026-10-20), written by PRO |
-| 2026-10-20 | Story approved; OQ-1, OQ-3, OQ-4 answered as proposed; OQ-2 changed: the `.dmg` also delivers a removal script for the leftover data (data folder, Keychain entry, preferences, caches), explained in the install instructions with "Remove pairing" first. Changed: AC-2, AC-6, UI notes (install flow). Status stays `New` until ARC's plan is approved (then `Analyzed`) | Michael (via the Orchestrator), written by PRO |
-| 2026-10-20 | Implementation plan and ADR-020 approved (plan Q-1, Q-2 as recommended); status → `Analyzed` | Michael (via the Orchestrator), recorded by ARC |
-| 2026-10-31 | Story closed by Michael without a test run (Mac app in pilot use); gaps and follow-ups in `02_Implementation/docs/testing/US-007/test-report.md`; status → `Verified/Closed` | Michael (via the Orchestrator), recorded by the Orchestrator |
+| 2026-10-20 | Story created (status `New`) | The project owner's scope (CR-001 Q-6, Orchestrator brief 2026-10-20), written by PRO |
+| 2026-10-20 | Story approved; OQ-1, OQ-3, OQ-4 answered as proposed; OQ-2 changed: the `.dmg` also delivers a removal script for the leftover data (data folder, Keychain entry, preferences, caches), explained in the install instructions with "Remove pairing" first. Changed: AC-2, AC-6, UI notes (install flow). Status stays `New` until ARC's plan is approved (then `Analyzed`) | The project owner (via the Orchestrator), written by PRO |
+| 2026-10-20 | Implementation plan and ADR-020 approved (plan Q-1, Q-2 as recommended); status → `Analyzed` | The project owner (via the Orchestrator), recorded by ARC |
+| 2026-10-31 | Story closed by the project owner without a test run (Mac app in pilot use); gaps and follow-ups in `02_Implementation/docs/testing/US-007/test-report.md`; status → `Verified/Closed` | The project owner (via the Orchestrator), recorded by the Orchestrator |
 
 ---
 
@@ -183,7 +183,7 @@ The pages, sections, tables and texts are those of the Windows app (mockups in U
     } |
     {
       "<b>Reports"
-      "Account" | ^Max Adler (max)^
+      "Account" | ^Max Mustermann (max)^
       ---
       "<b>Today, 10/20/2026   (heading bar in the macOS accent colour)"
       {#
@@ -194,7 +194,7 @@ The pages, sections, tables and texts are those of the Windows app (mockups in U
     }
   }
   ---
-  "<color:green>●</color> Connected to 192.168.1.37"
+  "<color:green>●</color> Connected to DEV-PC"
 }
 @endsalt
 ```
@@ -231,13 +231,13 @@ end note
 ## Out of Scope
 
 - New parent-app features. The Mac app gets exactly the features of the Windows app 0.6.2. Features the Windows app does not have stay out for both apps: the list of all paired devices and removing other devices (rest of FR-APP-015), the re-scan of installed applications (FR-APP-033), "used vs. budget" on Reports (FR-APP-061), events to the parent (FR-APP-070), showing the history of blocked starts.
-  - *Follow-up for PRO (backlog, from ARC's Step 1 review, 2026-10-20)*: a **device-management story** (rest of FR-APP-015: list the paired devices on the service, remove other devices). Needed among other things to clean up **orphan devices**: first light left four "Michael's MacBook" entries on the service (pairing accepted by the service, token never saved by the app, G-5). They are harmless (no device limit, tokens stored nowhere) but cannot be removed by any parent app today. US-007 prevents new orphans (best-effort revoke, plan Step 1 Review R-3). Related: arc42 R-8, R-9.
+  - *Follow-up for PRO (backlog, from ARC's Step 1 review, 2026-10-20)*: a **device-management story** (rest of FR-APP-015: list the paired devices on the service, remove other devices). Needed among other things to clean up **orphan devices**: first light left four "the project owner's MacBook" entries on the service (pairing accepted by the service, token never saved by the app, G-5). They are harmless (no device limit, tokens stored nowhere) but cannot be removed by any parent app today. US-007 prevents new orphans (best-effort revoke, plan Step 1 Review R-3). Related: arc42 R-8, R-9.
 - Developer-ID signing, notarisation, the Mac App Store, distribution to other people, automatic updates (ADR-019, §10).
 - Intel Macs and macOS versions older than 26 (§9.4).
 - Mac-only extras: menu bar icon, macOS notifications, widgets, Touch ID, Shortcuts, Handoff, several windows.
 - Finding the service PC automatically (Bonjour, network scan); remote access outside the LAN (CN-017).
 - A full accessibility review (VoiceOver); the Windows app had none either.
-- Changes to the service or the tray client. If ARC finds that the Mac app needs one, it is raised with Michael before the plan is approved.
+- Changes to the service or the tray client. If ARC finds that the Mac app needs one, it is raised with the project owner before the plan is approved.
 - Manual verification of the US-006 service behaviour that was never tested manually (US-006 test report: AC-1 to AC-39 not verified), beyond the samples of AC-34. See OQ-4.
 - The open agent-token check TC-005-26 / TC-006-34 (US-006 test report F-1).
 - Protection against a kid who pairs their own parent app (accepted risk, US-005 OQ-15).
@@ -252,16 +252,16 @@ Fallback, only if ARC's analysis shows that the Mac platform work is much larger
 
 ---
 
-## Open Questions (answered by Michael, 2026-10-20)
+## Open Questions (answered by the project owner, 2026-10-20)
 
-Answered by Michael on 2026-10-20: OQ-1, OQ-3 and OQ-4 as proposed; OQ-2 changed (removal script in the `.dmg`, AC-2 and AC-6 adjusted).
+Answered by the project owner on 2026-10-20: OQ-1, OQ-3 and OQ-4 as proposed; OQ-2 changed (removal script in the `.dmg`, AC-2 and AC-6 adjusted).
 
 | ID | Question | Proposed default | Answer |
 |---|---|---|---|
-| OQ-1 | **Closing the window.** On the Mac, closing the last window can either quit the app (as on Windows) or keep it running in the Dock until Command + Q. The app has no background function. | **Closing the window quits the app** (AC-8), like the Windows app and like single-window Mac apps such as System Settings. | Answer (Michael, 2026-10-20): proposed default accepted |
-| OQ-2 | **Removing the app.** macOS has no uninstaller: dragging the app to the Trash leaves its data (pairing, appearance) and its Keychain entry on the Mac. On Windows, uninstalling removes all data (US-002 AC-5). | **No uninstaller.** The install instructions list the remaining items (data folder, Keychain entry) and how to delete them by hand (AC-6). Before removing the app, the parent can use "Remove pairing" so that the service forgets the device. | Answer (Michael, 2026-10-20): **changed**. No uninstaller app, but the `.dmg` also delivers a **removal script** that deletes the leftover data: the data folder, the Keychain entry and any other app leftovers such as preferences or caches. The install instructions explain how to run it and recommend "Remove pairing" first so that the service forgets the device. → AC-2, AC-6, UI notes |
-| OQ-3 | **Updates and the Keychain.** The app is only ad-hoc signed, and each build has a new signature. macOS may then ask once after an update whether the new version may use the stored Keychain entry, or it may refuse access, so that the pairing is lost. Which outcome is acceptable? | A **one-time macOS prompt after an update is acceptable** (the parent clicks "Always Allow"); after that the app connects without a new pairing code. Having to pair again after every update is **not** acceptable (AC-5). If ARC finds that only re-pairing is possible, the question comes back to Michael. | Answer (Michael, 2026-10-20): proposed default accepted |
-| OQ-4 | **Test scope for US-006.** All 39 ACs of US-006 were never tested manually (closed without a test run). The Mac test run will exercise the Rules and Settings pages and the samples of AC-34 against the service, but not the full US-006 enforcement (grace periods, midnight, break-start closes, time-zone detection). | **Not part of US-007.** US-007 tests the Mac app and the samples of AC-34. A full manual verification of US-006 is planned separately when Michael wants it. | Answer (Michael, 2026-10-20): proposed default accepted; US-006 verification is skipped for now |
+| OQ-1 | **Closing the window.** On the Mac, closing the last window can either quit the app (as on Windows) or keep it running in the Dock until Command + Q. The app has no background function. | **Closing the window quits the app** (AC-8), like the Windows app and like single-window Mac apps such as System Settings. | Answer (the project owner, 2026-10-20): proposed default accepted |
+| OQ-2 | **Removing the app.** macOS has no uninstaller: dragging the app to the Trash leaves its data (pairing, appearance) and its Keychain entry on the Mac. On Windows, uninstalling removes all data (US-002 AC-5). | **No uninstaller.** The install instructions list the remaining items (data folder, Keychain entry) and how to delete them by hand (AC-6). Before removing the app, the parent can use "Remove pairing" so that the service forgets the device. | Answer (the project owner, 2026-10-20): **changed**. No uninstaller app, but the `.dmg` also delivers a **removal script** that deletes the leftover data: the data folder, the Keychain entry and any other app leftovers such as preferences or caches. The install instructions explain how to run it and recommend "Remove pairing" first so that the service forgets the device. → AC-2, AC-6, UI notes |
+| OQ-3 | **Updates and the Keychain.** The app is only ad-hoc signed, and each build has a new signature. macOS may then ask once after an update whether the new version may use the stored Keychain entry, or it may refuse access, so that the pairing is lost. Which outcome is acceptable? | A **one-time macOS prompt after an update is acceptable** (the parent clicks "Always Allow"); after that the app connects without a new pairing code. Having to pair again after every update is **not** acceptable (AC-5). If ARC finds that only re-pairing is possible, the question comes back to the project owner. | Answer (the project owner, 2026-10-20): proposed default accepted |
+| OQ-4 | **Test scope for US-006.** All 39 ACs of US-006 were never tested manually (closed without a test run). The Mac test run will exercise the Rules and Settings pages and the samples of AC-34 against the service, but not the full US-006 enforcement (grace periods, midnight, break-start closes, time-zone detection). | **Not part of US-007.** US-007 tests the Mac app and the samples of AC-34. A full manual verification of US-006 is planned separately when the project owner wants it. | Answer (the project owner, 2026-10-20): proposed default accepted; US-006 verification is skipped for now |
 
 ---
 

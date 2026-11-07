@@ -1,15 +1,15 @@
 # Test Report: US-004 — App Usage Tracking and Daily Usage Report
 
-**Status**: Final — approved by Michael, 2026-10-10
+**Status**: Final — approved by the project owner, 2026-10-10
 **Date**: 2026-10-10
-**Author**: Orchestrator (recorded from `test-run-01.md` and Michael's decisions; no separate TES evaluation, at Michael's direction)
-**Test runs evaluated**: `docs/testing/US-004/test-run-01.md` (build 0.4.0); visual re-test of ISSUE-007 on build 0.4.1 (Michael's report, no run file)
+**Author**: Orchestrator (recorded from `test-run-01.md` and the project owner's decisions; no separate TES evaluation, at the project owner's direction)
+**Test runs evaluated**: `docs/testing/US-004/test-run-01.md` (build 0.4.0); visual re-test of ISSUE-007 on build 0.4.1 (the project owner's report, no run file)
 
 ---
 
 ## 1. Verdict
 
-**Closed by Michael (2026-10-10).** Run 01 on build 0.4.0 had **23 Pass, 0 Fail, 0 Blocked, 11 Skipped and 1 not ticked** (35 cases). Michael raised one change request for visuals and usability (ISSUE-007). DEV delivered it as patch 0.4.1. Michael re-tested it visually and reported "All good". He decided that skipped cases stay skipped and are not repeated. The ACs in §3 that were not verified manually rest on DEV's unit tests and smoke check (`docs/requirements/user-stories/US-004/implementation-report.md`).
+**Closed by the project owner (2026-10-10).** Run 01 on build 0.4.0 had **23 Pass, 0 Fail, 0 Blocked, 11 Skipped and 1 not ticked** (35 cases). The project owner raised one change request for visuals and usability (ISSUE-007). DEV delivered it as patch 0.4.1. The project owner re-tested it visually and reported "All good". They decided that skipped cases stay skipped and are not repeated. The ACs in §3 that were not verified manually rest on DEV's unit tests and smoke check (`docs/requirements/user-stories/US-004/implementation-report.md`).
 
 ## 2. Case Tally (run 01)
 
@@ -37,14 +37,14 @@ The run file header fields (execution date, installer file dates) and most per-c
 
 | Issue | Severity | Status | Found / verified |
 |---|---|---|---|
-| `docs/requirements/user-stories/US-004/issues/ISSUE-007.md`: accent-colour heading bars on *Berichte* and *Einstellungen*, *Berichte* as the start page | Low (change request) | Verified/Closed (fix in 0.4.1; visual re-test passed per Michael, 2026-10-10) | Change request after run 01 / visual re-test on 0.4.1 |
+| `docs/requirements/user-stories/US-004/issues/ISSUE-007.md`: accent-colour heading bars on *Berichte* and *Einstellungen*, *Berichte* as the start page | Low (change request) | Verified/Closed (fix in 0.4.1; visual re-test passed per the project owner, 2026-10-10) | Change request after run 01 / visual re-test on 0.4.1 |
 
 No failures were reported in run 01.
 
 ## 5. Notes and Follow-ups
 
 1. **Untested ACs and security checks.** AC-11, AC-14, AC-16 and AC-25 and the security checks TC-004-23, -25, -26 and -29 rest on unit tests and DEV's smoke check only. Proposal: include them in a later manual run that touches the service, or in the next regression run. TC-004-23 also answers ARC's open question about which write-restriction variant runs (plan Q-9).
-2. **ISSUE-007 scope of the re-test.** DEV smoke-checked dark mode at 150 % with an orange-red accent colour. Michael checked the visuals on 0.4.1 and approved them. Light mode, a light accent colour (black text) and a live accent-colour change were not reported separately. iOS and macOS use the fallback colour `#1E7B3A` until a platform reader exists.
+2. **ISSUE-007 scope of the re-test.** DEV smoke-checked dark mode at 150 % with an orange-red accent colour. The project owner checked the visuals on 0.4.1 and approved them. Light mode, a light accent colour (black text) and a live accent-colour change were not reported separately. iOS and macOS use the fallback colour `#1E7B3A` until a platform reader exists.
 3. **Deliberate layout change in 0.4.1.** The *Berichte* and *Einstellungen* pages now use the full content width; before 0.4.1 they were capped at 760 units. Heading text is regular weight, as in the mockup.
 4. **Delivered builds.** `03_Delivery/windows/EagleEye-Setup-0.4.1.exe` (SHA-256 `2565b31e…1fbe`) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.4.1.exe` (SHA-256 `274d82fc…d472`); full hashes in the implementation report.
 5. **Evidence.** `evidence/visuals_1.png` and `evidence/visuals_2.png` (change request mockups).

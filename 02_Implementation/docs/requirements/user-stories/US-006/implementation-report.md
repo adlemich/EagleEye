@@ -45,8 +45,8 @@ US-006 is implemented as planned in Steps 0 to 12, version **0.6.0**. The parent
 | D-12 | `RulesViewModel(accounts, rules, dispatcher)` hosts the section | The section view model is injected: `RulesViewModel(accounts, rules, AppRulesSectionViewModel, dispatcher)` | DI creates the section; tests inject it with a mocked model. |
 | D-13 | `WarningSettingsModel` "like `UserAccountsModel`" | Derived from the extracted `SelectedAccountModel<T>` with one fixed key | Same fetch-on-connect, revision, write-confirmation and 4 s timeout logic without a third copy; the US-005 `AccountRulesModel` tests run unchanged and green on the base. |
 | D-14 | Kid dialog: newer message replaces the text | Also: if the kid closes the dialog at the very moment a replacement arrives, the newer message opens a new dialog | Otherwise that message would be lost although the tray answered `Replaced`. |
-| D-15 | Smoke check Step 10.2 items 3 to 6 (Notepad blocked, warnings, close, grace, break begin) and Step 11.2 (CPU with 10 allowed apps running) in DEV's own session | **Not done live.** The smoke check ran with the console service controlling no session (see §8). | Michael's admin session was active the whole time (`query user`: not idle). With deny by default, a Debug service that controls this session closes every running app without a rule at once (VS Code, terminals, browser). These paths are covered by unit tests (§5) and must be checked in the TES run with `kid1`. |
-| D-16 | Step 10.1: check the satellite "in both installers (list the Inno Setup output or install into a temp folder)" | Checked in the publish output that both installers package recursively (`[Files] … recursesubdirs`): `Service\en\`, `TrayClient\en\` and `ParentApp\en\EagleEye.Shared.resources.dll` are present | There is no extraction tool on this PC, and installing the per-user parent app would have upgraded Michael's installed 0.5.0 parent app. TES checks the English default in the kid dialog (plan R-10). |
+| D-15 | Smoke check Step 10.2 items 3 to 6 (Notepad blocked, warnings, close, grace, break begin) and Step 11.2 (CPU with 10 allowed apps running) in DEV's own session | **Not done live.** The smoke check ran with the console service controlling no session (see §8). | The project owner's admin session was active the whole time (`query user`: not idle). With deny by default, a Debug service that controls this session closes every running app without a rule at once (VS Code, terminals, browser). These paths are covered by unit tests (§5) and must be checked in the TES run with `kid1`. |
+| D-16 | Step 10.1: check the satellite "in both installers (list the Inno Setup output or install into a temp folder)" | Checked in the publish output that both installers package recursively (`[Files] … recursesubdirs`): `Service\en\`, `TrayClient\en\` and `ParentApp\en\EagleEye.Shared.resources.dll` are present | There is no extraction tool on this PC, and installing the per-user parent app would have upgraded the project owner's installed 0.5.0 parent app. TES checks the English default in the kid dialog (plan R-10). |
 
 The plan's own story interpretations D-1 to D-11 are implemented as written.
 
@@ -111,7 +111,7 @@ All paths relative to `02_Implementation/`.
 
 ## 6. Open Questions and Risks
 
-1. **Enforcement not smoke-checked live by DEV** (D-15): blocked starts by app rule, warnings, closes of running apps, grace periods, break begin closing running apps, the kid dialog with the info line and text replacement, and the CPU with 10 allowed apps running were not run in a real session. Michael's admin session was in use. The TES run with `kid1` is the first live run of these paths.
+1. **Enforcement not smoke-checked live by DEV** (D-15): blocked starts by app rule, warnings, closes of running apps, grace periods, break begin closing running apps, the kid dialog with the info line and text replacement, and the CPU with 10 allowed apps running were not run in a real session. The project owner's admin session was in use. The TES run with `kid1` is the first live run of these paths.
 2. **Deny by default right after the upgrade** (plan Q-6, R-1): every app the kids used before is blocked until the rules are set. In the smoke check the migrated database showed all 106 records at 0/0 with no day ticked.
 3. **Agent token** (plan Q-4, TC-005-26): graceful closes of running apps depend on the agent's `WM_CLOSE` under the SYSTEM token. Please rerun TC-005-26.
 4. **Messages of closes are not part of the per-tick message priority** (plan D-4): a close sends its own message (budget text, or one break text per session) through the close sequence. When a warning of another app is sent in the same tick, the later message replaces the text in the dialog. This is rare and has no effect on enforcement.
@@ -121,7 +121,7 @@ All paths relative to `02_Implementation/`.
 
 ---
 
-## 7. Checks for Michael (admin / SYSTEM / real kid session)
+## 7. Checks for the project owner (admin / SYSTEM / real kid session)
 
 Preparation (admin, kids not using the PC, see risk 2): install `03_Delivery/windows/EagleEye-Setup-0.6.0.exe` over 0.5.0, then `EagleEye-ParentApp-Setup-0.6.0.exe` on both parent PCs. Open Rules for `kid1` first and set the test rules (e.g. Notepad 0:03 all days, Paint 0:30 Saturday only, Calculator default). Settings: early 2 / final 1.
 
@@ -155,8 +155,8 @@ Preparation (admin, kids not using the PC, see risk 2): install `03_Delivery/win
 | Rules: budget text label (AC-1) | Anzeige Text wenn Budget aufgebraucht: | Display text when budget is used up: |
 | Rules: AC-8 | Bitte Stunden zwischen 0 und 23 eingeben. · Bitte Minuten zwischen 0 und 59 eingeben. | Enter hours between 0 and 23. · Enter minutes between 0 and 59. |
 | Settings: heading bar, explanation (AC-13) | Zeit-Ende Warnungen · Hier kannst du 2 Zeitpunkte einstellen, … | Time-elapsed warnings · Here you can set 2 points in time … |
-| Settings: columns and rows (AC-13) | Zeitpunkt · Minuten vor Ende · Anzeigetext · Frühe Warnung · Finale Warnung | Point in time · Minutes before end · Display text · Early warning · Final warning |
-| Settings: AC-15 | Bitte Minuten zwischen 1 und 59 eingeben. · Die finale Warnung muss weniger Minuten vor dem Ende liegen als die frühe Warnung. | Enter minutes between 1 and 59. · The final warning must be less minutes before the end than the early warning. |
+| Settings: columns and rows (AC-13) | Zeitpunkt · Minuten vor Ende · Anzeigetext · Früthey Warnung · Finale Warnung | Point in time · Minutes before end · Display text · Early warning · Final warning |
+| Settings: AC-15 | Bitte Minuten zwischen 1 und 59 eingeben. · Die finale Warnung muss weniger Minuten vor dem Ende liegen als die früthey Warnung. | Enter minutes between 1 and 59. · The final warning must be less minutes before the end than the early warning. |
 | Default texts (AC-10, AC-14) | Du hast deine Zeit aufgebraucht! Leider ist jetzt Schluss. · Achtung, du hast nur noch 5 Minuten! Speichere deinen Fortschritt. · Achtung!!! Nur noch 1 Minute – jetzt aber schnell speichern! · break text unchanged from US-005 | You have used up your time! Sorry, that's it for now. · Attention, you only have 5 minutes left! Save your progress. · Attention!!! Only 1 minute left – save quickly now! · Hi! Unfortunately, your parents have set a PC break for this time. You can't use this program right now. Sorry. How about using the time to read a book? 😊 |
 | Kid dialog info line (AC-34) | Editor: noch 2 Minuten. · Editor: noch 1 Minute. · Die Ruhezeit beginnt um 20:00. · Editor: Deine Eltern haben die Regeln geändert. Editor wird in 1 Minute geschlossen. · Deine Eltern haben eine Ruhezeit eingestellt. Alle Apps werden in 1 Minute geschlossen. · Editor: heute nicht erlaubt. · Editor: Zeit-Budget aufgebraucht. · Ruhezeit von 20:00 bis 24:00. | Notepad: 2 minutes left. · Notepad: 1 minute left. · Break time begins at 8:00 PM. · Notepad: your parents changed the rules. Notepad closes in 1 minute. · Your parents set a break time. All apps close in 1 minute. · Notepad: not allowed today. · Notepad: time budget used up. · Break time from 8:00 PM to midnight. |
 
@@ -193,7 +193,7 @@ Warning: The clock of the PC changed from … to …; the local date stays 10/12
 
 `%ProgramData%\EagleEye\EagleEye.Service.db`, schema version 5: `AppRules` (`AppId`, `BudgetMinutes`, `Days` bit mask Mo = 1 … Su = 64; **no row = 0:00, no day = blocked**), `AccountBudgetTexts` (no row = default text), `WarningSettings` (no row = 5 / 1 and default texts), `BlockedStarts` with `Kind` (`blocked start` / `running app`), `Reason` (`break time` / `not allowed today` / `budget used up`), `AfterGrace`, `Trigger` (`app start`, `found at agent start`, `break began`, `budget ran out`, `grace period ended`, `midnight`, `rules changed`), `BudgetMinutes`, `BudgetDays`, `UsedSeconds`; break rows keep the entry columns, budget rows have them `NULL`. The plan's Manual Verification Notes apply unchanged.
 
-### DEV smoke check (Windows Developer Machine, 2026-10-12, non-elevated, next to Michael's running 0.5.0 service and tray client, both untouched)
+### DEV smoke check (Windows Developer Machine, 2026-10-12, non-elevated, next to the project owner's running 0.5.0 service and tray client, both untouched)
 
 Setup (D-15): copy of the US-005 smoke data (a real **version-4** database) in `artifacts/smoke-us006` (git-ignored). In that copy, the Admin account (this session) was unticked, its 6 app records were moved to `ee-anna` (standard account, ticked, never signed in), and 100 records "Testapp 001…100" were added for TI-18. Debug console service with `EAGLEEYE_DATA_DIR` and `EAGLEEYE_DEV_PORT_OFFSET=10000`, **without** `EAGLEEYE_DEV_WATCH_SID`, so no session is controlled and nothing can be closed. Debug parent app with `EAGLEEYE_DEV_APP_DATA_DIR=artifacts/smoke-us006-app` (copy of the US-005 pairing). Driven with UI Automation patterns only (no mouse, no keyboard).
 
@@ -203,13 +203,13 @@ Setup (D-15): copy of the US-005 smoke data (a real **version-4** database) in `
 | Rules page (AC-1 to AC-3) | Section heading, explanation, two header rows, 106 rows sorted case-insensitively ("Battlefield™ 6", "EA", "EagleEye.ParentApp", …, "Testapp 001"…, "Visual Studio Code"), all "0" / "0", 742 checkboxes unticked; budget text box with the German default |
 | Edit (AC-7, AC-8, AC-11, AC-17 pattern) | Hours `24` → "Bitte Stunden zwischen 0 und 23 eingeben." and back to 0; hours `1` → log `1:00, no day`; minutes `30` → `1:30` (combined with the stored hours); Monday and Saturday ticked → `1:30, Mo` and `1:30, Mo Sa`; `AppRules` row (90, 33) |
 | Budget text (AC-10, ADR-016) | "Schluss für heute 😊 / 👍" → "budget text changed"; the English default typed → "budget text reset to the default", no `AccountBudgetTexts` row, the box shows the German default again |
-| Settings (AC-13 to AC-16) | Rows "Frühe Warnung" 5 and "Finale Warnung" 1 with the German default texts; early 3 → stored; final 3 → "Die finale Warnung muss weniger Minuten …", back to 1; early 2 → stored; early text "Bald ist Schluss 🚀" → "early warning text changed"; final text emptied while default → nothing sent, default shown again |
+| Settings (AC-13 to AC-16) | Rows "Früthey Warnung" 5 and "Finale Warnung" 1 with the German default texts; early 3 → stored; final 3 → "Die finale Warnung muss weniger Minuten …", back to 1; early 2 → stored; early text "Bald ist Schluss 🚀" → "early warning text changed"; final text emptied while default → nothing sent, default shown again |
 | TI-18 (106 rows) | Rules page ready after switching from Settings in **545–584 ms** (3 runs, incl. the UI Automation search) → below 1 s, no `CollectionView` needed |
 | Tray client | Debug tray connected to the console service: `Tray client connected: … (session 1, verified)` |
 | CPU (console service, no controlled session) | 0.004 % of total CPU over 60 s (20 logical CPUs), 32 MB private. Not representative for AC-38 (no agent, no running apps): see §7 D |
 | Not done | Enforcement in a session (D-15), 150 % / light mode, a second parent app, English Windows UI, installers (admin), SYSTEM agent |
 
-Clean-up: all processes started by DEV were stopped; Michael's service, tray client and parent app data were not touched. Left behind (git-ignored): `02_Implementation/artifacts/smoke-us006*`, `smoke-us006-console*.txt`, `artifacts/publish`.
+Clean-up: all processes started by DEV were stopped; the project owner's service, tray client and parent app data were not touched. Left behind (git-ignored): `02_Implementation/artifacts/smoke-us006*`, `smoke-us006-console*.txt`, `artifacts/publish`.
 
 ---
 
@@ -231,8 +231,8 @@ Clean-up: all processes started by DEV were stopped; Michael's service, tray cli
 **Fix**: the `End` alignment was removed from the four Entry types (`Views/SettingsView.xaml`, `Views/RulesView.xaml`); width and column layout are unchanged. Version 0.6.1 (`Directory.Build.props`). Evidence: `docs/testing/US-006/issues/ISSUE-008-after-*.png` (dark and light mode, 200 %).
 
 **Deviations from the 0.6.0 report**:
-- D-17: 150 % scaling not checked by DEV (this PC now runs at 200 %); to be checked on `LEOSERV`.
-- D-18: **dependency update.** The NuGet audit advisory GHSA-334f-vvp4-7g6p (`Microsoft.AspNetCore.SignalR.Common` 10.0.12, published after the 0.6.0 build) made the restore fail with warnings as errors. Michael chose to update (internet granted for this update only, no suppression). Package versions before → after:
+- D-17: 150 % scaling not checked by DEV (this PC now runs at 200 %); to be checked on `PARENT-PC`.
+- D-18: **dependency update.** The NuGet audit advisory GHSA-334f-vvp4-7g6p (`Microsoft.AspNetCore.SignalR.Common` 10.0.12, published after the 0.6.0 build) made the restore fail with warnings as errors. The project owner chose to update (internet granted for this update only, no suppression). Package versions before → after:
 
   | Package | Projects | Before | After |
   |---|---|---|---|
@@ -259,12 +259,12 @@ The publish output contains `en\EagleEye.Shared.resources.dll` (0.6.1) for Servi
 
 **Defect**: the parent app stayed "Gekoppelt" with "Die Identität des EagleEye-PCs localhost hat sich geändert", and "Kopplung aufheben" was disabled because it needs a connection. There was no way to pair again (`docs/testing/US-006/issues/ISSUE-009.md`).
 
-**Cause**: the pairing in Michael's `%LocalAppData%\EagleEye` on `ZOCK-O-MAT-V3` dates from the US-004 DEV smoke check on 2026-10-08. The Debug parent app was paired with the Debug console service (data `artifacts/smoke-us004`), and that service's certificate thumbprint matches the pinned value. Separate parent-app dev data only exists since US-005 D-5. Certificate pinning works as designed. The defect is the missing way out, because US-002 made unpairing online-only (AC-30, Q-3). This is not a 0.6.1 regression.
+**Cause**: the pairing in the project owner's `%LocalAppData%\EagleEye` on `DEV-PC` dates from the US-004 DEV smoke check on 2026-10-08. The Debug parent app was paired with the Debug console service (data `artifacts/smoke-us004`), and that service's certificate thumbprint matches the pinned value. Separate parent-app dev data only exists since US-005 D-5. Certificate pinning works as designed. The defect is the missing way out, because US-002 made unpairing online-only (AC-30, Q-3). This is not a 0.6.1 regression.
 
-**Fix** (Michael's option A): a local "Kopplung auf diesem Gerät löschen" button. It is offered only when the app is paired, not connected, and the last attempt failed with *identity changed* or *unreachable*. After a confirmation dialog, the app stops the connect loop, deletes the stored pairing (host, device ID, thumbprint, DPAPI token), returns to "Nicht gekoppelt" and logs the action. The online "Kopplung aufheben" is unchanged. Version 0.6.2. Texts, trigger, screenshots: `ISSUE-009.md`.
+**Fix** (the project owner's option A): a local "Kopplung auf diesem Gerät löschen" button. It is offered only when the app is paired, not connected, and the last attempt failed with *identity changed* or *unreachable*. After a confirmation dialog, the app stops the connect loop, deletes the stored pairing (host, device ID, thumbprint, DPAPI token), returns to "Nicht gekoppelt" and logs the action. The online "Kopplung aufheben" is unchanged. Version 0.6.2. Texts, trigger, screenshots: `ISSUE-009.md`.
 
 **Deviations**:
-- D-19: **change of approved US-002 behaviour at Michael's request (2026-10-17).** US-002 allowed unpairing only online (AC-30, Q-3). The parent app can now also forget a pairing locally, in the states above. The device entry can remain on the service. No parent app can remove it there, because no such function exists yet. *ARC/PRO may want to reflect this in the US-002 user story and the architecture docs; DEV did not edit them.*
+- D-19: **change of approved US-002 behaviour at the project owner's request (2026-10-17).** US-002 allowed unpairing only online (AC-30, Q-3). The parent app can now also forget a pairing locally, in the states above. The device entry can remain on the service. No parent app can remove it there, because no such function exists yet. *ARC/PRO may want to reflect this in the US-002 user story and the architecture docs; DEV did not edit them.*
 - D-20: the parent app had no logger. `ConnectionCoordinator` now takes an optional `ILogger<ConnectionCoordinator>`, which defaults to `NullLogger`. The parent app has no file log sink, so the entry is not persisted in Release.
 - D-21: after a connection drop at runtime, the button appears only once a connect attempt has failed with one of the two messages (at the latest after an app restart).
 

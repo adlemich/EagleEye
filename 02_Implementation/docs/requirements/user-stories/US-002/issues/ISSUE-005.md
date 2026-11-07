@@ -1,17 +1,17 @@
 # ISSUE-005: Administrator gets "Zugriff verweigert" on the service certificate folder
 
-**Status**: Verified/Closed (TC-002-02 passed in `docs/testing/US-002/test-run-02.md`; closed by Michael, 2026-10-07)
+**Status**: Verified/Closed (TC-002-02 passed in `docs/testing/US-002/test-run-02.md`; closed by the project owner, 2026-10-07)
 **User Story**: US-002
 **Found in**: docs/testing/US-002/test-run-01.md, TC-002-02 (supporting check, no AC)
 **Date**: 2026-10-04
 **Severity**: Medium as filed. **Reclassified 2026-10-04: not a product defect** (test-instruction problem, see "Resolution").
 **Machine**: Windows Developer Machine
 **Build**: `03_Delivery/windows/EagleEye-Setup-0.2.0.exe`
-**Routed to**: TES (test plan). Originally DEV for analysis; no DEV or ARC action needed after Michael's answer.
+**Routed to**: TES (test plan). Originally DEV for analysis; no DEV or ARC action needed after the project owner's answer.
 
 ## Description
 
-TC-002-02 checks the ACLs that the service installer sets on the service data folder. Step 1 (`icacls` on `%ProgramData%\EagleEye`) raised no complaint (Michael did not report a deviation; the output was not pasted). Steps 2 and 3, run in Michael's admin account, were refused with *Zugriff verweigert* / *Access ... is denied*. The certificate folder could not be listed, and the existence of `eagleeye.pfx` could not be checked.
+TC-002-02 checks the ACLs that the service installer sets on the service data folder. Step 1 (`icacls` on `%ProgramData%\EagleEye`) raised no complaint (the project owner did not report a deviation; the output was not pasted). Steps 2 and 3, run in the project owner's admin account, were refused with *Zugriff verweigert* / *Access ... is denied*. The certificate folder could not be listed, and the existence of `eagleeye.pfx` could not be checked.
 
 ## Steps to Reproduce
 
@@ -52,13 +52,13 @@ TES cannot decide from the outside which of these applies:
 1. **Product defect:** the installer's ACL on `certs\` does not grant *Administratoren* the access the design intends (for example a wrong SID, a missing grant, or an owner/inheritance problem after the service created the folder). An admin then cannot inspect or back up the certificate, and the documented reset ("delete `%ProgramData%\EagleEye` as admin", implementation report) may fail.
 2. **Test-plan expectation problem:** the commands ran **without elevation**. With UAC, an admin's non-elevated token does not use the Administrators group, so access is denied by design. The test plan step says only "PowerShell" and does not require *Terminal (Administrator)*. The prompt `PS C:\Users\Admin>` does not show whether the terminal was elevated. If this is the cause, TES will change TC-002-02 to require an elevated terminal, and this issue is closed as "not a defect".
 
-**TES asks Michael:** was the terminal used for TC-002-02 elevated (title *Administrator: …*)? If unsure, please repeat steps 2 and 3 in an elevated terminal and add the output to this issue. Then DEV analyzes.
+**TES asks the project owner:** was the terminal used for TC-002-02 elevated (title *Administrator: …*)? If unsure, please repeat steps 2 and 3 in an elevated terminal and add the output to this issue. Then DEV analyzes.
 
 ## Evidence
 
 - Command output above (from `docs/testing/US-002/test-run-01.md`, TC-002-02). No screenshot.
 
-## Answer (Michael, 2026-10-04)
+## Answer (the project owner, 2026-10-04)
 
 > "The terminal was not in Admin mode, so a simple hint in the test instructions will do the fix."
 
@@ -84,4 +84,4 @@ Test instruction. TC-002-02 said only "In PowerShell", and setup S-8 did not say
 
 TC-002-02 in `docs/testing/US-002/test-run-02.md`, in an elevated terminal. Expected result unchanged (test plan TC-002-02). If it passes, TES sets this issue to `Verified/Closed`. If `icacls` still reports *Zugriff verweigert* in an elevated terminal, the issue is reopened as a product defect for DEV.
 
-**Verified**: TC-002-02 passed in an elevated terminal in `docs/testing/US-002/test-run-02.md`. Closed by Michael, 2026-10-07.
+**Verified**: TC-002-02 passed in an elevated terminal in `docs/testing/US-002/test-run-02.md`. Closed by the project owner, 2026-10-07.

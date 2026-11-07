@@ -1,6 +1,6 @@
 # Implementation Plan: US-002 — Windows Parent App: Installation, Connection and Pairing
 
-**Status**: Approved by Michael (2026-10-04)
+**Status**: Approved by the project owner (2026-10-04)
 **Date**: 2026-10-04
 **Author**: ARC
 **User story**: `02_Implementation/docs/requirements/user-stories/US-002/user-story.md` (approved 2026-10-04, 30 ACs)
@@ -16,7 +16,7 @@
 |---|---|
 | This plan, ADR-008/009, arc42 and guideline updates (ARC) | MacBook (done here) |
 | Steps 0 to 9 (DEV), `build.ps1` / `test.ps1`, both installers, smoke check | **Windows Developer Machine** |
-| Manual test run (Michael) | Windows Developer Machine **plus a second Windows PC** in the LAN (AC-6, AC-23, AC-24) |
+| Manual test run (the project owner) | Windows Developer Machine **plus a second Windows PC** in the LAN (AC-6, AC-23, AC-24) |
 | MacBook | Not needed. Step 8 keeps `build.ps1` / `test.ps1` working on the MacBook (`ParentApp.Core` and its tests build without a MAUI workload). |
 
 The Android target is built by `build.ps1` on Windows. The shared MAUI code must still compile for Android (zero warnings), but there is no Android-specific work and no Android test.
@@ -40,7 +40,7 @@ The Android target is built by `build.ps1` on Windows. The shared MAUI code must
 
 ## Architecture Changes
 
-ADR-008 and ADR-009 hold the decisions. After Michael approves this plan, ARC applies these document updates on the feature branch:
+ADR-008 and ADR-009 hold the decisions. After the project owner approves this plan, ARC applies these document updates on the feature branch:
 
 | Document | Change |
 |---|---|
@@ -466,7 +466,7 @@ Opens one long-lived connection, sets pragmas (WAL, `synchronous=NORMAL`, `busy_
 
 ## Localization Impact
 
-*Required since US-001 (lessons learned). German is the neutral language (`*.resx`), English the satellite (`*.en.resx`). The Windows display language selects the language; any other language falls back to German. Texts in quotes are proposals that DEV puts into the resx files; Michael can adjust the wording in review.*
+*Required since US-001 (lessons learned). German is the neutral language (`*.resx`), English the satellite (`*.en.resx`). The Windows display language selects the language; any other language falls back to German. Texts in quotes are proposals that DEV puts into the resx files; the project owner can adjust the wording in review.*
 
 ### Parent app (`ParentApp.Core/Resources/AppTexts*.resx`)
 
@@ -634,7 +634,7 @@ All steps run on the **Windows Developer Machine**, on branch `feature/US-002-wi
 
 ---
 
-## Open Points for Michael
+## Open Points for the project owner
 
 1. **Security consequence of Q-1 (not blocking US-002).** Because the code appears in the kid's tray, a kid can pair their own parent app: on the same PC (the per-user installer needs no admin rights) or from another device. In US-002 a paired app can do nothing but stay connected. **From the first configuration story on, a kid could change their own rules.** Recommendation: before the first configuration story, decide on a mitigation (e.g. code only in admin sessions / the Event Log, or an admin confirmation on the service PC).
 2. **Tray client in admin sessions.** You said the tray should run only in the kid's account. It currently also starts in admin sessions (HKLM Run key, US-001 report §5). The plan leaves this unchanged (no AC requires it, and it lets you see the code when you pair at the service PC as admin). Should it be restricted? If yes, ARC adds a small step (the tray client ends itself in admin sessions) and TES adds a case.

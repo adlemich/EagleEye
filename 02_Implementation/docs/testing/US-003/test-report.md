@@ -1,15 +1,15 @@
 # Test Report: US-003 — Account Inventory and Selection of Accounts under Parental Control
 
-**Status**: Final — approved by Michael, 2026-10-07
+**Status**: Final — approved by the project owner, 2026-10-07
 **Date**: 2026-10-07
-**Author**: Orchestrator (recorded from `test-run-01.md` and Michael's decision; no separate TES evaluation, at Michael's direction)
+**Author**: Orchestrator (recorded from `test-run-01.md` and the project owner's decision; no separate TES evaluation, at the project owner's direction)
 **Test runs evaluated**: `docs/testing/US-003/test-run-01.md` (build 0.3.1)
 
 ---
 
 ## 1. Verdict
 
-**Closed as "good enough" by Michael (2026-10-07).** Michael executed test run 01 partially: **18 Pass, 0 Fail, 0 Blocked, 17 Skipped, 1 not ticked** (36 cases). He judged the result sufficient and closed US-003. Several ACs were therefore **not verified manually** (§3); they rest on DEV's unit tests and smoke check (`US-003/implementation-report.md`) and should be covered in a later manual run (see §5).
+**Closed as "good enough" by the project owner (2026-10-07).** The project owner executed test run 01 partially: **18 Pass, 0 Fail, 0 Blocked, 17 Skipped, 1 not ticked** (36 cases). They judged the result sufficient and closed US-003. Several ACs were therefore **not verified manually** (§3); they rest on DEV's unit tests and smoke check (`US-003/implementation-report.md`) and should be covered in a later manual run (see §5).
 
 ## 2. Case Tally (run 01)
 
@@ -42,4 +42,4 @@ No new issues were reported in run 01.
 1. **Untested ACs.** The push behaviour (AC-19 to AC-22), the two-app broadcast (AC-23, AC-24) and the error/revert path (AC-16) are central to ADR-010 but were only unit-tested and smoke-checked by DEV (broadcast between two apps on one PC seen within 1 s). Proposal: include TC-003-22 to -35 in the next story's manual run that touches the parent app or the service, or in the next regression run.
 2. **Service log evidence.** The cleanup step LOG-COPY is ticked, but no service log files are in `evidence/`. `.gitignore` excludes `*.log`, so copies under `evidence/` could not be committed. Fixed on `main` (Orchestrator, 2026-10-07) with an exception for `docs/testing/**/evidence/**`.
 3. **Evidence files.** `evidence/Screenshot 2026-10-07 191530.png` (referenced in the run file Notes) and `evidence/issue_formatting_accounts.png` (ISSUE-006 before the fix).
-4. **Setup.** The service PC was brought from 0.3.0 (Michael's quick check) back to 0.2.0 and upgraded to 0.3.1 as planned (S-1 to S-11 ticked).
+4. **Setup.** The service PC was brought from 0.3.0 (the project owner's quick check) back to 0.2.0 and upgraded to 0.3.1 as planned (S-1 to S-11 ticked).

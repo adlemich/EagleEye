@@ -2,7 +2,7 @@
 
 **Status**: Accepted (example amended by CR-001, 2026-10-20)
 **Date**: 2026-09-20
-**Deciders**: Michael (project owner), ARC
+**Deciders**: the project owner, ARC
 
 > **Amended by CR-001 (2026-10-20, ADR-019)**: cosmetic only. The iOS and Android parent apps are dropped; parent apps run on Windows and macOS. The device-name example in the pairing flow now reads "Mom's MacBook" (as FR-SVC-094 in requirements v1.7). The decision is unchanged.
 

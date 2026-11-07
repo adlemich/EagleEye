@@ -1,8 +1,8 @@
 # EagleEye — Project Structure Plan
 
-This document describes the planned folder structure and initial files to be generated under `02_Implementation`. It is subject to Michael's review and approval before anything is generated.
+This document describes the planned folder structure and initial files to be generated under `02_Implementation`. It is subject to the project owner's review and approval before anything is generated.
 
-> **Amendment 2026-10-20 (Michael's decision, CR-001)**: the iOS and Android parent apps are dropped. The parent app targets only **Windows** (added 2026-10-03, ADR-007) and **macOS** (Mac Catalyst). The `Platforms/iOS/` and `Platforms/Android/` folders, `03_Delivery/android/` and the Apple Developer / Android signing sections of the secrets template are marked dropped below; their removal from the repository is a follow-up for DEV (`02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`).
+> **Amendment 2026-10-20 (the project owner's decision, CR-001)**: the iOS and Android parent apps are dropped. The parent app targets only **Windows** (added 2026-10-03, ADR-007) and **macOS** (Mac Catalyst). The `Platforms/iOS/` and `Platforms/Android/` folders, `03_Delivery/android/` and the Apple Developer / Android signing sections of the secrets template are marked dropped below; their removal from the repository is a follow-up for DEV (`02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`).
 
 ---
 
@@ -173,18 +173,18 @@ Agent `skills/` subfolders are created empty (`.gitkeep`) — skills are added b
 
 ## Orchestrator Workflow — Mandatory Phase Sequence
 
-The Orchestrator CLAUDE.md will enforce the following strict phase sequence. **No phase may begin before the previous one is approved by Michael.**
+The Orchestrator CLAUDE.md will enforce the following strict phase sequence. **No phase may begin before the previous one is approved by the project owner.**
 
 ### Phase 0 — Project Bootstrap (this activity)
 - Input documents in `01_Intend_and_Constraints` are complete.
 - Project structure under `02_Implementation` has been generated.
-- **Gate**: Michael approves the generated structure before Phase 1 starts.
+- **Gate**: the project owner approves the generated structure before Phase 1 starts.
 
 ### Phase 1 — PRO: General Product Requirements
 The Orchestrator instructs PRO to produce:
 - `docs/requirements/general-product-requirements.md` — detailed functional requirements covering all components, personas, use cases, and acceptance criteria derived from `01_Intend_and_Constraints`.
 
-**Gate**: Michael reviews and approves the General Product Requirements. No ARC work starts until approved.
+**Gate**: the project owner reviews and approves the General Product Requirements. No ARC work starts until approved.
 
 ### Phase 2 — ARC: Foundation Architecture
 The Orchestrator instructs ARC to produce (in order):
@@ -193,16 +193,16 @@ The Orchestrator instructs ARC to produce (in order):
 3. `docs/architecture/product-design-principles.md` — design principles and guardrails for DEV
 4. `docs/architecture/product-coding-guidelines.md` — .NET coding guidelines and patterns DEV must follow
 
-**Gate**: Michael reviews and approves all ARC documents. No DEV work (no code) starts until approved.
+**Gate**: the project owner reviews and approves all ARC documents. No DEV work (no code) starts until approved.
 
 ### Phase 3+ — Iterative User Story Implementation
 Only after Phases 1 and 2 are approved does the Orchestrator begin the iterative loop:
 
 ```
-PRO writes User Story → Michael approves →
-ARC writes Implementation Plan → Michael approves →
-DEV implements + unit tests → Michael approves →
-TES writes E2E tests + test report → Michael approves →
+PRO writes User Story → the project owner approves →
+ARC writes Implementation Plan → the project owner approves →
+DEV implements + unit tests → the project owner approves →
+TES writes E2E tests + test report → the project owner approves →
 (repeat for next user story)
 ```
 
@@ -218,7 +218,7 @@ TES writes E2E tests + test report → Michael approves →
 
 3. **Agents are co-located with implementation**: The `agents/` folder lives inside `02_Implementation` so each agent has direct access to the code, docs, and tests it needs to work on.
 
-4. **Single CLAUDE.md at root = Orchestrator**: The root-level `CLAUDE.md` is the Dev Process Orchestrator. Michael interacts with this agent to drive the overall workflow. The other agents are invoked from their own subfolders.
+4. **Single CLAUDE.md at root = Orchestrator**: The root-level `CLAUDE.md` is the Dev Process Orchestrator. The project owner interacts with this agent to drive the overall workflow. The other agents are invoked from their own subfolders.
 
 5. **Docs are first-class**: `docs/` lives alongside `src/` and `tests/` — not as an afterthought. Architecture, decisions, user stories, and test reports all have a defined home.
 

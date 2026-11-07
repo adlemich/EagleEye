@@ -418,6 +418,6 @@ public sealed class UserAccountsModelTests
 
     private static UserAccountListDto Snapshot(long revision, bool ticked, Guid? requestId = null)
     {
-        return new UserAccountListDto(revision, requestId, [new UserAccountDto(Sid, "max", "Max Adler", false, ticked)]);
+        return new UserAccountListDto(revision, requestId, [new UserAccountDto(Sid, "max", "Max Mustermann", false, ticked)]);
     }
 }

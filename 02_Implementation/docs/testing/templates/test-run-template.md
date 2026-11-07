@@ -2,7 +2,7 @@
 
 **Test plan**: `docs/testing/US-XXX/test-plan.md`
 **Prepared by**: TES, YYYY-MM-DD
-**Executed by**: Michael
+**Executed by**: the project owner
 **Execution date**: <!-- fill in -->
 **Build / installer version**: <!-- fill in, e.g. EagleEye_v0.1 -->
 **Machine(s)**: <!-- fill in, e.g. Windows Dev Machine, Windows 11 Pro 24H2 -->

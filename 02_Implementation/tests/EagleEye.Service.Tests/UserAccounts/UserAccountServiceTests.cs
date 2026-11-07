@@ -17,8 +17,8 @@ public sealed class UserAccountServiceTests : IAsyncLifetime
 
     private static readonly LocalAccountInfo Administrator = new($"{Machine}-500", "Administrator", null, true, true);
     private static readonly LocalAccountInfo Guest = new($"{Machine}-501", "Gast", null, true, false);
-    private static readonly LocalAccountInfo Papa = new($"{Machine}-1000", "papa", "Michael Adler", false, true);
-    private static readonly LocalAccountInfo Max = new($"{Machine}-1001", "max", "Max Adler", false, false);
+    private static readonly LocalAccountInfo Papa = new($"{Machine}-1000", "papa", "Erika Mustermann", false, true);
+    private static readonly LocalAccountInfo Max = new($"{Machine}-1001", "max", "Max Mustermann", false, false);
     private static readonly LocalAccountInfo Anna = new($"{Machine}-1002", "anna", null, false, false);
     private static readonly LocalAccountInfo Leftover = new($"{Machine}-1003", "defaultuser0", null, false, false);
 
@@ -62,7 +62,7 @@ public sealed class UserAccountServiceTests : IAsyncLifetime
 
         Assert.Equal((1L, (Guid?)null), (snapshot.Revision, snapshot.LastChangeRequestId));
         Assert.Equal(
-            [new UserAccountDto(Anna.Sid, "anna", null, false, false), new UserAccountDto(Max.Sid, "max", "Max Adler", false, false)],
+            [new UserAccountDto(Anna.Sid, "anna", null, false, false), new UserAccountDto(Max.Sid, "max", "Max Mustermann", false, false)],
             snapshot.Accounts);
     }
 
@@ -303,7 +303,7 @@ public sealed class UserAccountServiceTests : IAsyncLifetime
         { "added", [Papa, Max, Anna, new($"{Machine}-1004", "lena", null, false, false)] },
         { "deleted", [Papa, Max] },
         { "renamed", [Papa, Max with { UserName = "maximilian" }, Anna] },
-        { "full name", [Papa, Max with { FullName = "Maximilian Adler" }, Anna] },
+        { "full name", [Papa, Max with { FullName = "Maximilian Mustermann" }, Anna] },
         { "disabled", [Papa, Max with { IsDisabled = true }, Anna] },
         { "became admin", [Papa, Max with { IsAdmin = true }, Anna] },
         { "admin became standard", [Papa with { IsAdmin = false }, Max, Anna] },

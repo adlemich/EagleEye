@@ -2,10 +2,10 @@
 
 **Test plan**: `docs/testing/US-005/test-plan.md` (draft 2026-10-11, for approval)
 **Prepared by**: TES, 2026-10-11
-**Executed by**: Michael
+**Executed by**: the project owner
 **Execution date**: <!-- fill in -->
 **Build / installer version**: 0.5.0 — `03_Delivery/windows/EagleEye-Setup-0.5.0.exe` (2026-10-10 22:47, SHA-256 `83bf5c55…151830`) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.5.0.exe` (2026-10-10 22:48, SHA-256 `a03245d5…b217a1`); full hashes in test plan §2
-**Machine(s)**: Windows Developer Machine (service PC, `ZOCK-O-MAT-V3`) · LEOSERV (App B)
+**Machine(s)**: Windows Developer Machine (service PC, `DEV-PC`) · PARENT-PC (App B)
 
 > **What this run covers**: the 35 cases of the test plan, **only US-005 features**, no regression.
 >
@@ -17,7 +17,7 @@
 >
 > **Duration**: Setup ≈ 30 min (+15 if kid accounts must be created) · A ≈ 40 min · B ≈ 45 min · C ≈ 30 min · D ≈ 45 min · E ≈ 25 min (+10 optional) · F ≈ 10 min (+≈ 60 optional). Core blocks ≈ 3 h 15 min plus setup.
 >
-> **Accounts**: **Admin** = you. **kid1** = `eagleeye-kid` (controlled). **kid2** = `ee-kid2` (**not** controlled). **kid3** = `ee-kid3` (controlled; deleted in TC-005-30). **App A** = parent app in your admin session; **App B** = parent app on **LEOSERV** (to switch breaks while the kid's session is in front).
+> **Accounts**: **Admin** = you. **kid1** = `eagleeye-kid` (controlled). **kid2** = `ee-kid2` (**not** controlled). **kid3** = `ee-kid3` (controlled; deleted in TC-005-30). **App A** = parent app in your admin session; **App B** = parent app on **PARENT-PC** (to switch breaks while the kid's session is in front).
 > **Terminal (Administrator)** = elevated terminal in your session. **K-TERM** = elevated terminal **inside the kid's session** with your admin credentials. **P-KID** = **normal** PowerShell of the kid.
 >
 > **Break helpers** (test plan §2):
@@ -80,7 +80,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 - [x] **S-9 Selection**: App A → *Einstellungen*: **eagleeye-kid** and **ee-kid3** ticked; **ee-kid2** and all others unticked.
 - [x] **S-10 SmartScreen**: *Weitere Informationen* → *Trotzdem ausführen* (expected).
 - [x] **S-11 K-TERM understood** (Start → **Terminal** → right-click → **Als Administrator ausführen** → your admin credentials, in the kid's session).
-- [x] **S-12 App B on LEOSERV** (after TC-005-02): install `EagleEye-ParentApp-Setup-0.5.0.exe`; green and *Gekoppelt* (else pair as **LEOSERV**). Not available → write it here: ____________ (TC-005-23 Blocked).
+- [x] **S-12 App B on PARENT-PC** (after TC-005-02): install `EagleEye-ParentApp-Setup-0.5.0.exe`; green and *Gekoppelt* (else pair as **PARENT-PC**). Not available → write it here: ____________ (TC-005-23 Blocked).
 - [x] **S-13 SQLite tool** for optional TC-005-34: yes / no ______
 
 ---
@@ -279,7 +279,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 
 ## Block B — Blocking at start and the kid's dialog (core) · ≈ 45 min
 
-- [x] **P-1** App B (LEOSERV) → **Regeln** → **Konto** `eagleeye-kid` → create **E1** (now − 1 min to 23:59, all days), **An/Aus unticked**. (No LEOSERV: in App A.)
+- [x] **P-1** App B (PARENT-PC) → **Regeln** → **Konto** `eagleeye-kid` → create **E1** (now − 1 min to 23:59, all days), **An/Aus unticked**. (No PARENT-PC: in App A.)
 - [x] **P-2** *Benutzer wechseln* → `eagleeye-kid`.
 - [x] **P-3** *Einstellungen → Personalisierung → Taskleiste → Verhalten der Taskleiste* → **Sekunden in der Uhr der Taskleiste anzeigen** ✓.
 - [x] **P-4** **P-KID**: Start → **Terminal** (normal). Keep it open.
@@ -545,7 +545,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 
 ### TC-005-23: Two parent apps: changes appear in the other app within 5 s; deleted meanwhile → message
 
-*Verifies AC-19, AC-18, AC-5 · Service PC / Admin (App A) + LEOSERV (App B) side by side · both Regeln → eagleeye-kid. No LEOSERV → Blocked*
+*Verifies AC-19, AC-18, AC-5 · Service PC / Admin (App A) + PARENT-PC (App B) side by side · both Regeln → eagleeye-kid. No PARENT-PC → Blocked*
 
 1. A: **Eintrag hinzufügen**. Watch B.
 2. B: new row **End-Zeit** `22:00`, Enter. Watch A.
@@ -602,7 +602,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
 
 ## Block E — Security (core security) · ≈ 25 min (+10 optional)
 
-- [x] App B on LEOSERV started again → Regeln → `eagleeye-kid`. kid1 in front with P-KID and K-TERM.
+- [x] App B on PARENT-PC started again → Regeln → `eagleeye-kid`. kid1 in front with P-KID and K-TERM.
 
 ### TC-005-26: Which restricted SYSTEM token the agent runs with (US-004 TC-004-23, rerun)
 
@@ -808,7 +808,7 @@ Select-String -Path "$env:ProgramData\EagleEye\logs\*.log" -Pattern "<pattern>" 
     if (Get-LocalUser -Name $n -ErrorAction SilentlyContinue) { Remove-LocalUser -Name $n }
   }
   ```
-- [x] LEOSERV: App B stays installed and paired.
+- [x] PARENT-PC: App B stays installed and paired.
 
 ---
 

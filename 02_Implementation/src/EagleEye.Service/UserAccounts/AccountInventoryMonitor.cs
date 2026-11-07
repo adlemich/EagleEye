@@ -10,7 +10,7 @@ public sealed class AccountInventoryMonitor(
     TimeProvider timeProvider,
     ILogger<AccountInventoryMonitor> logger) : BackgroundService
 {
-    /// <summary>Interval of the check (Michael, 2026-10-07, Q-3). A constant until the service has its YAML configuration.</summary>
+    /// <summary>Interval of the check (project owner, 2026-10-07, Q-3). A constant until the service has its YAML configuration.</summary>
     public static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(15);
 
     /// <inheritdoc />

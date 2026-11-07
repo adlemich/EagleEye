@@ -2,11 +2,11 @@
 
 **Author**: ARC
 **Date**: 2026-11-01
-**For**: DEV (build), Michael (test run)
+**For**: DEV (build), the project owner (test run)
 **Branch**: `feature/US-010-time-overlay`
-**Status**: Ready for DEV. Michael approved the spike on 2026-11-01. Still **no user story**, no implementation plan, no ADR.
+**Status**: Ready for DEV. The project owner approved the spike on 2026-11-01. Still **no user story**, no implementation plan, no ADR.
 **Basis**: `02_Implementation/docs/requirements/user-stories/US-010/feasibility-overlay.md` §3a, §5, §6 (option a: layered, top-most, click-through window)
-**Results template**: `02_Implementation/docs/requirements/user-stories/US-010/spike-overlay-results.md` (Michael fills it in)
+**Results template**: `02_Implementation/docs/requirements/user-stories/US-010/spike-overlay-results.md` (the project owner fills it in)
 **Evaluation (later)**: `02_Implementation/docs/requirements/user-stories/US-010/spike-overlay.md` (DEV/ARC write it after the run)
 
 Source tags as in the feasibility doc: **[R]** from the repo, **[K]** ARC's general knowledge, not checked on the internet, **[S]** to be found out by this spike.
@@ -17,17 +17,17 @@ Source tags as in the feasibility doc: **[R]** from the repo, **[K]** ARC's gene
 
 | Part | Who | Machine |
 |---|---|---|
-| Build, publish, smoke check (§3 to §5) | DEV | **Windows Developer Machine** (`ZOCK-O-MAT-V3`, Windows 11) |
-| Copy to the gaming PC, test run (§6, results template) | Michael | **The kid's gaming PC** (Windows 11), in the **kid's standard account**. Which PC this is: see open question Q-A (§8) |
+| Build, publish, smoke check (§3 to §5) | DEV | **Windows Developer Machine** (`DEV-PC`, Windows 11) |
+| Copy to the gaming PC, test run (§6, results template) | The project owner | **The kid's gaming PC** (Windows 11), in the **kid's standard account**. Which PC this is: see open question Q-A (§8) |
 | Evaluation (§7) | DEV and ARC | either machine (documentation) |
 
-Repo facts on the PCs [R]: the test station of all earlier stories is the Windows Developer Machine `ZOCK-O-MAT-V3`. It is also the service PC with EagleEye installed, the kid accounts `eagleeye-kid` (controlled) and `ee-kid2` (not controlled), and IP `192.168.1.37` in US-009 (`02_Implementation/docs/testing/US-005/test-plan.md`, `02_Implementation/docs/testing/US-009/test-report.md`). The repo does not name a separate gaming PC, and it does not mention `192.168.1.85`.
+Repo facts on the PCs [R]: the test station of all earlier stories is the Windows Developer Machine `DEV-PC`. It is also the service PC with EagleEye installed, the kid accounts `eagleeye-kid` (controlled) and `ee-kid2` (not controlled), and IP `DEV-PC` in US-009 (`02_Implementation/docs/testing/US-005/test-plan.md`, `02_Implementation/docs/testing/US-009/test-report.md`). The repo does not name a separate gaming PC, and it does not mention `PILOT-PC`.
 
 ---
 
 ## 1. Goal and scope
 
-**Goal.** A small **throwaway** Windows app, "OverlaySpike". It shows a fake remaining-time countdown in a translucent, top-most, click-through overlay. Michael uses it to check, over the kids' real games, the [S] statements of the feasibility doc: is the overlay visible, does it take the focus or input, does Easy Anti-Cheat react, does it cost frames, and how does it behave with several monitors and DPI scales.
+**Goal.** A small **throwaway** Windows app, "OverlaySpike". It shows a fake remaining-time countdown in a translucent, top-most, click-through overlay. The project owner uses it to check, over the kids' real games, the [S] statements of the feasibility doc: is the overlay visible, does it take the focus or input, does Easy Anti-Cheat react, does it cost frames, and how does it behave with several monitors and DPI scales.
 
 **In scope.** One stand-alone WinForms app (.NET 10, like the tray client), published as **one portable exe**.
 
@@ -48,7 +48,7 @@ The production design (data push, settings, which dialogs stay) is decided later
 **Choice: a separate folder `02_Implementation/spikes/US-010-overlay/` with its own `OverlaySpike.csproj`, committed on the US-010 branch.** Delete it before the branch is merged into `main`.
 
 Why:
-- Michael will want a fix or a variant after the first run (a different corner, uniform alpha). A real project can be rebuilt with one command. A patch-only spike, as in US-008, would have to be re-applied first; that fitted a throwaway page inside the MAUI app, but this is a stand-alone exe.
+- The project owner will want a fix or a variant after the first run (a different corner, uniform alpha). A real project can be rebuilt with one command. A patch-only spike, as in US-008, would have to be re-applied first; that fitted a throwaway page inside the MAUI app, but this is a stand-alone exe.
 - Traceability: the code that was tested is in the branch history. The merge is `--no-ff` (`02_Implementation/docs/dev-process/dev-process.md` §4), so the commits stay reachable after the folder is deleted. `spike-overlay.md` records the commit hash of the tested build.
 - It cannot break the build or the tests [R]:
   - `build.ps1` builds named projects under `02_Implementation/src/` only (`Get-ProjectPath`);
@@ -125,7 +125,7 @@ On each foreground change, log one line:
   - `maximized` when `IsZoomed`;
   - else `windowed`.
   
-  Also log the raw notification state. This is a heuristic; Michael's photo is the truth.
+  Also log the raw notification state. This is a heuristic; the project owner's photo is the truth.
 
 ### 3.5 Control without stealing the focus
 
@@ -136,7 +136,7 @@ Three ways; precedence **command line > config file > defaults**.
    { "startMinutes": 15, "label": "Spiele", "corner": "TopRight", "opacity": 50,
      "alpha": "perPixel", "reassert": true, "beep": true, "fontSizePt": 16, "cpuLogSeconds": 30 }
    ```
-2. **Command line**: `--minutes 15 --label Spiele --corner TopRight|TopLeft|BottomRight|BottomLeft --opacity 30..90 --alpha perPixel|uniform --no-reassert --no-beep`. Michael can make desktop shortcuts with switches if he likes.
+2. **Command line**: `--minutes 15 --label Spiele --corner TopRight|TopLeft|BottomRight|BottomLeft --opacity 30..90 --alpha perPixel|uniform --no-reassert --no-beep`. The project owner can make desktop shortcuts with switches if they like.
 3. **Global hotkeys** (`RegisterHotKey` with `MOD_NOREPEAT`). **For use during a game**: they never activate a window. All are **Strg + Alt + Umschalt + key**: three modifiers, so no game or AltGr character uses them [K].
 
    | Hotkey | Action |
@@ -167,7 +167,7 @@ Three ways; precedence **command line > config file > defaults**.
 
 - File `overlay-spike-<yyyyMMdd-HHmmss>.log`, UTF-8, one line per event: `HH:mm:ss.fff  CATEGORY  message`.
 - Location: **next to the exe**. If that folder is not writable (read-only USB stick), use `%LOCALAPPDATA%\OverlaySpike\`. The first line names the folder used; the tray tooltip names it too.
-- Flush after every line (Michael may pull the plug or sign out).
+- Flush after every line (the project owner may pull the plug or sign out).
 - Content:
 
   | Category | When | Content |
@@ -205,7 +205,7 @@ Copy-Item 02_Implementation/spikes/US-010-overlay/overlay-spike.json 03_Delivery
 - **Output**: `03_Delivery/spikes/US-010-overlay/OverlaySpike.exe` plus the optional `overlay-spike.json`. Git-ignored (§2).
 - Self-contained: the gaming PC needs no .NET runtime. Expected size about 50 to 150 MB [K]. **No trimming**: WinForms does not support it.
 - `IncludeNativeLibrariesForSelfExtract`: the runtime's native files are unpacked at first start into the user's `%TEMP%\.net\…`. That needs no admin rights [K].
-- **Restore**: no packages. The win-x64 runtime packs (including Windows Desktop) are already cached on this PC, because `package-windows.ps1` publishes the tray client self-contained for win-x64 [R]. If `dotnet publish` still wants to download a pack, stop and ask Michael (no internet without his go).
+- **Restore**: no packages. The win-x64 runtime packs (including Windows Desktop) are already cached on this PC, because `package-windows.ps1` publishes the tray client self-contained for win-x64 [R]. If `dotnet publish` still wants to download a pack, stop and ask the project owner (no internet without their go).
 - **Version shown in the log**: the commit hash via `SourceRevisionId` (it ends up in `InformationalVersion`). So the log proves which build was tested. Commit before publishing for the run.
 - Unsigned exe: SmartScreen will warn on the gaming PC (§6.2).
 
@@ -229,13 +229,13 @@ Copy-Item 02_Implementation/spikes/US-010-overlay/overlay-spike.json 03_Delivery
 | D-10 | **EagleEye does not record it** (§6.3): run it for 5 min in the **controlled** account `eagleeye-kid` (service 0.9.0 installed) | It keeps running (not closed after 20 s). It does not appear on *Regeln* or *Berichte* in the parent app for `eagleeye-kid`. The service log has no "start blocked … OverlaySpike" line |
 | D-11 | `CPU` lines over 10 min | Own CPU < 1 %, working set stable (no growth), GDI/USER counts stable |
 
-**DEV hand-over**: a short section "§1 Build and DEV checks" at the top of `02_Implementation/docs/requirements/user-stories/US-010/spike-overlay.md`. It holds: the commit hash, the exe size, the D-1 to D-11 results, any deviation from this document, and especially the D-10 result. Then commit and push on the branch, and tell Michael where the exe is.
+**DEV hand-over**: a short section "§1 Build and DEV checks" at the top of `02_Implementation/docs/requirements/user-stories/US-010/spike-overlay.md`. It holds: the commit hash, the exe size, the D-1 to D-11 results, any deviation from this document, and especially the D-10 result. Then commit and push on the branch, and tell the project owner where the exe is.
 
-If D-10 fails (the app is recorded as an app), find out which window caused it (likely the tray context menu or a balloon tip) and fix it. If it cannot be fixed in the time box, note it; Michael then uses the fallback in §6.3.
+If D-10 fails (the app is recorded as an app), find out which window caused it (likely the tray context menu or a balloon tip) and fix it. If it cannot be fixed in the time box, note it; the project owner then uses the fallback in §6.3.
 
 ---
 
-## 6. Michael's test run on the kid's gaming PC
+## 6. The project owner's test run on the kid's gaming PC
 
 The step-by-step checklist with tick boxes is in `02_Implementation/docs/requirements/user-stories/US-010/spike-overlay-results.md` (the test-run format of `02_Implementation/docs/testing/README.md` §4). This section only explains the setup.
 
@@ -254,7 +254,7 @@ What 0.9.0 does with an unknown program in a **controlled** kid account [R]:
 - But **only apps** are recorded and blocked. An app is a program with a visible, unowned window that is not a tool window (ADR-011 §4). OverlaySpike has only a tool window and a tray icon (§3.6), so it **should never be recorded**. DEV confirms this in D-10.
 - Renaming does **not** help: EagleEye identifies apps by program path, and a new path is just a new, blocked record (ADR-015 §6, arc42 R-16).
 
-**What Michael does:**
+**What the project owner does:**
 1. Nothing special. Start OverlaySpike in the kid account. If it keeps running for 1 minute without an EagleEye message, it is not blocked.
 2. **Fallback**, only if EagleEye blocks it anyway (kid dialog with the budget text, overlay closes): in the parent app → *Regeln* → the kid's account → *Applikations-Regeln* → the new row **OverlaySpike** → budget **3:00**, today's weekday ticked. Wait 5 s and start it again. Keep the exe in the **same folder** for the whole run (another folder = another record). After the run, set that row back to 0:00 / no day.
 3. **The games themselves must not run out of time during the test.** Otherwise EagleEye's own warning dialogs and closes interfere. Before the run, give the games' group (e.g. *Spiele*) or the single games at least **3 h for today**, with today ticked. Make sure no break time (*Ruhezeit*) begins in the next 3 h. Set it back afterwards. (Alternative: a non-controlled account, but the game launchers are usually signed in only in the kid's account.)
@@ -283,24 +283,24 @@ What 0.9.0 does with an unknown program in a **controlled** kid account [R]:
 
 ## 7. Afterwards
 
-1. Michael commits the filled-in `spike-overlay-results.md` and the evidence (`US-010/evidence/spike-*`, the log `overlay-spike-*.log`) on the branch, or hands them to DEV.
+1. The project owner commits the filled-in `spike-overlay-results.md` and the evidence (`US-010/evidence/spike-*`, the log `overlay-spike-*.log`) on the branch, or hands them to DEV.
 2. **DEV and ARC write the evaluation** in `02_Implementation/docs/requirements/user-stories/US-010/spike-overlay.md`: the result per case, the game matrix of feasibility §4 confirmed or corrected, the FPS figures, and the decision by the rules of feasibility §6:
    - steps 1–6 pass → option (a) as recommended;
    - only true exclusive modes fail → (a) with the documented limit plus the audio cue;
-   - Fortnite *Vollbild* fails or EAC reacts → (a) with "use *Fenster-Vollbild*" as a documented limit; Michael decides;
+   - Fortnite *Vollbild* fails or EAC reacts → (a) with "use *Fenster-Vollbild*" as a documented limit; the project owner decides;
    - covered even with re-assert → a short follow-up spike for the `uiAccess` variant (a+);
    - noticeable frame drops → a smaller overlay, "last N minutes" only, or uniform alpha.
-3. Michael accepts the evaluation.
+3. The project owner accepts the evaluation.
 4. **Code**: DEV removes `02_Implementation/spikes/US-010-overlay/` in a commit on the branch ("US-010: remove overlay spike code (evaluated in spike-overlay.md)"). This happens before the branch is merged, at the latest together with the story's implementation. `spike-overlay.md` names the last spike commit. The exe in `03_Delivery/spikes/` can simply be deleted.
-5. **PRO writes US-010** with the feasibility doc, the evaluation, and Michael's answers to the product questions (feasibility §8).
+5. **PRO writes US-010** with the feasibility doc, the evaluation, and the project owner's answers to the product questions (feasibility §8).
 
 ---
 
-## 8. Open questions for Michael
+## 8. Open questions for the project owner
 
 | # | Question | ARC assumption until answered |
 |---|---|---|
-| Q-A | **Which PC is "the kid's gaming PC"?** The repo knows only the Windows Developer Machine `ZOCK-O-MAT-V3` as the service PC (with `eagleeye-kid`, IP `192.168.1.37` in US-009). Is the gaming PC the same machine or another one (`192.168.1.85`?), and which EagleEye version runs there, if any? | Another Windows 11 PC with EagleEye 0.9.0 and a controlled kid account. If it is `ZOCK-O-MAT-V3` itself, §6.1 is trivial and D-10 already covers §6.3. |
+| Q-A | **Which PC is "the kid's gaming PC"?** The repo knows only the Windows Developer Machine `DEV-PC` as the service PC (with `eagleeye-kid`, IP `DEV-PC` in US-009). Is the gaming PC the same machine or another one (`PILOT-PC`?), and which EagleEye version runs there, if any? | Another Windows 11 PC with EagleEye 0.9.0 and a controlled kid account. If it is `DEV-PC` itself, §6.1 is trivial and D-10 already covers §6.3. |
 | Q-B | Which games are installed in which account there, and in which display mode does the kid normally play Fortnite and Minecraft? | As in the feasibility §4 matrix. |
 | Q-C | Does the gaming PC have a second monitor, and which scaling? | Unknown; SP-16 is optional. |
-| Q-D | May Michael lift the games' budget to 3 h for one test afternoon (§6.3 step 3)? | Yes. |
+| Q-D | May the project owner lift the games' budget to 3 h for one test afternoon (§6.3 step 3)? | Yes. |

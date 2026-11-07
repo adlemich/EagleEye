@@ -18,7 +18,7 @@ namespace EagleEye.Service.Monitoring;
 /// <item><c>STARTUPINFOEX</c> with <c>PROC_THREAD_ATTRIBUTE_HANDLE_LIST</c> = exactly the agent's three pipe ends.</item>
 /// <item><c>CREATE_NO_WINDOW | CREATE_UNICODE_ENVIRONMENT | EXTENDED_STARTUPINFO_PRESENT</c>, desktop <c>WinSta0\Default</c>.</item>
 /// </list>
-/// Requires SYSTEM (SeTcbPrivilege for the session ID). Thin Win32, verified manually by Michael (DEV has no admin rights).
+/// Requires SYSTEM (SeTcbPrivilege for the session ID). Thin Win32, verified manually by the project owner (DEV has no admin rights).
 /// </summary>
 public sealed unsafe partial class SessionAgentLauncher(AgentStartSpec spec, ILogger<SessionAgentLauncher> logger) : IAgentLauncher
 {

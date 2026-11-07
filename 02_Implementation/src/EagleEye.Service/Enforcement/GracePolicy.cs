@@ -1,7 +1,7 @@
 namespace EagleEye.Service.Enforcement;
 
 /// <summary>
-/// The grace-period rule (ADR-015 §5, US-006 Decision 7, Michael's answer to plan Q-2: <b>minimum grace</b>). After a parent
+/// The grace-period rule (ADR-015 §5, US-006 Decision 7, the project owner's answer to plan Q-2: <b>minimum grace</b>). After a parent
 /// change of the account's app rules or break times, a running app gets a grace period of the full final-warning minutes
 /// when the change moved its end earlier and less than the final-warning minutes are left. Pure.
 /// </summary>

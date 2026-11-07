@@ -1,6 +1,6 @@
 # Test Report: US-001 — Basic Service Installation and Tray Client Connectivity
 
-**Status**: Approved by Michael, 2026-10-03
+**Status**: Approved by the project owner, 2026-10-03
 **Date**: 2026-10-03
 **Author**: TES
 **Test runs evaluated**: `test-run-01.md` (build 0.1.0), `test-run-02.md` (build 0.1.1)
@@ -9,7 +9,7 @@
 
 ## 1. Verdict
 
-**Ready to close — closed by Michael on 2026-10-03.** All 13 acceptance criteria (12 original + AC-13) pass in build 0.1.1. ISSUE-001, ISSUE-002 and ISSUE-003 are verified and closed.
+**Ready to close — closed by the project owner on 2026-10-03.** All 13 acceptance criteria (12 original + AC-13) pass in build 0.1.1. ISSUE-001, ISSUE-002 and ISSUE-003 are verified and closed.
 
 ## 2. Environment
 
@@ -17,7 +17,7 @@
 |---|---|
 | Machine | Windows Developer Machine, Windows 11 Pro (German UI) |
 | Build / installer | Run 01: `EagleEye-Setup-0.1.0.exe`; run 02: `EagleEye-Setup-0.1.1.exe` (upgrade install). Service version `EagleEye_v0.1` |
-| Accounts | Admin (Michael), standard user `eagleeye-kid` |
+| Accounts | Admin (the project owner), standard user `eagleeye-kid` |
 
 ## 3. Acceptance Criteria Results (run 01)
 
@@ -69,8 +69,8 @@ None. US-001 is the first story.
 
 ## 6. Feedback for PRO / ARC
 
-- **PRO, US-001 AC wording**: done 2026-10-03. AC-11/AC-12 now refer to the application-information entry with English examples, plus a note that all quoted UI texts are English examples shown in the user's language (Michael's decision).
-- **PRO, ISSUE-003**: done. Michael decided to add AC-13 to US-001 and fix it in 0.1.1.
+- **PRO, US-001 AC wording**: done 2026-10-03. AC-11/AC-12 now refer to the application-information entry with English examples, plus a note that all quoted UI texts are English examples shown in the user's language (the project owner's decision).
+- **PRO, ISSUE-003**: done. The project owner decided to add AC-13 to US-001 and fix it in 0.1.1.
 - **PRO, timing**: AC-8/AC-9 have no time bounds. Run 01 measured about 15 s to detect a stop. TES used ≤ 30 s / ≤ 60 s; consider writing such bounds into the AC.
 - **ARC**: localization was a known NFR, but the US-001 plan did not mention it, so DEV did not implement it. Future plans should list the localization impact for every user-facing text.
 

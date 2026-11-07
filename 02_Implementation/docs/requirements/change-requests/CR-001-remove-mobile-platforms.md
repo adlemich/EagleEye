@@ -1,10 +1,10 @@
 # CR-001: Remove the iOS and Android Parent Apps
 
-**Status**: Approved by Michael, 2026-10-20
+**Status**: Approved by the project owner, 2026-10-20
 **Type**: Scope change (not a user story)
-**Decided by**: Michael, 2026-10-20 (final)
+**Decided by**: the project owner, 2026-10-20 (final)
 **Written by**: PRO, 2026-10-20
-**Branch**: `change/CR-001-remove-mobile-platforms` (merged into `main` by the Orchestrator after Michael's approval)
+**Branch**: `change/CR-001-remove-mobile-platforms` (merged into `main` by the Orchestrator after the project owner's approval)
 
 ---
 
@@ -19,7 +19,7 @@ The **iPhone/iOS app and the Android app are removed from the product entirely**
 
 ## 2. Rationale
 
-Running a self-built iOS app on one's own iPhone for longer than 7 days needs a paid Apple Developer account (99 EUR/year). Michael will not pay that just to run his own app on his own phone. Android is dropped together with iOS, so the product does not keep a single mobile platform on its own.
+Running a self-built iOS app on one's own iPhone for longer than 7 days needs a paid Apple Developer account (99 EUR/year). The project owner will not pay that just to run their own app on their own phone. Android is dropped together with iOS, so the product does not keep a single mobile platform on its own.
 
 ## 3. Background and Consequences
 
@@ -46,7 +46,7 @@ No roadmap, backlog or story-list document exists in the repo. The only planning
 
 | Item | Change |
 |---|---|
-| Header, v1.7 amendment | Status Draft v1.7; change-log entry citing Michael's decision of 2026-10-20 |
+| Header, v1.7 amendment | Status Draft v1.7; change-log entry citing the project owner's decision of 2026-10-20 |
 | §1.1 Vision | Parents manage rules from the parent app on a Windows PC or a Mac (was: mobile phone or Mac) |
 | G-6 | Windows and macOS parent apps (was: Android and iOS primary, Windows, macOS) |
 | §2.1 Parent persona | Devices: Windows 11 PC or Mac; Constraints: manages rules from a Windows PC or a Mac on the LAN (was: Android/iPhone primary, mobile device) |
@@ -63,7 +63,7 @@ No roadmap, backlog or story-list document exists in the repo. The only planning
 | §9.4 macOS | Purpose = production; deployment on a Mac on the LAN; unsigned, un-notarised `.dmg` accepted (Q-7) |
 | §9.5 Windows | Purpose = production (was: initial testing vehicle) |
 | §10 Out of scope | "iOS and Android parent apps" replaces "App Store / Play Store distribution"; Microsoft Store made explicit |
-| §11 | Q-1, Q-3 marked superseded; Q-5 (answered, Michael 2026-10-20); Q-6, Q-7 added and answered by Michael 2026-10-20 |
+| §11 | Q-1, Q-3 marked superseded; Q-5 (answered, the project owner 2026-10-20); Q-6, Q-7 added and answered by the project owner 2026-10-20 |
 
 All other requirement IDs are unchanged. No ID was renumbered.
 
@@ -82,9 +82,9 @@ All other requirement IDs are unchanged. No ID was renumbered.
 
 Found with `git grep -i -E "android|ios|iphone|ipad|mobile|phone|adb|xcode|sideload"`. Hits that are only `IPAddress`/`RemoteIpAddress` in code are false positives and not listed.
 
-### 6.1 ARC (after Michael approves this CR)
+### 6.1 ARC (after the project owner approves this CR)
 
-**Status (ARC, 2026-10-20)**: ARC rows done on this branch in `6f23416` (arc42, ADRs, new ADR-019) and `ebba2b1` (coding guidelines, dev-process docs). The new ADR-019 and the arc42/guidelines amendments were approved by Michael on 2026-10-20 (ADR-019 Accepted). The two testing rows stay with TES. **TES (2026-10-20)**: testing rows done in `ae4ecb2`.
+**Status (ARC, 2026-10-20)**: ARC rows done on this branch in `6f23416` (arc42, ADRs, new ADR-019) and `ebba2b1` (coding guidelines, dev-process docs). The new ADR-019 and the arc42/guidelines amendments were approved by the project owner on 2026-10-20 (ADR-019 Accepted). The two testing rows stay with TES. **TES (2026-10-20)**: testing rows done in `ae4ecb2`.
 
 | File | What must change |
 |---|---|
@@ -138,19 +138,19 @@ Also on the **MacBook** (from the Orchestrator memory): the Mac Catalyst build m
 | `02_Implementation/agents/dev/CLAUDE.md` | **Done (916abfb).** Machine table (Android targets and packaging) and MAUI row (Android, iOS) |
 | `02_Implementation/agents/pro/CLAUDE.md` | **Done (916abfb).** Phase 1 item 9 platform list (iOS 26, Android 14); "Platform explicit" rule names "Android" |
 | `02_Implementation/agents/tes/CLAUDE.md` | No hit; check only |
-| `02_Implementation/agents/orchestrator/memory/` | After approval: record CR-001 approved and merged, requirements v1.7, FR-APP-100..102 unused; update `michael-project-owner.md` ("Windows/Android work"); keep the Mac parity decision (Q-6) and signing decision (Q-7) |
+| `02_Implementation/agents/orchestrator/memory/` | After approval: record CR-001 approved and merged, requirements v1.7, FR-APP-100..102 unused; update `project-owner.md` ("Windows/Android work"); keep the Mac parity decision (Q-6) and signing decision (Q-7) |
 | Process | Decide whether the DEV follow-up is its own change branch (e.g. `change/CR-001-dev-remove-android`) or part of the next story; start the new US-007 "macOS parent app parity" after the merge (Q-6) |
 
 ### 6.4 No change (history)
 
 Closed story artifacts mention Android, iOS or phones and stay as they are: `02_Implementation/docs/requirements/user-stories/US-002/` to `US-006/` (user stories, implementation plans and reports, ISSUE-006, ISSUE-007) and `02_Implementation/docs/testing/US-002/` to `US-006/` (test plans, ISSUE-008).
 
-## 7. Questions Answered by Michael (2026-10-20)
+## 7. Questions Answered by the project owner (2026-10-20)
 
-| ID | Question | Answer (Michael, 2026-10-20) |
+| ID | Question | Answer (the project owner, 2026-10-20) |
 |---|---|---|
 | Q-6 | Is the Mac app now a full-parity production platform, and when does it catch up with the features of US-002 to US-006, which exist only in the Windows parent app? | Yes, full parity with the Windows app. A **new US-007 "macOS parent app parity"** covers it, started after CR-001 is merged (the number is reused; the aborted iOS US-007 never reached `main`). After that story, every parent-app story names both apps. |
-| Q-7 | Without a paid Apple Developer account the `.dmg` cannot be Developer-ID signed or notarised, so macOS asks for confirmation at the first start (Gatekeeper). Acceptable? | Accepted. An unsigned, un-notarised `.dmg` is fine. Michael does not plan to distribute it; a one-time allow in the macOS settings on his MacBook is enough. |
+| Q-7 | Without a paid Apple Developer account the `.dmg` cannot be Developer-ID signed or notarised, so macOS asks for confirmation at the first start (Gatekeeper). Acceptable? | Accepted. An unsigned, un-notarised `.dmg` is fine. The project owner does not plan to distribute it; a one-time allow in the macOS settings on their MacBook is enough. |
 
 Both answers are also recorded in `02_Implementation/docs/requirements/general-product-requirements.md` §11.1.
 
@@ -159,6 +159,6 @@ Both answers are also recorded in `02_Implementation/docs/requirements/general-p
 | Step | Who | Status |
 |---|---|---|
 | CR written, requirements v1.7 drafted | PRO | Done 2026-10-20 |
-| Approve CR-001 and requirements v1.7, answer Q-6 and Q-7 | Michael | Approved 2026-10-20 |
+| Approve CR-001 and requirements v1.7, answer Q-6 and Q-7 | The project owner | Approved 2026-10-20 |
 | Merge `change/CR-001-remove-mobile-platforms` into `main` (`--no-ff`) | Orchestrator | After approval |
-| Follow-ups §6 | ARC, DEV, Orchestrator | Orchestrator CLAUDE.md files done (916abfb); ARC docs done (6f23416, ebba2b1), ADR-019 Accepted 2026-10-20; TES done (ae4ecb2); DEV done (0749f74). Merge approved by Michael 2026-10-20 **before** the Windows check; Windows build/test/packaging (incl. `--runtime win-x64` in `package-windows.ps1`) is still open and is done by Michael on `main` |
+| Follow-ups §6 | ARC, DEV, Orchestrator | Orchestrator CLAUDE.md files done (916abfb); ARC docs done (6f23416, ebba2b1), ADR-019 Accepted 2026-10-20; TES done (ae4ecb2); DEV done (0749f74). Merge approved by the project owner 2026-10-20 **before** the Windows check; Windows build/test/packaging (incl. `--runtime win-x64` in `package-windows.ps1`) is still open and is done by the project owner on `main` |

@@ -55,11 +55,11 @@ public sealed class ReportsViewModelTests
     {
         TestSupport.InCulture("de-DE", () =>
         {
-            _accounts.Publish(AccountsLoadState.Ready, Accounts(Account(Max, "max", true, "Max Adler"), Account(Anna, "anna", true), Account(Lena, "lena", false)));
+            _accounts.Publish(AccountsLoadState.Ready, Accounts(Account(Max, "max", true, "Max Mustermann"), Account(Anna, "anna", true), Account(Lena, "lena", false)));
             return 0;
         });
 
-        Assert.Equal(["anna", "Max Adler (max)"], _viewModel.Accounts.Select(a => a.DisplayName));
+        Assert.Equal(["anna", "Max Mustermann (max)"], _viewModel.Accounts.Select(a => a.DisplayName));
         Assert.Equal((Anna, Anna), (_viewModel.SelectedAccount!.Sid, _usage.Selected));
         Assert.Equal("anna", _viewModel.SelectedAccount.ToString());
     }

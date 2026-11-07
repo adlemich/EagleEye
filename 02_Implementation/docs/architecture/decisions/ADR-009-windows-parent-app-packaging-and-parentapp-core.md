@@ -1,18 +1,18 @@
 # ADR-009: Windows Parent App Packaging and the ParentApp.Core Library
 
-**Status**: Accepted (approved by Michael with the US-002 implementation plan, 2026-10-04; target list amended by CR-001 / ADR-019, 2026-10-20; minimum Windows 10 22H2 for the parent app installer, US-009 amendment accepted 2026-10-31)
+**Status**: Accepted (approved by the project owner with the US-002 implementation plan, 2026-10-04; target list amended by CR-001 / ADR-019, 2026-10-20; minimum Windows 10 22H2 for the parent app installer, US-009 amendment accepted 2026-10-31)
 **Date**: 2026-10-04
-**Deciders**: ARC, Michael
+**Deciders**: ARC, the project owner
 
 > **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped. `EagleEye.ParentApp` targets only `net10.0-windows10.0.19041.0` (Windows machine) and `net10.0-maccatalyst` (MacBook). The Windows parent app is a production platform (not only the testing vehicle); Core is reused unchanged by the macOS app (new US-007). Packaging (§1) and Core (§2) are unchanged. Once DEV has removed the Android target (CR-001 §6.2), the D-4 reason "a command-line `-r` also hits the Android target" no longer applies; keeping the properties in the csproj stays valid.
 
-> **Amendment 2026-10-31 (US-009) — accepted, approved by Michael together with the US-009 implementation plan (2026-10-31)**: requirements v1.9 (§9.5, FR-APP-092) support the Windows parent app on **Windows 10 22H2 (build 19045) or newer, and Windows 11, x64**. §1 and note D-3 change: the parent app installer sets `MinVersion=10.0.19045` (was `10.0.22000`) and keeps `ArchitecturesAllowed=x64compatible`. Older Windows versions and 32-bit Windows get Inno Setup's built-in refusal message and nothing is installed (OQ-2). The csproj minimum (`10.0.19041.0`) and the TFM are unchanged; there is no Windows-10-specific code. On Windows 10 the parent app runs only as a remote parent app; the **service installer stays Windows 11 only** (`setup.iss`, `MinVersion=10.0.22000`).
+> **Amendment 2026-10-31 (US-009) — accepted, approved by the project owner together with the US-009 implementation plan (2026-10-31)**: requirements v1.9 (§9.5, FR-APP-092) support the Windows parent app on **Windows 10 22H2 (build 19045) or newer, and Windows 11, x64**. §1 and note D-3 change: the parent app installer sets `MinVersion=10.0.19045` (was `10.0.22000`) and keeps `ArchitecturesAllowed=x64compatible`. Older Windows versions and 32-bit Windows get Inno Setup's built-in refusal message and nothing is installed (OQ-2). The csproj minimum (`10.0.19041.0`) and the TFM are unchanged; there is no Windows-10-specific code. On Windows 10 the parent app runs only as a remote parent app; the **service installer stays Windows 11 only** (`setup.iss`, `MinVersion=10.0.22000`).
 
 ---
 
 ## Context
 
-1. **Packaging.** Requirements v1.2 (FR-APP-092, Michael 2026-10-04) replace copy deployment with a separate, self-contained Windows installer with install, repair and uninstall. ADR-007 §2 and coding guidelines §16.1 still describe a single copied `.exe`.
+1. **Packaging.** Requirements v1.2 (FR-APP-092, the project owner 2026-10-04) replace copy deployment with a separate, self-contained Windows installer with install, repair and uninstall. ADR-007 §2 and coding guidelines §16.1 still describe a single copied `.exe`.
 2. **Testability.** `EagleEye.ParentApp` is a multi-targeted MAUI executable (`net10.0-windows…`, ~~`net10.0-android`,~~ `net10.0-maccatalyst`; Android dropped by CR-001). The unit test project `EagleEye.ParentApp.Tests` targets plain `net10.0` and cannot reference it. US-002 brings the first real parent-app logic (connection, pairing, state), which must be unit-tested with 100 % branch coverage (dev-process §9).
 3. **Two-machine build.** The MacBook currently has no MAUI workload. Logic that can be built and tested without MAUI is useful on both machines.
 
@@ -46,7 +46,7 @@ This supersedes ADR-007 §2 "Distribution" and coding guidelines §16.1 "Packagi
 
 | Option | Reason Rejected |
 |---|---|
-| Copy deployment (single exe) | Replaced by Michael's decision (FR-APP-092 v1.2). |
+| Copy deployment (single exe) | Replaced by the project owner's decision (FR-APP-092 v1.2). |
 | MSIX package | Needs a trusted code-signing certificate on each PC; sideloading self-signed MSIX requires manual certificate import. |
 | Per-machine installer (admin) | Needs admin rights for every update, and puts the parent app into every account on the PC, including the kid's. Its uninstaller could not remove the data in other users' profiles. |
 | Add a plain `net10.0` TFM to the MAUI project for tests | Works, but mixes MAUI and non-MAUI builds in one project, and view models could still depend on MAUI types. A separate library makes the boundary explicit and buildable without the MAUI workload. |

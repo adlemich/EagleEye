@@ -87,7 +87,7 @@ public sealed class AppTextsTests
     [Fact]
     public void Format_TwoArguments_FormatsBoth()
     {
-        Assert.Equal("Max Adler (max)", AppTexts.Format(AppTexts.AccountNameFormat, "Max Adler", "max"));
+        Assert.Equal("Max Mustermann (max)", AppTexts.Format(AppTexts.AccountNameFormat, "Max Mustermann", "max"));
     }
 
     [Theory]

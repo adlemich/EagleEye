@@ -1,7 +1,7 @@
 # US-010 Spike — Overlay Test Run: Results
 
 **Instructions**: `02_Implementation/docs/requirements/user-stories/US-010/spike-overlay-instructions.md` (§6 explains the setup)
-**Run by**: Michael
+**Run by**: the project owner
 **Date**: <!-- fill in -->
 **Machine**: kid's gaming PC <!-- computer name, Windows 11 version + build (winver) -->
 **Account**: <!-- kid account name; controlled by EagleEye yes/no; EagleEye version -->

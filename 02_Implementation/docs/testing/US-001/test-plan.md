@@ -1,6 +1,6 @@
 # Test Plan: US-001 — Basic Service Installation and Tray Client Connectivity
 
-**Status**: Draft (approved by executing `test-run-01.md`, or by Michael's explicit approval)
+**Status**: Draft (approved by executing `test-run-01.md`, or by the project owner's explicit approval)
 **Date**: 2026-10-03
 **Author**: TES
 **User Story**: `docs/requirements/user-stories/US-001/user-story.md`
@@ -18,7 +18,7 @@
 | Item | Value |
 |---|---|
 | Test machine | Windows Developer Machine (Windows 11 Pro, German UI) |
-| Accounts | **Admin**: Michael's administrator account. **Kid**: local standard account `eagleeye-kid` (created in setup) |
+| Accounts | **Admin**: the project owner's administrator account. **Kid**: local standard account `eagleeye-kid` (created in setup) |
 | Build under test | `03_Delivery/windows/EagleEye-Setup-0.1.0.exe` |
 | Expected version | Installer `0.1.0` → service version `EagleEye_v0.1` |
 | Time needed | about 45 minutes including one reboot |

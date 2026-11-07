@@ -4,7 +4,7 @@ using EagleEye.Shared.Models;
 namespace EagleEye.ParentApp.Core.ViewModels;
 
 /// <summary>
-/// The shown name of an account (US-003 AC-11, AC-12): "Max Adler (max)", or "max" without a full
+/// The shown name of an account (US-003 AC-11, AC-12): "Max Mustermann (max)", or "max" without a full
 /// name, followed by "(disabled)" / "(deaktiviert)" for disabled accounts. Sorted with the current
 /// culture, ignoring case (AC-10).
 /// </summary>

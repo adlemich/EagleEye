@@ -2,10 +2,10 @@
 
 **Test plan**: `docs/testing/US-006/test-plan.md` (draft 2026-10-17, for approval)
 **Prepared by**: TES, 2026-10-17
-**Executed by**: Michael
+**Executed by**: the project owner
 **Execution date**: <!-- fill in -->
 **Build / installer version**: 0.6.0 — `03_Delivery/windows/EagleEye-Setup-0.6.0.exe` (2026-10-12 13:48, SHA-256 `416E0A74…E03950`) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.6.0.exe` (2026-10-12 13:49, SHA-256 `56500A6A…ED34E5`); full hashes in test plan §2
-**Machine(s)**: Windows Developer Machine (service PC, `ZOCK-O-MAT-V3`) · LEOSERV (App B)
+**Machine(s)**: Windows Developer Machine (service PC, `DEV-PC`) · PARENT-PC (App B)
 
 > **What this run covers**: the 42 cases of the test plan, **only US-006 features**, no regression. It is the **first live run of enforcement against running apps** (DEV could not run it, report D-15).
 >
@@ -19,10 +19,10 @@
 >
 > **DENY BY DEFAULT**: right after the update **every app** a controlled account used before is **blocked** until you set a rule (browser, games, Terminal, Task-Manager, *Einstellungen*, Snipping Tool). Start menu, Explorer, lock, sign-out and the tray icon still work. **Install only when the kids do not need the PC.** Real kid accounts: untick them for the run, or set their rules right after TC-006-04. Do everything that needs *Einstellungen* in a kid account **before** the upgrade (S-6, S-7).
 >
-> **Accounts**: **Admin** = you. **kid1** = `eagleeye-kid` (controlled, German). **ee-kid2** = new, **controlled**, **English** Windows (deleted in TC-006-37). **ee-kid3** = new, **not** controlled. *(In US-005 the roles of ee-kid2/ee-kid3 were reversed; both are new accounts now.)* **App A** = parent app in your admin session; **App B** = parent app on **LEOSERV** (to change rules while the kid's session is in front).
+> **Accounts**: **Admin** = you. **kid1** = `eagleeye-kid` (controlled, German). **ee-kid2** = new, **controlled**, **English** Windows (deleted in TC-006-37). **ee-kid3** = new, **not** controlled. *(In US-005 the roles of ee-kid2/ee-kid3 were reversed; both are new accounts now.)* **App A** = parent app in your admin session; **App B** = parent app on **PARENT-PC** (to change rules while the kid's session is in front).
 > **Terminal (Administrator)** = elevated terminal in your session. **K-TERM** = elevated terminal **inside the kid's session** with your admin credentials (runs as you, never limited).
 >
-> **Rule set for kid1 (TC-006-04)**: **Editor** 0:03, all days · **Paint** 0:30, only **SA** (on a Saturday: only **SO**) · **Rechner** untouched (0:00, no day). **Settings**: **Frühe Warnung 2**, **Finale Warnung 1**; warning texts stay default.
+> **Rule set for kid1 (TC-006-04)**: **Editor** 0:03, all days · **Paint** 0:30, only **SA** (on a Saturday: only **SO**) · **Rechner** untouched (0:00, no day). **Settings**: **Früthey Warnung 2**, **Finale Warnung 1**; warning texts stay default.
 >
 > **Rules**:
 > - **UI wording** differences are Notes (expected German texts: test plan §2 table). **But** a text **you** entered must appear in the kid dialog **exactly** (lines, emojis); a difference is a Fail.
@@ -89,7 +89,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 - [ ] **S-10 Selection**: App A → *Einstellungen*: **eagleeye-kid** and **ee-kid2** ticked; **ee-kid3** and other test accounts unticked.
 - [ ] **S-11 SmartScreen**: *Weitere Informationen* → *Trotzdem ausführen* (expected).
 - [ ] **S-12 K-TERM understood** (in the kid's session: Start → **Terminal** → right-click → **Als Administrator ausführen** → your admin credentials).
-- [ ] **S-13 App B on LEOSERV** (after TC-006-02): install `EagleEye-ParentApp-Setup-0.6.0.exe`; green and *Gekoppelt* (else pair as **LEOSERV**). Not available → write here: ____________ (TC-006-10 Blocked).
+- [ ] **S-13 App B on PARENT-PC** (after TC-006-02): install `EagleEye-ParentApp-Setup-0.6.0.exe`; green and *Gekoppelt* (else pair as **PARENT-PC**). Not available → write here: ____________ (TC-006-10 Blocked).
 - [ ] **S-14 Stopwatch** with laps ready.
 - [ ] **S-15 SQLite tool** for optional TC-006-41: yes / no ______
 - [ ] **S-16 All kid accounts signed out** (*Task-Manager → Benutzer*: only you).
@@ -145,7 +145,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 2. Try to edit the labels; look for add/delete or account controls.
 
 **Expected**:
-- Bar **Zeit-Ende Warnungen**; explanation "Hier kannst du 2 Zeitpunkte einstellen, …"; table **Zeitpunkt · Minuten vor Ende · Anzeigetext**; two rows: **Frühe Warnung · 5 ·** "Achtung, du hast nur noch 5 Minuten! Speichere deinen Fortschritt." and **Finale Warnung · 1 ·** "Achtung!!! Nur noch 1 Minute – jetzt aber schnell speichern!".
+- Bar **Zeit-Ende Warnungen**; explanation "Hier kannst du 2 Zeitpunkte einstellen, …"; table **Zeitpunkt · Minuten vor Ende · Anzeigetext**; two rows: **Früthey Warnung · 5 ·** "Achtung, du hast nur noch 5 Minuten! Speichere deinen Fortschritt." and **Finale Warnung · 1 ·** "Achtung!!! Nur noch 1 Minute – jetzt aber schnell speichern!".
 - Labels not editable; no add/delete; no account selection.
 
 - **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
@@ -162,7 +162,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 2. **Editor**: tick **MO** to **SO** one after the other.
 3. **Paint**: **Minuten** `30`, **Enter**; tick **SA** (Saturday: **SO**); tick **MO**, untick it again.
 4. **Rechner**: do not touch.
-5. **Einstellungen** → **Frühe Warnung** minutes `2`, **Tab**.
+5. **Einstellungen** → **Früthey Warnung** minutes `2`, **Tab**.
 
 **Expected**:
 - One log line per change within 5 s: "App rules of account eagleeye-kid (S-1-5-21-…) changed by Papas PC: app rule changed: Editor, 0:03, no day" … "Editor, 0:03, Mo Tu We Th Fr Sa Su"; "Paint, 0:30, no day", "Paint, 0:30, Sa", "Paint, 0:30, Mo Sa", "Paint, 0:30, Sa" (or Su). No Save button.
@@ -198,13 +198,13 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 *Verifies AC-15 · Service PC / Admin; log monitor · Einstellungen, early 2 / final 1*
 
-1. **Frühe Warnung** minutes: `0` · `60` · try `abc` · `2.5` · empty — each with **Tab**.
+1. **Früthey Warnung** minutes: `0` · `60` · try `abc` · `2.5` · empty — each with **Tab**.
 2. **Finale Warnung** minutes: `2` Tab · `3` Tab.
-3. **Frühe Warnung** minutes: `1` Tab.
+3. **Früthey Warnung** minutes: `1` Tab.
 
 **Expected**:
 - Step 1: back to **2**, **Bitte Minuten zwischen 1 und 59 eingeben.**, no log line.
-- Steps 2, 3: back to the stored value, **Die finale Warnung muss weniger Minuten vor dem Ende liegen als die frühe Warnung.**, no log line. Still early 2 / final 1.
+- Steps 2, 3: back to the stored value, **Die finale Warnung muss weniger Minuten vor dem Ende liegen als die früthey Warnung.**, no log line. Still early 2 / final 1.
 
 - **Result**: [ X] Pass  [ ] Fail  [ ] Blocked  [ ] Skipped
 - **Observed**:
@@ -272,16 +272,16 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 ---
 
-### TC-006-10: Two parent apps stay in sync; the last change wins *(must-run, needs LEOSERV)*
+### TC-006-10: Two parent apps stay in sync; the last change wins *(must-run, needs PARENT-PC)*
 
-*Verifies AC-17 · App A and App B side by side, both Regeln → eagleeye-kid · no LEOSERV → Blocked*
+*Verifies AC-17 · App A and App B side by side, both Regeln → eagleeye-kid · no PARENT-PC → Blocked*
 
 1. A: Paint **Stunden** `1`, Tab. Watch B.
 2. B: Paint tick **DO** (Thursday: **MI**). Watch A.
 3. A: untick that day. Watch B.
 4. A and B together (count down): A Paint **Minuten** `20`, B `40`, both **Enter**. Wait 5 s.
 5. A: Paint **Stunden** `0`, **Minuten** `30`, Tab.
-6. Both → **Einstellungen**. A: **Frühe Warnung** text `Gleich ist Schluss ⏰`, Tab; watch B. A: empty it, Tab; watch B.
+6. Both → **Einstellungen**. A: **Früthey Warnung** text `Gleich ist Schluss ⏰`, Tab; watch B. A: empty it, Tab; watch B.
 
 **Expected**: every change shows in the other app **≤ 5 s** without action there; step 4: both show the **same** minutes; at the end Paint 0:30 SA (or SO), early text default in both.
 
@@ -890,7 +890,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
 
 ### TC-006-42 (optional): English parent app
 
-*Verifies AC-10, AC-14 (parent side) · a parent PC with English Windows (e.g. LEOSERV, if English); otherwise Skipped*
+*Verifies AC-10, AC-14 (parent side) · a parent PC with English Windows (e.g. PARENT-PC, if English); otherwise Skipped*
 
 1. **Rules** → `eagleeye-kid`: **Application rules**. **Settings** → **Time-elapsed warnings**. Hours `24`, Tab.
 
@@ -916,7 +916,7 @@ Patterns: `Warning: account|Grace period|Blocked start|Closing app|App closed` �
   }
   ```
 - [ ] `C:\EETest` removed (TC-006-41).
-- [ ] LEOSERV: App B stays installed and paired.
+- [ ] PARENT-PC: App B stays installed and paired.
 
 ---
 

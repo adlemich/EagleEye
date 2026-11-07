@@ -80,10 +80,10 @@ This project uses an AI-assisted, incremental development process coordinated by
 1. PRO writes the user story
 2. ARC writes the implementation plan, including which machine does which step
 3. DEV implements it with unit tests and smoke-checks the build
-4. TES writes a **manual** test plan and checklist; Michael executes it and records the results
+4. TES writes a **manual** test plan and checklist; the project owner executes it and records the results
 5. TES evaluates the results and writes the test report and issues
 
-Each step requires Michael's explicit approval. Acceptance testing is 100 % manual; see `02_Implementation/docs/testing/README.md`.
+Each step requires the project owner's explicit approval. Acceptance testing is 100 % manual; see `02_Implementation/docs/testing/README.md`.
 
 ---
 

@@ -1,12 +1,12 @@
 # ADR-019: Parent App Platforms — Windows and macOS Only, Unsigned Mac Distribution
 
-**Status**: Accepted (Michael, 2026-10-20; records CR-001; Windows row amended by US-009, accepted 2026-10-31)
+**Status**: Accepted (the project owner, 2026-10-20; records CR-001; Windows row amended by US-009, accepted 2026-10-31)
 **Date**: 2026-10-20
-**Deciders**: Michael (project owner), ARC
+**Deciders**: the project owner, ARC
 
-> **Amendment (US-007, ADR-020) — approved by Michael with the US-007 implementation plan, 2026-10-20**: §4 "macOS uses `MauiSecureStorageSecretStore` (Keychain)" is replaced by `MacKeychainSecretStore` (Security framework, login keychain preferred), because MAUI `SecureStorage` needs a `keychain-access-groups` entitlement that an ad-hoc-signed build cannot carry. ADR-020 also turns the App Sandbox off and sets the managed HTTP handler for the Mac.
+> **Amendment (US-007, ADR-020) — approved by the project owner with the US-007 implementation plan, 2026-10-20**: §4 "macOS uses `MauiSecureStorageSecretStore` (Keychain)" is replaced by `MacKeychainSecretStore` (Security framework, login keychain preferred), because MAUI `SecureStorage` needs a `keychain-access-groups` entitlement that an ad-hoc-signed build cannot carry. ADR-020 also turns the App Sandbox off and sets the managed HTTP handler for the Mac.
 
-> **Amendment 2026-10-31 (US-009) — accepted, approved by Michael together with the US-009 implementation plan (2026-10-31)**: §1, platform table: the Windows row reads **"Windows 10 22H2 (build 19045+) or Windows 11, x64"** instead of "Windows 11" (requirements v1.9 §9.5, ADR-009 amendment). On Windows 10 the parent app is always a remote parent app, because the service and tray client stay Windows 11 only (§9.1).
+> **Amendment 2026-10-31 (US-009) — accepted, approved by the project owner together with the US-009 implementation plan (2026-10-31)**: §1, platform table: the Windows row reads **"Windows 10 22H2 (build 19045+) or Windows 11, x64"** instead of "Windows 11" (requirements v1.9 §9.5, ADR-009 amendment). On Windows 10 the parent app is always a remote parent app, because the service and tray client stay Windows 11 only (§9.1).
 
 > **Numbering note**: ADR-017 and ADR-018 were drafted on the aborted branch `feature/US-007-ios-parent-app`, which was deleted unmerged. They never reached `main`. Like FR-APP-100 to FR-APP-102 (CR-001 §3), the two numbers stay unused to avoid confusion with those drafts.
 
@@ -20,11 +20,11 @@ Until now the parent app had four targets (ADR-001, ADR-007, requirements §3.3 
 - **Windows** (WinUI, per-user installer, ADR-009) as the initial testing vehicle for parent-side features,
 - **macOS** (Mac Catalyst, `.dmg`) as a desktop app.
 
-On 2026-10-20 Michael aborted US-007 (iOS parent app) and approved CR-001 (`02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`) and requirements v1.7:
+On 2026-10-20 the project owner aborted US-007 (iOS parent app) and approved CR-001 (`02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`) and requirements v1.7:
 
-- Running a self-built iOS app on one's own iPhone for longer than 7 days needs a paid Apple Developer account. Michael will not pay for that.
+- Running a self-built iOS app on one's own iPhone for longer than 7 days needs a paid Apple Developer account. The project owner will not pay for that.
 - Android is dropped together with iOS, so the product does not keep a single mobile platform on its own.
-- Without a paid Apple Developer account, the Mac `.dmg` cannot be Developer-ID signed or notarised. Michael accepts this (CR-001 Q-7): he does not distribute the app and allows it once in the macOS settings on his MacBook.
+- Without a paid Apple Developer account, the Mac `.dmg` cannot be Developer-ID signed or notarised. The project owner accepts this (CR-001 Q-7): they do not distribute the app and allows it once in the macOS settings on their MacBook.
 - The Mac app must reach full parity with the Windows parent app. A new US-007 "macOS parent app parity" covers this after CR-001 is merged (CR-001 Q-6).
 
 ---
@@ -64,15 +64,15 @@ Both apps are ordinary `ParentHub` clients with TLS trust on first use, a pinned
 - iOS sideloading without a paid account expires every 7 days, which is not usable for a parental control app.
 - Android alone would keep a mobile toolchain (SDK, emulator, separate layout, TLS configuration) for one platform, with no user for it.
 - Windows and macOS share the desktop layout, so parity costs little extra UI work.
-- An unsigned `.dmg` is enough for one user on his own Mac. The Gatekeeper step happens once.
+- An unsigned `.dmg` is enough for one user on their own Mac. The Gatekeeper step happens once.
 
 ### Alternatives Considered
 
 | Option | Reason Rejected |
 |---|---|
-| Keep iOS with a paid Apple Developer account | Michael's decision: no 99 EUR/year for running his own app on his own phone |
+| Keep iOS with a paid Apple Developer account | The project owner's decision: no 99 EUR/year for running their own app on their own phone |
 | Keep iOS with the free profile (re-sign every 7 days) | Not usable for a product that must run continuously |
-| Keep Android only | Michael's decision: no single mobile platform on its own |
+| Keep Android only | The project owner's decision: no single mobile platform on its own |
 | Developer-ID sign and notarise the `.dmg` | Needs the paid account; no distribution planned (Q-7) |
 | Distribute the Mac app via the Mac App Store | Needs the paid account and sandboxing; out of scope (requirements §10) |
 

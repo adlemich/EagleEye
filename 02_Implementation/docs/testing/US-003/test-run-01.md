@@ -2,14 +2,14 @@
 
 **Test plan**: `docs/testing/US-003/test-plan.md` (draft 2026-10-07, for approval; aligned with the implementation report)
 **Prepared by**: TES, 2026-10-07
-**Executed by**: Michael
+**Executed by**: the project owner
 **Execution date**: <!-- fill in -->
 **Build / installer version**: 0.3.1 — `03_Delivery/windows/EagleEye-Setup-0.3.1.exe` (service + tray; DEV: built 2026-10-07 12:59, SHA-256 `6693dc9b…48434420`; file date found in S-1: ________) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.3.1.exe` (parent app; DEV: built 2026-10-07 13:00, SHA-256 `d6e5efc5…b8627918`; file date found in S-1: ________). Starting builds for the upgrade: `EagleEye-Setup-0.2.0.exe`, `EagleEye-ParentApp-Setup-0.2.0.exe`.
 **Machine(s)**: Windows Developer Machine (service PC) <!-- add Windows version (winver) --> · PC2 (Block E) <!-- add Windows version / display language / scaling / cable or Wi-Fi -->
 
 > **What this run covers**: all 36 cases of the test plan, TC-003-01 to TC-003-36. **TC-003-36** (ISSUE-006, account list as a table, patch 0.3.1) runs in Block B after TC-003-13. **TC-003-23 (AC-16) is executed in Block E** (it needs PC2's network cable); its number stays the same. **No regression cases** (testing README; regression runs only on your explicit request before a major version release).
 >
-> **Start state**: at the last check, **EagleEye service 0.3.0** was installed on the service PC (your quick check; a 0.3.0 app on LEOSERV was paired to it). Setup S-2 removes it. Setup S-2/S-3 first installs and pairs **0.2.0**, so that Block A can test the upgrade to 0.3.1.
+> **Start state**: at the last check, **EagleEye service 0.3.0** was installed on the service PC (your quick check; a 0.3.0 app on PARENT-PC was paired to it). Setup S-2 removes it. Setup S-2/S-3 first installs and pairs **0.2.0**, so that Block A can test the upgrade to 0.3.1.
 >
 > **How to record**: tick exactly one result box per case (`[x]`). Fill in **Observed** for Fail/Blocked. Screenshots go into `docs/testing/US-003/evidence/` (e.g. `run01-tc13-list.png`); reference them in Notes. When you are done, or want to stop halfway, tell TES: *"test run 01 for US-003 is done"*.
 >
@@ -89,7 +89,7 @@ Get-LocalUser |
   - **EagleEye 0.3.0 or 0.3.1 installed** (expected: service 0.3.0 from your quick check):
     a. *Installierte Apps* → **EagleEye** → *…* → *Deinstallieren*. If **EagleEye Parent App** 0.3.x is installed here, close it and uninstall it too.
     b. Continue with steps 1 to 4 below. Step 1 **must** delete `%ProgramData%\EagleEye` (test plan §8 Q-8): its database has the 0.3 schema.
-    c. **LEOSERV**: its 0.3.0 app loses its pairing with step 1. Remove the pairing or uninstall it there, or just leave it **closed** for the whole run (it must not take part as a third parent app). Done: [ ] unpaired/uninstalled  [ ] left closed
+    c. **PARENT-PC**: its 0.3.0 app loses its pairing with step 1. Remove the pairing or uninstall it there, or just leave it **closed** for the whole run (it must not take part as a third parent app). Done: [ ] unpaired/uninstalled  [ ] left closed
   - **Nothing installed**:
     1. Terminal (Administrator): `Test-Path "$env:ProgramData\EagleEye"` → if **True**: `Remove-Item "$env:ProgramData\EagleEye" -Recurse -Force` (leftovers of earlier installations; test plan §8 Q-8). Was it there? [ ] yes [ ] no
     2. Close every parent app. PowerShell: `Test-Path "$env:LOCALAPPDATA\EagleEye"` → if **True**: `Remove-Item "$env:LOCALAPPDATA\EagleEye" -Recurse -Force`.

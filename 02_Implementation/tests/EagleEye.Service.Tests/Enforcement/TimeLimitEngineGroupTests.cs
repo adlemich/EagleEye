@@ -72,7 +72,7 @@ public sealed class TimeLimitEngineGroupTests
     }
 
     [Fact]
-    public void MichaelsExample_WarningsOncePerGroup_OneLine_BothClosedWithOneMessage()
+    public void OwnersExample_WarningsOncePerGroup_OneLine_BothClosedWithOneMessage()
     {
         // AC-26, AC-27: "Test" 0:05, early 3 / final 1; Notepad 3 min alone, then Notepad and Paint 2 min together.
         SetGroupRule(5);

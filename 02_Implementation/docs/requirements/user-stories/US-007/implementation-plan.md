@@ -1,21 +1,21 @@
 # Implementation Plan: US-007 — macOS Parent App Parity
 
-**Status**: Approved by Michael (2026-10-20), with his answers to Q-1 and Q-2 (both as recommended), incl. ADR-020 and the amendments of ADR-019, arc42 and the coding guidelines. **Revision 1 (2026-10-20, Step 1 review) — approved by Michael 2026-10-20**, with his answers to Q-4 and Q-5 (both as recommended): see "Step 1 Review" (ADR-020 §2 Revision 1, arc42 R-3, Steps 2 to 7 adjusted).
+**Status**: Approved by the project owner (2026-10-20), with their answers to Q-1 and Q-2 (both as recommended), incl. ADR-020 and the amendments of ADR-019, arc42 and the coding guidelines. **Revision 1 (2026-10-20, Step 1 review) — approved by the project owner 2026-10-20**, with their answers to Q-4 and Q-5 (both as recommended): see "Step 1 Review" (ADR-020 §2 Revision 1, arc42 R-3, Steps 2 to 7 adjusted).
 **Date**: 2026-10-20
 **Author**: ARC
 **User story**: `02_Implementation/docs/requirements/user-stories/US-007/user-story.md` (approved 2026-10-20, 36 ACs in groups A to I, OQ-1 to OQ-4 answered)
 **Requirements**: `02_Implementation/docs/requirements/general-product-requirements.md` v1.7 (FR-APP-110 to FR-APP-112, §9.4, §11.1 Q-6, Q-7)
 **Branch**: `feature/US-007-macos-parent-app-parity`
-**New ADR** (Accepted, approved by Michael with this plan, 2026-10-20):
+**New ADR** (Accepted, approved by the project owner with this plan, 2026-10-20):
 - ADR-020 — macOS platform layer under ad-hoc signing (`02_Implementation/docs/architecture/decisions/ADR-020-macos-platform-layer-under-ad-hoc-signing.md`)
 
-**Amended** (approved by Michael with this plan, 2026-10-20): ADR-019 §4 (amendment note), arc42 (header, §5.5, §7, §7.1.1, §7.4, §8.1, §8.13, §9, §11 R-3), coding guidelines §13.
+**Amended** (approved by the project owner with this plan, 2026-10-20): ADR-019 §4 (amendment note), arc42 (header, §5.5, §7, §7.1.1, §7.4, §8.1, §8.13, §9, §11 R-3), coding guidelines §13.
 
 ---
 
 ## Summary
 
-Michael wants to **see the Mac app running soon**. The plan therefore starts with a short **"first light"** step: build the Mac target as it is on `main`, launch it on the MacBook, pair it with the service at `192.168.1.37`, and write down every gap. The parity work follows in small steps, each ending with something Michael can try on the MacBook. Packaging (`.dmg`, removal script, instructions) comes after the app works. The Windows regression comes last, on the Windows machine.
+The project owner wants to **see the Mac app running soon**. The plan therefore starts with a short **"first light"** step: build the Mac target as it is on `main`, launch it on the MacBook, pair it with the service at `DEV-PC`, and write down every gap. The parity work follows in small steps, each ending with something the project owner can try on the MacBook. Packaging (`.dmg`, removal script, instructions) comes after the app works. The Windows regression comes last, on the Windows machine.
 
 **No change to `EagleEye.Shared`, the service or the tray client.** The work is in the Mac platform layer of `EagleEye.ParentApp`, a few small, platform-neutral additions to `EagleEye.ParentApp.Core`, and `package-macos.ps1`.
 
@@ -27,7 +27,7 @@ Michael wants to **see the Mac app running soon**. The plan therefore starts wit
 
 | # | Issue | Impact | Solution in this plan |
 |---|---|---|---|
-| **TI-1** | **Keychain under ad-hoc signing.** The Mac target uses MAUI `SecureStorage`, which on Mac Catalyst expects a `keychain-access-groups` entitlement. An ad-hoc build cannot carry it (no provisioning profile, no Apple account). Each build has a new code hash, so the Keychain may prompt, refuse, or lose the item after an update (OQ-3). | Possible blocker for AC-5, AC-24, AC-6. | Observed already in Step 1. **Spike in Step 2**: own `MacKeychainSecretStore` on the Security framework, login keychain preferred (K-1), data-protection keychain as fallback (K-2), each tested across a rebuild. Decision rule in ADR-020 §2. If neither survives an update without re-pairing, the plan stops and Michael decides (story OQ-3, split fallback). |
+| **TI-1** | **Keychain under ad-hoc signing.** The Mac target uses MAUI `SecureStorage`, which on Mac Catalyst expects a `keychain-access-groups` entitlement. An ad-hoc build cannot carry it (no provisioning profile, no Apple account). Each build has a new code hash, so the Keychain may prompt, refuse, or lose the item after an update (OQ-3). | Possible blocker for AC-5, AC-24, AC-6. | Observed already in Step 1. **Spike in Step 2**: own `MacKeychainSecretStore` on the Security framework, login keychain preferred (K-1), data-protection keychain as fallback (K-2), each tested across a rebuild. Decision rule in ADR-020 §2. If neither survives an update without re-pairing, the plan stops and the project owner decides (story OQ-3, split fallback). |
 | **TI-2** | **TLS callback on Apple.** The default `HttpClientHandler` on Apple platforms is the native `NSUrlSessionHandler`, which bypassed the certificate callback in the aborted iOS work. Negotiate would then fail, or (worse) skip the pin. | Blocker for AC-17, AC-19, AC-20. | `UseNativeHttpHandler=false` for the maccatalyst TFM (ADR-020 §3): the managed handler calls `CertificateTrustPolicy` exactly as on Windows. Allowed as a first-light fix if pairing fails without it. |
 | **TI-3** | **App Sandbox** is on in `Entitlements.plist`. Container ownership is bound to the code signature, the data folder sits inside the container, and sandbox plus keychain under ad-hoc signing are harder to predict. | Risk for AC-5, AC-6. | Sandbox off (ADR-020 §1). Data in `~/Library/Application Support/EagleEye/`, as arc42 §7.1.1 already states. First light still runs with the sandbox (as on `main`); the removal script also cleans a container left by such dev runs. |
 | **TI-4** | **Local network privacy.** macOS asks before an app may connect to devices on the LAN (AC-18). Without an `NSLocalNetworkUsageDescription`, the prompt shows no explanation, or the connection fails silently. | AC-18. | Info.plist key with a German and an English text (`InfoPlist.strings`). The install instructions explain the prompt and the setting. |
@@ -48,10 +48,10 @@ Michael wants to **see the Mac app running soon**. The plan therefore starts wit
 |---|---|
 | This plan, ADR-020, amendments (ARC) | MacBook (done here) |
 | Step 0 to Step 7 (DEV): Mac code, Core additions, unit tests on the Mac (`test.ps1`: Shared.Tests, ParentApp.Tests), `.dmg` | **MacBook** |
-| Step 1 and the checks after Steps 2 to 7 | **MacBook**, with the service PC `192.168.1.37` running service and tray client 0.6.2 (Step 1 to 7) — Michael reads the pairing code there |
+| Step 1 and the checks after Steps 2 to 7 | **MacBook**, with the service PC `DEV-PC` running service and tray client 0.6.2 (Step 1 to 7) — the project owner reads the pairing code there |
 | Step 8 (DEV): Windows build, unit tests, both Windows installers 0.7.0, Windows smoke check | **Windows Developer Machine** |
 | Step 9: documentation and handover | MacBook (Mac parts) and Windows (Step 8 results), whichever comes last |
-| Manual test run (Michael, guided by TES) | MacBook (Mac app) + service PC `192.168.1.37` (service, tray, Windows app as the second parent app) |
+| Manual test run (the project owner, guided by TES) | MacBook (Mac app) + service PC `DEV-PC` (service, tray, Windows app as the second parent app) |
 
 **Order across machines.** No `EagleEye.Shared` contract change. The Core additions (Step 2, Step 4) are platform-neutral and compile on both machines; they change nothing that Windows shows. The Windows step runs once, after the last code change (Step 8). Before switching machines: commit and push the branch.
 
@@ -131,7 +131,7 @@ CSPROJ ..> COMM : managed handler →\ntrust callback runs
 
 ### Decision 1: first light before design work
 
-The Mac app on `main` has not run since US-001. Designing fixes for gaps nobody has seen would waste time. Step 1 builds and runs it unchanged, pairs it, and records the gaps in `US-007/first-light.md` (one row per gap: ID `G-n`, area, what Michael saw, AC, proposed step). **Allowed fixes in Step 1** are only those needed to reach a paired, connected app, and only from this list: `UseNativeHttpHandler=false` (TI-2), `NSLocalNetworkUsageDescription` (TI-4), `ValidateXcodeVersion` adjustments. Everything else goes into the gap list and into Steps 2 to 6. After Step 1, DEV sends the gap list to Michael; ARC checks it. If a gap changes the design (Keychain unusable, a page that cannot work on Catalyst), ARC amends this plan before Step 2 continues.
+The Mac app on `main` has not run since US-001. Designing fixes for gaps nobody has seen would waste time. Step 1 builds and runs it unchanged, pairs it, and records the gaps in `US-007/first-light.md` (one row per gap: ID `G-n`, area, what the project owner saw, AC, proposed step). **Allowed fixes in Step 1** are only those needed to reach a paired, connected app, and only from this list: `UseNativeHttpHandler=false` (TI-2), `NSLocalNetworkUsageDescription` (TI-4), `ValidateXcodeVersion` adjustments. Everything else goes into the gap list and into Steps 2 to 6. After Step 1, DEV sends the gap list to the project owner; ARC checks it. If a gap changes the design (Keychain unusable, a page that cannot work on Catalyst), ARC amends this plan before Step 2 continues.
 
 ### Decision 2: Keychain store and spike (ADR-020 §2)
 
@@ -257,9 +257,9 @@ The script touches nothing outside the paths above. Every path contains `com.adl
 
 ---
 
-## Step 1 Review (ARC, 2026-10-20) — Revision 1, approved by Michael 2026-10-20
+## Step 1 Review (ARC, 2026-10-20) — Revision 1, approved by the project owner 2026-10-20
 
-*Input: `US-007/first-light.md` (gap list G-1 to G-18, Keychain and Release probes), `US-007/implementation-report.md` (DV-1, DV-2), `US-007/evidence/`, screenshots in `US-007/input/`. Result of Step 1: the Mac app pairs with `192.168.1.37` and shows Michael's real data in Debug and Release. **No gap changes the plan's structure or needs a story split.** DV-1 (store pulled forward into Step 1) is accepted. DV-2 is accepted through ADR-020 Revision 1.*
+*Input: `US-007/first-light.md` (gap list G-1 to G-18, Keychain and Release probes), `US-007/implementation-report.md` (DV-1, DV-2), `US-007/evidence/`, screenshots in `US-007/input/`. Result of Step 1: the Mac app pairs with `DEV-PC` and shows the project owner's real data in Debug and Release. **No gap changes the plan's structure or needs a story split.** DV-1 (store pulled forward into Step 1) is accepted. DV-2 is accepted through ADR-020 Revision 1.*
 
 ### R-1. Keychain (G-4, G-8, DV-2) — ADR-020 §2 Revision 1
 - `SecItem…` cannot write on Mac Catalyst for an ad-hoc build (-34018 for login and data-protection keychain, with and without sandbox; the entitlement prevents launch). **Decision**: the FL-2 implementation (legacy `SecKeychain…` API, login keychain, K-1) **is** the ADR-020 §2 implementation. K-2 and plan Q-3 are void.
@@ -268,7 +268,7 @@ The script touches nothing outside the paths above. Every path contains `com.adl
 
 ### R-2. Update behaviour (OQ-3, AC-5)
 - Measured: each "Always Allow" by a new ad-hoc build **replaces** the item's partition list with that build's cdhash. Parent view: **one prompt after each update, then silent; the pairing survives.** This matches OQ-3 (one-time prompt acceptable, re-pairing not). A second prompt at the first restart after an update was seen once (Debug); TES checks it in the update test. Tolerance: Q-4.
-- **Dev convenience — decision**: Debug builds on Mac Catalyst use their own Keychain service `com.adlemich.eagleeye.debug` and their own data folder `~/Library/Application Support/EagleEye-Debug/` (`#if MACCATALYST && DEBUG`; `EAGLEEYE_DEV_APP_DATA_DIR` still overrides). Reason: without it, every dev build steals the partition list from Michael's installed Release app (which would then prompt again), and a Debug pairing would overwrite the installed app's pairing. Debug builds still prompt after each rebuild; accepted. **Q-1 is not reopened**: a self-signed identity has no team ID, so the partition list would most likely still be keyed on the cdhash and the prompt would stay; the cost (key, setup) would buy nothing certain.
+- **Dev convenience — decision**: Debug builds on Mac Catalyst use their own Keychain service `com.adlemich.eagleeye.debug` and their own data folder `~/Library/Application Support/EagleEye-Debug/` (`#if MACCATALYST && DEBUG`; `EAGLEEYE_DEV_APP_DATA_DIR` still overrides). Reason: without it, every dev build steals the partition list from the project owner's installed Release app (which would then prompt again), and a Debug pairing would overwrite the installed app's pairing. Debug builds still prompt after each rebuild; accepted. **Q-1 is not reopened**: a self-signed identity has no team ID, so the partition list would most likely still be keyed on the cdhash and the prompt would stay; the cost (key, setup) would buy nothing certain.
 
 ### R-3. Silent pairing failure and orphan devices (G-5) — Core, affects Windows too
 **Decision** — `ConnectionCoordinator.CompletePairingAsync` handles a failing `pairingStore.SaveAsync`:
@@ -285,7 +285,7 @@ The script touches nothing outside the paths above. Every path contains `com.adl
 
 **Windows impact**: behaviour change only in a failure path that has never been seen on Windows (DPAPI or SQLite failing while saving); no visible change in normal use. Windows unit tests cover it (same Core code); no Windows manual test needed beyond the Step 8 smoke check.
 **Unit tests** (add to the Unit Test Requirements): save throws each caught type → session ended, message set (`KeychainSaveFailed` vs `PairingSaveFailed`), `DeleteAsync` called, revoke attempted with device ID, pinned trust and token; revoke failing or timing out → same message, no exception; `DeleteAsync` throwing → still the message; an uncaught exception type → propagates; state never `PairedConnected`.
-**Orphan devices**: the hub method lets any paired app remove any device ID, but no parent app has a device list or a "remove other device" function (rest of FR-APP-015, out of scope of US-007). The four orphans "Michael's MacBook" left by first light are harmless (no device limit, tokens never stored anywhere). They stay until a later **device-management story** (FR-APP-015: list paired devices, remove others), which PRO should keep on the backlog; it also covers R-8/R-9 of arc42. No clean-up in US-007. **Backlog note for PRO** recorded in `US-007/user-story.md` (Out of Scope, follow-up note).
+**Orphan devices**: the hub method lets any paired app remove any device ID, but no parent app has a device list or a "remove other device" function (rest of FR-APP-015, out of scope of US-007). The four orphans "the project owner's MacBook" left by first light are harmless (no device limit, tokens never stored anywhere). They stay until a later **device-management story** (FR-APP-015: list paired devices, remove others), which PRO should keep on the backlog; it also covers R-8/R-9 of arc42. No clean-up in US-007. **Backlog note for PRO** recorded in `US-007/user-story.md` (Out of Scope, follow-up note).
 
 ### R-4. TLS handler (G-7)
 **Keep** `UseNativeHttpHandler=false` (ADR-020 §3, revision note). The native handler did run the callback, and the managed fallback build also worked, but keeping the managed handler gives one TLS stack on both platforms, no App Transport Security and no dependence on how Apple's handler orders system trust and the callback. Step 2 sets it; Step 6 checks the pin mismatch case (AC-19, "identity changed") on the Mac.
@@ -322,18 +322,18 @@ The per-architecture Release bundle from `dotnet publish` is only linker-signed 
 | G-17 duplicate "EA" rows | 6 | Check only (tooltip with the program path on hover). |
 | G-18 universal build | 2 | `RuntimeIdentifier=maccatalyst-arm64` (as planned). |
 
-**Visible Windows change: none.** All look fixes are Mac-only (Decision 8). If DEV finds a fix that can only be shared, DEV stops and asks; Michael must approve any visible Windows change (Q-5).
+**Visible Windows change: none.** All look fixes are Mac-only (Decision 8). If DEV finds a fix that can only be shared, DEV stops and asks; the project owner must approve any visible Windows change (Q-5).
 
 ---
 
 ## Implementation Steps
 
-All steps on branch `feature/US-007-macos-parent-app-parity`. Commit after each step (`US-007: …`) and push. Each step ends with **"Michael sees"**: what he can try on the MacBook.
+All steps on branch `feature/US-007-macos-parent-app-parity`. Commit after each step (`US-007: …`) and push. Each step ends with **"the project owner sees"**: what they can try on the MacBook.
 
 | Step | Content | Machine |
 |---|---|---|
 | 0 | Preparation, version 0.7.0 | MacBook |
-| **1** | **First light**: run the Mac app as is, pair with `192.168.1.37`, gap list | **MacBook** (+ service PC for the code) |
+| **1** | **First light**: run the Mac app as is, pair with `DEV-PC`, gap list | **MacBook** (+ service PC for the code) |
 | 2 | Connection and secrets: managed handler, no sandbox, data path, Keychain spike and store, denied-access handling, Release check | MacBook |
 | 3 | App shell: name, icon, About, window, close quits, Edit menu | MacBook |
 | 4 | Language and formats | MacBook |
@@ -349,15 +349,15 @@ All steps on branch `feature/US-007-macos-parent-app-parity`. Commit after each 
 3. `pwsh 02_Implementation/scripts/build.ps1` and `test.ps1`: green on the Mac.
 
 ### Step 1: First light (MacBook) — keep it short (about half a day)
-Prerequisites: the service PC `192.168.1.37` runs service and tray 0.6.2; Michael can see its tray client (or Event Log) for the pairing code; MacBook in the same LAN.
+Prerequisites: the service PC `DEV-PC` runs service and tray 0.6.2; the project owner can see its tray client (or Event Log) for the pairing code; MacBook in the same LAN.
 1. Build and run Debug: `dotnet build 02_Implementation/src/EagleEye.ParentApp -f net10.0-maccatalyst -t:Run` (or launch the built `.app` with `open`). For console output and exceptions, run the executable inside the bundle from Terminal (`…/EagleEye.ParentApp.app/Contents/MacOS/EagleEye.ParentApp`).
-2. Michael enters `192.168.1.37` in the host dialog, the code from the tray, a device name ("Michael's MacBook"). Allowed fixes only per Decision 1.
+2. The project owner enters `DEV-PC` in the host dialog, the code from the tray, a device name ("the project owner's MacBook"). Allowed fixes only per Decision 1.
 3. Walk through and note gaps: window (title, size, minimum, resize, full screen, close), menu bar, status bar states, Settings (all four sections, a tick, warning minutes), Rules (account, break table, add/edit/delete, app rules, texts with an emoji), Reports (today, live update), light/dark switch, macOS language (German and English), accent colour.
 4. Keychain probe (no code change): quit, start → still paired? Rebuild after a one-line change, start → prompt / silent / lost? Record the Keychain service name MAUI used (*Keychain Access*, search "eagleeye") and the data folder actually used (`find ~/Library -name EagleEye.ParentApp.db`).
 5. Release probe: `dotnet build … -c Release`, launch, connect → hub calls work or fail (TI-5).
-6. Write `02_Implementation/docs/requirements/user-stories/US-007/first-light.md` (gap table G-1 …, Keychain probe, Release probe, data path, screenshots optional in `US-007/input/`), commit, push, report to Michael. ARC reviews the gap list (Decision 1).
+6. Write `02_Implementation/docs/requirements/user-stories/US-007/first-light.md` (gap table G-1 …, Keychain probe, Release probe, data path, screenshots optional in `US-007/input/`), commit, push, report to the project owner. ARC reviews the gap list (Decision 1).
 
-**Michael sees**: the EagleEye window on his MacBook, paired with the service PC, green "Connected to 192.168.1.37", and his real Settings, Rules and Reports data in it, with whatever rough edges first light finds, all listed in `first-light.md`.
+**The project owner sees**: the EagleEye window on their MacBook, paired with the service PC, green "Connected to DEV-PC", and their real Settings, Rules and Reports data in it, with whatever rough edges first light finds, all listed in `first-light.md`.
 
 ### Step 2: Connection and secrets (MacBook)
 1. csproj (maccatalyst): `UseNativeHttpHandler=false` (if not already from Step 1), `RuntimeIdentifier=maccatalyst-arm64`, and the TI-5 property if the Release probe failed.
@@ -368,27 +368,27 @@ Prerequisites: the service PC `192.168.1.37` runs service and tray 0.6.2; Michae
 6. Keychain spike (Decision 2), K-1 first; K-2 only if K-1 fails. Results into `first-light.md` and the report. If neither variant is accepted: stop and report (ADR-020 §2).
 7. Release launch once more: pairing, restart, rebuild.
 
-**Michael sees**: pairing that survives quitting, restarting the Mac and a rebuild (with at most one "Always Allow" prompt), the item "pairing-token" in *Keychain Access → login*, and the database in `~/Library/Application Support/EagleEye/`.
+**The project owner sees**: pairing that survives quitting, restarting the Mac and a rebuild (with at most one "Always Allow" prompt), the item "pairing-token" in *Keychain Access → login*, and the database in `~/Library/Application Support/EagleEye/`.
 
 ### Step 3: App shell (MacBook)
 1. Decision 5: `ApplicationTitle` for maccatalyst, `NSHumanReadableCopyright`, close quits (with flush), window title, minimum size.
 2. Check the Mac Catalyst default menu: About panel (name, 0.7.0, copyright), Hide, Quit (⌘Q), Edit commands and shortcuts in `Entry` and `Editor`.
 
-**Michael sees**: "EagleEye Parent App" in the Dock and menu bar, About with 0.7.0 and "Michael Adler", red close button quits the app, ⌘C/⌘V work in every field.
+**The project owner sees**: "EagleEye Parent App" in the Dock and menu bar, About with 0.7.0 and "Michael Adler", red close button quits the app, ⌘C/⌘V work in every field.
 
 ### Step 4: Language and formats (MacBook)
 1. Core: `UiCulturePolicy` + unit tests.
 2. `MacCultureSetup`, Info.plist localizations, `de.lproj`/`en.lproj` `InfoPlist.strings`.
 3. Check: macOS German / English / French first; per-app language for "EagleEye Parent App"; region US vs Germany on Reports; default kid texts in the app language (AC-14).
 
-**Michael sees**: the app in English when macOS is English, in German otherwise, with macOS's own menu entries in the same language, and dates in his region's format.
+**The project owner sees**: the app in English when macOS is English, in German otherwise, with macOS's own menu entries in the same language, and dates in their region's format.
 
 ### Step 5: Look (MacBook)
 1. Core: `AppleAccentPalette` + unit tests. `MacAccentColor`; `HeadingBarColorService` Mac branch.
 2. Light/dark: first start follows macOS (with "Auto" the current appearance); switch applies at once and persists (the existing `AppearanceViewModel`, check only).
 3. Fix the look gaps from the gap list (Decision 8): dark/light contrast, checkboxes, value fields, trash icon, Larger Text, scrolling below the minimum size.
 
-**Michael sees**: heading bars in his accent colour (white text on blue, dark text on yellow), changing when he switches the accent colour and comes back to the window; all pages readable in light and dark and at "Larger Text".
+**The project owner sees**: heading bars in their accent colour (white text on blue, dark text on yellow), changing when they switches the accent colour and comes back to the window; all pages readable in light and dark and at "Larger Text".
 
 ### Step 6: Pages parity sweep (MacBook, with the service PC and the Windows app)
 1. Fix the remaining page gaps from the gap list (Settings, Rules, Reports, dialogs, status bar).
@@ -398,14 +398,14 @@ Prerequisites: the service PC `192.168.1.37` runs service and tray 0.6.2; Michae
 5. Connection: wrong host, service stopped and started, Local Network denied and allowed (AC-17, AC-18, AC-21).
 6. Sleep and Wi-Fi off/on (AC-22). **Contingent**: only if green does not return within 60 s, add `Platforms/MacCatalyst/MacNetworkResume` (network path monitor and app-activation notification) calling a new `IConnectionCoordinator.ReconnectNowAsync()` that skips the current backoff wait of the paired connection. Core change + unit tests. Report it as a deviation.
 
-**Michael sees**: the Mac app and the Windows app side by side, each change appearing in the other within seconds; the Mac app recovering by itself after sleep or Wi-Fi loss.
+**The project owner sees**: the Mac app and the Windows app side by side, each change appearing in the other within seconds; the Mac app recovering by itself after sleep or Wi-Fi loss.
 
 ### Step 7: Packaging (MacBook)
 1. `package-macos.ps1` (Decision 9), `installer/macos/remove-eagleeye-parent-app.command`, `installer/macos/instructions.txt`.
 2. Run it → `03_Delivery/macos/EagleEye-ParentApp-0.7.0.dmg`.
 3. DEV checks on the MacBook: fresh install from the `.dmg` (after running the removal script), with quarantine set (TI-11) → Gatekeeper block → *Open Anyway* → host dialog. Update: build again with a changed build (e.g. the same version rebuilt), drag over, "Replace" → paired, appearance kept (one Keychain prompt at most). Removal: "Remove pairing", quit, Trash, script → list of removed items; second run "nothing to remove"; new install starts unpaired.
 
-**Michael sees**: a `.dmg` that opens with the app, the *Applications* shortcut, the removal script and the instructions; install, update and removal as in the instructions.
+**The project owner sees**: a `.dmg` that opens with the app, the *Applications* shortcut, the removal script and the instructions; install, update and removal as in the instructions.
 
 ### Step 8: Windows regression (Windows Developer Machine)
 1. `git switch feature/US-007-macos-parent-app-parity`, `git pull`.
@@ -413,7 +413,7 @@ Prerequisites: the service PC `192.168.1.37` runs service and tray 0.6.2; Michae
 3. `package-windows.ps1` → `EagleEye-Setup-0.7.0.exe` and `EagleEye-ParentApp-Setup-0.7.0.exe`.
 4. Smoke check: install the parent app 0.7.0 over 0.6.2 (pairing and appearance kept), one tick, one break time change, one app rule change, Reports with today's usage; the window shows no menu bar or other Mac-only element; heading bars still in the Windows accent colour; service and tray 0.7.0 start and the Mac app connects to them.
 
-**Michael sees**: the Windows app 0.7.0 unchanged except for the version.
+**The project owner sees**: the Windows app 0.7.0 unchanged except for the version.
 
 ### Step 9: Documentation and handover (MacBook / Windows)
 1. READMEs: `src/EagleEye.ParentApp/README.md` (Mac platform layer, data locations, Keychain variant, how to run first light), `src/EagleEye.ParentApp.Core/README.md` (new classes).
@@ -538,7 +538,7 @@ Not unit-tested (platform code, verified manually): `MacKeychainSecretStore`, `M
 | What | Where / how |
 |---|---|
 | Artifacts | `03_Delivery/macos/EagleEye-ParentApp-0.7.0.dmg` (MacBook); `03_Delivery/windows/EagleEye-Setup-0.7.0.exe` and `EagleEye-ParentApp-Setup-0.7.0.exe` (service PC). |
-| Setup | As in the story: service PC `192.168.1.37`, `kid1`, `kid2` controlled, `kid3` not; Windows app as the second parent app. Use the **IP address**, not a `.local` name. |
+| Setup | As in the story: service PC `DEV-PC`, `kid1`, `kid2` controlled, `kid3` not; Windows app as the second parent app. Use the **IP address**, not a `.local` name. |
 | Gatekeeper (AC-3, TI-11) | A `.dmg` built on the same MacBook is not quarantined, so macOS does not block it. Before the first-install test, transfer the `.dmg` the way a download would (AirDrop to itself, or a browser download), or set the attribute: `xattr -w com.apple.quarantine "0081;$(printf %x $(date +%s));Safari;" <file>.dmg`. Then the block and *Open Anyway* appear. |
 | Clean start | Run the removal script first if a dev build ran on the MacBook before (Step 1 builds leave a sandbox container and a MAUI Keychain item). |
 | Keychain prompt (AC-5, OQ-3) | After installing a **new build** over an old one, macOS may ask once for the login password so the app can use "EagleEye Parent App" in the keychain. Click **Always Allow**. A prompt per new build is expected; a prompt at every start of the same build is a failure. "Deny" → the app shows the Keychain message and stays paired for the next start. |
@@ -567,17 +567,17 @@ Not unit-tested (platform code, verified manually): `MacKeychainSecretStore`, `M
 
 ---
 
-## Open Questions for Michael
+## Open Questions for the project owner
 
 Q-1 and Q-2 answered 2026-10-20 (as recommended). Q-3 void after the Step 1 review. Q-4 and Q-5 (new with Revision 1) answered 2026-10-20 (as recommended).
 
 | ID | Question | Recommendation (default) | Answer |
 |---|---|---|---|
-| **Q-1** | **Avoid the Keychain prompt after every update?** With ad-hoc signing, each new build may ask once for your login password ("Always Allow", OQ-3). A **local self-signed code-signing certificate** on the MacBook (created once in Keychain Access, private key stays on the MacBook) would give every build the same identity, so the prompt would not come back. Gatekeeper still blocks the first start (not an Apple certificate). Cost: a one-time setup step and a key to keep. | **No, keep ad-hoc signing** as accepted in OQ-3. Revisit if the prompts during the test run bother you; it can be added later without other changes. | **Resolved** (Michael, 2026-10-20): no self-signed certificate; ad-hoc signing stays. |
-| **Q-2** | **Dock entry on removal.** If you kept the app in the Dock, a "?" icon stays after removal. The removal script could delete that Dock entry itself (edit the Dock settings and restart the Dock), or the instructions tell you to remove it first. | **Instructions + reminder** (D-3): the script only checks and tells you. It never edits settings that do not belong to the app. | **Resolved** (Michael, 2026-10-20): the script does not remove the Dock entry; it only checks and reminds. |
+| **Q-1** | **Avoid the Keychain prompt after every update?** With ad-hoc signing, each new build may ask once for your login password ("Always Allow", OQ-3). A **local self-signed code-signing certificate** on the MacBook (created once in Keychain Access, private key stays on the MacBook) would give every build the same identity, so the prompt would not come back. Gatekeeper still blocks the first start (not an Apple certificate). Cost: a one-time setup step and a key to keep. | **No, keep ad-hoc signing** as accepted in OQ-3. Revisit if the prompts during the test run bother you; it can be added later without other changes. | **Resolved** (the project owner, 2026-10-20): no self-signed certificate; ad-hoc signing stays. |
+| **Q-2** | **Dock entry on removal.** If you kept the app in the Dock, a "?" icon stays after removal. The removal script could delete that Dock entry itself (edit the Dock settings and restart the Dock), or the instructions tell you to remove it first. | **Instructions + reminder** (D-3): the script only checks and tells you. It never edits settings that do not belong to the app. | **Resolved** (the project owner, 2026-10-20): the script does not remove the Dock entry; it only checks and reminds. |
 | **Q-3** | *(Only if the Step 2 spike ends with K-2.)* The data-protection keychain item cannot be deleted by a script. The app would need a "delete my data" function to be run before the app is moved to the Trash. | Not asked now. Raised by ARC with the spike result if it happens. | **Void** (Step 1 review R-1): K-2 is not reachable; the login keychain item is deleted by the script. |
-| **Q-4** *(Revision 1)* | **Up to two Keychain prompts after an update?** Normally one prompt after an update, then silent. Once in development a second prompt came at the first restart after "Always Allow". The pairing is never lost. | **Accept up to two prompts per update** (the first start and possibly the first restart), then silent. TES records the count as a note, not a Fail. More than two, or a prompt at every start of the same build, is a Fail. | **Resolved** (Michael, 2026-10-20): accepted as recommended. |
-| **Q-5** *(Revision 1)* | **Button and menu colour on Windows.** On the Mac, buttons and the selected menu item will use the macOS accent colour (G-11, G-16), like the heading bars. Should the Windows app get the same (Windows accent colour), for a consistent look? | **No, Windows unchanged in US-007** (AC-35: no visible change). If you want it, it becomes a small separate change with its own check. | **Resolved** (Michael, 2026-10-20): no, Windows stays unchanged in US-007. |
+| **Q-4** *(Revision 1)* | **Up to two Keychain prompts after an update?** Normally one prompt after an update, then silent. Once in development a second prompt came at the first restart after "Always Allow". The pairing is never lost. | **Accept up to two prompts per update** (the first start and possibly the first restart), then silent. TES records the count as a note, not a Fail. More than two, or a prompt at every start of the same build, is a Fail. | **Resolved** (the project owner, 2026-10-20): accepted as recommended. |
+| **Q-5** *(Revision 1)* | **Button and menu colour on Windows.** On the Mac, buttons and the selected menu item will use the macOS accent colour (G-11, G-16), like the heading bars. Should the Windows app get the same (Windows accent colour), for a consistent look? | **No, Windows unchanged in US-007** (AC-35: no visible change). If you want it, it becomes a small separate change with its own check. | **Resolved** (the project owner, 2026-10-20): no, Windows stays unchanged in US-007. |
 
 ---
 
@@ -585,7 +585,7 @@ Q-1 and Q-2 answered 2026-10-20 (as recommended). Q-3 void after the Step 1 revi
 
 | # | Risk | Probability | Impact | Mitigation |
 |---|---|---|---|---|
-| R-1 | Keychain unusable or lost after each ad-hoc update (TI-1) | Medium | High | Probe in Step 1, spike in Step 2 with two variants and a decision rule (ADR-020 §2). If both fail: stop, Michael decides (OQ-3), split fallback of the story. Q-1 (local signing identity) is a further way out. |
+| R-1 | Keychain unusable or lost after each ad-hoc update (TI-1) | Medium | High | Probe in Step 1, spike in Step 2 with two variants and a decision rule (ADR-020 §2). If both fail: stop, the project owner decides (OQ-3), split fallback of the story. Q-1 (local signing identity) is a further way out. |
 | R-2 | MAUI pages look or behave differently on Mac Catalyst (TI-9) | High | Medium | First light makes the gaps visible on day one; fixes are platform-scoped (Decision 8). |
 | R-3 | Release build fails at hub calls (trimming, TI-5) | Medium | High | Release probe in Step 1; property or source-generated context in Step 2; packaging always Release. |
 | R-4 | A Mac fix changes the Windows app (shared XAML) | Low | Medium | `#if MACCATALYST` / `OnPlatform` only (Decision 8); Step 8 Windows smoke check (AC-35). |
@@ -594,7 +594,7 @@ Q-1 and Q-2 answered 2026-10-20 (as recommended). Q-3 void after the Step 1 revi
 | R-7 | `Application.Quit()` does not end the process on Mac Catalyst | Low | Low | Fallback through `UIApplication` `terminate:` (Decision 5). |
 | R-8 | Reconnect after sleep slower than 60 s (TI-10) | Low | Medium | Contingent nudge in Step 6. |
 | R-9 | Repo synced by iCloud breaks `codesign` | Low | Medium | Repo at `~/EagleEye` (outside iCloud); the package script checks and warns. |
-| R-10 | The story is larger than one iteration | Medium | Medium | Early milestones (Steps 1 to 3 already give a usable, paired app). If Step 2 needs a workaround, the story's split fallback (groups A to E, then F to H) applies, decided by Michael. |
+| R-10 | The story is larger than one iteration | Medium | Medium | Early milestones (Steps 1 to 3 already give a usable, paired app). If Step 2 needs a workaround, the story's split fallback (groups A to E, then F to H) applies, decided by the project owner. |
 
 ---
 

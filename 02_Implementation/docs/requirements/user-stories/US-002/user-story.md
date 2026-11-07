@@ -1,8 +1,8 @@
 # US-002: Windows Parent App — Installation, Connection and Pairing
 
-**Status**: Verified/Closed (closed by Michael, 2026-10-07, after `docs/testing/US-002/test-run-02.md`)
+**Status**: Verified/Closed (closed by the project owner, 2026-10-07, after `docs/testing/US-002/test-run-02.md`)
 **Created**: 2026-10-04
-**Approved**: by Michael, 2026-10-04 (status becomes `Analyzed` when the implementation plan is approved)
+**Approved**: by the project owner, 2026-10-04 (status becomes `Analyzed` when the implementation plan is approved)
 **Component(s)**: EagleEye.ParentApp, EagleEye.Service, EagleEye.TrayClient, EagleEye.Shared
 **Platform(s)**: ParentApp Windows · Windows (service/tray)
 
@@ -18,7 +18,7 @@ As a **parent**, I want to install the EagleEye parent app on any Windows PC in 
 
 US-001 delivered the service and the tray client on the kid's PC. Every parent-side feature (user accounts, allow-lists, budgets, statistics) needs a trusted connection from a parent app to the service first. This story builds that foundation with the Windows parent app, which is the initial testing vehicle for parent-side functionality (general product requirements §3.3).
 
-Michael changed the distribution of the Windows parent app on 2026-10-04: it gets its own full, clean and self-contained installer instead of a copied executable (general product requirements v1.2, FR-APP-092).
+The project owner changed the distribution of the Windows parent app on 2026-10-04: it gets its own full, clean and self-contained installer instead of a copied executable (general product requirements v1.2, FR-APP-092).
 
 References: FR-APP-010 to FR-APP-014, FR-APP-083 (v1.2, light/dark mode), FR-APP-015 (de-registration of the own device only), FR-APP-081, FR-APP-091, FR-APP-092 (v1.2), FR-SVC-050, FR-SVC-060 to FR-SVC-062, FR-SVC-090 to FR-SVC-098, FR-TRAY-070, CN-010 to CN-014, CN-016, NFR-L-010 to NFR-L-012, NFR-S-013, NFR-S-014, NFR-U-010, NFR-U-011, §9.5.
 
@@ -94,13 +94,13 @@ References: FR-APP-010 to FR-APP-014, FR-APP-083 (v1.2, light/dark mode), FR-APP
 
 | Date | Change | Source |
 |---|---|---|
-| 2026-10-04 | Story created | Michael's scope, written by PRO |
-| 2026-10-04 | AC-1, AC-23: no difference between service PC and other PCs, incl. parent and kid sharing one PC with separate Windows accounts | Michael, review feedback |
-| 2026-10-04 | Menu entry "Connection" replaced by "Settings" with sections "Visual appearance" (new: light/dark mode switch, AC-9) and "Server connection" (pairing status, set/change host, remove pairing). New AC-25 (change host while paired). ACs renumbered; numbers in this log refer to the current numbering. | Michael, review feedback |
-| 2026-10-04 | Open questions decided (Q-1 to Q-6). AC-11: host dialog on start when unpaired. AC-25: host cannot be changed while paired. AC-8, AC-27 and mockups adjusted. | Michael, review feedback |
-| 2026-10-04 | Story approved | Michael |
+| 2026-10-04 | Story created | The project owner's scope, written by PRO |
+| 2026-10-04 | AC-1, AC-23: no difference between service PC and other PCs, incl. parent and kid sharing one PC with separate Windows accounts | The project owner, review feedback |
+| 2026-10-04 | Menu entry "Connection" replaced by "Settings" with sections "Visual appearance" (new: light/dark mode switch, AC-9) and "Server connection" (pairing status, set/change host, remove pairing). New AC-25 (change host while paired). ACs renumbered; numbers in this log refer to the current numbering. | The project owner, review feedback |
+| 2026-10-04 | Open questions decided (Q-1 to Q-6). AC-11: host dialog on start when unpaired. AC-25: host cannot be changed while paired. AC-8, AC-27 and mockups adjusted. | The project owner, review feedback |
+| 2026-10-04 | Story approved | The project owner |
 | 2026-10-04 | Status `Implemented`; see `US-002/implementation-report.md` | DEV |
-| 2026-10-04 | Outdated duplicate decisions table removed. Decisions Q-7 to Q-11 added (answers to the implementation plan's open points). ACs unchanged. | Michael, recorded by PRO |
+| 2026-10-04 | Outdated duplicate decisions table removed. Decisions Q-7 to Q-11 added (answers to the implementation plan's open points). ACs unchanged. | The project owner, recorded by PRO |
 
 ---
 
@@ -262,7 +262,7 @@ App -> Parent : back to hostname entry (red)
 
 ---
 
-## Decisions (Michael, 2026-10-04)
+## Decisions (the project owner, 2026-10-04)
 
 | ID | Question | Decision |
 |---|---|---|
@@ -274,9 +274,9 @@ App -> Parent : back to hostname entry (red)
 | Q-6 | **One story or split into two?** | One story. |
 | Q-7 | **Tray client in admin sessions** (implementation plan, open point 2). Since US-001 the tray client also starts in admin sessions. Restrict it to kid sessions? | No change: the tray client keeps running in admin sessions too. This refines Q-1; AC-14 and AC-15 are unchanged. |
 | Q-8 | **A kid can pair their own parent app** (implementation plan, open point 1). The pairing code appears in the kid's tray. | No technical protection for now; accepted risk. To be revisited before or when configuration stories make it relevant (`01_Intend_and_Constraints/questions_and_answers.md` Q10.1). |
-| Q-9 | **Second Windows PC for remote tests** (implementation plan, open point 3). | Michael has a second Windows PC; AC-2, AC-6, AC-23 and AC-24 are testable. |
+| Q-9 | **Second Windows PC for remote tests** (implementation plan, open point 3). | The project owner has a second Windows PC; AC-2, AC-6, AC-23 and AC-24 are testable. |
 | Q-10 | **Product name** of the parent app (implementation plan, open point 4). | Stays "EagleEye Parent App". |
-| Q-11 | **UI wording in manual tests.** | Differences in UI wording are notes, not Fails. Michael reports needed text changes during testing. |
+| Q-11 | **UI wording in manual tests.** | Differences in UI wording are notes, not Fails. The project owner reports needed text changes during testing. |
 
 ---
 

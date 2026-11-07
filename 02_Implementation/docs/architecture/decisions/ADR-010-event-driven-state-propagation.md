@@ -1,12 +1,12 @@
 # ADR-010: Event-Driven State Propagation — Service Broadcasts with Revisions
 
-**Status**: Accepted (approved by Michael, 2026-10-07; note added by CR-001, 2026-10-20; US-008 amendment 2026-10-31)
+**Status**: Accepted (approved by the project owner, 2026-10-07; note added by CR-001, 2026-10-20; US-008 amendment 2026-10-31)
 **Date**: 2026-10-07
-**Deciders**: Michael (project owner), ARC
+**Deciders**: the project owner, ARC
 
 > **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped. The remark "relevant later for mobile apps" in the rationale no longer has a target; fetching only the areas a client shows stays the rule for the Windows and macOS apps. The decision is unchanged.
 
-> **Amendment 2026-10-31 (US-008, ADR-021) — approved by Michael together with the US-008 implementation plan (2026-10-31)**: two new state areas, **`AppGroups`** (global: groups, members and the listed apps) and **`AppGroupRules:{sid}`** (group rules of one account, a row for every group), both owned by `AppGroupService` with one revision counter. `DayUsageDto` carries the group lines of its day. A group change does not re-broadcast past days: a parent app that shows Reports **fetches the account's usage again** when it receives an `AppGroups` change. This is a fetch triggered by a broadcast, not polling; the rule "the app never polls" holds. No compatibility with older parent apps is kept (US-008 scope: all components are updated together).
+> **Amendment 2026-10-31 (US-008, ADR-021) — approved by the project owner together with the US-008 implementation plan (2026-10-31)**: two new state areas, **`AppGroups`** (global: groups, members and the listed apps) and **`AppGroupRules:{sid}`** (group rules of one account, a row for every group), both owned by `AppGroupService` with one revision counter. `DayUsageDto` carries the group lines of its day. A group change does not re-broadcast past days: a parent app that shows Reports **fetches the account's usage again** when it receives an `AppGroups` change. This is a fetch triggered by a broadcast, not polling; the rule "the app never polls" holds. No compatibility with older parent apps is kept (US-008 scope: all components are updated together).
 
 ---
 
@@ -14,7 +14,7 @@
 
 US-003 is the first story in which parent apps **change** state on the service (which accounts are under parental control) and in which several parent apps can be connected at the same time. Every later configuration story (allow-lists, budgets, pause windows, general settings, paired devices) has the same shape.
 
-Michael set the general rule on 2026-10-07:
+The project owner set the general rule on 2026-10-07:
 
 > "We use event driven communication to push changes to all connected participants. When a parent app changes settings, it is reflected by the server to all connected apps via SignalR mechanisms. The source client of the change can use that to verify that its write request was successful and other clients will have a trigger to update their views and local data."
 
@@ -58,7 +58,7 @@ client ◀── StateWriteAckDto(revision) ─ 6. return the acknowledgement
 - Every write command carries a client-generated correlation id `Guid requestId` as its first parameter.
 - A **state owner** (one singleton per area in the service, e.g. `UserAccountService`) serializes the writes of its area (one `SemaphoreSlim` per area). Steps 2 to 5 run inside that lock, so broadcasts leave the service in revision order.
 - **Every accepted write produces exactly one new revision and exactly one broadcast**, even if the stored value did not change (e.g. two apps tick the same box). This keeps the sender's confirmation path free of special cases.
-- **Last write received wins** — a general default confirmed by Michael (2026-10-07). There is no expected-revision check (optimistic concurrency) by default. An area may introduce one later, if a story needs it, through a new ADR or story decision.
+- **Last write received wins** — a general default confirmed by the project owner (2026-10-07). There is no expected-revision check (optimistic concurrency) by default. An area may introduce one later, if a story needs it, through a new ADR or story decision.
 - Changes the service makes on its own (e.g. a Windows account was renamed, a budget expired at midnight) follow steps 2 to 5 with `requestId = null`.
 
 ### 3. State areas and the contract shape
@@ -106,7 +106,7 @@ The **broadcast is the confirmation of the stored state**; the **method result i
 
 ### 7. Initial load, reconnect and missed events
 
-- After every (re)connect, **as soon as the service has confirmed the pairing** (`GetPairingStatus().IsPaired`), the client resets its revisions (4) and **fetches** the full snapshot of every area it shows with the area's query. The service does **not** push state on connect. *(This changes ADR-003 Rule 3; a general default confirmed by Michael, 2026-10-07.)*
+- After every (re)connect, **as soon as the service has confirmed the pairing** (`GetPairingStatus().IsPaired`), the client resets its revisions (4) and **fetches** the full snapshot of every area it shows with the area's query. The service does **not** push state on connect. *(This changes ADR-003 Rule 3; a general default confirmed by the project owner, 2026-10-07.)*
 - The connection is in the `Parents` group from `OnConnectedAsync`, before the client can invoke anything (SignalR dispatches invocations only after `OnConnectedAsync` has completed). So there is no gap between joining the group and the fetch: anything that changes afterwards arrives as a broadcast, and the revision rule sorts out the overlap.
 - Events missed while disconnected are **not replayed**. The fetch on reconnect is the recovery.
 - While a client is disconnected, its replicas are stale. What it shows then is decided per story. US-003 shows no data (US-003 AC-8, OQ-5).
@@ -140,7 +140,7 @@ The **broadcast is the confirmation of the stored state**; the **method result i
 
 | Option | Reason Rejected |
 |---|---|
-| Method result alone confirms the write; broadcast only to *other* apps (`Clients.OthersInGroup`) | Two code paths for the same state change; the sender would have to build its replica from its own request. Contradicts Michael's rule and ADR-003 Rule 1. |
+| Method result alone confirms the write; broadcast only to *other* apps (`Clients.OthersInGroup`) | Two code paths for the same state change; the sender would have to build its replica from its own request. Contradicts the project owner's rule and ADR-003 Rule 1. |
 | Broadcast alone, write method returns `Task` (no ack) | The sender could not tell "rejected" from "slow", and could not confirm when another app's write overtook its own. |
 | Server pushes full state on connect (ADR-003 Rule 3 as written) | Client cannot know when the state is complete; push races with handler registration and the pairing check; pushes areas the client may not show. |
 | No revisions (apply whatever arrives last) | A query result can overtake a broadcast and show stale state permanently, until the next change. |

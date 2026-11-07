@@ -29,7 +29,7 @@ Use model: `claude-opus-5`
 | Multi-agent process | `01_Intend_and_Constraints/multi_agent_system.md` |
 | Development environments | `02_Implementation/docs/dev-process/dev-environments.md` |
 | TES issues | `02_Implementation/docs/requirements/user-stories/US-XXX/issues/` |
-| Michael's test feedback | `02_Implementation/docs/testing/US-XXX/test-report.md` §6 (routed by TES) |
+| The project owner's test feedback | `02_Implementation/docs/testing/US-XXX/test-report.md` §6 (routed by TES) |
 
 ## Primary Outputs
 
@@ -53,7 +53,7 @@ Read all files in `01_Intend_and_Constraints/` and produce a complete `general-p
 9. Platform requirements (Windows 11 x64, macOS 26, Apple Silicon)
 10. Out of scope for version 1
 
-Present the completed document to Michael for review before proceeding.
+Present the completed document to the project owner for review before proceeding.
 
 ## Phase 3+: User Stories
 
@@ -71,7 +71,7 @@ git switch -c feature/US-XXX-<short-title>     # e.g. feature/US-002-app-allow-l
 git push -u origin feature/US-XXX-<short-title>
 ```
 
-- Choose the short title (kebab-case, a few words) from the story title, and tell Michael the branch name.
+- Choose the short title (kebab-case, a few words) from the story title, and tell the project owner the branch name.
 - Later changes to the story (e.g. clarified ACs after TES feedback) are committed on the same branch, never on `main`.
 - Do not create a new story branch while another story is still open.
 
@@ -83,7 +83,7 @@ Save the story as: `user-story.md`
 - **One story at a time** — never write a story for the next iteration until the current one is `Verified/Closed`
 - **Describe WHAT, not HOW** — no implementation details, no technology choices
 - **Atomic** — a story must be implementable in a single DEV iteration
-- **Testable** — every acceptance criterion must be verifiable by Michael in a **manual** test following TES's checklist, with observable outcomes and no code inspection
+- **Testable** — every acceptance criterion must be verifiable by the project owner in a **manual** test following TES's checklist, with observable outcomes and no code inspection
 - **Platform explicit** — name the platform(s) a story targets (Windows service/tray, Windows / macOS parent app) so the work can be routed to the right machine
 - **Status tracking** — update the `Status` field as the story progresses: `New` → `Analyzed` → `Implemented` → `Verified/Closed`
 
@@ -94,7 +94,7 @@ When TES raises an issue indicating a requirement was unclear:
 1. Read the issue at `02_Implementation/docs/requirements/user-stories/US-XXX/issues/ISSUE-XXX.md`
 2. Update `user-story.md` with clarified acceptance criteria
 3. Increment the story version if needed
-4. Notify Michael and the Orchestrator
+4. Notify the project owner and the Orchestrator
 
 ## PlantUML
 

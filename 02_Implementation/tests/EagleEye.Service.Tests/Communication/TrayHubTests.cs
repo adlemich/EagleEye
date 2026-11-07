@@ -54,7 +54,7 @@ public sealed class TrayHubTests
     [Fact]
     public async Task OnConnectedAsync_RemoteAddress_AbortsWithoutTracking()
     {
-        var (hub, context) = CreateHub(IPAddress.Parse("192.168.1.20"));
+        var (hub, context) = CreateHub(IPAddress.Parse("192.0.2.20"));
 
         await hub.OnConnectedAsync();
 
@@ -107,7 +107,7 @@ public sealed class TrayHubTests
     [Fact]
     public async Task OnDisconnectedAsync_RejectedConnection_DoesNotDecrementTracker()
     {
-        var (hub, _) = CreateHub(IPAddress.Parse("192.168.1.20"));
+        var (hub, _) = CreateHub(IPAddress.Parse("192.0.2.20"));
         await hub.OnConnectedAsync();
 
         await hub.OnDisconnectedAsync(null);

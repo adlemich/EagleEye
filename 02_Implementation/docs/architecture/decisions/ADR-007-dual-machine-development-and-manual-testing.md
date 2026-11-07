@@ -2,11 +2,11 @@
 
 **Status**: Accepted (§2 "Distribution" superseded by ADR-009, 2026-10-04; machine roles and §2 "Role" amended by CR-001 / ADR-019, 2026-10-20; third, test-only machine and Windows parent client minimum OS amended by US-009, accepted 2026-10-31; second test-only machine (gaming PC) amended by US-010, accepted 2026-11-01)
 **Date**: 2026-10-03
-**Deciders**: Michael (project owner)
+**Deciders**: the project owner
 
-> **Amendment 2026-11-01 (US-010) — approved by Michael together with the US-010 implementation plan (2026-11-01)**: a second **test-only machine**: the kid's **gaming PC 192.168.1.85** (Windows 11, one monitor, the kids' games; also the pilot service PC that the Mac app paired with in US-008). Like the Windows 10 test PC: no repo, no agent sessions, no builds; Michael copies the git-ignored installers from `03_Delivery/windows/` to it and runs the game test cases there. It is not the Windows Developer Machine `ZOCK-O-MAT-V3` (192.168.1.37). `02_Implementation/docs/dev-process/dev-environments.md` §1 gets the matching row (Orchestrator, after approval).
+> **Amendment 2026-11-01 (US-010) — approved by the project owner together with the US-010 implementation plan (2026-11-01)**: a second **test-only machine**: the kid's **gaming PC PILOT-PC** (Windows 11, one monitor, the kids' games; also the pilot service PC that the Mac app paired with in US-008). Like the Windows 10 test PC: no repo, no agent sessions, no builds; the project owner copies the git-ignored installers from `03_Delivery/windows/` to it and runs the game test cases there. It is not the Windows Developer Machine `DEV-PC`. `02_Implementation/docs/dev-process/dev-environments.md` §1 gets the matching row (Orchestrator, after approval).
 
-> **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped (Michael, 2026-10-20). The two-machine setup and manual testing stay as decided. Changed:
+> **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped (the project owner, 2026-10-20). The two-machine setup and manual testing stay as decided. Changed:
 >
 > 1. **Machine roles** (§1): the Windows Developer Machine builds Shared, Service, TrayClient, the ParentApp **Windows** target and the Windows installers; it has no Android target, workload, SDK, emulator or APK. The MacBook builds Shared and the ParentApp **Mac Catalyst** target and packages the `.dmg`; it has no iOS target. Xcode stays on the MacBook for Mac Catalyst only.
 > 2. **Role of the Windows parent app** (§2): it is a **production** platform, together with the macOS app, not only the initial testing vehicle. Both apps have the same features (FR-APP-082); the macOS app catches up in the new US-007 "macOS parent app parity".
@@ -14,9 +14,9 @@
 >
 > The original text below is kept as history; superseded statements are struck through.
 
-> **Amendment 2026-10-31 (US-009) — accepted, approved by Michael together with the US-009 implementation plan (2026-10-31)**:
+> **Amendment 2026-10-31 (US-009) — accepted, approved by the project owner together with the US-009 implementation plan (2026-10-31)**:
 >
-> 1. **Third machine, test only** (§1, §3): Michael's physical **Windows 10 22H2 PC** (x64, same LAN as the service PC) is used for manual tests of the Windows parent app on Windows 10. It has no repo clone, runs no agent sessions and builds nothing; installers are copied to it from `03_Delivery/windows/` on the Windows Developer Machine. Steps that need it are marked "Windows 10 PC" in implementation plans. `02_Implementation/docs/dev-process/dev-environments.md` §1 gets the matching row (Orchestrator, after approval).
+> 1. **Third machine, test only** (§1, §3): the project owner's physical **Windows 10 22H2 PC** (x64, same LAN as the service PC) is used for manual tests of the Windows parent app on Windows 10. It has no repo clone, runs no agent sessions and builds nothing; installers are copied to it from `03_Delivery/windows/` on the Windows Developer Machine. Steps that need it are marked "Windows 10 PC" in implementation plans. `02_Implementation/docs/dev-process/dev-environments.md` §1 gets the matching row (Orchestrator, after approval).
 > 2. **Minimum OS of the Windows parent client** (§2): "minimum Windows 11" becomes "Windows 10 22H2 (build 19045) or Windows 11" (requirements v1.9, ADR-009 amendment).
 
 ---
@@ -25,7 +25,7 @@
 
 The original setup (ADR-001, `01_Intend_and_Constraints/technology_selection.md`) assumed a single MacBook as the development machine, with Windows 11 running as a VMware Fusion VM for testing, and automated E2E tests written by TES.
 
-Michael now has a dedicated **Windows 11 developer machine** in addition to the MacBook, and wants to:
+The project owner now has a dedicated **Windows 11 developer machine** in addition to the MacBook, and wants to:
 
 1. develop on both machines with the same git repository,
 2. do all Windows work (Service, TrayClient, a Windows parent client) ~~and all Android work~~ on the Windows machine *(Android dropped, CR-001)*,
@@ -54,9 +54,9 @@ Details: `02_Implementation/docs/dev-process/dev-environments.md`.
 
 ### 2. Windows parent client
 
-The parent app gains a **Windows desktop target** (MAUI on WinUI, `net10.0-windows10.0.19041.0`, minimum Windows 11). It shares the single ParentApp codebase and gets a desktop-style UI like the macOS app. The resulting requirement changes are recorded in `general-product-requirements.md` v1.1 (pending Michael's review).
+The parent app gains a **Windows desktop target** (MAUI on WinUI, `net10.0-windows10.0.19041.0`, minimum Windows 11). It shares the single ParentApp codebase and gets a desktop-style UI like the macOS app. The resulting requirement changes are recorded in `general-product-requirements.md` v1.1 (pending the project owner's review).
 
-Michael's clarifications (2026-10-03):
+The project owner's clarifications (2026-10-03):
 
 - ~~**Role**: Android and iOS are the primary production platforms. The Windows client is the **initial testing vehicle** for parent-side features, which can then be tested on the Windows developer machine before the mobile apps exist.~~
   **Amended by CR-001 (2026-10-20)**: Windows and macOS are the two production platforms; iOS and Android are dropped (ADR-019).
@@ -66,9 +66,9 @@ Michael's clarifications (2026-10-03):
 
 ### 3. Manual acceptance testing
 
-- All acceptance and E2E testing is **manual**, executed by Michael, primarily on the Windows Developer Machine. macOS parent-app cases run on the MacBook against the service on the Windows machine.
+- All acceptance and E2E testing is **manual**, executed by the project owner, primarily on the Windows Developer Machine. macOS parent-app cases run on the MacBook against the service on the Windows machine.
 - TES becomes the **Manual Test Lead**: test plans, test-run checklists, guided sessions, result evaluation, test reports, issues, and the regression checklist. No automated E2E tests. The `tests/EagleEye.E2E.Tests` project is retired.
-- Feedback mechanism: Michael records results directly in Markdown test-run files (`docs/testing/US-XXX/test-run-NN.md`): a Pass/Fail/Blocked/Skipped tick box per case, plus Observed, Notes, an evidence folder, and a General Feedback section. TES evaluates these files.
+- Feedback mechanism: the project owner records results directly in Markdown test-run files (`docs/testing/US-XXX/test-run-NN.md`): a Pass/Fail/Blocked/Skipped tick box per case, plus Observed, Notes, an evidence folder, and a General Feedback section. TES evaluates these files.
 - DEV keeps writing **automated unit tests** (xUnit + Moq). They are developer tooling, not acceptance testing.
 
 Process: `02_Implementation/docs/testing/README.md`.
@@ -86,10 +86,10 @@ Process: `02_Implementation/docs/testing/README.md`.
 
 | Option | Reason Rejected |
 |---|---|
-| Keep MacBook + Windows VM | Michael's direction; a native Windows machine is simpler and faster |
+| Keep MacBook + Windows VM | The project owner's direction; a native Windows machine is simpler and faster |
 | Build everything on one machine | Mac Catalyst (~~and iOS~~, dropped by CR-001) require macOS/Xcode; Inno Setup and WinUI require Windows |
-| Keep automated E2E tests alongside manual tests | Michael's direction: 100 % manual acceptance testing |
-| Drop unit tests too | Unit tests are cheap, run in seconds and protect refactoring; they are not acceptance tests. Can be revisited if Michael decides otherwise. |
+| Keep automated E2E tests alongside manual tests | The project owner's direction: 100 % manual acceptance testing |
+| Drop unit tests too | Unit tests are cheap, run in seconds and protect refactoring; they are not acceptance tests. Can be revisited if the project owner decides otherwise. |
 
 ---
 
@@ -105,7 +105,7 @@ Process: `02_Implementation/docs/testing/README.md`.
 
 - Work must be committed (and pushed) before switching machines, or it is invisible on the other machine
 - Cross-machine stories (a contract change plus a macOS UI change) need sequencing in the implementation plan
-- Manual testing costs Michael's time on every run, including regression. The regression checklist must stay lean.
+- Manual testing costs the project owner's time on every run, including regression. The regression checklist must stay lean.
 - The test station is also the dev machine: the installed service enforces rules for every standard account on it (admin accounts are not monitored)
 
 ### Neutral

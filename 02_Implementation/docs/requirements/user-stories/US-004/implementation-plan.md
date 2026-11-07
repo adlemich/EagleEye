@@ -1,6 +1,6 @@
 # Implementation Plan: US-004 — App Usage Tracking and Daily Usage Report
 
-**Status**: Approved by Michael (2026-10-07), incl. ADR-011 (with Security Analysis), ADR-012 and the ADR-005, arc42 and coding-guideline amendments marked "proposed with the US-004 plan"
+**Status**: Approved by the project owner (2026-10-07), incl. ADR-011 (with Security Analysis), ADR-012 and the ADR-005, arc42 and coding-guideline amendments marked "proposed with the US-004 plan"
 **Date**: 2026-10-07
 **Author**: ARC
 **User story**: `02_Implementation/docs/requirements/user-stories/US-004/user-story.md` (approved 2026-10-07, 27 ACs, OQ-1 to OQ-11 answered with the proposed defaults)
@@ -10,7 +10,7 @@
 - ADR-012 — Usage accounting (`02_Implementation/docs/architecture/decisions/ADR-012-usage-accounting.md`)
 
 **Amended**: ADR-005 (Explorer, seconds, identity by path for recording), arc42, coding guidelines; all marked "proposed with the US-004 plan".
-**Revision 2026-10-07**: Michael's answers to Q-1 to Q-5 recorded. **Security analysis of the session agent** added to ADR-011 ("Security Analysis", threats T-1 to T-13, hardening §7). The resulting measures are built into the component design, steps, unit tests and Manual Verification Notes below (marked *(sec)*). New open questions Q-6 to Q-9.
+**Revision 2026-10-07**: the project owner's answers to Q-1 to Q-5 recorded. **Security analysis of the session agent** added to ADR-011 ("Security Analysis", threats T-1 to T-13, hardening §7). The resulting measures are built into the component design, steps, unit tests and Manual Verification Notes below (marked *(sec)*). New open questions Q-6 to Q-9.
 
 ---
 
@@ -22,7 +22,7 @@
 |---|---|
 | This plan, ADR-011, ADR-012, ADR-005 amendment, arc42, coding guidelines (ARC) | Windows Developer Machine (done here) |
 | Steps 0 to 11 (DEV): code, unit tests, `build.ps1` / `test.ps1`, installers, smoke check | **Windows Developer Machine** |
-| Manual test run (Michael) | Windows Developer Machine as service PC, with the kid accounts `kid1` (controlled) and `kid2` (not controlled) and the parent's admin account. The parent app on the service PC or, better, on the second Windows PC (US-003 Q-6), so the kid's session can be locked and switched without affecting the parent app. |
+| Manual test run (the project owner) | Windows Developer Machine as service PC, with the kid accounts `kid1` (controlled) and `kid2` (not controlled) and the parent's admin account. The parent app on the service PC or, better, on the second Windows PC (US-003 Q-6), so the kid's session can be locked and switched without affecting the parent app. |
 | MacBook | Not needed. `ParentApp.Core`, `Shared` and their tests stay free of Windows APIs (the window and process code lives in the Windows-only service), so `build.ps1` / `test.ps1` keep working there after the next `git pull`. |
 
 The Android target is built by `build.ps1` on Windows. The new Reports page must compile for Android with zero warnings; there is no Android-specific work and no Android test.
@@ -46,11 +46,11 @@ The Android target is built by `build.ps1` on Windows. The new Reports page must
 
 ## Architecture Changes
 
-Applied in this commit, on the feature branch, as part of what Michael approves with this plan (all marked "proposed with the US-004 plan"):
+Applied in this commit, on the feature branch, as part of what the project owner approves with this plan (all marked "proposed with the US-004 plan"):
 
 | Document | Change |
 |---|---|
-| `docs/architecture/decisions/ADR-011-session-agent-for-app-observation.md` | **New**, incl. §7 Hardening and the section "Security Analysis" (Michael's request, 2026-10-07) |
+| `docs/architecture/decisions/ADR-011-session-agent-for-app-observation.md` | **New**, incl. §7 Hardening and the section "Security Analysis" (the project owner's request, 2026-10-07) |
 | `docs/architecture/decisions/ADR-012-usage-accounting.md` | **New** |
 | ADR-005 | Amendment: recording is not classification; Explorer counted while a File Explorer window is open (OQ-3); seconds; identity by path for recording; display-name order |
 | arc42 §5.2 | Monitoring and Statistics components made concrete (session agent, sessions, usage tracker, usage state owner) |
@@ -201,7 +201,7 @@ PA --> HUB
 
 ### Decision 1a: security of the session agent *(sec)*
 
-Michael asked for a security analysis before approval. It is in ADR-011, section "Security Analysis" (threat model, attack surface, threats T-1 to T-13 with ratings, mitigations and residual risks, comparison of agent variants).
+The project owner asked for a security analysis before approval. It is in ADR-011, section "Security Analysis" (threat model, attack surface, threats T-1 to T-13 with ratings, mitigations and residual risks, comparison of agent variants).
 
 **The decision stays a SYSTEM agent, now hardened** (ADR-011 §7). An agent running with the kid's own token would be enough to *see* the windows. It would not be enough to *trust* its reports: the kid could end it, inject into it or feed it fake data. System integrity is itself a protection: UIPI blocks window messages and hook injection from the kid's Medium-integrity processes. Hardening measures and where they land in this plan:
 
@@ -606,7 +606,7 @@ All steps run on the **Windows Developer Machine**, on branch `feature/US-004-ap
 DEV has no admin rights (US-001 lesson), so the real SYSTEM agent cannot be started by DEV. Smoke check in console mode (Debug build, `EAGLEEYE_DATA_DIR` as in US-002/US-003, plus `EAGLEEYE_DEV_WATCH_SID` = DEV's own SID, which makes the service treat DEV's own account as controlled and start the agent via `DevSessionAgentLauncher` in DEV's session):
 1. The Reports page of the installed 0.4.0 parent app (paired with `localhost`) shows DEV's account, Notepad appears within 15 s, the minutes grow, locking the session (Windows+L) stops the counting.
 2. The log file in the override folder shows start/end entries.
-3. *(sec)* The agent's diagnostic line appears in the log (in console mode it shows DEV's own token; the SYSTEM values are checked by Michael in the test run).
+3. *(sec)* The agent's diagnostic line appears in the log (in console mode it shows DEV's own token; the SYSTEM values are checked by the project owner in the test run).
 
 ### Step 10: Coverage and load
 1. `build.ps1`, `test.ps1`: 0 warnings, all green, 100 % line and branch coverage for the classes marked **unit** above.
@@ -703,8 +703,8 @@ DEV has no admin rights (US-001 lesson), so the real SYSTEM agent cannot be star
 | Service stop (AC-10, AC-15) | `net stop EagleEyeService` while apps are open → end entries with "(service stopping)"; after `net start` → new "App started" entries for the still-open apps. Killing the service process (Task Manager as admin, *Prozessstruktur beenden*) → at the next start, end entries "(service stopped unexpectedly)" with the last recorded time (≤ 5 s before the kill). |
 | Database | `%ProgramData%\EagleEye\EagleEye.Service.db` (admin, SQLite tool): `AppRecords` (one row per account + path, AC-7), `AppInstances` (history), `DailyUsage` (seconds per app and day). The 90-day purge (AC-11) cannot be waited for; it is covered by unit tests. Optional: as admin, back-date a `DailyUsage.Day` value to 91 days ago with a SQLite tool while the service is stopped; after the start it is gone. |
 | CPU (AC-25) | Task Manager → *Details*: there are **two** `EagleEye.Service.exe` processes while `kid1` is logged on (service and agent); add both CPU values. Expected well below 1 %. |
-| US-003 dependency | US-003's push ACs (AC-19 to AC-24 there) were not verified manually (`docs/testing/US-003/test-report.md` §5). US-004 AC-22 and AC-23 depend on the same mechanism, so a failure there may show up as a Reports page that does not follow. **Michael (Q-5): the US-004 run tests only the US-004 features; the skipped US-003 cases stay skipped.** |
-| Security checks *(sec)* | All as described in ADR-011 §7 / Security Analysis; Michael is the only one who can do them (SYSTEM, admin). (1) **Agent token**: the service log shows at agent start a line like `Session agent in session 2: user SYSTEM, integrity System, privileges SeChangeNotifyPrivilege, write-restricted yes` (or `no` with the documented fallback). (2) **Kid cannot touch the agent**: signed in as `kid1`, in PowerShell `Stop-Process -Id <agent PID> -Force` and in Task Manager *Task beenden* → access denied; the agent keeps running. (3) **Remote program**: as `kid1` run a program from a network share (e.g. a copy of `C:\Windows\System32\charmap.exe` on `\\<other PC>\share\`): it is recorded under its process name (`charmap`), not under "Zeichentabelle", and the log contains no file access error for the share; on the share's PC, no access by the service PC's computer account appears (optional). (4) **Renamed EagleEye name**: copy `C:\Windows\System32\charmap.exe` to `C:\Users\kid1\Desktop\EagleEye.TrayClient.exe` and start it as `kid1`: it **is** recorded. (5) **Flicker**: open and close Notepad 40 times within a few minutes: at most 30 start/end log lines for it in that hour plus a summary line; the report still shows correct usage. (6) **Release has no Debug switches**: setting `EAGLEEYE_DEV_WATCH_SID` or `EAGLEEYE_DATA_DIR` as a machine environment variable (admin) and restarting the service has no effect. |
+| US-003 dependency | US-003's push ACs (AC-19 to AC-24 there) were not verified manually (`docs/testing/US-003/test-report.md` §5). US-004 AC-22 and AC-23 depend on the same mechanism, so a failure there may show up as a Reports page that does not follow. **The project owner (Q-5): the US-004 run tests only the US-004 features; the skipped US-003 cases stay skipped.** |
+| Security checks *(sec)* | All as described in ADR-011 §7 / Security Analysis; the project owner is the only one who can do them (SYSTEM, admin). (1) **Agent token**: the service log shows at agent start a line like `Session agent in session 2: user SYSTEM, integrity System, privileges SeChangeNotifyPrivilege, write-restricted yes` (or `no` with the documented fallback). (2) **Kid cannot touch the agent**: signed in as `kid1`, in PowerShell `Stop-Process -Id <agent PID> -Force` and in Task Manager *Task beenden* → access denied; the agent keeps running. (3) **Remote program**: as `kid1` run a program from a network share (e.g. a copy of `C:\Windows\System32\charmap.exe` on `\\<other PC>\share\`): it is recorded under its process name (`charmap`), not under "Zeichentabelle", and the log contains no file access error for the share; on the share's PC, no access by the service PC's computer account appears (optional). (4) **Renamed EagleEye name**: copy `C:\Windows\System32\charmap.exe` to `C:\Users\kid1\Desktop\EagleEye.TrayClient.exe` and start it as `kid1`: it **is** recorded. (5) **Flicker**: open and close Notepad 40 times within a few minutes: at most 30 start/end log lines for it in that hour plus a summary line; the report still shows correct usage. (6) **Release has no Debug switches**: setting `EAGLEEYE_DEV_WATCH_SID` or `EAGLEEYE_DATA_DIR` as a machine environment variable (admin) and restarting the service has no effect. |
 | Not covered by unit tests | Window enumeration and the "Apps" rule against real programs, Store app names, SYSTEM agent start in another session, WTS states and SCM events (lock, switch user, sleep), process inspection across sessions, installer, UI |
 
 ---
@@ -727,26 +727,26 @@ No AC is changed. Points the plan interprets or adds:
 
 ---
 
-## Open Questions for Michael
+## Open Questions for the project owner
 
-### Answered (Michael, 2026-10-07)
+### Answered (the project owner, 2026-10-07)
 
 | ID | Question | Proposed answer | Answer |
 |---|---|---|---|
-| Q-1 | **Memory of the session agent.** Each watched session gets one extra `EagleEye.Service.exe` (SYSTEM) with about 30 to 40 MB of memory (CPU negligible). Acceptable? | Yes. Native AOT later if memory matters. | Answer (Michael, 2026-10-07): accepted as proposed. |
-| Q-2 | **Visibility of the agent.** The kid can see the agent in Task Manager → *Details* (user SYSTEM) but cannot end it. Compatible with AC-27? | Yes: AC-27 is about effects on the kid; a background process is not a notice. | Answer (Michael, 2026-10-07): accepted as proposed. |
-| Q-3 | **History while locked or switched away.** End the instance, or continue while the app is open? | Continue (D-4). | Answer (Michael, 2026-10-07): accepted as proposed. |
-| Q-4 | **Programs started with other credentials** are not recorded (story: out of scope). | Accept for US-004; revisit with the first enforcement story. | Answer (Michael, 2026-10-07): accepted as proposed. |
-| Q-5 | **US-003 regression in the US-004 run.** | TES includes TC-003-22 to TC-003-35 (or a subset). | Answer (Michael, 2026-10-07): **No.** The skipped US-003 cases stay skipped for now; the US-004 run tests only the US-004 features. The risk note stays in the Manual Verification Notes. |
+| Q-1 | **Memory of the session agent.** Each watched session gets one extra `EagleEye.Service.exe` (SYSTEM) with about 30 to 40 MB of memory (CPU negligible). Acceptable? | Yes. Native AOT later if memory matters. | Answer (the project owner, 2026-10-07): accepted as proposed. |
+| Q-2 | **Visibility of the agent.** The kid can see the agent in Task Manager → *Details* (user SYSTEM) but cannot end it. Compatible with AC-27? | Yes: AC-27 is about effects on the kid; a background process is not a notice. | Answer (the project owner, 2026-10-07): accepted as proposed. |
+| Q-3 | **History while locked or switched away.** End the instance, or continue while the app is open? | Continue (D-4). | Answer (the project owner, 2026-10-07): accepted as proposed. |
+| Q-4 | **Programs started with other credentials** are not recorded (story: out of scope). | Accept for US-004; revisit with the first enforcement story. | Answer (the project owner, 2026-10-07): accepted as proposed. |
+| Q-5 | **US-003 regression in the US-004 run.** | TES includes TC-003-22 to TC-003-35 (or a subset). | Answer (the project owner, 2026-10-07): **No.** The skipped US-003 cases stay skipped for now; the US-004 run tests only the US-004 features. The risk note stays in the Manual Verification Notes. |
 
 ### New, from the security analysis (ADR-011)
 
 | ID | Question | Proposed answer | Answer |
 |---|---|---|---|
-| Q-6 | **Visibility of recording gaps (T-9).** If the session agent cannot run (repeated failures) or is restarted, usage is not recorded for that time. In US-004 this is visible **only in the service log** (Warning per restart, Error after 3 failed restarts). Should the parent see it in the app? | Not in US-004 (no new AC; keeps the story's scope). Add a "recording interrupted" indicator per account and day as an AC of the first budget/enforcement story, where gaps matter for limits. The data for it (pauses with start/end) is already in the log. | Answer (Michael, 2026-10-07): proposed answer accepted. |
-| Q-7 | **Evasion by window manipulation (T-10).** A tech-savvy kid can make a program's window a tool window or an owned window (e.g. with AutoHotkey), so it drops out of the "Apps" rule and its usage is not counted (Task Manager behaves similarly). | Accept for US-004 (observation only). Enforcement stays process-based and deny-by-default (ADR-005), so this cannot start blocked programs. The budget story decides whether allowed apps without an app window still count (e.g. counting the process while it runs). | Answer (Michael, 2026-10-07): proposed answer accepted. |
-| Q-8 | **Disguised names (T-11).** A kid can copy a game to a user folder with version info "Editor"; the report shows "Editor" (separate record, real path in log and database). | Accept for US-004; the parent can check the path in the log. Show the program path or publisher in the parent app together with allow-lists (later story). | Answer (Michael, 2026-10-07): proposed answer accepted. |
-| Q-9 | **Write-restricted token fallback (T-5).** If the .NET runtime or the desktop connection does not start under the write-restricted SYSTEM token, the agent runs without the write restriction (still no privileges, Administrators deny-only, System integrity, no windows). | Accept the fallback; DEV verifies in Step 3 together with Michael, and records which variant runs in the implementation report and the agent's diagnostic log line. | Answer (Michael, 2026-10-07): proposed answer accepted. |
+| Q-6 | **Visibility of recording gaps (T-9).** If the session agent cannot run (repeated failures) or is restarted, usage is not recorded for that time. In US-004 this is visible **only in the service log** (Warning per restart, Error after 3 failed restarts). Should the parent see it in the app? | Not in US-004 (no new AC; keeps the story's scope). Add a "recording interrupted" indicator per account and day as an AC of the first budget/enforcement story, where gaps matter for limits. The data for it (pauses with start/end) is already in the log. | Answer (the project owner, 2026-10-07): proposed answer accepted. |
+| Q-7 | **Evasion by window manipulation (T-10).** A tech-savvy kid can make a program's window a tool window or an owned window (e.g. with AutoHotkey), so it drops out of the "Apps" rule and its usage is not counted (Task Manager behaves similarly). | Accept for US-004 (observation only). Enforcement stays process-based and deny-by-default (ADR-005), so this cannot start blocked programs. The budget story decides whether allowed apps without an app window still count (e.g. counting the process while it runs). | Answer (the project owner, 2026-10-07): proposed answer accepted. |
+| Q-8 | **Disguised names (T-11).** A kid can copy a game to a user folder with version info "Editor"; the report shows "Editor" (separate record, real path in log and database). | Accept for US-004; the parent can check the path in the log. Show the program path or publisher in the parent app together with allow-lists (later story). | Answer (the project owner, 2026-10-07): proposed answer accepted. |
+| Q-9 | **Write-restricted token fallback (T-5).** If the .NET runtime or the desktop connection does not start under the write-restricted SYSTEM token, the agent runs without the write restriction (still no privileges, Administrators deny-only, System integrity, no windows). | Accept the fallback; DEV verifies in Step 3 together with the project owner, and records which variant runs in the implementation report and the agent's diagnostic log line. | Answer (the project owner, 2026-10-07): proposed answer accepted. |
 
 ---
 

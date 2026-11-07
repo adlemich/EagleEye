@@ -1,6 +1,6 @@
 # US-005 Scope Input: Break Times (Ruhezeiten)
 
-**Source**: Michael, 2026-10-10 (recorded by the Orchestrator, wording kept)
+**Source**: the project owner, 2026-10-10 (recorded by the Orchestrator, wording kept)
 **Mock**: `02_Implementation/docs/requirements/user-stories/US-005/input/us-005_parentApp.png` (parent app UI with requirements 1 to 10 next to it)
 
 ## Parent app (from the mock)
@@ -19,7 +19,7 @@
 
 Table columns in the mock: delete (trash icon) · An/Aus · Start-Zeit · End-Zeit · MO · DI · MI · DO · FR · SA · SO. Below the table: "Anzeige Text:" with the message edit box.
 
-## Additions (Michael, 2026-10-10)
+## Additions (the project owner, 2026-10-10)
 
 - **Per account.** Rules are saved and managed per monitored child account. The mock is missing this: there must be a drop-down at the top to select the account whose rules are shown and edited.
 - **Server data model and API.** For each monitored account the server stores the rules shown in the parent app. It needs a data model and APIs to query (display rules) and to create/update (edit rules).
@@ -29,7 +29,7 @@ Table columns in the mock: delete (trash icon) · An/Aus · Start-Zeit · End-Ze
   - If a rule is active: the process is terminated right away. Through the tray client, the kid sees the display text configured in the parent app, in a **system-modal message box** (topmost) that must be acknowledged with **OK**.
 - **Colours.** The mock may show poor colouring. Use only the standard colours that follow light/dark mode, no special colours. Don't take the mock too seriously in this regard.
 
-## Clarifications (Michael, 2026-10-10)
+## Clarifications (the project owner, 2026-10-10)
 
 1. **Apps already running when a break starts** are out of scope. They are handled in the next user story ("approaching a usage limitation"). US-005 only checks at app start.
 2. **"Active or disabled (in general)" = the per-entry switch (An/Aus).** Ticked: the entry is active and is evaluated at runtime. Not ticked: it behaves as if it did not exist (not evaluated), but the record remains so it can be activated later. There is no separate main switch.

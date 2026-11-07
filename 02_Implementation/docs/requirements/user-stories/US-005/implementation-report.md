@@ -5,7 +5,7 @@
 **Branch**: `feature/US-005-break-times`
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-005/implementation-plan.md` (approved 2026-10-10 with Q-1 to Q-9), ADR-013, ADR-014, amendments of ADR-003/005/006/011/012, coding guidelines §10.1, §12.2, §12.4, §16.1
 **Machine(s) used**: Windows Developer Machine only (see §9)
-**Story status**: Verified/Closed (Michael, 2026-10-11)
+**Story status**: Verified/Closed (the project owner, 2026-10-11)
 
 ---
 
@@ -37,7 +37,7 @@ US-005 is implemented as planned in Steps 0 to 13, version **0.5.0**. The parent
 | D-2 | `EnforcementIgnoreList`: listed programs by full path under `%SystemRoot%` | System32 programs and `explorer.exe` by exact path; the shell hosts `ShellExperienceHost`, `StartMenuExperienceHost`, `SearchHost`, `TextInputHost`, `LockApp` by file name **below `%SystemRoot%\SystemApps\`** (any package folder; paths with `..` rejected) | Their package folder names differ between Windows builds (on this PC `TextInputHost.exe` exists in two folders, one under `SystemApps\SxS\`). `SystemApps` is writable by TrustedInstaller only. |
 | D-3 | Gate: "only if the earliest of them lies in a break does the gate read the process table to find an older process of the same path (which would make it not a start)" | The start time is the **oldest** process of the path in the session (owned by the account); the decision is made again for that time: outside every break → allowed; inside a break (possibly another entry) → blocked with that entry | Literal application of Q-1 (start = creation of the first process, ADR-013 §3). The table is still read only when the reported processes lie in a break. |
 | D-4 | Close sequence waits on process handles | Polls the opened handles every 250 ms (`TimeProvider` delay); seconds rounded to 0.1 s | Deterministic unit tests with the fake clock. The 20 s force step is exact (the last wait is shortened). |
-| D-5 | Smoke check with a Debug tray client and the Debug parent app (US-004 setup) | Two more **Debug-only** switches: the tray client reads `EAGLEEYE_DEV_PORT_OFFSET`; the parent app reads `EAGLEEYE_DEV_APP_DATA_DIR` | Michael's installed service holds 5080/5443 and his tray client runs in the same session: without the offset the Debug tray would talk to his service. The app-data switch keeps the smoke pairing away from the installed parent app's data (`%LocalAppData%\EagleEye`) instead of moving that folder aside as in US-004. Release DLLs contain no `EAGLEEYE_DEV` string (checked, §5). |
+| D-5 | Smoke check with a Debug tray client and the Debug parent app (US-004 setup) | Two more **Debug-only** switches: the tray client reads `EAGLEEYE_DEV_PORT_OFFSET`; the parent app reads `EAGLEEYE_DEV_APP_DATA_DIR` | The project owner's installed service holds 5080/5443 and their tray client runs in the same session: without the offset the Debug tray would talk to their service. The app-data switch keeps the smoke pairing away from the installed parent app's data (`%LocalAppData%\EagleEye`) instead of moving that folder aside as in US-004. Release DLLs contain no `EAGLEEYE_DEV` string (checked, §5). |
 | D-6 | Tray texts `BreakMessageTitle`, `OkButton` | `BreakMessageTitle` new; the existing key `Ok` ("OK" in both languages) reused | Same text already exists. |
 | D-7 | Dialog text drawn by GDI, "Segoe UI Emoji" only if emojis show as boxes (ADR-014 §3) | The text label always uses "Segoe UI Emoji" | Smoke check: with the dialog font the emojis were boxes. "Segoe UI Emoji" also contains the Latin letters; emojis are monochrome (AC-31 accepts). |
 | D-8 | `SetDisplayText`: empty or white space → default | Also a text equal to the default text is stored as "default" (`IsDefaultDisplayText` stays true) | Keeps the flag meaningful when the parent types the default text again. |
@@ -119,7 +119,7 @@ All paths relative to `02_Implementation/`.
 
 ---
 
-## 7. Checks for Michael (admin / SYSTEM / real kid session)
+## 7. Checks for the project owner (admin / SYSTEM / real kid session)
 
 Preparation (admin): install `03_Delivery/windows/EagleEye-Setup-0.5.0.exe` over 0.4.x, then `EagleEye-ParentApp-Setup-0.5.0.exe` on both parent PCs. Service log: `%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log` (elevated, e.g. `Get-Content -Wait`).
 
@@ -186,9 +186,9 @@ Purged enforcement records older than 90 days: … · Purged enforcement records
 
 `%ProgramData%\EagleEye\EagleEye.Service.db`: `BreakTimeEntries` (minutes after midnight, `Days` bit mask Mo = 1 … Su = 64), `AccountDisplayTexts` (no row = default text; line breaks `\n`), `BlockedStarts` (one row per blocked start: `StartedLocal`, `DetectedUtc`, names and path, `ProcessId`, `Trigger`, entry minutes/days, `Weekday`, `Outcome`, `SecondsUntilGone`, `MessageState`), `TimeChangeFindings`. The plan's Manual Verification Notes apply unchanged.
 
-### DEV smoke check (Windows Developer Machine, 2026-10-10, non-elevated, next to Michael's running 0.4.x service and tray client, both untouched)
+### DEV smoke check (Windows Developer Machine, 2026-10-10, non-elevated, next to the project owner's running 0.4.x service and tray client, both untouched)
 
-Setup: Debug console service (`EAGLEEYE_DATA_DIR=artifacts/smoke-us005`, `EAGLEEYE_DEV_WATCH_SID` = DEV's SID, `EAGLEEYE_DEV_PORT_OFFSET=10000`), Debug tray client and Debug parent app (`EAGLEEYE_DEV_APP_DATA_DIR=artifacts/smoke-us005-app`), driven with UI Automation. UI steps were done only while the session had been idle for at least 5 minutes (Michael was using the PC in between).
+Setup: Debug console service (`EAGLEEYE_DATA_DIR=artifacts/smoke-us005`, `EAGLEEYE_DEV_WATCH_SID` = DEV's SID, `EAGLEEYE_DEV_PORT_OFFSET=10000`), Debug tray client and Debug parent app (`EAGLEEYE_DEV_APP_DATA_DIR=artifacts/smoke-us005-app`), driven with UI Automation. UI steps were done only while the session had been idle for at least 5 minutes (the project owner was using the PC in between).
 
 | What | Result |
 |---|---|
@@ -204,7 +204,7 @@ Setup: Debug console service (`EAGLEEYE_DATA_DIR=artifacts/smoke-us005`, `EAGLEE
 | CPU (AC-29, Step 12) | Entry not in effect, ~10 recorded apps, 60 s, 20 logical CPUs: service **0.009 %**, agent **0.005 %** of total CPU (US-004: 0.016 % / 0.005 %); agent 22 MB private, service 35 MB private |
 | Not done | Installers (admin), SYSTEM agent, other sessions/accounts, lock/sign-out with the dialog open, full-screen apps, time-zone change (plan Step 11.5), Store app (Calculator), a second parent app at the same time (AC-19 broadcast between two apps; the broadcast path is unit-tested and the reconnect fetch was checked), 150 % on a second PC, light mode |
 
-Clean-up: all processes started by DEV were stopped; the test entry is switched off; Michael's service, tray client and parent app data were not touched. Left behind (git-ignored): `02_Implementation/artifacts/smoke-us005*` (console service data with a test certificate, the Debug app's pairing), `artifacts/publish`.
+Clean-up: all processes started by DEV were stopped; the test entry is switched off; the project owner's service, tray client and parent app data were not touched. Left behind (git-ignored): `02_Implementation/artifacts/smoke-us005*` (console service data with a test certificate, the Debug app's pairing), `artifacts/publish`.
 
 ---
 

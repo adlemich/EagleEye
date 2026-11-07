@@ -1,8 +1,8 @@
 # ADR-020: macOS Platform Layer under Ad-hoc Signing — Keychain, TLS Handler, No App Sandbox, Language
 
-**Status**: Accepted (approved by Michael with the US-007 implementation plan, 2026-10-20; plan Q-1: ad-hoc signing stays, no local signing identity). **Revision 1 (2026-10-20, after US-007 first light) — Accepted (approved by Michael, 2026-10-20)**: §2 implementation API changed (legacy `SecKeychain…` API instead of `SecItem…`), update behaviour (partition list) recorded, Debug builds use their own keychain item and data folder, deprecation risk added. Plan Q-4 (2026-10-20): up to two prompts per update, then silent.
+**Status**: Accepted (approved by the project owner with the US-007 implementation plan, 2026-10-20; plan Q-1: ad-hoc signing stays, no local signing identity). **Revision 1 (2026-10-20, after US-007 first light) — Accepted (approved by the project owner, 2026-10-20)**: §2 implementation API changed (legacy `SecKeychain…` API instead of `SecItem…`), update behaviour (partition list) recorded, Debug builds use their own keychain item and data folder, deprecation risk added. Plan Q-4 (2026-10-20): up to two prompts per update, then silent.
 **Date**: 2026-10-20 (revision 1: 2026-10-20)
-**Deciders**: ARC, Michael
+**Deciders**: ARC, the project owner
 
 ---
 
@@ -10,7 +10,7 @@
 
 US-007 makes the Mac Catalyst parent app a production platform with full parity to the Windows app (ADR-019, FR-APP-110 to FR-APP-112). The Mac target has compiled from `main` since US-001, but it has never run against the service. Four platform points are open (arc42 R-3):
 
-1. **Code signature.** The `.app` is ad-hoc signed only (ADR-019 §3). An ad-hoc signature has no team ID, and its designated requirement is the hash of the code (cdhash). Every build is therefore a "different app" for macOS. Anything that macOS binds to the code signature can break on update: Keychain access rules, data-protection keychain access groups, and App Sandbox container ownership. Restricted entitlements (e.g. `keychain-access-groups`, `application-identifier`) need a provisioning profile, which needs an Apple Developer account. Michael has none (CR-001 Q-7).
+1. **Code signature.** The `.app` is ad-hoc signed only (ADR-019 §3). An ad-hoc signature has no team ID, and its designated requirement is the hash of the code (cdhash). Every build is therefore a "different app" for macOS. Anything that macOS binds to the code signature can break on update: Keychain access rules, data-protection keychain access groups, and App Sandbox container ownership. Restricted entitlements (e.g. `keychain-access-groups`, `application-identifier`) need a provisioning profile, which needs an Apple Developer account. The project owner has none (CR-001 Q-7).
 2. **Secret storage.** The pairing token must be in the Keychain (NFR-S-014, US-007 AC-24). After an update the app must still read it. A one-time macOS prompt is acceptable; re-pairing after every update is not (US-007 OQ-3). The removal script must be able to delete the item (US-007 AC-6, OQ-2). Today the Mac target uses MAUI `SecureStorage` (`MauiSecureStorageSecretStore`). On Mac Catalyst it expects a `keychain-access-groups` entitlement, which an ad-hoc build cannot carry.
 3. **TLS.** On Apple platforms the default `HttpClientHandler` of .NET is backed by the native `NSUrlSessionHandler`. The aborted iOS work found that this native handler does not call the certificate callback that `CertificateTrustPolicy` relies on (ADR-008 §3). The handler is also subject to App Transport Security. The WebSocket transport (`ClientWebSocket`) is managed on Apple platforms and calls its callback.
 4. **Language.** The Windows app takes the Windows display language through .NET (`CurrentUICulture`), with German as the neutral resource language (NFR-L-011). On Mac Catalyst, .NET derives the cultures from `NSLocale`, and macOS offers a per-app language and localizes the standard menu bar only for bundles that declare their localizations.
@@ -30,7 +30,7 @@ The Mac app runs **without** the App Sandbox. `Platforms/MacCatalyst/Entitlement
 
 ### 2. Own Keychain secret store through the Security framework
 
-> **Revision 1 (Accepted, approved by Michael 2026-10-20).** First light (`02_Implementation/docs/requirements/user-stories/US-007/first-light.md` §3, §4; evidence `US-007/evidence/keychain-probe-results.txt`) showed:
+> **Revision 1 (Accepted, approved by the project owner 2026-10-20).** First light (`02_Implementation/docs/requirements/user-stories/US-007/first-light.md` §3, §4; evidence `US-007/evidence/keychain-probe-results.txt`) showed:
 >
 > - On Mac Catalyst **every `SecItem…` call goes to the data-protection keychain**; `kSecUseDataProtectionKeychain = false` is ignored. Every write returns `errSecMissingEntitlement` (-34018), for K-1 and K-2, with and without App Sandbox. Adding `keychain-access-groups` stops the ad-hoc app from launching. So the `SecItem` design below cannot work for an ad-hoc build.
 > - The **legacy file-keychain API** (`SecKeychainFindGenericPassword`, `SecKeychainAddGenericPassword`, `SecKeychainItemModifyAttributesAndData`, `SecKeychainItemDelete`, P/Invoke into Security.framework; deprecated since macOS 10.10, present in macOS 27) works on the default (login) keychain, with and without sandbox, without a prompt for the creating build.
@@ -38,9 +38,9 @@ The Mac app runs **without** the App Sandbox. `Platforms/MacCatalyst/Entitlement
 > **Decision (replaces the API list and the K-1/K-2 table below):**
 >
 > 1. `MacKeychainSecretStore` uses the legacy file-keychain API on the **login keychain** (K-1). Item attributes as below (generic password, service `com.adlemich.eagleeye`, account = key). The label "EagleEye Parent App" is set through an attribute list (`kSecLabelItemAttr`) when the item is created; if that proves fragile, the visible name stays the service name (accepted, presentation only). K-2 is dropped: it is not reachable for an ad-hoc build. Plan Q-3 (app-side purge) is void.
-> 2. **Update behaviour (accepted under story OQ-3).** For an ad-hoc build, "Always Allow" writes the build's cdhash into the item's access list **and replaces** the item's partition list with that cdhash. Hence: the build that was approved last starts silently; any other build prompts once for the login password. For the parent (one installed build at a time): **one prompt after each update, then silent; the pairing survives, no re-pairing.** A second prompt at the first restart after an update was seen once in development and is tolerated (plan Q-4, Michael 2026-10-20: up to two prompts per update, then silent; more than two, or a prompt at every start of the same build, is a failure).
-> 3. **Debug builds use their own item and data folder**: service `com.adlemich.eagleeye.debug` and `~/Library/Application Support/EagleEye-Debug/` (Mac Catalyst Debug only; the existing `EAGLEEYE_DEV_APP_DATA_DIR` still overrides the folder). A dev build then never takes over the partition list of the installed Release item, so Michael's installed app stays silent while DEV iterates, and a Debug pairing never overwrites the installed app's pairing. Debug builds still prompt after each rebuild (accepted dev nuisance).
-> 4. **Deprecation risk.** If Apple removes the legacy API, the store throws `SecretStoreUnavailableException` (pairing cannot be read or saved; the app shows the Keychain message, nothing is deleted). There is no supported exit inside the current constraints: `SecItem` needs a keychain access group, which needs a provisioning profile, which needs a paid Apple Developer account (excluded by CR-001 Q-7). Mitigation: the store stays behind `ISecretStore`; DEV checks the Mac app on each macOS major release and each Xcode/.NET workload update (dev-environments §5); if the API disappears, Michael decides between a paid account and a different secret mechanism (arc42 R-3).
+> 2. **Update behaviour (accepted under story OQ-3).** For an ad-hoc build, "Always Allow" writes the build's cdhash into the item's access list **and replaces** the item's partition list with that cdhash. Hence: the build that was approved last starts silently; any other build prompts once for the login password. For the parent (one installed build at a time): **one prompt after each update, then silent; the pairing survives, no re-pairing.** A second prompt at the first restart after an update was seen once in development and is tolerated (plan Q-4, the project owner 2026-10-20: up to two prompts per update, then silent; more than two, or a prompt at every start of the same build, is a failure).
+> 3. **Debug builds use their own item and data folder**: service `com.adlemich.eagleeye.debug` and `~/Library/Application Support/EagleEye-Debug/` (Mac Catalyst Debug only; the existing `EAGLEEYE_DEV_APP_DATA_DIR` still overrides the folder). A dev build then never takes over the partition list of the installed Release item, so the project owner's installed app stays silent while DEV iterates, and a Debug pairing never overwrites the installed app's pairing. Debug builds still prompt after each rebuild (accepted dev nuisance).
+> 4. **Deprecation risk.** If Apple removes the legacy API, the store throws `SecretStoreUnavailableException` (pairing cannot be read or saved; the app shows the Keychain message, nothing is deleted). There is no supported exit inside the current constraints: `SecItem` needs a keychain access group, which needs a provisioning profile, which needs a paid Apple Developer account (excluded by CR-001 Q-7). Mitigation: the store stays behind `ISecretStore`; DEV checks the Mac app on each macOS major release and each Xcode/.NET workload update (dev-environments §5); if the API disappears, the project owner decides between a paid account and a different secret mechanism (arc42 R-3).
 > 5. The debug-only OSStatus trace (stderr, status code only, never the value) stays in Debug builds; Release builds have none.
 >
 > The text below is the original decision of 2026-10-20, kept for history; where it conflicts with Revision 1, Revision 1 applies.
@@ -57,7 +57,7 @@ The Mac app runs **without** the App Sandbox. `Platforms/MacCatalyst/Entitlement
 |---|---|---|
 | **K-1 (preferred)** | The file-based **login keychain** (`kSecUseDataProtectionKeychain` = false). Default access rule: the creating app is trusted. | Store, read and delete work for the ad-hoc-signed app, and after an update (new cdhash) the app reads the token either silently or after **one** macOS prompt that the parent answers with "Always Allow" (OQ-3). |
 | K-2 | The **data-protection keychain**, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` (the pattern of the aborted iOS work). | Only if K-1 is not usable from Mac Catalyst, **and** K-2 works without a restricted entitlement and survives an update. Then the removal script cannot delete the item with the `security` tool, and the plan adds an app-side purge (US-007 plan Q-3). |
-| None | — | If neither variant survives an update without re-pairing, the question goes back to Michael (story OQ-3) before more work is done; the story's split fallback applies. |
+| None | — | If neither variant survives an update without re-pairing, the question goes back to the project owner (story OQ-3) before more work is done; the story's split fallback applies. |
 
 K-1 is preferred because the login keychain is local by nature (it never syncs to iCloud, so "this device only" holds without an attribute), the parent sees the item in *Keychain Access → login*, and the removal script can delete it with `security delete-generic-password`.
 
@@ -92,7 +92,7 @@ The Mac Catalyst target sets the MSBuild property `UseNativeHttpHandler=false` (
 ## Rationale
 
 - An ad-hoc signature changes with every build. Every mechanism that macOS binds to the signature is a risk for "pairing and settings survive an update" (AC-5). The sandbox container (ownership checks bound to the code signature) and the data-protection keychain (access groups bound to the team ID) depend on it more than plain files and the login keychain do.
-- The login keychain's access rule is also bound to the signature, but its failure mode is the prompt that Michael accepted (OQ-3).
+- The login keychain's access rule is also bound to the signature, but its failure mode is the prompt that the project owner accepted (OQ-3).
 - Calling the Security framework directly makes the keychain variant, the item attributes and the "denied" case explicit, instead of depending on MAUI's internal keychain settings and their entitlement.
 - `UseNativeHttpHandler=false` is the smallest change that makes the existing, tested trust code run unchanged on the Mac.
 
@@ -104,7 +104,7 @@ The Mac Catalyst target sets the MSBuild property `UseNativeHttpHandler=false` (
 | Keep the App Sandbox | Container ownership is bound to the code signature (risk for AC-5); data path inside the container; no benefit without the App Store. |
 | Token in SQLite, encrypted with a key in a file | Violates NFR-S-014 and AC-24 (Keychain). |
 | Keychain item readable by every app (empty trusted-app list) | Avoids the update prompt, but any process of the user could read the token. |
-| Stable local self-signed code-signing identity | Would avoid the update prompt (stable designated requirement). Adds a private key and a setup step on the MacBook. Not needed after OQ-3; offered as plan Q-1, declined by Michael (2026-10-20). Revision 1: a self-signed identity has no team ID, so macOS would most likely still key the partition list on the cdhash; the prompt would probably not go away. |
+| Stable local self-signed code-signing identity | Would avoid the update prompt (stable designated requirement). Adds a private key and a setup step on the MacBook. Not needed after OQ-3; offered as plan Q-1, declined by the project owner (2026-10-20). Revision 1: a self-signed identity has no team ID, so macOS would most likely still key the partition list on the cdhash; the prompt would probably not go away. |
 | *(Revision 1)* `SecItem…` API (original §2) | Every write fails with -34018 on Mac Catalyst for an ad-hoc build (first light). |
 | *(Revision 1)* Debug-only plain-file secret store to avoid dev prompts | A second, insecure code path that the Release app never uses; tests would not exercise the real store. |
 | Replace the handler in `ParentHubClient` (always `SocketsHttpHandler`) | Changes the Windows code path too (AC-35); the build property only affects the Mac. |
@@ -124,7 +124,7 @@ The Mac Catalyst target sets the MSBuild property `UseNativeHttpHandler=false` (
 
 - *(Revision 1)* The store relies on an API that Apple deprecated in macOS 10.10 (risk, §2 Revision 1 item 4).
 - After each update, macOS may ask once for the login password to let the new build use the Keychain item ("Always Allow"). Several builds during a test run mean several prompts.
-- Without the sandbox, the Mac app runs with the parent user's full file access. Acceptable for a self-built app on Michael's own Mac.
+- Without the sandbox, the Mac app runs with the parent user's full file access. Acceptable for a self-built app on the project owner's own Mac.
 - Custom date formats of macOS are not followed (.NET/ICU patterns for the culture).
 
 ### Neutral

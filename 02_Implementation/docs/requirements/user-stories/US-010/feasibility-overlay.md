@@ -4,8 +4,8 @@
 **Date**: 2026-11-01
 **Machine**: MacBook (documentation only; no code changed, nothing built or run)
 **Branch**: `feature/US-010-time-overlay`
-**Status**: Draft for Michael. **No user story exists yet.** This is not an implementation plan and not an ADR; it gives PRO and Michael the facts to write the story.
-**Trigger**: Michael, 2026-11-01: replace the annoying 5- and 1-minute "OK" dialogs with a half-transparent, always-on-top overlay that shows the remaining time over the running game, as FPS overlays do.
+**Status**: Draft for the project owner. **No user story exists yet.** This is not an implementation plan and not an ADR; it gives PRO and the project owner the facts to write the story.
+**Trigger**: the project owner, 2026-11-01: replace the annoying 5- and 1-minute "OK" dialogs with a half-transparent, always-on-top overlay that shows the remaining time over the running game, as FPS overlays do.
 
 **Sources.** Every statement carries a source tag:
 
@@ -53,7 +53,7 @@
   - `WS_EX_TOOLWINDOW`: no taskbar button, not in Alt+Tab.
 - Two ways to get translucency:
   1. **Uniform alpha** (`Form.Opacity` = `SetLayeredWindowAttributes`): the whole window, text included, at e.g. 70 %. Normal WinForms painting works. Simplest.
-  2. **Per-pixel alpha** (`UpdateLayeredWindow` with a 32-bit premultiplied bitmap): a translucent dark pill with fully opaque, anti-aliased text. The tray draws the content itself into a bitmap (GDI+/`System.Drawing`) once per update; WinForms controls are not used. About 100 to 150 lines of interop, comparable to `ForegroundHelper`. Looks like the FPS overlays Michael means.
+  2. **Per-pixel alpha** (`UpdateLayeredWindow` with a 32-bit premultiplied bitmap): a translucent dark pill with fully opaque, anti-aliased text. The tray draws the content itself into a bitmap (GDI+/`System.Drawing`) once per update; WinForms controls are not used. About 100 to 150 lines of interop, comparable to `ForegroundHelper`. Looks like the FPS overlays the project owner means.
 - **Z-order upkeep**: a top-most window stays top-most, but **another** top-most window shown later lies above it. Several borderless games, Chrome in some fullscreen modes and launchers set themselves top-most. The overlay therefore re-asserts `SetWindowPos(HWND_TOPMOST, …, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE)` when the foreground window changes (`SetWinEventHook(EVENT_SYSTEM_FOREGROUND)`, **out-of-context**, so no DLL is loaded into other processes) and on its 1 s redraw.
 - **Monitor**: the overlay follows the monitor of the foreground window (`MonitorFromWindow(GetForegroundWindow())`) and uses the monitor bounds, not the work area (in fullscreen there is no taskbar).
 
@@ -157,7 +157,7 @@ Coverage of today's dialog is the same as the overlay's: what (a) cannot show, t
 
 **Purpose**: confirm or refute the [S] statements of §3a and §4 before PRO fixes the story's scope. Throwaway code, kept only as a patch under `US-010/evidence/` (the US-008 pattern), never in production code.
 
-**Who/where**: DEV builds the spike on the **Windows Developer Machine** (= service PC, Windows 11). Michael runs the game cases in the kid account (games installed there), with a second monitor if available. No service changes: the spike is a stand-alone WinForms exe with a fake countdown (e.g. from 6:00, colour change at 5:00 and 1:00).
+**Who/where**: DEV builds the spike on the **Windows Developer Machine** (= service PC, Windows 11). The project owner runs the game cases in the kid account (games installed there), with a second monitor if available. No service changes: the spike is a stand-alone WinForms exe with a fake countdown (e.g. from 6:00, colour change at 5:00 and 1:00).
 
 **Prototype**: a borderless 32-bit per-pixel-alpha window (`UpdateLayeredWindow`) with the styles of §3a, "Games 4:59" in white on a 50 % dark pill, top-right corner of the foreground window's monitor, top-most re-asserted on foreground change and every second, per-monitor DPI aware. Command-line switches: `--uniform-alpha` (Form.Opacity variant), `--no-reassert`, `--corner`. It writes a log line per foreground change: foreground exe, monitor, DPI, and whether the overlay was still top-most before the re-assert.
 
@@ -181,7 +181,7 @@ Coverage of today's dialog is the same as the overlay's: what (a) cannot show, t
 **Decision rule**
 - Steps 1–6 pass → option (a) as recommended; story scope as in §8.
 - Only true exclusive modes fail (step 2, third case) → (a) with the documented limit and the audio cue.
-- Fortnite fullscreen fails or EAC reacts → (a) with "use Windowed Fullscreen" as a documented limit; Michael decides whether that is acceptable for the pilot.
+- Fortnite fullscreen fails or EAC reacts → (a) with "use Windowed Fullscreen" as a documented limit; the project owner decides whether that is acceptable for the pilot.
 - Step 7 shows covered overlays even with re-assert → short follow-up spike for (a+) uiAccess with a self-signed certificate.
 - Step 4 shows noticeable frame drops → smaller overlay, show only in the last N minutes (Q-1), or uniform alpha.
 
@@ -193,7 +193,7 @@ Coverage of today's dialog is the same as the overlay's: what (a) cannot show, t
 |---|---|---|---|---|
 | OV-1 | True exclusive fullscreen hides the overlay [K] | Medium (game dependent) | Medium | Same limit as today's dialog; audio cue; borderless mode advice; final close message unchanged. |
 | OV-2 | Another top-most window covers the overlay [K] | Medium | Low | Re-assert on foreground change; uiAccess fallback (a+). |
-| OV-3 | Anti-cheat heuristic treats the overlay as an external ESP overlay [K] | Low | High (game account) | No injection, no game-process access, small corner pill; spike checks only for immediate reactions; residual risk named to Michael. |
+| OV-3 | Anti-cheat heuristic treats the overlay as an external ESP overlay [K] | Low | High (game account) | No injection, no game-process access, small corner pill; spike checks only for immediate reactions; residual risk named to the project owner. |
 | OV-4 | Frame drops / latency from composition (NFR-P-011) [K] | Low–medium | Medium | Spike step 4; minimal redraws; option to show only in the last N minutes. |
 | OV-5 | The displayed number differs from enforcement (local countdown vs 5 s tick, clock stopped on lock) [R, K] | Medium | Low | Service authoritative; pushes on every change and a heartbeat; the overlay shows minutes, seconds only in the last minute. |
 | OV-6 | Kid ends the tray client → no overlay [R, R-6] | Low | Low | Unchanged acceptance; enforcement in the service. |
@@ -202,7 +202,7 @@ Coverage of today's dialog is the same as the overlay's: what (a) cannot show, t
 
 ---
 
-## 8. Product questions for Michael and PRO
+## 8. Product questions for the project owner and PRO
 
 | # | Question | ARC suggestion |
 |---|---|---|
@@ -230,4 +230,4 @@ Coverage of today's dialog is the same as the overlay's: what (a) cannot show, t
 
 **Size**: spike ½–1 day; story **M** (Shared contract + service push + setting + tray overlay + parent-app setting on both platforms); **L** with per-app lists, kid-movable position or foreground-app selection.
 
-**Next step**: Michael decides whether to run the spike (§6) on the Windows Developer Machine before PRO writes US-010, and answers Q-1 to Q-15 (or leaves them to PRO). New ADRs expected with the plan: overlay technique and remaining-time push (amending ADR-014).
+**Next step**: the project owner decides whether to run the spike (§6) on the Windows Developer Machine before PRO writes US-010, and answers Q-1 to Q-15 (or leaves them to PRO). New ADRs expected with the plan: overlay technique and remaining-time push (amending ADR-014).

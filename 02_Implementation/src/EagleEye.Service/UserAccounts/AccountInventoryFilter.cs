@@ -10,7 +10,7 @@ namespace EagleEye.Service.UserAccounts;
 /// </summary>
 public static class AccountInventoryFilter
 {
-    /// <summary>User name of the Windows setup leftover account (Michael, 2026-10-07, Q-4).</summary>
+    /// <summary>User name of the Windows setup leftover account (project owner, 2026-10-07, Q-4).</summary>
     public const string SetupLeftoverUserName = "defaultuser0";
 
     // Administrator, Guest, DefaultAccount, WDAGUtilityAccount.

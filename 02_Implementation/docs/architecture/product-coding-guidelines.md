@@ -5,23 +5,23 @@
 
 > **Amendment 2026-10-04 (US-002, ADR-008, ADR-009)**: §10.1, §10.2, §10.4 (`ParentApp.Core`, Shared `Communication/` and `Data/`), §12.2 (pairing code in a topmost window), §16.1 (packaging per ADR-009, token storage via DPAPI `ISecretStore`).
 
-> **Amendment 2026-10-07 (Michael, US-002 deviation D-11)**: §3.4 and §8.2: plain `using` for SQLite commands, readers and transactions instead of `await using`.
+> **Amendment 2026-10-07 (the project owner, US-002 deviation D-11)**: §3.4 and §8.2: plain `using` for SQLite commands, readers and transactions instead of `await using`.
 
-> **Amendment 2026-10-07 (ADR-010, accepted by Michael 2026-10-07)**: §7.2 and §7.3 (broadcast includes the sender; client fetches after (re)connect instead of a server push), new §7.5 (checklist for a state area).
+> **Amendment 2026-10-07 (ADR-010, accepted by the project owner 2026-10-07)**: §7.2 and §7.3 (broadcast includes the sender; client fetches after (re)connect instead of a server push), new §7.5 (checklist for a state area).
 
 > **Amendment 2026-10-07 (US-003, approved with the US-003 implementation plan)**: §9 (EagleEye file logging provider; service logs in the admin-only `logs\` folder), §10.1 (`Shared/Logging`, `Service/UserAccounts`, `ParentApp.Core/Accounts`).
 
 > **Amendment 2026-10-07 (US-004, ADR-011, ADR-012) — proposed, approved together with the US-004 implementation plan**: §10.1 (`Service/SessionAgent`, `Service/Monitoring`, `Service/Statistics`, `ParentApp.Core/Reports`), §12.1 (session agent, Win32 interop, monotonic durations), §12.4 (SYSTEM code and kid-controlled input, from the ADR-011 security analysis).
 
-> **Amendment 2026-10-10 (US-005, ADR-013, ADR-014) — approved by Michael together with the US-005 implementation plan (2026-10-10)**: §12.2 (tray requests with a result, kid-facing acknowledged dialogs), §12.4 (the agent's single `PostMessageW(WM_CLOSE)` exception, terminating kid processes in the service, service → agent commands), §16.1 (editable tables, WinUI `CheckBox` width, typed times, save on blur, `\r` line breaks), §10.1 (folders `Service/Rules`, `Service/Enforcement`, `ParentApp.Core/Rules`).
+> **Amendment 2026-10-10 (US-005, ADR-013, ADR-014) — approved by the project owner together with the US-005 implementation plan (2026-10-10)**: §12.2 (tray requests with a result, kid-facing acknowledged dialogs), §12.4 (the agent's single `PostMessageW(WM_CLOSE)` exception, terminating kid processes in the service, service → agent commands), §16.1 (editable tables, WinUI `CheckBox` width, typed times, save on blur, `\r` line breaks), §10.1 (folders `Service/Rules`, `Service/Enforcement`, `ParentApp.Core/Rules`).
 
-> **Amendment 2026-10-12 (US-006, ADR-015, ADR-016) — approved by Michael together with the US-006 implementation plan (2026-10-12)**: §10.1 (folders `Shared/Resources` for the default kid texts, de neutral + en satellite, and `ParentApp.Core/Settings`; `Service/Rules` and `Service/Enforcement` also hold the app rules, the warning settings and the time-limit engine). Rule: default texts shown to users are never hard-coded and never stored by the service. They come from `DefaultTexts` in the displaying app's UI culture (ADR-016).
+> **Amendment 2026-10-12 (US-006, ADR-015, ADR-016) — approved by the project owner together with the US-006 implementation plan (2026-10-12)**: §10.1 (folders `Shared/Resources` for the default kid texts, de neutral + en satellite, and `ParentApp.Core/Settings`; `Service/Rules` and `Service/Enforcement` also hold the app rules, the warning settings and the time-limit engine). Rule: default texts shown to users are never hard-coded and never stored by the service. They come from `DefaultTexts` in the displaying app's UI culture (ADR-016).
 
-> **Amendment 2026-10-20 (CR-001, ADR-019) — approved by Michael 2026-10-20**: iOS and Android parent apps dropped. §14 (iOS) and §15 (Android) removed (numbers kept), TOC updated; §10.1 and §10.4 without `Platforms/Android` and `Platforms/iOS`; §13 (macOS is a production platform; unsigned `.dmg`; desktop layout only); §16.1 (Windows is a production platform; secure storage and packaging notes without Android).
+> **Amendment 2026-10-20 (CR-001, ADR-019) — approved by the project owner 2026-10-20**: iOS and Android parent apps dropped. §14 (iOS) and §15 (Android) removed (numbers kept), TOC updated; §10.1 and §10.4 without `Platforms/Android` and `Platforms/iOS`; §13 (macOS is a production platform; unsigned `.dmg`; desktop layout only); §16.1 (Windows is a production platform; secure storage and packaging notes without Android).
 
-> **Amendment 2026-10-31 (US-008, ADR-021) — approved by Michael together with the US-008 implementation plan (2026-10-31)**: §10.1 (folders `Service/Groups` for the app-group state owner, snapshot, span union and group usage calculator, and `ParentApp.Core/Groups` for the app-groups model and name rules). Mac Catalyst rule (US-007 lesson): every visual state that sets a background also sets an explicit background in "Normal" (an unset background does not repaint). Where the requirements allow either way, prefer the option with less code (Michael, 2026-10-31).
+> **Amendment 2026-10-31 (US-008, ADR-021) — approved by the project owner together with the US-008 implementation plan (2026-10-31)**: §10.1 (folders `Service/Groups` for the app-group state owner, snapshot, span union and group usage calculator, and `ParentApp.Core/Groups` for the app-groups model and name rules). Mac Catalyst rule (US-007 lesson): every visual state that sets a background also sets an explicit background in "Normal" (an unset background does not repaint). Where the requirements allow either way, prefer the option with less code (the project owner, 2026-10-31).
 
-> **Amendment 2026-10-31 (US-009) — approved by Michael together with the US-009 implementation plan (2026-10-31)**: §16.1 (minimum OS of the Windows parent app: Windows 10 22H2, enforced by the installer with `MinVersion=10.0.19045`; no Windows-10-specific code).
+> **Amendment 2026-10-31 (US-009) — approved by the project owner together with the US-009 implementation plan (2026-10-31)**: §16.1 (minimum OS of the Windows parent app: Windows 10 22H2, enforced by the installer with `MinVersion=10.0.19045`; no Windows-10-specific code).
 
 This document defines the coding standards all EagleEye components must follow. It complements but does not duplicate the system architecture (`arc42/system-architecture.md`) and ADRs — refer to those for architectural decisions, component responsibilities, and design rationale.
 
@@ -202,7 +202,7 @@ public class InvalidUserSidException : Exception { } // Don't do this
 
 - Implement `IAsyncDisposable` on types that hold database connections, SignalR connections, or file handles.
 - Use `await using` for scoped disposable resources.
-- **Exception — SQLite objects**: use plain `using` for `SqliteCommand`, `SqliteDataReader` and `SqliteTransaction` (Microsoft.Data.Sqlite). They dispose synchronously, so `await using` gains nothing. It only adds compiler-generated async-dispose branches that tests with in-memory SQLite cannot reach, which breaks the 100 % branch-coverage rule. (Michael, 2026-10-07; US-002 deviation D-11.)
+- **Exception — SQLite objects**: use plain `using` for `SqliteCommand`, `SqliteDataReader` and `SqliteTransaction` (Microsoft.Data.Sqlite). They dispose synchronously, so `await using` gains nothing. It only adds compiler-generated async-dispose branches that tests with in-memory SQLite cannot reach, which breaks the 100 % branch-coverage rule. (The project owner, 2026-10-07; US-002 deviation D-11.)
 - Register disposable services correctly in DI (prefer `AddSingleton` with `IHostedService` for long-lived resources).
 
 ---
@@ -673,7 +673,7 @@ Everything the kid's programs control is **untrusted input** for the SYSTEM serv
 
 ### 13.1 Mac Catalyst Considerations
 
-> **Amendment (US-007, ADR-020) — approved by Michael with the US-007 implementation plan, 2026-10-20**:
+> **Amendment (US-007, ADR-020) — approved by the project owner with the US-007 implementation plan, 2026-10-20**:
 > - **Secure storage**: `Platforms/MacCatalyst/MacKeychainSecretStore` (Security framework, generic password, service `com.adlemich.eagleeye`), not MAUI `SecureStorage`. "Not found" returns `null`; any refusal throws `SecretStoreUnavailableException`, never "no secret".
 > - **TLS**: `UseNativeHttpHandler=false` for the maccatalyst TFM, so the trust callback runs on the managed handler. No other TLS code on the Mac.
 > - **No App Sandbox**, no restricted entitlements (ad-hoc signing). Data in `~/Library/Application Support/EagleEye/`, resolved via `NSFileManager` (Application Support, user domain).

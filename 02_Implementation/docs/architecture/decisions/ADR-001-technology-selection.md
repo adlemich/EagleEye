@@ -2,9 +2,9 @@
 
 **Status**: Accepted (parent-app targets amended by CR-001 / ADR-019, 2026-10-20)
 **Date**: 2026-09-15
-**Deciders**: Michael (project owner)
+**Deciders**: the project owner
 
-> **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped (Michael, 2026-10-20). MAUI targets only **Windows** (WinUI, per-user installer, ADR-009) and **macOS** (Mac Catalyst, unsigned `.dmg`); both are production platforms. Where this ADR says "iOS, Android, and macOS", read "Windows and macOS". The technology choices themselves are unchanged. The original text below is kept as history.
+> **Amended by CR-001 (2026-10-20, ADR-019)**: the iOS and Android parent apps are dropped (the project owner, 2026-10-20). MAUI targets only **Windows** (WinUI, per-user installer, ADR-009) and **macOS** (Mac Catalyst, unsigned `.dmg`); both are production platforms. Where this ADR says "iOS, Android, and macOS", read "Windows and macOS". The technology choices themselves are unchanged. The original text below is kept as history.
 
 ---
 

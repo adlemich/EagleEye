@@ -1,15 +1,15 @@
 # Test Report: US-005 — Break Times (Ruhezeiten)
 
-**Status**: Final — approved by Michael, 2026-10-11
+**Status**: Final — approved by the project owner, 2026-10-11
 **Date**: 2026-10-11
-**Author**: Orchestrator (recorded from `test-run-01.md` and Michael's decision; no separate TES evaluation, at Michael's direction)
+**Author**: Orchestrator (recorded from `test-run-01.md` and the project owner's decision; no separate TES evaluation, at the project owner's direction)
 **Test runs evaluated**: `docs/testing/US-005/test-run-01.md` (build 0.5.0)
 
 ---
 
 ## 1. Verdict
 
-**Closed by Michael (2026-10-11), "no changes required".** Michael ran test run 01 on build 0.5.0 and got **22 Pass, 0 Fail, 0 Blocked, 13 Skipped** (35 cases, all ticked). His general feedback: "Seems to work fine." No issues were raised. Blocks A to C (the Rules page, blocking at app start with graceful close and force, the kid's dialog, per-account isolation) passed in full. The ACs in §3 that were not verified manually rest on DEV's unit tests and smoke check (`docs/requirements/user-stories/US-005/implementation-report.md`).
+**Closed by the project owner (2026-10-11), "no changes required".** The project owner ran test run 01 on build 0.5.0 and got **22 Pass, 0 Fail, 0 Blocked, 13 Skipped** (35 cases, all ticked). Their general feedback: "Seems to work fine." No issues were raised. Blocks A to C (the Rules page, blocking at app start with graceful close and force, the kid's dialog, per-account isolation) passed in full. The ACs in §3 that were not verified manually rest on DEV's unit tests and smoke check (`docs/requirements/user-stories/US-005/implementation-report.md`).
 
 ## 2. Case Tally (run 01)
 
@@ -53,6 +53,6 @@ DEV fixed one defect during implementation that also affected the released 0.4.x
 
 1. **Untested ACs and security checks.** AC-18, AC-19, AC-33, AC-35, AC-37 and the security cases TC-005-26, -27 and -29 rest on unit tests and DEV's smoke check. DEV saw the save-error path, the tray-not-running path, two parent apps and the history rows in its smoke check (implementation report). Proposal: include TC-005-21 to -23 and -26 to -30 in the next story's run that touches the service, or in the next regression run.
 2. **Agent token still open.** TC-004-23 / TC-005-26 has now been skipped twice. ARC's question (does the agent run write-restricted, or with the documented fallback?) stays open. The graceful close works under the real token either way (TC-005-12).
-3. **Clean-up.** Test plan Q-5 asked to switch off all break entries of `eagleeye-kid` after the run. Not recorded in the run file: Michael, check that no entry of `eagleeye-kid` is still on, unless you want it to apply.
+3. **Clean-up.** Test plan Q-5 asked to switch off all break entries of `eagleeye-kid` after the run. Not recorded in the run file: the project owner, check that no entry of `eagleeye-kid` is still on, unless you want it to apply.
 4. **Delivered builds.** `03_Delivery/windows/EagleEye-Setup-0.5.0.exe` (SHA-256 `83bf5c55…151830`) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.5.0.exe` (SHA-256 `a03245d5…b217a1`); full hashes in the implementation report.
-5. **Next story.** Michael's clarification 1: apps already running when a break starts are handled in the next story ("approaching a usage limitation"), together with process-based enforcement (plan Q-3) and, possibly, the time-zone hardening (plan Q-2).
+5. **Next story.** The project owner's clarification 1: apps already running when a break starts are handled in the next story ("approaching a usage limitation"), together with process-based enforcement (plan Q-3) and, possibly, the time-zone hardening (plan Q-2).

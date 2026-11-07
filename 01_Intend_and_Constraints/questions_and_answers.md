@@ -1,6 +1,6 @@
 # EagleEye Project - Clarifying Questions & Answers
 
-This file records all clarifying questions asked during the project bootstrapping interview, along with Michael's answers.
+This file records all clarifying questions asked during the project bootstrapping interview, along with the project owner's answers.
 
 ---
 
@@ -96,7 +96,7 @@ This file records all clarifying questions asked during the project bootstrappin
 
 **A**: Manual sideloading only for now — iOS via Xcode/`ios-deploy`, Android via `adb`. App Store / Play Store distribution deferred to a later stage when the product is mature.
 
-**Superseded (Michael, 2026-10-20)**: there are no iOS and Android apps any more; both are removed from the product (see Group 11 and `02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`).
+**Superseded (the project owner, 2026-10-20)**: there are no iOS and Android apps any more; both are removed from the product (see Group 11 and `02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`).
 
 ---
 
@@ -122,7 +122,7 @@ This file records all clarifying questions asked during the project bootstrappin
 
 **Q6.3**: Where does the git repo root live relative to the project folders?
 
-**A**: Git repo root is at `/Users/micha/Documents/App-Development/EagleEyeParentalControl`. The `01_Intend_and_Constraints` folder is part of the project documentation and lives in the repo. Top-level files at root: `README.md`, global `CLAUDE.md` and orchestrator agent config files, side by side with `01_Intend_and_Constraints/`, `02_Implementation/`, and `03_Delivery/`.
+**A**: Git repo root is at `<repo root>`. The `01_Intend_and_Constraints` folder is part of the project documentation and lives in the repo. Top-level files at root: `README.md`, global `CLAUDE.md` and orchestrator agent config files, side by side with `01_Intend_and_Constraints/`, `02_Implementation/`, and `03_Delivery/`.
 
 ---
 
@@ -164,13 +164,13 @@ Recorded by the Orchestrator. These answers supersede the development and test s
 
 **A**: All development, build and test for Windows (the service, the tray app and a new Windows parent client) and for Android happens on the Windows developer machine. All development, build and test for the macOS desktop parent app happens on the MacBook.
 
-**Amended (Michael, 2026-10-20)**: Android is dropped (Group 11). The Windows developer machine builds no Android target.
+**Amended (the project owner, 2026-10-20)**: Android is dropped (Group 11). The Windows developer machine builds no Android target.
 
 ---
 
 **Q9.3**: How is testing done?
 
-**A**: All testing moves to manual, on the Windows developer machine. Michael executes 100 % of the tests. The agents support him with instructions, checklists and feedback mechanisms. (Interpretation recorded in ADR-007: this covers acceptance/E2E testing; DEV's automated unit tests remain.)
+**A**: All testing moves to manual, on the Windows developer machine. The project owner executes 100 % of the tests. The agents support them with instructions, checklists and feedback mechanisms. (Interpretation recorded in ADR-007: this covers acceptance/E2E testing; DEV's automated unit tests remain.)
 
 ---
 
@@ -184,7 +184,7 @@ Recorded by the Orchestrator. These answers supersede the development and test s
 
 **A**: It is an extra app. No need to package it into the installer; a single copied exe file is sufficient.
 
-**Superseded (Michael, 2026-10-04)**: the Windows parent client gets its own full, clean and self-contained Windows installer, next to the service installer. Copy deployment is dropped. See `02_Implementation/docs/requirements/general-product-requirements.md` FR-APP-092 (v1.2).
+**Superseded (the project owner, 2026-10-04)**: the Windows parent client gets its own full, clean and self-contained Windows installer, next to the service installer. Copy deployment is dropped. See `02_Implementation/docs/requirements/general-product-requirements.md` FR-APP-092 (v1.2).
 
 ---
 
@@ -200,13 +200,13 @@ Recorded by the Orchestrator. These answers supersede the development and test s
 
 **A**: Android and iOS apps are the primary platforms for production. The Windows client is used for initial testing.
 
-**Superseded (Michael, 2026-10-20)**: see Q11.1. Windows and Mac are the production parent-app platforms.
+**Superseded (the project owner, 2026-10-20)**: see Q11.1. Windows and Mac are the production parent-app platforms.
 
 ---
 
 ## Group 10: Parent App Pairing (2026-10-04)
 
-Recorded by PRO from Michael's answers to the open points of `02_Implementation/docs/requirements/user-stories/US-002/implementation-plan.md`. Story-specific answers are in `02_Implementation/docs/requirements/user-stories/US-002/user-story.md`, Decisions Q-7 to Q-11.
+Recorded by PRO from the project owner's answers to the open points of `02_Implementation/docs/requirements/user-stories/US-002/implementation-plan.md`. Story-specific answers are in `02_Implementation/docs/requirements/user-stories/US-002/user-story.md`, Decisions Q-7 to Q-11.
 
 **Q10.1**: The pairing code is shown in the kid's tray client, so a kid can pair their own parent app. Is a technical protection needed?
 
@@ -222,7 +222,7 @@ Recorded by PRO from Michael's answers to the open points of `02_Implementation/
 
 ## Group 11: Parent App Platforms (2026-10-20)
 
-Recorded by PRO from Michael's decision of 2026-10-20 (change request CR-001, `02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`). These answers supersede Q5.2 and Q9.7, and amend Q9.2 and Q9.6.
+Recorded by PRO from the project owner's decision of 2026-10-20 (change request CR-001, `02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`). These answers supersede Q5.2 and Q9.7, and amend Q9.2 and Q9.6.
 
 **Q11.1**: On which platforms does the EagleEye parent app ship?
 
@@ -232,4 +232,4 @@ Recorded by PRO from Michael's decision of 2026-10-20 (change request CR-001, `0
 
 **Q11.2**: What happens to the iPhone (iOS) and Android apps?
 
-**A**: Both are removed from the product. Michael will not pay 99 EUR/year for an Apple Developer account just to run his own app on his own phone; Android is dropped with it. US-007 (iOS parent app) was aborted and its branch deleted unmerged; US-008 (Rules on the phone) is void. Do not plan mobile apps again unless Michael brings them up.
+**A**: Both are removed from the product. The project owner will not pay 99 EUR/year for an Apple Developer account just to run their own app on their own phone; Android is dropped with it. US-007 (iOS parent app) was aborted and its branch deleted unmerged; US-008 (Rules on the phone) is void. Do not plan mobile apps again unless the project owner brings them up.

@@ -4,7 +4,7 @@
 **Date**: 2026-10-31
 **Machine**: MacBook (macOS 27, Apple Silicon), Debug build `net10.0-maccatalyst`
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-008/implementation-plan.md`, Step 1, Decision 9, TI-9, Q-4
-**Status**: **Done (2026-10-31).** DEV did the automatic part. Michael did the real mouse and trackpad checks (§4) and reported all 10 steps OK (§5). **Chosen approach**: MAUI `DragGestureRecognizer`/`DropGestureRecognizer` in shared XAML, plus the "≡" button with "Move to …", plus the right-click menu (§6).
+**Status**: **Done (2026-10-31).** DEV did the automatic part. The project owner did the real mouse and trackpad checks (§4) and reported all 10 steps OK (§5). **Chosen approach**: MAUI `DragGestureRecognizer`/`DropGestureRecognizer` in shared XAML, plus the "≡" button with "Move to …", plus the right-click menu (§6).
 
 ---
 
@@ -25,13 +25,13 @@ Throwaway, per Decision 9. The source is **not** in the production code. It is k
 
 | Check | Pass | Result |
 |---|---|---|
-| Drag with the mouse inside the `ScrollView` | Drag starts; the page does not scroll | **Pass (Michael, §5)** |
-| Drag with the trackpad inside the `ScrollView` | same | **Pass (Michael, §5)** |
-| Drop on another section, an empty one, the own section, outside | Moves, moves, nothing, nothing | **Pass (Michael, §5)**. Move logic and re-render checked by DEV with the probe (Discord → empty "School"): `evidence/spike-2-highlight-off-moved.png` |
-| Highlight follows and always clears (light and dark) | No stuck colour after 20 drags | **Pass.** By DEV, set and cleared by code: the colour appears and repaints back to normal (dark mode), `evidence/spike-1-highlight-on.png`, `spike-2-…`. Following the pointer and the 20 drags: **pass (Michael, §5)** |
-| Right-click menu on a draggable entry | Opens; no drag starts | **Pass (Michael, §5)** |
-| "≡" → "Move to …" | Sheet with the other sections + Cancel | **Pass.** By DEV, opened by code: native Catalyst sheet with "School (empty)", "Not in any group", "Cancel" (`evidence/spike-3-move-to-sheet.png`). Clicking it and the move: **pass (Michael, §5)** |
-| Name prompt loop | Opens again with the message and the text; Escape cancels | **Pass.** By DEV: the re-prompt shows the message "A group with this name already exists." above the field, with the typed text "games" pre-filled and selected (`evidence/spike-4-name-reprompt.png`). Typing, OK, Escape: **pass (Michael, §5)** |
+| Drag with the mouse inside the `ScrollView` | Drag starts; the page does not scroll | **Pass (the project owner, §5)** |
+| Drag with the trackpad inside the `ScrollView` | same | **Pass (the project owner, §5)** |
+| Drop on another section, an empty one, the own section, outside | Moves, moves, nothing, nothing | **Pass (the project owner, §5)**. Move logic and re-render checked by DEV with the probe (Discord → empty "School"): `evidence/spike-2-highlight-off-moved.png` |
+| Highlight follows and always clears (light and dark) | No stuck colour after 20 drags | **Pass.** By DEV, set and cleared by code: the colour appears and repaints back to normal (dark mode), `evidence/spike-1-highlight-on.png`, `spike-2-…`. Following the pointer and the 20 drags: **pass (the project owner, §5)** |
+| Right-click menu on a draggable entry | Opens; no drag starts | **Pass (the project owner, §5)** |
+| "≡" → "Move to …" | Sheet with the other sections + Cancel | **Pass.** By DEV, opened by code: native Catalyst sheet with "School (empty)", "Not in any group", "Cancel" (`evidence/spike-3-move-to-sheet.png`). Clicking it and the move: **pass (the project owner, §5)** |
+| Name prompt loop | Opens again with the message and the text; Escape cancels | **Pass.** By DEV: the re-prompt shows the message "A group with this name already exists." above the field, with the typed text "games" pre-filled and selected (`evidence/spike-4-name-reprompt.png`). Typing, OK, Escape: **pass (the project owner, §5)** |
 
 Probe log: `evidence/spike-probe-log.txt`.
 
@@ -44,10 +44,10 @@ Probe log: `evidence/spike-probe-log.txt`.
 - Decision rule mapping (applied in §6):
   - All pass → MAUI recognizers in shared XAML, "≡" + right-click menu.
   - Drag or highlight unreliable → try a `#if MACCATALYST` handler with `UIDragInteraction`/`UIDropInteraction`.
-  - Both fail → stop; Michael decides on menu only.
+  - Both fail → stop; the project owner decides on menu only.
   - Right-click unreliable → "≡" only (Q-4).
 
-## 4. Michael's manual check (Debug build, MacBook)
+## 4. The project owner's manual check (Debug build, MacBook)
 
 The spike build is already built in the git-ignored `bin/` folder. **Do not rebuild before the check**: the spike source is not in the tree. If the bundle is gone, run `git apply 02_Implementation/docs/requirements/user-stories/US-008/evidence/spike-drag-drop.patch`, build, and afterwards run `git checkout -- 02_Implementation/src` and delete `Views/SpikeDragDropPage.cs`. The build does not touch the installed `/Applications` app or its pairing.
 
@@ -74,11 +74,11 @@ Then, with the **mouse** and again with the **trackpad** (press and hold, or thr
 
 Report per step: OK / not OK (+ what happened). Screenshots are welcome.
 
-## 5. Result of Michael's check (2026-10-31)
+## 5. Result of the project owner's check (2026-10-31)
 
-Michael ran §4 with the mouse and the trackpad on the Debug spike build. The Orchestrator relayed his report: "Done. All seems to work fine!" Recorded as **steps 1 to 10 OK, mouse and trackpad**. His wording gives no detail per step.
+The project owner ran §4 with the mouse and the trackpad on the Debug spike build. The Orchestrator relayed their report: "Done. All seems to work fine!" Recorded as **steps 1 to 10 OK, mouse and trackpad**. Their wording gives no detail per step.
 
-His stderr log (`spike-log.txt`, deleted afterwards and not committed) contains no errors or exceptions. It shows 9 drags (9 `DragStarting`, 9 `DropCompleted`, 9 moves via drag), 3 moves via the right-click menu and 1 drop on the own section (nothing moved). The counter "highlight still set at completion" stayed 0. The log is from one launch and may not cover every step.
+Their stderr log (`spike-log.txt`, deleted afterwards and not committed) contains no errors or exceptions. It shows 9 drags (9 `DragStarting`, 9 `DropCompleted`, 9 moves via drag), 3 moves via the right-click menu and 1 drop on the own section (nothing moved). The counter "highlight still set at completion" stayed 0. The log is from one launch and may not cover every step.
 
 ## 6. Decision (decision rule of Decision 9)
 

@@ -13,10 +13,10 @@ public sealed class HostAddressTests
     [InlineData("kid-pc.fritz.box.", "kid-pc.fritz.box.", "https://kid-pc.fritz.box.:5443/hubs/parent")]
     [InlineData("pc2", "pc2", "https://pc2:5443/hubs/parent")]
     [InlineData("  kid-pc  ", "kid-pc", "https://kid-pc:5443/hubs/parent")]
-    [InlineData("192.168.178.20", "192.168.178.20", "https://192.168.178.20:5443/hubs/parent")]
+    [InlineData("192.0.2.20", "192.0.2.20", "https://192.0.2.20:5443/hubs/parent")]
     [InlineData("fe80::1", "fe80::1", "https://[fe80::1]:5443/hubs/parent")]
     [InlineData("::1", "::1", "https://[::1]:5443/hubs/parent")]
-    [InlineData("::ffff:192.168.1.2", "::ffff:192.168.1.2", "https://[::ffff:192.168.1.2]:5443/hubs/parent")]
+    [InlineData("::ffff:192.0.2.2", "::ffff:192.0.2.2", "https://[::ffff:192.0.2.2]:5443/hubs/parent")]
     public void TryParse_ValidHost_ReturnsHostWithDisplayAndUri(string input, string display, string uri)
     {
         var ok = HostAddress.TryParse(input, out var host);
@@ -31,7 +31,7 @@ public sealed class HostAddressTests
     [InlineData("   ")]
     [InlineData("https://kid-pc")]
     [InlineData("kid-pc:5443")]
-    [InlineData("192.168.1.2:5443")]
+    [InlineData("192.0.2.2:5443")]
     [InlineData("[::1]")]
     [InlineData("[::1]:5443")]
     [InlineData("fe80::1%12")]

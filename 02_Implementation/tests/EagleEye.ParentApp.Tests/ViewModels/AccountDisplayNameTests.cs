@@ -10,7 +10,7 @@ public sealed class AccountDisplayNameTests
     [Fact]
     public void Format_FullName_ShowsFullNameAndUserName()
     {
-        Assert.Equal("Max Adler (max)", AccountDisplayName.Format(Account("Max Adler", false)));
+        Assert.Equal("Max Mustermann (max)", AccountDisplayName.Format(Account("Max Mustermann", false)));
     }
 
     [Theory]
@@ -23,11 +23,11 @@ public sealed class AccountDisplayNameTests
     }
 
     [Theory]
-    [InlineData("de-DE", "Max Adler (max) (deaktiviert)")]
-    [InlineData("en-US", "Max Adler (max) (disabled)")]
+    [InlineData("de-DE", "Max Mustermann (max) (deaktiviert)")]
+    [InlineData("en-US", "Max Mustermann (max) (disabled)")]
     public void Format_Disabled_AppendsSuffix(string culture, string expected)
     {
-        Assert.Equal(expected, TestSupport.InCulture(culture, () => AccountDisplayName.Format(Account("Max Adler", true))));
+        Assert.Equal(expected, TestSupport.InCulture(culture, () => AccountDisplayName.Format(Account("Max Mustermann", true))));
     }
 
     [Fact]

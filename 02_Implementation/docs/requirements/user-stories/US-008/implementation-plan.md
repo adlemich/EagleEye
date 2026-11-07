@@ -1,22 +1,22 @@
 # Implementation Plan: US-008 — App Groups with a Shared Daily Budget (service and Mac app)
 
-**Status**: Approved by Michael (2026-10-31), revision 1, with Q-2 answered (no group times before 0.8.0), incl. ADR-021 and the amendments of ADR-010, ADR-012, ADR-015, arc42 and the coding guidelines
+**Status**: Approved by the project owner (2026-10-31), revision 1, with Q-2 answered (no group times before 0.8.0), incl. ADR-021 and the amendments of ADR-010, ADR-012, ADR-015, arc42 and the coding guidelines
 **Date**: 2026-10-31
 **Author**: ARC
 **User story**: `02_Implementation/docs/requirements/user-stories/US-008/user-story.md` (approved 2026-10-31; scope change of commit f23da5a: AC-44 removed, 43 active ACs, no mixed versions, Windows parent app only compiles and passes its unit tests)
 **Requirements**: `02_Implementation/docs/requirements/general-product-requirements.md` v1.8 amendment (FR-APP-042 to FR-APP-044, FR-APP-062, TC-026; TC-020, TC-033, FR-SVC-011/020/022/032/047 changed)
 **Branch**: `feature/US-008-app-groups`
-**New ADR** (Accepted, approved by Michael with this plan, 2026-10-31): ADR-021 — App groups: shared budgets computed from activity spans, enforced per limit subject (`02_Implementation/docs/architecture/decisions/ADR-021-app-groups-and-activity-spans.md`)
+**New ADR** (Accepted, approved by the project owner with this plan, 2026-10-31): ADR-021 — App groups: shared budgets computed from activity spans, enforced per limit subject (`02_Implementation/docs/architecture/decisions/ADR-021-app-groups-and-activity-spans.md`)
 
-**Amended** (approved by Michael with this plan, 2026-10-31; applied by ARC on the branch): ADR-010 (two new state areas; refetch of usage on a group change), ADR-012 (activity spans), ADR-015 (§2 group used time, §4 warning keys per subject, §5 grace per subject, §7 group close batch), arc42 (header, §5.2, §5.5, §8.4, §8.6, §9, §11), coding guidelines §10.1 (folders `Service/Groups`, `ParentApp.Core/Groups`).
+**Amended** (approved by the project owner with this plan, 2026-10-31; applied by ARC on the branch): ADR-010 (two new state areas; refetch of usage on a group change), ADR-012 (activity spans), ADR-015 (§2 group used time, §4 warning keys per subject, §5 grace per subject, §7 group close batch), arc42 (header, §5.2, §5.5, §8.4, §8.6, §9, §11), coding guidelines §10.1 (folders `Service/Groups`, `ParentApp.Core/Groups`).
 
-**Revision 1 (2026-10-31, Michael: "Keep it simple", no version mixing)**:
+**Revision 1 (2026-10-31, the project owner: "Keep it simple", no version mixing)**:
 - Removed: all old/new version compatibility (additive-only contracts, wire tests with frozen 0.7 records, the AC-44 check, the Windows feature switch, the log note for own rules of grouped apps, handling of a missing `Groups` list).
 - Removed: the 0.7.0 Windows regression step (old Step 2) and old Q-3 and Q-5.
 - Removed: estimated activity spans for days before the update (backfill, `Estimated` column, `PendingBackfills` table). Group lines start with 0.8.0 (Q-2).
-- Q-1 and Q-4 resolved (Michael accepted; story updated in f23da5a). Q-2 resolved at approval (2026-10-31).
+- Q-1 and Q-4 resolved (the project owner accepted; story updated in f23da5a). Q-2 resolved at approval (2026-10-31).
 
-**Guidance for DEV (Michael, 2026-10-31)**: where the requirements allow either way, **prefer the option with less code**. In his words: "My guidance would be to minimize the code here, when it is easier to group it from a code-complexity perspective, then why not. User-requirements have no opinion here, it just is ok either way."
+**Guidance for DEV (the project owner, 2026-10-31)**: where the requirements allow either way, **prefer the option with less code**. In their words: "My guidance would be to minimize the code here, when it is easier to group it from a code-complexity perspective, then why not. User-requirements have no opinion here, it just is ok either way."
 
 ---
 
@@ -24,9 +24,9 @@
 
 The service learns **app groups**: it stores groups once per PC, records **activity spans** (when each app was active), computes a group's used time as the **union** of its current members' spans, and enforces group rules with the US-006 engine, reorganized around **limit subjects** (an app, or the group it belongs to). The Mac app gets the **App Groups** page (drag-and-drop and a "≡" button with a "Move to …" menu), an **App group rules** section on Rules, and **group lines** on Reports. The **tray client needs no code change**: kid messages reuse the US-006 reasons with the group name in place of the app name.
 
-Michael updates service, tray client and Mac app together; no mixed versions are supported. The **Windows parent app** shares Core and Shared code: it only has to **compile and keep its unit tests green**; it is not used against the 0.8 service and is not packaged. Its views stay unchanged; known breakage (below) is accepted until US-009, which delivers all four assets as 0.9.0.
+The project owner updates service, tray client and Mac app together; no mixed versions are supported. The **Windows parent app** shares Core and Shared code: it only has to **compile and keep its unit tests green**; it is not used against the 0.8 service and is not packaged. Its views stay unchanged; known breakage (below) is accepted until US-009, which delivers all four assets as 0.9.0.
 
-**Order**: a short **drag-and-drop spike on the MacBook** first (biggest UI unknown, and Michael is on the MacBook now). Then the **Windows** block (Shared contracts, service, installer 0.8.0, install on the service PC). Then the **MacBook** block (Core, Mac views, `.dmg` 0.8.0, US-007 F-2 documentation). Then a short **Windows** close-out (build and all tests green).
+**Order**: a short **drag-and-drop spike on the MacBook** first (biggest UI unknown, and the project owner is on the MacBook now). Then the **Windows** block (Shared contracts, service, installer 0.8.0, install on the service PC). Then the **MacBook** block (Core, Mac views, `.dmg` 0.8.0, US-007 F-2 documentation). Then a short **Windows** close-out (build and all tests green).
 
 ---
 
@@ -44,7 +44,7 @@ Michael updates service, tray client and Mac app together; no mixed versions are
 | **TI-6** | **Group lines after a group change** (AC-36, AC-37): every day may change. | Stale Reports. | No re-broadcast of past days: the Mac app's Reports model fetches the account's usage again on an `AppGroups` change. Today's line updates with the normal 5 s push. |
 | **TI-7** | **Group name rules** (AC-8): trimmed, 1 to 40 characters, emojis allowed, unique ignoring case. SQLite `NOCASE` folds ASCII only. | "Ä"/"ä" duplicates; emoji counted as 2. | `AppGroupNames` in Shared: NFC, trim, length in **text elements**, no control characters, key = `ToUpperInvariant`; `NameKey` column `UNIQUE`. Same code in service and Mac app. |
 | **TI-8** | **History** (AC-31): the group name "in the reason"; `BlockedStarts.Reason` has a `CHECK` with three values. | Migration conflict. | Two nullable columns `GroupId`, `GroupName` (D-4). |
-| **TI-9** | **MAUI drag-and-drop on Mac Catalyst** (AC-11): drags inside a `ScrollView` with the trackpad, drop highlight repaint, in-app data, empty sections as targets, a right-click menu next to drags. | AC-11. | **Step 1 spike** with a decision rule (Decision 9). Fallbacks: native interactions through a Mac-only handler, or menu only (Michael decides). |
+| **TI-9** | **MAUI drag-and-drop on Mac Catalyst** (AC-11): drags inside a `ScrollView` with the trackpad, drop highlight repaint, in-app data, empty sections as targets, a right-click menu next to drags. | AC-11. | **Step 1 spike** with a decision rule (Decision 9). Fallbacks: native interactions through a Mac-only handler, or menu only (the project owner decides). |
 | **TI-10** | **Catalyst repaint lesson (US-007).** A visual state that sets a background needs an explicit background in "Normal". The Mac `Button` style has an empty "Normal" next to a "Disabled" background. | Highlight or disabled colour stuck. | Every new state with a background sets "Normal" explicitly; the Mac `Button` style gets explicit "Normal" setters (Mac only). DEV verifies on screen with screenshots (Step 9). |
 | **TI-11** | **Buttons on heading bars.** Mac buttons use the accent colour (US-007 G-11); "Rename"/"Delete" sit on an accent-coloured bar (AC-2). | Invisible buttons. | Mac-only style `HeadingBarButton`: transparent fill, border and text in the heading-bar text colour, explicit "Normal". |
 | **TI-12** | **Name dialog must stay open with an inline message** (AC-8); `DisplayPromptAsync` closes on OK. | AC-7 to AC-9. | Re-prompt: an invalid name opens the prompt again at once with the message and the typed name (Decision 8). Escape and Cancel are native. A modal page only if the spike shows the re-prompt feels wrong. |
@@ -58,12 +58,12 @@ Michael updates service, tray client and Mac app together; no mixed versions are
 |---|---|
 | This plan and ADR-021 (ARC) | MacBook (done here) |
 | **Step 1**: drag-and-drop spike | **MacBook** |
-| **Steps 2 to 7**: Shared contracts, service, installer 0.8.0, smoke check, install on the service PC | **Windows Developer Machine** (service PC `192.168.1.37`) |
+| **Steps 2 to 7**: Shared contracts, service, installer 0.8.0, smoke check, install on the service PC | **Windows Developer Machine** (service PC `DEV-PC`) |
 | **Steps 8 to 10**: `ParentApp.Core`, Mac views, `.dmg` 0.8.0, F-2 documentation | **MacBook**, connected to the service 0.8.0 on the service PC |
 | **Step 11**: Windows build and all tests of the final branch, implementation report | **Windows Developer Machine** |
-| Manual test run (Michael, guided by TES) | Service PC (service, tray) + MacBook (Mac app 0.8.0) |
+| Manual test run (the project owner, guided by TES) | Service PC (service, tray) + MacBook (Mac app 0.8.0) |
 
-**Handover points** (commit, push, Michael switches machines, `git pull` there):
+**Handover points** (commit, push, the project owner switches machines, `git pull` there):
 
 | # | After | From → To | Pushed |
 |---|---|---|---|
@@ -240,7 +240,7 @@ Grouped apps (by path from `AppGroupsDto.Apps`) are hidden from "Application rul
 - **Enforcement**: `TodayUsageLedger` keeps today's spans per (sid, path) (loaded with the account via `GetSpansAsync(sid, today, today)`, then fed by `ApplySpans(output.Spans)` in the same loop step as the credits). New: `GroupUsedSeconds(sid, memberPaths, day)`. App subjects keep `UsedSeconds` (the Reports figure, ADR-015 §2).
 - **Reports**: `GetAccountUsageAsync` loads the account's spans of the 90 days (one query), `PublishDayAsync` those of the day; both fill `DayUsageDto.Groups` with `IAppGroupsView.Current`. A group is listed on a day when it has spans and at least one current member is in that day's app table ("00:00" for less than a minute, AC-35); deleted groups are gone (AC-36). Days before 0.8.0 have no spans and so no group lines (Q-2).
 
-Michael's examples (AC-19): together 5 → 5; Notepad 2 then both 10 → 12; Notepad 3 then Paint 4 → 7. AC-22: Paint 50 min alone, moved into "Test" (1:00) → 10 min left.
+The project owner's examples (AC-19): together 5 → 5; Notepad 2 then both 10 → 12; Notepad 3 then Paint 4 → 7. AC-22: Paint 50 min alone, moved into "Test" (1:00) → 10 min left.
 
 ### Decision 4: `AppGroupService` — state owner (AC-2 to AC-18, AC-38 to AC-40)
 
@@ -324,7 +324,7 @@ Throwaway prototype (not committed; findings committed): three sections in a `Sc
 | Right-click menu on a draggable entry | Opens; no drag starts |
 | Name prompt loop | Opens again with message and text; Escape cancels |
 
-Rule: all pass → MAUI recognizers in shared XAML. Drag or highlight unreliable → `#if MACCATALYST` handler with `UIDragInteraction`/`UIDropInteraction` (tried the same day). Both fail → stop; Michael decides on menu only (AC-11 deferred). Right-click menu unreliable → "≡" button only (Q-4).
+Rule: all pass → MAUI recognizers in shared XAML. Drag or highlight unreliable → `#if MACCATALYST` handler with `UIDragInteraction`/`UIDropInteraction` (tried the same day). Both fail → stop; the project owner decides on menu only (AC-11 deferred). Right-click menu unreliable → "≡" button only (Q-4).
 
 ---
 
@@ -377,64 +377,64 @@ Parent app: no database change.
 
 ## Implementation Steps
 
-All steps on `feature/US-008-app-groups`. Commit after each step (`US-008: …`) and push. Each step ends with **"Michael sees"**.
+All steps on `feature/US-008-app-groups`. Commit after each step (`US-008: …`) and push. Each step ends with **"the project owner sees"**.
 
 | Step | Content | Machine |
 |---|---|---|
 | **1** | Drag-and-drop spike (Decision 9) | **MacBook** |
-| — | **H1**: push; Michael switches to Windows | |
+| — | **H1**: push; the project owner switches to Windows | |
 | 2 | Version 0.8.0; Shared contracts, `AppGroupNames`, stubs | **Windows** |
 | 3 | Service data: migration 6, repositories | Windows |
 | 4 | Activity spans: tracker, persistence, ledger, union, Reports group lines | Windows |
 | 5 | `AppGroupService`, hub methods, broadcaster, observer, purger, logs | Windows |
 | 6 | Enforcement per subject: resolver, gate, engine, messages, history, logs | Windows |
 | 7 | Tray tests, service installer 0.8.0, smoke check, install on the service PC, performance | Windows |
-| — | **H2**: push; Michael switches to the MacBook | |
+| — | **H2**: push; the project owner switches to the MacBook | |
 | 8 | `ParentApp.Core`: client, gateway, models, view models, texts | **MacBook** |
 | 9 | Mac views: App Groups page, Rules section, Reports groups; on-screen check | MacBook |
 | 10 | `.dmg` 0.8.0, update over 0.7.0; F-2 documentation; report (Mac part) | MacBook |
-| — | **H3**: push; Michael switches to Windows | |
+| — | **H3**: push; the project owner switches to Windows | |
 | 11 | Windows build (0 warnings) and all four test projects; report; story → `Implemented` | **Windows** |
 
 ### Step 1: Drag-and-drop spike (MacBook, about half a day)
 1. `git pull`; `pwsh 02_Implementation/scripts/env-check.ps1`.
 2. Prototype per Decision 9 (Debug, not committed).
-3. `US-008/spike-drag-drop.md`: checks, chosen technique, reusable fragments, screenshots in `US-008/evidence/`. If the rule says "stop", report to Michael before H1.
+3. `US-008/spike-drag-drop.md`: checks, chosen technique, reusable fragments, screenshots in `US-008/evidence/`. If the rule says "stop", report to the project owner before H1.
 
-**Michael sees**: a rough page on his MacBook where he drags apps between sections with mouse and trackpad, sees the target highlighted, and opens "Move to …".
+**The project owner sees**: a rough page on their MacBook where they drags apps between sections with mouse and trackpad, sees the target highlighted, and opens "Move to …".
 
 ### Step 2: Shared contracts (Windows)
 1. `git pull`. `Directory.Build.props` → `0.8.0`.
 2. DTOs, `DayUsageDto.Groups`, `AppGroupNames`, `IParentHub` (8), `IParentClientCallback` (2), `KidMessageDto` doc.
 3. Stubs so the build stays green (hub methods throw `HubException("The change could not be saved.")`; `DayUsageDto` callers pass `[]`; Core client and gateway members added).
 
-**Michael sees**: nothing visible; build and tests green.
+**The project owner sees**: nothing visible; build and tests green.
 
 ### Step 3: Service data (Windows)
 1. Migration 6. `AppGroupRepository` (load incl. catalog, create, rename, delete, set/delete member, upsert/delete rule — default deletes the row, purge by SID). `UsageRepository`: `ApplyAsync` with spans, `GetSpansAsync`, purge. `BlockedStartRepository`: group columns.
 2. Tests on a real version-5 file (data kept, no groups).
 
-**Michael sees**: nothing visible.
+**The project owner sees**: nothing visible.
 
 ### Step 4: Activity spans and group time (Windows)
 1. `ActivitySpanAccumulator`, tracker spans, `TrackerOutput.Spans`.
 2. `UsageService`: persist spans; observers as `IEnumerable<IAppRecordObserver>`; group lines in `GetAccountUsageAsync` and `PublishDayAsync`.
 3. `SpanUnion`, `GroupUsageCalculator`; `TodayUsageLedger.ApplySpans`, `GroupUsedSeconds`.
 
-**Michael sees**: nothing visible.
+**The project owner sees**: nothing visible.
 
 ### Step 5: Groups state owner and hub (Windows)
 1. `AppGroupsSnapshot`, `AppGroupChangeLog`, `AppGroupService` (Decision 4), broadcaster methods.
 2. `ParentHub` (8 methods: validation, safe texts, device name); loop passes the controlled set; purger registration; start order: database → accounts → usage → app rules → **app groups** → warning settings → break times → ledger → dangling history → host.
 
-**Michael sees**: nothing visible.
+**The project owner sees**: nothing visible.
 
 ### Step 6: Enforcement per subject (Windows)
 1. `LimitRule`, `LimitSubject`, `LimitSubjectResolver`; `AppEndCalculator` parameter.
 2. `AppStartGate`, `TimeLimitEngine` (Decision 6), `WarningLedger.SubjectKey`, `KidMessageFactory`, `CloseRequest`, `EnforcementLog`, history columns.
 3. **All US-006 engine and gate tests stay green** with only mechanical signature changes (AC-30).
 
-**Michael sees**: nothing visible yet.
+**The project owner sees**: nothing visible yet.
 
 ### Step 7: Tray, installer, smoke, install (Windows)
 1. TrayClient.Tests: `KidMessageText` with a group name for every app reason, de and en.
@@ -448,33 +448,33 @@ All steps on `feature/US-008-app-groups`. Commit after each step (`US-008: …`)
 5. Performance (AC-41): 20 groups, 100 apps, 10 members running: tick duration and service CPU as in US-006 Step 11; record.
 6. `implementation-report.md` §Windows. Commit, push (**H2**).
 
-**Michael sees**: the service 0.8.0 on the service PC; in the dev smoke, one kid dialog "Test: …" for two programs.
+**The project owner sees**: the service 0.8.0 on the service PC; in the dev smoke, one kid dialog "Test: …" for two programs.
 
 ### Step 8: ParentApp.Core (MacBook)
 1. `git pull`. Client and gateway (2 events, 8 calls, registered before `StartAsync`).
 2. Models, name rules, `IDialogService` changes, view models (Decision 8), menu, texts.
 3. `test.ps1` on the Mac (Shared.Tests, ParentApp.Tests).
 
-**Michael sees**: nothing visible yet; tests green.
+**The project owner sees**: nothing visible yet; tests green.
 
 ### Step 9: Mac views (MacBook, against the service 0.8.0)
 1. `AppGroupsView` with the Step 1 technique; Rules section; Reports groups; `MainPage`; `MauiProgram`; `MauiDialogService`; Mac styles.
 2. **On-screen check by DEV before handing over** (light/dark, Larger Text, accent blue and yellow): create, rename, delete, drag and "Move to …", highlight never stuck, heading-bar buttons readable, Rules section, Reports group lines. Screenshots in `US-008/evidence/`.
 
-**Michael sees**: "App Gruppen" in the menu; he creates "Games", drags apps into it, sets "Games" 1:00 for `kid1`, and sees "Games" on Reports.
+**The project owner sees**: "App Gruppen" in the menu; they create "Games", drags apps into it, sets "Games" 1:00 for `kid1`, and sees "Games" on Reports.
 
 ### Step 10: Delivery and documentation (MacBook)
 1. `package-macos.ps1` → `03_Delivery/macos/EagleEye-ParentApp-0.8.0.dmg`; install over 0.7.0 (pairing and appearance kept, at most two Keychain prompts) (AC-42, US-007 F-3). Spot check AC-43.
 2. **US-007 F-2 folded in** (same files): `src/EagleEye.ParentApp/README.md` (Mac platform layer, data locations, Keychain, first light; App Groups view, drag-and-drop technique), `src/EagleEye.ParentApp.Core/README.md` (US-007 and new classes); DEV proposes `dev-environments.md` §5 lessons (Catalyst "Normal" background rule, spike result) to the Orchestrator. Service and Shared READMEs (groups, spans, tables, logs).
 3. `implementation-report.md` §Mac. Commit, push (**H3**).
 
-**Michael sees**: the `.dmg` 0.8.0 installed over his 0.7.0 app, still paired, with the new page.
+**The project owner sees**: the `.dmg` 0.8.0 installed over their 0.7.0 app, still paired, with the new page.
 
 ### Step 11: Windows close-out (Windows)
 1. `git pull`; `build.ps1` (0 warnings, incl. the Windows parent app), `test.ps1` (all four projects green). The Windows parent app is not run or packaged (TI-13).
 2. Report: "How to test", deviations, UI texts as implemented; story → `Implemented`; push.
 
-**Michael sees**: everything green on Windows; ready for TES.
+**The project owner sees**: everything green on Windows; ready for TES.
 
 ---
 
@@ -515,7 +515,7 @@ All steps on `feature/US-008-app-groups`. Commit after each step (`US-008: …`)
 | AC-31 logs, history | 3, 6 | templates; group columns | log, DB |
 | AC-32 grace on changes | 6 | rule cut; move in; not-running move; delete with own 0:00; one message; full final minutes | yes |
 | AC-33 early at once, no re-arm | 6 | as US-006 per subject | yes |
-| AC-34 rename, not-running move | 6 | rename → nothing; Michael's Notepad/Paint example | yes |
+| AC-34 rename, not-running move | 6 | rename → nothing; the project owner's Notepad/Paint example | yes |
 | AC-35 Reports table | 4, 8, 9 | sort; 00:00 listed; hidden when none | yes |
 | AC-36 current members, past days | 4, 8 | move → past day (with spans) changes; delete → gone; days before 0.8 → no group lines | yes |
 | AC-37 live, group change ≤ 5 s | 4, 8 | refetch on `AppGroups` change | yes |
@@ -639,13 +639,13 @@ Reused: OK/cancel, `AccountsNoData`, `AccountsLoading`, `AccountSaveFailed` (AC-
 
 ---
 
-## Open Questions for Michael
+## Open Questions for the project owner
 
 | ID | Question | Recommendation | Answer |
 |---|---|---|---|
-| Q-1 | Moving a not-running app into a group whose apps are running, when its earlier time uses up their time. | Treat it as a rule change: grace period for the running apps. | **Resolved** (Michael, 2026-10-31): accepted; AC-22, AC-32, AC-34 updated by PRO (f23da5a). |
-| Q-2 | Group times before the update. 0.7 only stored totals per app, so overlaps are unknown. | No group times before 0.8.0: the service records activity from the update on. Group lines on Reports start with 0.8.0 (the update day counts from the install); earlier days show only per-app lines. For the budget on the update day, the group's time before the install is not counted. | **Resolved** (Michael, 2026-10-31): "No, not required. My guidance would be to minimize the code here, when it is easier to group it from a code-complexity perspective, then why not. User-requirements have no opinion here, it just is ok either way. Otherwise ok." → no group times before 0.8.0; DEV picks the variant with the least code. |
-| Q-4 | "Move to …" control (AC-12). | "≡" button with a menu on every entry; right-click menu only if the spike shows it works. | **Resolved** (Michael, 2026-10-31): accepted. |
+| Q-1 | Moving a not-running app into a group whose apps are running, when its earlier time uses up their time. | Treat it as a rule change: grace period for the running apps. | **Resolved** (the project owner, 2026-10-31): accepted; AC-22, AC-32, AC-34 updated by PRO (f23da5a). |
+| Q-2 | Group times before the update. 0.7 only stored totals per app, so overlaps are unknown. | No group times before 0.8.0: the service records activity from the update on. Group lines on Reports start with 0.8.0 (the update day counts from the install); earlier days show only per-app lines. For the budget on the update day, the group's time before the install is not counted. | **Resolved** (the project owner, 2026-10-31): "No, not required. My guidance would be to minimize the code here, when it is easier to group it from a code-complexity perspective, then why not. User-requirements have no opinion here, it just is ok either way. Otherwise ok." → no group times before 0.8.0; DEV picks the variant with the least code. |
+| Q-4 | "Move to …" control (AC-12). | "≡" button with a menu on every entry; right-click menu only if the spike shows it works. | **Resolved** (the project owner, 2026-10-31): accepted. |
 
 (Q-3 and Q-5 of the first draft are void with the scope change.)
 
@@ -655,7 +655,7 @@ Reused: OK/cancel, `AccountsNoData`, `AccountsLoading`, `AccountSaveFailed` (AC-
 
 | # | Risk | Probability | Impact | Mitigation |
 |---|---|---|---|---|
-| R-1 | MAUI drag-and-drop unusable on Catalyst | Medium | High (AC-11) | Spike first, native fallback, menu-only decision by Michael |
+| R-1 | MAUI drag-and-drop unusable on Catalyst | Medium | High (AC-11) | Spike first, native fallback, menu-only decision by the project owner |
 | R-2 | Engine reorganization changes US-006 behaviour (AC-30) | Medium | High | US-006 tests unchanged and green; TES repeats key US-006 cases |
 | R-3 | Span recording adds load or size | Low | Medium | Same tick and transaction; ~5 MB / 90 days; AC-41 measurement |
 | R-4 | Kids blocked after a group is created (default 0:00) | High (by design) | Medium | Explanation text (AC-2); grace for running apps |

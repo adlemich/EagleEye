@@ -1,8 +1,8 @@
 # ADR-022: Remaining-Time Overlay in the Tray Client
 
-**Status**: Accepted (approved by Michael with the US-010 implementation plan, 2026-11-01)
+**Status**: Accepted (approved by the project owner with the US-010 implementation plan, 2026-11-01)
 **Date**: 2026-11-01
-**Deciders**: ARC, Michael
+**Deciders**: ARC, the project owner
 
 ---
 
@@ -10,7 +10,7 @@
 
 Since US-006 the kid sees the early and the final warning in the topmost kid dialog with "OK". The dialog takes the keyboard focus (ADR-014 §3), so in a game the kid must leave the game to click it. US-010 (requirements v1.10: FR-TRAY-020, FR-TRAY-030 to FR-TRAY-032) replaces these dialogs by a small, half-transparent, always-on-top display of the remaining time over the running game, as FPS overlays do.
 
-The feasibility check `02_Implementation/docs/requirements/user-stories/US-010/feasibility-overlay.md` compared four techniques: (a) a layered top-most click-through window of the tray client, (b) an Xbox Game Bar widget, (c) graphics-API hooking/injection, (d) others (toasts, DirectComposition, `WTSSendMessage`). A throwaway spike of option (a) (commit `24f6dea`) was run by Michael on the kid's gaming PC on 2026-11-01. The pill was visible and click-through over Minecraft Java (windowed, F11, changed fullscreen resolutions), Minecraft Bedrock, Fortnite *Fenster-Vollbild* and *Vollbild* (no Easy Anti-Cheat reaction, no FPS impact felt), Chrome F11 and YouTube fullscreen, Steam Big Picture, the Xbox app and the Epic Games Launcher. Only Minecraft Java's explicit "exclusive fullscreen" option hid it, as it hides Task Manager. Evaluation: `02_Implementation/docs/requirements/user-stories/US-010/spike-overlay.md` §2.
+The feasibility check `02_Implementation/docs/requirements/user-stories/US-010/feasibility-overlay.md` compared four techniques: (a) a layered top-most click-through window of the tray client, (b) an Xbox Game Bar widget, (c) graphics-API hooking/injection, (d) others (toasts, DirectComposition, `WTSSendMessage`). A throwaway spike of option (a) (commit `24f6dea`) was run by the project owner on the kid's gaming PC on 2026-11-01. The pill was visible and click-through over Minecraft Java (windowed, F11, changed fullscreen resolutions), Minecraft Bedrock, Fortnite *Fenster-Vollbild* and *Vollbild* (no Easy Anti-Cheat reaction, no FPS impact felt), Chrome F11 and YouTube fullscreen, Steam Big Picture, the Xbox app and the Epic Games Launcher. Only Minecraft Java's explicit "exclusive fullscreen" option hid it, as it hides Task Manager. Evaluation: `02_Implementation/docs/requirements/user-stories/US-010/spike-overlay.md` §2.
 
 Constraints: the service runs as SYSTEM in session 0 and must not show windows on the kid's desktop (ADR-011 §8); the tray client runs as the kid and can be ended by the kid (arc42 R-6); enforcement never depends on the tray (NFR-R-012); no injection into game processes (requirements §10).
 
@@ -75,7 +75,7 @@ The spike confirmed every [S] expectation of the feasibility check for option (a
 | (b) Xbox Game Bar widget | The kid controls it (unpin, Game Bar off); MSIX, signing and a loopback exemption; a second UI stack. |
 | (c) Graphics-API hooking / DLL injection | Anti-cheat ban risk; contradicts ADR-011 §8 and requirements §10; native code per graphics API. |
 | (a+) `uiAccess` window | Needs a signed exe and a trusted certificate; not needed, the re-assert was enough in the spike. |
-| Uniform alpha (`Form.Opacity`) | Text becomes as transparent as the background; Michael chose the per-pixel look at 75 %. |
+| Uniform alpha (`Form.Opacity`) | Text becomes as transparent as the background; the project owner chose the per-pixel look at 75 %. |
 | Toast notifications | Suppressed during games by Windows' "do not disturb" rules. |
 | Tray-side warning decisions (local level crossing) | Would repeat signals after a tray restart and could not apply the break rule ("one end, one set of warnings"). |
 | Settings in a JSON file under `%LOCALAPPDATA%` | More code (folder, file, parsing, write errors) for the same per-account scope. |

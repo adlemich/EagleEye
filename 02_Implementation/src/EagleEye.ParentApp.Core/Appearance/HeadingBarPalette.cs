@@ -32,7 +32,7 @@ public static class HeadingBarPalette
     }
 
     /// <summary>
-    /// White text (as in Michael's mockup) when it reaches <see cref="MinimumTextContrast"/>;
+    /// White text (as in the project owner's mockup) when it reaches <see cref="MinimumTextContrast"/>;
     /// otherwise black (light accent colours such as yellow). Below 4.5 with white, black always
     /// has the higher contrast (at least 4.6).
     /// </summary>

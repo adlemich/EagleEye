@@ -3,7 +3,7 @@
 ## Purpose
 
 This is a bootstrapping activity to set up a brand new software development project. It does not deal with code yet, but is used to generate the folders and files for the software project.
-You act as a sparrings partner and will ask explorative questions, to ensure a proper project setup. Your user is called Michael, he is a professional software engineer and you will act as a sparrings partner to him. The purpose is to first refine the intend, desired outcomes and constraints and then bootstrap the project, so generate an inital folder structure an files to get started.
+You act as a sparrings partner and will ask explorative questions, to ensure a proper project setup. Your user is called the project owner, they are a professional software engineer and you will act as a sparrings partner to them. The purpose is to first refine the intend, desired outcomes and constraints and then bootstrap the project, so generate an inital folder structure an files to get started.
 
 ## Folder Structure
 
@@ -15,7 +15,7 @@ The project is organized in three main folders for this activity:
 
 ## Your Input
 
-There are several files in the '01_Intend_and_Constraints' folder. You need to consume and understand each of them to get the complete picture. Each file focuses on a concrete topic. After analyzing all these files, reason about it and compile clarifing questions. Collect all questions that you might have, along with Michael's answers in a seperate file.
+There are several files in the '01_Intend_and_Constraints' folder. You need to consume and understand each of them to get the complete picture. Each file focuses on a concrete topic. After analyzing all these files, reason about it and compile clarifing questions. Collect all questions that you might have, along with the project owner's answers in a seperate file.
 
 ## Your Task
 
@@ -23,15 +23,15 @@ You should work in the following structured approach:
 
 1: Read, understand and analyze all .md files in the '01_Intend_and_Constraints'.
 2: Compile a set of clarifing questions to better understand the intend and refine required details.
-3: Work with Michael through your questions in an interview mode. Record all questions and answers in a seperate .md file under '01_Intend_and_Constraints'.
+3: Work with the project owner through your questions in an interview mode. Record all questions and answers in a seperate .md file under '01_Intend_and_Constraints'.
 4: You may repeat steps 1, 2 and 3 until you think you have a complete and consistent enough picture of the desired outcome of this project and the guardrails that you need to follow.
 5: Plan the project structure and inital files. Goal is to generate a folder structure and files under '02_Implementation' that will be the working folder for actual Software Engineering then based on the given requirements, constraints and intended outcomes. This should include folders and files for the production source code, tests, requirements and user stories and architecture but also tool configurations for claude (agent instructions, skills), git and VSCode.
-6: Review the plan with Michael, again use Questions and answers, ask for feedback. You may repeat steps 1..6 when the feedback requires changes in the approach or details.
-7: When approved by Michael, generate the folders and files in '02_Implementation'.
+6: Review the plan with the project owner, again use Questions and answers, ask for feedback. You may repeat steps 1..6 when the feedback requires changes in the approach or details.
+7: When approved by the project owner, generate the folders and files in '02_Implementation'.
 
 ## Rules
 
-- Never read or write any files outside this working folder "/Users/micha/Documents/App-Development/EagleEyeParentalControl". Do not leave this scope.
+- Never read or write any files outside this working folder "<repo root>". Do not leave this scope.
 - Do not leave the scope of the git repository for this project as well.
 - No internet research or other public information exchange unless explicitly granted.
 - No guessing. Work on available information primarily. In doubt, ask for feedback.

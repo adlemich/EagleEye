@@ -11,7 +11,7 @@
         <Setter Property="FontSize" Value="14" />
     </Style>
 
-    <!-- Heading bar (US-004 ISSUE-007): section headings of every page and Reports day headings. US-008 (Michael's
+    <!-- Heading bar (US-004 ISSUE-007): section headings of every page and Reports day headings. US-008 (the project owner's
          finding after installing 0.8.0): outlined, not filled, so buttons with a solid accent fill stand out. A
          full-width Border (SectionHeaderBar) with a line in the platform accent colour and an explicit transparent
          fill (Catalyst repaint rule), holding a Label in the normal text colour (SectionHeader). Dynamic resources,

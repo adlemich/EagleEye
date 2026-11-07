@@ -1,6 +1,6 @@
 # Test Report: US-XXX — [Story Title]
 
-**Status**: Draft | Approved by Michael
+**Status**: Draft | Approved by the project owner
 **Date**: YYYY-MM-DD
 **Author**: TES
 **Test runs evaluated**: `test-run-01.md`, `test-run-02.md`, …
@@ -39,7 +39,7 @@
 
 ## 6. Feedback for PRO / ARC
 
-[Unspecified behaviour, unclear ACs, and usability observations from Michael's notes, each routed to the right agent.]
+[Unspecified behaviour, unclear ACs, and usability observations from the project owner's notes, each routed to the right agent.]
 
 ## 7. Regression Checklist Update
 

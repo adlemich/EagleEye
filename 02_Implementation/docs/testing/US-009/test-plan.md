@@ -1,14 +1,14 @@
 # Test Plan: US-009 — Windows Parent App on Windows 10, and Windows Parent App Parity (0.9.0)
 
-**Status**: Draft, for approval by Michael
+**Status**: Draft, for approval by the project owner
 **Date**: 2026-11-01
 **Author**: TES
-**User Story**: `02_Implementation/docs/requirements/user-stories/US-009/user-story.md` (38 ACs in groups A to K, approved 2026-10-31, OQ-1 to OQ-7 resolved; status `Implemented`, step c approved by Michael 2026-11-01)
-**Inputs used**: the user story; `02_Implementation/docs/requirements/user-stories/US-009/implementation-report.md` (§6 final "How to test": artifacts, SHA-256, starting points, install order, known limitations; §8.2 to §8.4 DEV check and Michael's M-checks M-1 to M-6; §9 Windows 10 pre-check; §11 Mac Step 5); `02_Implementation/docs/requirements/user-stories/US-009/implementation-plan.md` ("Manual Verification Notes", D-1 to D-3, Q-1 to Q-4, TI-9); `02_Implementation/docs/requirements/user-stories/US-008/user-story.md` (the referenced ACs), `US-008/implementation-report.md` (§6.3, §8.6 Michael's 12-point Mac check, §9 UI texts as implemented, D-9 to D-19); `02_Implementation/docs/testing/US-008/test-report.md` (F-1: gaps retested here); `02_Implementation/docs/testing/US-007/test-report.md` (F-1, not verified AC-25, AC-33); `02_Implementation/docs/testing/US-006/test-plan.md` (format, timing conventions, log commands); `02_Implementation/docs/testing/regression-checklist.md` (REG-001); `02_Implementation/docs/dev-process/dev-environments.md` (machines, Windows 10 test PC, Mac Local Network lesson); `02_Implementation/docs/testing/README.md` §4. Black box: no source code was read.
+**User Story**: `02_Implementation/docs/requirements/user-stories/US-009/user-story.md` (38 ACs in groups A to K, approved 2026-10-31, OQ-1 to OQ-7 resolved; status `Implemented`, step c approved by the project owner 2026-11-01)
+**Inputs used**: the user story; `02_Implementation/docs/requirements/user-stories/US-009/implementation-report.md` (§6 final "How to test": artifacts, SHA-256, starting points, install order, known limitations; §8.2 to §8.4 DEV check and the project owner's M-checks M-1 to M-6; §9 Windows 10 pre-check; §11 Mac Step 5); `02_Implementation/docs/requirements/user-stories/US-009/implementation-plan.md` ("Manual Verification Notes", D-1 to D-3, Q-1 to Q-4, TI-9); `02_Implementation/docs/requirements/user-stories/US-008/user-story.md` (the referenced ACs), `US-008/implementation-report.md` (§6.3, §8.6 the project owner's 12-point Mac check, §9 UI texts as implemented, D-9 to D-19); `02_Implementation/docs/testing/US-008/test-report.md` (F-1: gaps retested here); `02_Implementation/docs/testing/US-007/test-report.md` (F-1, not verified AC-25, AC-33); `02_Implementation/docs/testing/US-006/test-plan.md` (format, timing conventions, log commands); `02_Implementation/docs/testing/regression-checklist.md` (REG-001); `02_Implementation/docs/dev-process/dev-environments.md` (machines, Windows 10 test PC, Mac Local Network lesson); `02_Implementation/docs/testing/README.md` §4. Black box: no source code was read.
 
 > **Why this run matters.** Three firsts in one run: (1) the Windows parent app has not been installed or run as a release build since 0.6.2; the US-007 and US-008 UI was only seen on WinUI in DEV's probe and in your M-checks. (2) Windows 10 has only had your short pre-check. (3) **US-008 was closed without a test run**: live group enforcement (warnings, blocking, closing all member apps, grace periods) has never run in a kid session. Session 6 does that for the first time.
 
-> **Lessons applied.** German UI labels as you see them (US-001). Every case is marked **essential** or **optional** (US-004, US-005, story OQ-7). The result box is what counts. Timing conventions of US-006 (stopwatch on Enter, lap C on Tab/Enter). Mac: Local Network switch off/on after the update and `nc -z -G 3 <ip> 5443` instead of ping (`dev-environments.md` §5). A remote parent app changes rules while the kid's session is in front, because used time only counts while that session is in front (US-006 Q-1): here the **Mac** takes the role of LEOSERV.
+> **Lessons applied.** German UI labels as you see them (US-001). Every case is marked **essential** or **optional** (US-004, US-005, story OQ-7). The result box is what counts. Timing conventions of US-006 (stopwatch on Enter, lap C on Tab/Enter). Mac: Local Network switch off/on after the update and `nc -z -G 3 <ip> 5443` instead of ping (`dev-environments.md` §5). A remote parent app changes rules while the kid's session is in front, because used time only counts while that session is in front (US-006 Q-1): here the **Mac** takes the role of PARENT-PC.
 
 ---
 
@@ -42,7 +42,7 @@
 
 | Item | Value |
 |---|---|
-| **Service PC** | Windows Developer Machine, Windows 11, `192.168.1.37` (check in S-3). Service and tray **0.8.0** installed (starting point of AC-31). German Windows. Admin account = you. |
+| **Service PC** | Windows Developer Machine, Windows 11, `DEV-PC` (check in S-3). Service and tray **0.8.0** installed (starting point of AC-31). German Windows. Admin account = you. |
 | **W11 app** | Windows parent app 0.9.0, installed **fresh** in your admin account on the service PC (TC-009-03). Device name **Papas PC**. |
 | **W10 PC** | Your physical Windows 10 22H2 PC (build 19045+, x64), same LAN. **No EagleEye installed** (pre-check ended with an uninstall). Device name **Windows 10 PC**. |
 | **Mac app** | Mac app **0.8.0** in `/Programme` on the MacBook (starting point of AC-32), paired with the service. Updated to 0.9.0 in TC-009-37. |
@@ -66,7 +66,7 @@
   | Rules | heading **App-Gruppen-Regeln** / App group rules, between **Ruhezeiten** and **Applikations-Regeln** · explanation "Hier legst du ein Zeit-Budget pro App-Gruppe fest. Alle Apps einer Gruppe teilen es sich: Die Zeit zählt, solange mindestens eine App der Gruppe verwendet wird. Die Gruppen legst du auf der Seite App Gruppen fest." · columns **App-Gruppe** · **Stunden** · **Minuten** · **MO … SO** · **(keine Apps)** / (no apps) · **Noch keine App-Gruppen. Du kannst sie auf der Seite App Gruppen anlegen.** · sentence under Applikations-Regeln: "Apps in einer App-Gruppe werden unter App-Gruppen-Regeln eingestellt." · **Bitte Stunden zwischen 0 und 23 eingeben.** · **Bitte Minuten zwischen 0 und 59 eingeben.** |
   | Reports | under each day: **App-Gruppen** / App groups, columns **App-Gruppe** · **Nutzung (HH:MM)** |
   | Page states | **Keine Daten verfügbar** · **Keine Konten unter Elternkontrolle. Konten unter Einstellungen auswählen.** · **Wird geladen …** |
-  | Status bar | green **Verbunden mit 192.168.1.37** · red **Nicht verbunden mit 192.168.1.37** · red **Verbindung zu 192.168.1.37 wird hergestellt …** |
+  | Status bar | green **Verbunden mit DEV-PC** · red **Nicht verbunden mit DEV-PC** · red **Verbindung zu DEV-PC wird hergestellt …** |
   | Kid dialog info lines (group "Test") | "Test: noch 3 Minuten." · "Test: noch 1 Minute." · "Test: Zeit-Budget aufgebraucht." · "Test: heute nicht erlaubt." · "Test: Deine Eltern haben die Regeln geändert. Test wird in 1 Minute geschlossen." (English kid: "Test: 3 minutes left.", "Test: time budget used up.", "Test: not allowed today.") — wording differences in the kid dialog are Notes; **the group name must appear** (Fail if the app name appears instead, except after a group was deleted). |
 
 - **Timing** (story limits): a change made in a parent app shows in the page and in the other parent app **≤ 5 s**; a new app appears **≤ 15 s**; today's usage follows **≤ 15 s**; reconnect: green **≤ 30 s** after start, red **≤ 30 s** after the service stops, green **≤ 60 s** after it starts.
@@ -87,7 +87,7 @@ Nothing is dropped. Where an earlier check covers a point, the case is kept and 
 | M-5 (Berichte after a move without "Wird geladen …") | AC-23 | TC-009-24: re-confirm; the cross-app part is new (TC-009-51) |
 | Pre-check rows 1, 2 (winver; service installer refused) | AC-5 | TC-009-26: re-confirm (1 minute) |
 | Pre-check rows 3 to 6 (install, pair, four pages, unpair, uninstall) | parts of AC-2, AC-3, AC-6, AC-7 | TC-009-27 to TC-009-34: **essential**: the pre-check was recorded as a one-line summary, without the details the ACs ask for (no admin prompt, publisher, repair, wrong code, timings, data removed) |
-| Michael's 12-point Mac check on 0.8.0 (US-008 report §8.6) | US-008 AC-1 to AC-18, AC-35 to AC-37, AC-43 on the Mac | TC-009-38 to TC-009-48: kept as **quick re-confirm** cases (AC-35 asks for them in full on 0.9.0; DEV states no shared code changed, §11.2) |
+| The project owner's 12-point Mac check on 0.8.0 (US-008 report §8.6) | US-008 AC-1 to AC-18, AC-35 to AC-37, AC-43 on the Mac | TC-009-38 to TC-009-48: kept as **quick re-confirm** cases (AC-35 asks for them in full on 0.9.0; DEV states no shared code changed, §11.2) |
 
 ### Service log as evidence
 
@@ -147,7 +147,7 @@ Run the sessions in this order. Breaks between sessions (also days) are fine, wi
 
 | Item | Value |
 |---|---|
-| Warning levels (Einstellungen) | **Frühe Warnung 3**, **Finale Warnung 1** (set in S-9); texts default |
+| Warning levels (Einstellungen) | **Früthey Warnung 3**, **Finale Warnung 1** (set in S-9); texts default |
 | Baseline group (S-10, created with the Mac app 0.8.0) | **Rechnen** = Rechner; App-Gruppen-Regeln kid1 **0:30, all days**; kid2 0:00 |
 | Session 2 groups | **Games**, **Musik 🎮**, **School** (TC-009-09, -12); deleted in TC-009-13; **Games** and **School** are created again in TC-009-14 and stay for the rest of the run |
 | Session 6B group | **Test** = Editor (Notepad) + Paint; kid1 **0:05, today ticked**; kid2 **0:00, no day**; kid1's own rule for **Paint 0:00, no day** (US-008 AC-24) |
@@ -164,8 +164,8 @@ Run the sessions in this order. Breaks between sessions (also days) are fine, wi
    - MacBook: Finder → *Programme* → EagleEye Parent App → *Informationen*: **0.8.0**.
    - W10 PC: *Einstellungen → Apps → Apps & Features*: **no** "EagleEye Parent App"; `%LocalAppData%\EagleEye` does not exist.
    - Anything different → **stop** and tell TES.
-3. **S-3 Service PC address**: Terminal: `ipconfig` → IPv4 of the LAN adapter. Expected **192.168.1.37**. If different, use the real address everywhere this plan says 192.168.1.37 and write it into the run file header.
-4. **S-4 Copy to the W10 PC**: both `.exe` from `03_Delivery\windows\` onto a USB stick or share. On the W10 PC (PowerShell): `Get-FileHash <file>` → as in §2. Network check from the W10 PC: `Test-NetConnection 192.168.1.37 -Port 5443` → *TcpTestSucceeded: True* (a failed ping proves nothing).
+3. **S-3 Service PC address**: Terminal: `ipconfig` → IPv4 of the LAN adapter. Expected **DEV-PC**. If different, use the real address everywhere this plan says DEV-PC and write it into the run file header.
+4. **S-4 Copy to the W10 PC**: both `.exe` from `03_Delivery\windows\` onto a USB stick or share. On the W10 PC (PowerShell): `Get-FileHash <file>` → as in §2. Network check from the W10 PC: `Test-NetConnection DEV-PC -Port 5443` → *TcpTestSucceeded: True* (a failed ping proves nothing).
 5. **S-5 Accounts on the service PC** (Terminal (Administrator): `Get-LocalUser | Format-Table Name, Enabled -AutoSize`). Fix the roles and write them into the run file: **kid1** = ______ (proposal `eagleeye-kid`), **kid2** = ______, **kid3** = ______. If kid2 or kid3 does not exist, create it (as in US-006 S-5):
    ```powershell
    $pw = Read-Host -AsSecureString "Password for the new kid account"
@@ -178,7 +178,7 @@ Run the sessions in this order. Breaks between sessions (also days) are fine, wi
 6. **S-6 English for kid2** (for AC-29; ≈ 15 min, optional if not possible): *Einstellungen* is blocked for a controlled account (deny by default). In the Mac app 0.8.0 **untick kid2** → sign in as kid2 → *Einstellungen → Zeit und Sprache → Sprache und Region → Windows-Anzeigesprache* → **English (United States)** (install the language pack in your session first, if needed) → sign out and in again → check "Settings" in the Start menu → sign out → **tick kid2** again in the Mac app. Not possible → note it; the English part of TC-009-60 is then **Blocked**.
 7. **S-7 Clock seconds**: kid1's taskbar shows seconds (set since US-005; if not: untick kid1 as in S-6, set *Taskleiste → Sekunden in der Uhr der Taskleiste anzeigen*, tick kid1 again).
 8. **S-8 Terminal (Administrator)** on the service PC: Start → **Terminal** → right-click → **Als Administrator ausführen**. A second one with **LOG-WATCH**.
-9. **S-9 Warning levels** (Mac app 0.8.0 → *Einstellungen → Zeit-Ende Warnungen*): **Frühe Warnung 3**, **Finale Warnung 1**. Write the old values into the run file if you want them back later.
+9. **S-9 Warning levels** (Mac app 0.8.0 → *Einstellungen → Zeit-Ende Warnungen*): **Früthey Warnung 3**, **Finale Warnung 1**. Write the old values into the run file if you want them back later.
 10. **S-10 Baseline before the update** (Mac app 0.8.0; screenshots into `evidence/`):
     - *App Gruppen*: if the group **Rechnen** does not exist, create it (**Gruppe hinzufügen** → `Rechnen` → **OK**) and move **Rechner** into it. Remove all other groups you do not need (write their names into the run file if you keep any).
     - *Regeln* → **Konto** kid1 → *App-Gruppen-Regeln*: **Rechnen** **Stunden 0**, **Minuten 30**, **MO to SO** ticked.
@@ -362,13 +362,13 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 **Steps**
 
 1. Look at the window after the first start.
-2. Host dialog: `192.168.1.37` → **Verbinden**. Read the 6-digit code from the popup **"EagleEye – Eltern-App koppeln"** (or *Ereignisanzeige → Anwendung*, source EagleEye). *Gerätename dieses PCs* **Papas PC** → code → **Koppeln**.
+2. Host dialog: `DEV-PC` → **Verbinden**. Read the 6-digit code from the popup **"EagleEye – Eltern-App koppeln"** (or *Ereignisanzeige → Anwendung*, source EagleEye). *Gerätename dieses PCs* **Papas PC** → code → **Koppeln**.
 3. Close the app (window **X**). Start it again from the Start menu.
 
 **Expected result**
 
 - Step 1: the app opens on **Einstellungen** with the host dialog; status bar red.
-- Step 2: no certificate warning or extra step; green **"Verbunden mit 192.168.1.37"**; *Gekoppelt*.
+- Step 2: no certificate warning or extra step; green **"Verbunden mit DEV-PC"**; *Gekoppelt*.
 - Step 3: green without a pairing code ≤ 30 s; the app opens on **Berichte**, with **Berichte** selected in the menu.
 
 #### TC-009-05: Data kept by the service update *(essential)*
@@ -477,7 +477,7 @@ Keep **LOG-WATCH** open in the second Terminal (Administrator). Display scaling 
 
 **Expected result**
 
-- Step 1: red **"Nicht verbunden mit 192.168.1.37"** ≤ 30 s; the page shows **Keine Daten verfügbar** (no stale entries that look editable).
+- Step 1: red **"Nicht verbunden mit DEV-PC"** ≤ 30 s; the page shows **Keine Daten verfügbar** (no stale entries that look editable).
 - Step 2: green ≤ 60 s; the page shows **Wird geladen …** briefly, then the groups again.
 - Step 3: **"Keine Konten unter Elternkontrolle. Konten unter Einstellungen auswählen."**
 - Step 4: the page with groups and apps as before; kid1's and kid2's rules unchanged (glance at *Regeln*).
@@ -817,17 +817,17 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 
 **Steps**
 
-1. Host `192.168.1.250` (an address with no PC; or any unused one) → **Verbinden**. Wait up to 30 s.
-2. Host `192.168.1.37` → **Verbinden**. Read the status bar and the pairing form.
+1. Host `192.0.2.250` (an address with no PC; or any unused one) → **Verbinden**. Wait up to 30 s.
+2. Host `DEV-PC` → **Verbinden**. Read the status bar and the pairing form.
 3. *Gerätename dieses PCs* **Windows 10 PC**; enter the code from the service PC's popup with the **last digit changed** → **Koppeln**.
 4. Enter the right code → **Koppeln**.
 
 **Expected result**
 
-- Step 1: a connection error that **names the host**, e.g. "Verbindungsfehler: Keine Verbindung zum EagleEye-Dienst unter 192.168.1.250 möglich."; red.
-- Step 2: no certificate warning, no extra step; pairing form with **Kopplungscode** and **Gerätename dieses PCs**; red **"Verbindung zu 192.168.1.37 wird hergestellt …"** (never "Verbunden" before pairing).
+- Step 1: a connection error that **names the host**, e.g. "Verbindungsfehler: Keine Verbindung zum EagleEye-Dienst unter 192.0.2.250 möglich."; red.
+- Step 2: no certificate warning, no extra step; pairing form with **Kopplungscode** and **Gerätename dieses PCs**; red **"Verbindung zu DEV-PC wird hergestellt …"** (never "Verbunden" before pairing).
 - Step 3: **"Der Kopplungscode ist falsch."** (or same meaning); not paired; red.
-- Step 4: green **"Verbunden mit 192.168.1.37"**, *Gekoppelt*.
+- Step 4: green **"Verbunden mit DEV-PC"**, *Gekoppelt*.
 
 #### TC-009-29: Reconnect timings from Windows 10 *(essential)*
 
@@ -844,7 +844,7 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 **Expected result**
 
 - Step 1: green ≤ **30 s**, no pairing code; opens on **Berichte**.
-- Step 2: red **"Nicht verbunden mit 192.168.1.37"** ≤ **30 s**.
+- Step 2: red **"Nicht verbunden mit DEV-PC"** ≤ **30 s**.
 - Step 3: green ≤ **60 s** without any action.
 
 #### TC-009-30: All four pages on Windows 10 (spot check incl. the three ways to move) *(essential)*
@@ -856,7 +856,7 @@ You work on the W10 PC; the service PC is needed for the pairing code (TC-009-28
 **Steps**
 
 1. **Einstellungen**: untick **kid2**, tick it again.
-2. **Einstellungen → Zeit-Ende Warnungen**: **Frühe Warnung** `4` → **Tab**; then back to `3` → **Tab**.
+2. **Einstellungen → Zeit-Ende Warnungen**: **Früthey Warnung** `4` → **Tab**; then back to `3` → **Tab**.
 3. **App Gruppen**: (if needed **Gruppe hinzufügen** `Games`); move **Paint** into **Games** by **dragging with the mouse**, back; with the **touchpad** (if the PC has one), back; with **≡**, back; with **right-click → Verschieben nach …**; leave it in Games.
 4. **Regeln** → kid1: **Games** **Stunden** `0`, **Minuten** `30`, tick today → **Tab**. *Ruhezeiten* → **Eintrag hinzufügen** (leave **An/Aus** off).
 5. **Berichte** → kid1: today.
@@ -986,13 +986,13 @@ The Mac cases are **quick re-confirms** of your 12-point check on 0.8.0 (US-008 
 1. Open `03_Delivery/macos/EagleEye-ParentApp-0.9.0.dmg` → drag **EagleEye Parent App** onto **Programme** → **Ersetzen**.
 2. Start the app. If macOS blocks it: *Systemeinstellungen → Datenschutz & Sicherheit → Dennoch öffnen*.
 3. If the app does not become green within 30 s: quit it (**Cmd+Q**), *Systemeinstellungen → Datenschutz & Sicherheit → Lokales Netzwerk* → switch **every EagleEye entry off and on again**, start the app. Answer a Keychain prompt with **Immer erlauben**. Write in Notes which of these steps were needed and how many Keychain prompts appeared.
-4. Terminal: `nc -z -G 3 192.168.1.37 5443` (not ping).
+4. Terminal: `nc -z -G 3 DEV-PC 5443` (not ping).
 5. Finder → *Programme* → EagleEye Parent App → **Informationen**. App menu **EagleEye Parent App → Über EagleEye Parent App**.
 
 **Expected result**
 
-- Step 3 (or already step 2): green **"Verbunden mit 192.168.1.37"** without a new pairing code; the same device name as before; appearance as before. At most the Keychain prompts accepted in US-007 OQ-3 (one-time "Immer erlauben"); having to pair again = **Fail**.
-- Step 4: "succeeded" / "Connection to 192.168.1.37 port 5443 … succeeded!".
+- Step 3 (or already step 2): green **"Verbunden mit DEV-PC"** without a new pairing code; the same device name as before; appearance as before. At most the Keychain prompts accepted in US-007 OQ-3 (one-time "Immer erlauben"); having to pair again = **Fail**.
+- Step 4: "succeeded" / "Connection to DEV-PC port 5443 … succeeded!".
 - Step 5: both show **0.9.0**.
 
 #### TC-009-38: Menu, start page, outlined headings, page states and look *(essential, re-confirm)*
@@ -1187,7 +1187,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 
 **Expected result**
 
-- Both green **"Verbunden mit 192.168.1.37"**.
+- Both green **"Verbunden mit DEV-PC"**.
 
 #### TC-009-50: Group changes on the App Groups page, both directions *(essential)*
 
@@ -1259,7 +1259,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 3. *Ruhezeiten* **Anzeige Text:** W adds ` Test` → **Tab**; M removes it → **Tab**.
 4. *Applikations-Regeln*: M changes **Editor** minutes by +1 → **Tab**; W changes them back → **Tab**.
 5. *Anzeige Text wenn Budget aufgebraucht:* W adds ` X` → Tab; M removes it → Tab.
-6. **Einstellungen → Zeit-Ende Warnungen**: M **Frühe Warnung** `4` → Tab; W back to `3` → Tab. W types a text in the **Finale Warnung** text `Gleich Schluss`; M empties it (back to the default).
+6. **Einstellungen → Zeit-Ende Warnungen**: M **Früthey Warnung** `4` → Tab; W back to `3` → Tab. W types a text in the **Finale Warnung** text `Gleich Schluss`; M empties it (back to the default).
 
 **Expected result**
 
@@ -1274,11 +1274,11 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 **Steps**
 
 1. M: **Einstellungen → Kopplung aufheben** (confirm). Watch W for 30 s; click through its pages.
-2. M: pair again: host `192.168.1.37` → **Verbinden** → code from the service PC → same device name → **Koppeln**.
+2. M: pair again: host `DEV-PC` → **Verbinden** → code from the service PC → same device name → **Koppeln**.
 
 **Expected result**
 
-- Step 1: M is *Nicht gekoppelt*; W stays green **"Verbunden mit 192.168.1.37"** and works.
+- Step 1: M is *Nicht gekoppelt*; W stays green **"Verbunden mit DEV-PC"** and works.
 - Step 2: M green again (needed as the remote parent app in Session 6B).
 
 ### Session 6A — Windows app regression spot checks (service PC / Admin) · ≈ 20 min
@@ -1297,7 +1297,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 
 **Expected result**
 
-- Step 1: a connection error that **names 192.168.1.37**; red; on *Einstellungen* **Kopplung aufheben** disabled and the button **Kopplung auf diesem Gerät löschen** shown.
+- Step 1: a connection error that **names DEV-PC**; red; on *Einstellungen* **Kopplung aufheben** disabled and the button **Kopplung auf diesem Gerät löschen** shown.
 - Step 2: dialog **"Kopplung auf diesem Gerät löschen?"** with the explanation and **Kopplung auf diesem Gerät löschen** / **Abbrechen**; Abbrechen keeps the pairing.
 - Step 3: green ≤ 60 s without any action; the forget button disappears.
 
@@ -1317,7 +1317,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 **Expected result**
 
 - Steps 1 to 3: each change stored ≤ 5 s (log line), the field keeps its value; no message.
-- Step 4: `0` → **"Bitte Minuten zwischen 1 und 59 eingeben."**; `3` → **"Die finale Warnung muss weniger Minuten vor dem Ende liegen als die frühe Warnung."**; `1` stored.
+- Step 4: `0` → **"Bitte Minuten zwischen 1 und 59 eingeben."**; `3` → **"Die finale Warnung muss weniger Minuten vor dem Ende liegen als die früthey Warnung."**; `1` stored.
 
 ### Session 6B — Group enforcement and the US-008 retest (service PC / kids; MacBook as remote parent app) · ≈ 1 h 15
 
@@ -1326,7 +1326,7 @@ Put the service PC and the MacBook side by side. "W" = W11 app, "M" = Mac app. I
 - **P-1** W11 app (AC-27 needs the rule set in the **Windows app**): first **Regeln** → kid1 → *Applikations-Regeln*: note kid1's own rules for **Editor** and **Paint**, then set **Paint 0:00, no day** (US-008 AC-24 check) and **Editor** e.g. 0:30, all days. Then **App Gruppen** → **Gruppe hinzufügen** `Test` → move **Editor** and **Paint** into **Test**.
 - **P-2** W11 app → **Regeln** → kid1 → *App-Gruppen-Regeln*: **Test** **Stunden 0**, **Minuten 5**, **today ticked** only. kid2: Test stays **0:00, no day**.
 - **P-3** W11 app → **Regeln** → kid1 → *Applikations-Regeln*: Editor and Paint are no longer listed.
-- **P-4** *Einstellungen*: **Frühe Warnung 3**, **Finale Warnung 1**; kid1, kid2 ticked, kid3 not.
+- **P-4** *Einstellungen*: **Früthey Warnung 3**, **Finale Warnung 1**; kid1, kid2 ticked, kid3 not.
 - **P-5** Mac (M): **Berichte** → kid1: today shows **no** Editor and Paint usage, and no **Test** line (if it does, tell TES or shift all times by that amount). M stays on **Regeln** → kid1, *App-Gruppen-Regeln* visible.
 - **P-6** *Benutzer wechseln* → kid1. **K-TERM** with LOG-WATCH. No other app open. Stopwatch ready. **Stay in kid1's session; do not lock** during a timed case.
 
@@ -1634,7 +1634,7 @@ None beyond the story's own regression ACs (AC-31 REG-001, AC-34, AC-35, AC-36, 
 6. **Mac**: stays on 0.9.0, paired. **W11 app**: stays installed, paired.
 7. Accent colour, scaling, display languages back to your settings.
 
-## 8. Notes and Open Questions for Michael
+## 8. Notes and Open Questions for the project owner
 
 | ID | Question | Proposed answer |
 |---|---|---|
@@ -1642,10 +1642,10 @@ None beyond the story's own regression ACs (AC-31 REG-001, AC-34, AC-35, AC-36, 
 | Q-2 | **Baseline group with the Mac app 0.8.0 before the update** (S-10): creates "Rechnen" and 2 minutes of Rechner use, so that AC-31 ("keeps app groups, members, group rules and the group lines of past days") can be seen. Past-day group lines exist only if kids used grouped apps after the 0.8.0 install. | Yes. If no past-day lines exist, TC-009-05 checks today's line and records "no past days available". |
 | Q-3 | **English on Windows 11** (AC-28 is tagged [W11] and [W10]): switching your admin account's display language means signing out twice. | English fully on Windows 10 (TC-009-32, same build); Windows 11 English optional (TC-009-25). |
 | Q-4 | **Mac AC-35 depth**: the story asks for the US-008 Mac ACs "in full"; DEV states the Mac code is unchanged since 0.8.0, where your 12-point check passed. | The Mac cases (TC-009-38 to -48) are written as quick re-confirms of the 12 points (≈ 1 h 15 with the update). OK? |
-| Q-5 | **Live "≤ 15 s" checks on Windows 11** (AC-13 new app, AC-23 / AC-34 today's usage): used time only counts while the kid's session is in front, so the W11 app on the same PC cannot be watched while the kid uses apps. | W11: "switch back and look without touching anything" (TC-009-24, -59); the timed check on the Mac (same shared code, TC-009-58, -59). If you have a second Windows 11 parent PC (e.g. LEOSERV), it can replace the Mac in these steps. |
+| Q-5 | **Live "≤ 15 s" checks on Windows 11** (AC-13 new app, AC-23 / AC-34 today's usage): used time only counts while the kid's session is in front, so the W11 app on the same PC cannot be watched while the kid uses apps. | W11: "switch back and look without touching anything" (TC-009-24, -59); the timed check on the Mac (same shared code, TC-009-58, -59). If you have a second Windows 11 parent PC (e.g. PARENT-PC), it can replace the Mac in these steps. |
 | Q-6 | **US-008 AC-6** (no groups after an update from 0.7.x) cannot be tested any more (the service is on 0.8.0). | Record as "not testable"; evidence: the 0.8.0 install log (`US-008/evidence/install-0.8.0-log-excerpt.txt`, "App groups loaded: 0 groups"). |
 | Q-7 | **Uninstall on Windows 10 while paired** (TC-009-34): the only way to see that uninstalling removes the pairing data. The device entry "Windows 10 PC" stays on the service (no UI to remove other devices, US-007 F-4). | Accept the orphan entry. Alternative: *Kopplung aufheben* first, then the case only shows that the folders are gone. |
-| Q-8 | **Service PC address** `192.168.1.37` (story). The US-007 report names `192.168.1.85`. | Check in S-3; use the real address. |
+| Q-8 | **Service PC address** `DEV-PC` (story). The US-007 report names `PILOT-PC`. | Check in S-3; use the real address. |
 | Q-9 | **Save error** (AC-18 / US-008 AC-14 error path) only in optional cases (TC-009-18, -44): it needs the service process suspended with `resmon`. | Optional, as in US-006 (TC-006-11). |
 | Q-10 | **Session 6B timing**: it needs a day on which kid1 has not used Editor or Paint before P-5, because group time counts the whole day. | Run Session 6B first thing on a day, or move the group to two other apps and tell TES. |
 | Q-11 | **72 cases, ≈ 8 h essential.** Larger than usual; you accepted the larger run with the story. | Three days: Sessions 0–2, 3–5, 6. Partial runs are fine; unticked cases count as not executed. |
@@ -1654,4 +1654,4 @@ None beyond the story's own regression ACs (AC-31 REG-001, AC-34, AC-35, AC-36, 
 
 | Date | Change | Reason |
 |---|---|---|
-| 2026-11-01 | Plan written after Michael's approval of step c (0.9.0, 2026-11-01). | Step d. |
+| 2026-11-01 | Plan written after the project owner's approval of step c (0.9.0, 2026-11-01). | Step d. |

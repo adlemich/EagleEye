@@ -1,10 +1,10 @@
 # ADR-013: Break-Time Enforcement at App Start — Blocked Starts, Close Sequence and Kill Set
 
-**Status**: Accepted (approved by Michael with the US-005 implementation plan, 2026-10-10; §3 and §9 reflect his answers Q-1 and Q-2); US-006 amendment approved with the US-006 implementation plan, 2026-10-12
+**Status**: Accepted (approved by the project owner with the US-005 implementation plan, 2026-10-10; §3 and §9 reflect their answers Q-1 and Q-2); US-006 amendment approved with the US-006 implementation plan, 2026-10-12
 **Date**: 2026-10-10
-**Deciders**: ARC, Michael
+**Deciders**: ARC, the project owner
 
-> **Amendment 2026-10-12 (US-006, ADR-015) — approved by Michael together with the US-006 implementation plan (2026-10-12)**
+> **Amendment 2026-10-12 (US-006, ADR-015) — approved by the project owner together with the US-006 implementation plan (2026-10-12)**
 >
 > 1. **Gate order** (§1, §3): for an app that becomes open, the break at the start's creation time is checked first (unchanged). Then the **app rule** at the local time of detection: today not allowed (day unticked or budget 0:00) or used ≥ budget → blocked with the budget text. An app without a rule row has the default rule (0:00, no day) and is blocked. Every controlled account is screened (no shortcut for accounts without break entries).
 > 2. **A blocked start creates the app record** (via `UsageService`), without usage.
@@ -48,7 +48,7 @@ An entry is in effect at the local date-time *t* of the service PC when it is ac
 
 ### 3. What a blocked start is
 
-**A start is the creation of the app's first process** (decided by Michael with the US-005 plan, Q-1; story Terms, AC-21, FR-SVC-023). The app is still *recognised* by its window: the agent reports the processes that have an app window (ADR-011 §3), and an app is identified per account by its program path (ADR-012 §1). Per report of a controlled account that has at least one active entry:
+**A start is the creation of the app's first process** (decided by the project owner with the US-005 plan, Q-1; story Terms, AC-21, FR-SVC-023). The app is still *recognised* by its window: the agent reports the processes that have an app window (ADR-011 §3), and an app is identified per account by its program path (ADR-012 §1). Per report of a controlled account that has at least one active entry:
 
 | Situation | Decision |
 |---|---|
@@ -108,7 +108,7 @@ A **shipped, code-defined** list of Windows programs that are never closed or te
 - The agent's new capability is limited to `PostMessageW(hwnd, WM_CLOSE, 0, 0)` on windows it has itself classified as app windows of a PID the service named, after verifying the creation time (ADR-011 amendment). It still has no window, no message loop, no hooks and never uses `SendMessage*`. UIPI allows messages from System integrity to lower integrity; the agent's restricted token needs no object access for posting.
 - The command channel is the agent's inherited stdin pipe; only the service can write to it. The agent parses it strictly (line limit, schema).
 - Termination stays in the service, so the hardened agent does not need `PROCESS_TERMINATE` rights over the kid's processes.
-- **Bypass risks** (accepted by Michael with the US-005 plan, Q-2, Q-3; arc42 R-13, R-14): a kid can change the **time zone** (Windows grants `SeTimeZonePrivilege` to Users by default) and so shift the local time out of a break time — the service detects, logs (Warning) and stores every such change as a finding (§9), but does not prevent it; a kid with tools can strip a window's app status (ADR-011 T-10) so that no app start is seen. Break-time enforcement is window-based by story; process-based deny-by-default enforcement (ADR-005) comes with allow-lists.
+- **Bypass risks** (accepted by the project owner with the US-005 plan, Q-2, Q-3; arc42 R-13, R-14): a kid can change the **time zone** (Windows grants `SeTimeZonePrivilege` to Users by default) and so shift the local time out of a break time — the service detects, logs (Warning) and stores every such change as a finding (§9), but does not prevent it; a kid with tools can strip a window's app status (ADR-011 T-10) so that no app start is seen. Break-time enforcement is window-based by story; process-based deny-by-default enforcement (ADR-005) comes with allow-lists.
 
 ### 9. Time-zone and clock findings (story AC-37, FR-SVC-026)
 
@@ -129,9 +129,9 @@ At every 5 s tick, after `TimeZoneInfo.ClearCachedData()`, `TimeChangeMonitor` c
 | `SendMessage(WM_CLOSE)` or `WM_SYSCOMMAND/SC_CLOSE` | `SendMessage` blocks on hung windows (ADR-011 T-9). `SC_CLOSE` behaves like `WM_CLOSE` for ordinary windows but is ignored by more apps; no gain. |
 | `WM_CLOSE` only to the "main window" (`CloseMainWindow`) | The main-window heuristic is not available across sessions and misses multi-window apps; all *app windows* of the process are closed, as the user would by clicking each close button. |
 | Block on process creation (ETW / WMI process-start events, kernel callbacks) | Detects console and background processes too, which the story exempts; still needs the window decision; kernel callbacks need a driver. The 1 s window scan meets the 10 s bound. |
-| "Start" = appearance of the app's first window (ARC's first proposal) | Michael decided for the first process (Q-1): a slow app started before the break must not be blocked; the price is that a program waiting in the notification area since before the break may be opened during it. |
+| "Start" = appearance of the app's first window (ARC's first proposal) | The project owner decided for the first process (Q-1): a slow app started before the break must not be blocked; the price is that a program waiting in the notification area since before the break may be opened during it. |
 | "Start" = every first-seen process, also after a restart | A service restart during a break time would close every app that is running, against AC-25. |
-| Additional processes of an open app created in a break are blocked (ARC's first proposal "T2") | Michael decided that further processes of an open app are not starts (Q-1). |
+| Additional processes of an open app created in a break are blocked (ARC's first proposal "T2") | The project owner decided that further processes of an open app are not starts (Q-1). |
 | Removing the time-zone right from *Users* in the installer | Out of scope for US-005 (Q-2); a possible later hardening. |
 | Global configurable timeout (ADR-006, FR-SVC-021) | US-005 fixes 20 s (FR-SVC-023 v1.5); the YAML setting is not needed yet. |
 

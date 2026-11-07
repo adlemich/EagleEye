@@ -1,8 +1,8 @@
 # ADR-021: App Groups — Shared Budgets Computed from Activity Spans, Enforced per Limit Subject
 
-**Status**: Accepted (approved by Michael with the US-008 implementation plan, 2026-10-31)
+**Status**: Accepted (approved by the project owner with the US-008 implementation plan, 2026-10-31)
 **Date**: 2026-10-31
-**Deciders**: ARC, Michael
+**Deciders**: ARC, the project owner
 
 ---
 
@@ -14,7 +14,7 @@ Today the service stores usage only as **whole seconds per app and local day** (
 
 The enforcement of US-006 (ADR-015) evaluates one **app** at a time: its own rule, its used time, its warnings (keyed per app and day), its grace period and its close. With groups, all running members of a group share one budget, one set of warnings (AC-26: once per group and day), one close message (AC-27) and one grace period per change (AC-32).
 
-Michael updates service, tray client and Mac app together; no mixed versions are supported (story scope change, 2026-10-31). The Windows parent app shares Core and Shared code but gets its group UI in US-009; in US-008 it only has to compile and pass its unit tests.
+The project owner updates service, tray client and Mac app together; no mixed versions are supported (story scope change, 2026-10-31). The Windows parent app shares Core and Shared code but gets its group UI in US-009; in US-008 it only has to compile and pass its unit tests.
 
 ---
 
@@ -79,7 +79,7 @@ Client-side joins keep each state area with one owner and avoid fan-out re-broad
 | Per-minute activity bitmaps per app and day | A minute slot counts a partial minute as a full one; with several short gaps the error exceeds the ± 1 minute tolerance and would cost the kid budget time. Per-second bitmaps are ~10 KB per app and day. |
 | Reconstructing activity from `AppInstances` | Instances include locked, switched-away and sleep times (US-004 AC-12 excludes them). |
 | Sum of the members' daily seconds | Double counts overlap; contradicts AC-19. |
-| Groups per account | Michael's answer 3: groups are defined once per service PC. |
+| Groups per account | The project owner's answer 3: groups are defined once per service PC. |
 | Filtering grouped apps out of `AppRulesDto` on the service | A membership change would need re-broadcasts of every account's app rules. |
 | A new kid-message reason for groups | Needs a tray client change for the same visible result. |
 | Re-broadcasting all 90 days of every account on a group change | Large pushes for a rare event; the fetch on change is simpler and bounded to the page that is open. |

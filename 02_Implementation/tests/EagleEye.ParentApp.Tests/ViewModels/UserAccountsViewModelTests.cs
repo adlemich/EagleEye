@@ -8,7 +8,7 @@ namespace EagleEye.ParentApp.Tests.ViewModels;
 
 public sealed class UserAccountsViewModelTests
 {
-    private static readonly UserAccountDto Max = new("S-1-5-21-1-2-3-1001", "max", "Max Adler", false, false);
+    private static readonly UserAccountDto Max = new("S-1-5-21-1-2-3-1001", "max", "Max Mustermann", false, false);
     private static readonly UserAccountDto Anna = new("S-1-5-21-1-2-3-1002", "anna", null, false, true);
     private static readonly UserAccountDto Gaming = new("S-1-5-21-1-2-3-1003", "gaming", "Gaming", true, false);
 
@@ -90,7 +90,7 @@ public sealed class UserAccountsViewModelTests
         });
 
         Assert.Equal(
-            [("anna", true, true), ("Gaming (gaming) (deaktiviert)", false, true), ("Max Adler (max)", false, true)],
+            [("anna", true, true), ("Gaming (gaming) (deaktiviert)", false, true), ("Max Mustermann (max)", false, true)],
             rows);
     }
 
@@ -126,7 +126,7 @@ public sealed class UserAccountsViewModelTests
 
         _model.Publish(AccountsLoadState.Ready, Snapshot(2, Max, Account(7, "lena")));
 
-        Assert.Equal(["lena", "Max Adler (max)"], _viewModel.Accounts.Select(a => a.DisplayName));
+        Assert.Equal(["lena", "Max Mustermann (max)"], _viewModel.Accounts.Select(a => a.DisplayName));
     }
 
     [Fact]
@@ -135,9 +135,9 @@ public sealed class UserAccountsViewModelTests
         _model.Publish(AccountsLoadState.Ready, Snapshot(1, Max, Anna));
         var maxItem = _viewModel.Accounts.Single(a => a.Sid == Max.Sid);
 
-        _model.Publish(AccountsLoadState.Ready, Snapshot(2, Max with { FullName = "Aaron Adler" }, Anna));
+        _model.Publish(AccountsLoadState.Ready, Snapshot(2, Max with { FullName = "Aaron Mustermann" }, Anna));
 
-        Assert.Equal((0, "Aaron Adler (max)"), (_viewModel.Accounts.IndexOf(maxItem), maxItem.DisplayName));
+        Assert.Equal((0, "Aaron Mustermann (max)"), (_viewModel.Accounts.IndexOf(maxItem), maxItem.DisplayName));
     }
 
     [Fact]

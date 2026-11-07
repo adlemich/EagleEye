@@ -7,7 +7,7 @@ public sealed class AccountInventoryTests
 {
     private const string Machine = "S-1-5-21-1-2-3";
     private static readonly LocalAccountInfo Admin = new($"{Machine}-1000", "papa", null, false, true);
-    private static readonly LocalAccountInfo Max = new($"{Machine}-1001", "max", "Max Adler", false, false);
+    private static readonly LocalAccountInfo Max = new($"{Machine}-1001", "max", "Max Mustermann", false, false);
     private static readonly LocalAccountInfo Anna = new($"{Machine}-1002", "anna", null, false, false);
 
     private static readonly AccountInventory Base = AccountInventory.Create([Admin, Max, Anna]);
@@ -31,7 +31,7 @@ public sealed class AccountInventoryTests
         { "added", [Admin, Max, Anna, new($"{Machine}-1003", "lena", null, false, false)] },
         { "removed", [Admin, Max] },
         { "renamed", [Admin, Max with { UserName = "maximilian" }, Anna] },
-        { "full name", [Admin, Max with { FullName = "Maximilian Adler" }, Anna] },
+        { "full name", [Admin, Max with { FullName = "Maximilian Mustermann" }, Anna] },
         { "disabled", [Admin, Max with { IsDisabled = true }, Anna] },
         { "became admin", [Admin, Max with { IsAdmin = true }, Anna] },
         { "admin became standard", [Admin with { IsAdmin = false }, Max, Anna] },

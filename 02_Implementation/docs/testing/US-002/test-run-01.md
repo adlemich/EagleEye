@@ -2,7 +2,7 @@
 
 **Test plan**: `docs/testing/US-002/test-plan.md` (approved 2026-10-04)
 **Prepared by**: TES, 2026-10-04
-**Executed by**: Michael
+**Executed by**: the project owner
 **Execution date**: <!-- fill in -->
 **Build / installer version**: 0.2.0 — `03_Delivery/windows/EagleEye-Setup-0.2.0.exe` (service + tray) and `03_Delivery/windows/EagleEye-ParentApp-Setup-0.2.0.exe` (parent app)
 **Machine(s)**: Windows Developer Machine (service PC) <!-- add Windows version --> · PC2 (Block C) <!-- add name / Windows version / display language -->

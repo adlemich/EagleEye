@@ -42,9 +42,9 @@ References: FR-SVC-050, FR-TRAY-010, FR-TRAY-040, FR-TRAY-041, FR-TRAY-042, FR-T
 
 | Date | Change | Source |
 |---|---|---|
-| 2026-10-03 | AC-11/AC-12 reworded so texts are language-dependent; language note added | Michael, after test run 01 (ISSUE-001) |
-| 2026-10-03 | AC-13 added: connection error with server address in the About dialog | Michael, ISSUE-003 |
-| 2026-10-03 | Verified/Closed by Michael after test runs 01 and 02 (build 0.1.1) | Michael |
+| 2026-10-03 | AC-11/AC-12 reworded so texts are language-dependent; language note added | The project owner, after test run 01 (ISSUE-001) |
+| 2026-10-03 | AC-13 added: connection error with server address in the About dialog | The project owner, ISSUE-003 |
+| 2026-10-03 | Verified/Closed by the project owner after test runs 01 and 02 (build 0.1.1) | The project owner |
 
 ---
 
