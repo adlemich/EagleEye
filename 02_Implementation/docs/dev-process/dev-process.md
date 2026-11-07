@@ -203,6 +203,7 @@ All automation is via PowerShell 7.6 scripts in `02_Implementation/scripts/`:
 | `package-windows.ps1` | Package Windows installer (Windows machine only) |
 | `package-macos.ps1` | Package macOS app (MacBook only) |
 | `plantuml.ps1` | Start/stop the local PlantUML server |
+| `clean.ps1` | Delete binaries and build artifacts (`-WhatIf` previews, `-IncludeDelivery` also deletes the installers) |
 
 ### 8.2 Development Environment
 

@@ -121,6 +121,7 @@ All scripts in `02_Implementation/scripts/` detect the host and only touch the c
 | `package-windows.ps1` | Installers (service + tray, parent app) | refuses to run |
 | `package-macos.ps1` | refuses to run | `.dmg` |
 | `plantuml.ps1` | Start/stop the PlantUML server | Start/stop the PlantUML server |
+| `clean.ps1` | Delete git-ignored build output (keeps `secrets/`, agent `.claude/` settings and `03_Delivery/` unless `-IncludeDelivery`); `-WhatIf` previews | same |
 
 The `EagleEye.ParentApp.csproj` selects its target frameworks by host OS (Windows: `net10.0-windows10.0.19041.0`; macOS: `net10.0-maccatalyst`). `Directory.Build.props` sets `EnableWindowsTargeting` so the full solution still loads in the IDE on macOS.
 
