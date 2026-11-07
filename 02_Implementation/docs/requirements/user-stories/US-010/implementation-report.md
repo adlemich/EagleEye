@@ -1,6 +1,6 @@
 # Implementation Report: US-010 — Remaining-Time Overlay Replaces the Warning Dialogs (0.10.0)
 
-**Status**: Windows Steps 1 to 4 and 6 done (2026-11-01). **Step 5 (Michael's on-screen check) pending** (§9). Step 7 (MacBook) pending (H1, §10). The story stays `Analyzed` until Step 9 (gaming PC) has passed (plan H4).
+**Status**: Windows Steps 1 to 4 and 6 done (2026-11-01). **Step 5 and Step 9 passed** by Michael's pilot check on 2026-11-07 (§9.1); the Windows part is approved as is. Step 7 (MacBook) pending (H1, §10); after Step 7 the story goes to `Implemented`.
 **Author**: DEV
 **Branch**: `feature/US-010-time-overlay`
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-010/implementation-plan.md` (approved 2026-11-01)
@@ -65,8 +65,8 @@ Not unit-tested (manual, Step 5 / test run, as planned): `OverlayWindow`, `PillR
 
 | # | Point | Default |
 |---|---|---|
-| **Q-DEV-1** | **Line order in the bottom corners** (D-3): the large top line sits at the corner (bottom) and the smaller lines stack above it. The alternative is the same order as in the top corners (top line at the top), which moves the top line up with each extra line. | **Keep D-3** (matches AC-4 "the top line always stays in the same place at the corner"). Michael sees it in Step 5 #3. |
-| **Q-DEV-2** | **Step 5 setup** uses the Admin account that owns the repo as the controlled account (`EAGLEEYE_DEV_WATCH_SID`), a fresh data folder `02_Implementation/artifacts/smoke-us010-step5` and a fresh Debug pairing. The installed service 0.8.0 and Michael's installed tray client keep running untouched (a second tray icon appears). | Proceed as in §9. |
+| **Q-DEV-1** | **Line order in the bottom corners** (D-3): the large top line sits at the corner (bottom) and the smaller lines stack above it. The alternative is the same order as in the top corners (top line at the top), which moves the top line up with each extra line. | **Keep D-3** (matches AC-4 "the top line always stays in the same place at the corner"). **Closed 2026-11-07**: default accepted by Michael (§9.1). |
+| **Q-DEV-2** | **Step 5 setup** uses the Admin account that owns the repo as the controlled account (`EAGLEEYE_DEV_WATCH_SID`), a fresh data folder `02_Implementation/artifacts/smoke-us010-step5` and a fresh Debug pairing. The installed service 0.8.0 and Michael's installed tray client keep running untouched (a second tray icon appears). | Proceed as in §9. **Closed 2026-11-07**: not needed, Step 5 was replaced by Michael's pilot check (§9.1). |
 | R-1 | Nothing visible was checked by DEV (no display/input in the DEV session, plan TI-15). Pulse, sound, colours, click-through, re-assert, 150 % and the menu popups are Step 5 / the test run. The pill rendering was checked offline only (§8.4). | — |
 | R-2 | The existing `package-windows.ps1` publishes the tray client **self-contained** (as before), not framework-dependent as plan S-20 assumed. Its working set is therefore closer to the spike's 136 MB start value. No script change (plan: "Installers — no script change"); AC-27 is Michael's pilot check. | — |
 | R-3 | The pulse/sound can come up to 5 s after the colour change (plan Q-1, accepted). | — |
@@ -94,9 +94,8 @@ Not unit-tested (manual, Step 5 / test run, as planned): `OverlayWindow`, `PillR
 | Steps | Machine |
 |---|---|
 | 1 to 4, 6 | Windows Developer Machine `ZOCK-O-MAT-V3` (192.168.1.37), DEV session over RDP (session 2, account Admin), no display/input usable for checks |
-| 5 | Windows Developer Machine, **Michael at the console** — pending (§9) |
+| 5, 9 | Pilot environment (Windows machines incl. gaming PC 192.168.1.85), installed 0.10.0, Michael — passed 2026-11-07 (§9.1) |
 | 7 | MacBook — pending (§10) |
-| 9 | Gaming PC 192.168.1.85 — pending |
 
 ---
 
@@ -190,6 +189,12 @@ If Step 5 finds something that needs a fix in the service or tray client, DEV fi
 
 **Report to DEV/Orchestrator**: Pass/Fail per row 1 to 5 and photos. Findings go back to Steps 2 to 4 (and new installers).
 
+### 9.1 Result (2026-11-07, recorded by the Orchestrator)
+
+Michael did not run the Debug setup above. He installed the 0.10.0 installers (§8.5) in the pilot environment on the Windows machines and checked there instead. This covers Step 5 and Step 9 together. His summary: "the overlay pill was tested OK in different games and applications, all as expected." He approved the Windows part as is and closed the open questions with their defaults (Q-DEV-1 keep D-3, Q-DEV-2 not needed). Bugs found later are filed as issues.
+
+No result was recorded per row, so the rows of the table above and the Step 9 points of the plan stay unrecorded. The test run (TES, step d) covers them. Mixed versions on .85 (TI-16): the Mac app stays on 0.9.0 until the `.dmg` 0.10.0 from Step 7 is installed.
+
 ---
 
 ## 10. H1 — Handover to the MacBook (Step 7)
@@ -202,7 +207,7 @@ Everything is pushed on `feature/US-010-time-overlay`. The shared changes the Ma
    `git fetch && git switch feature/US-010-time-overlay && git pull`
 2. `pwsh 02_Implementation/scripts/env-check.ps1` → host "MacBook", branch `feature/US-010-time-overlay`, no uncommitted changes, Xcode and the `maccatalyst` workload found.
 3. Start a Claude Code DEV session in `02_Implementation/agents/dev/` with this prompt:
-   > You are DEV on the MacBook. US-010 step c, plan Step 7 (`02_Implementation/docs/requirements/user-stories/US-010/implementation-plan.md`). Steps 1 to 4 and 6 are done on Windows (`implementation-report.md` §8; Step 5 is Michael's check on Windows, §9). Run `pwsh 02_Implementation/scripts/build.ps1` and `test.ps1` (Shared 314, ParentApp 1,108 expected; 0 warnings, all green). Build the Mac app Debug and do the look check of the Settings page with the probe/`screencapture` pattern of US-008 §8.3, light and dark: the section "Zeit-Ende Warnungen" has only the columns "Zeitpunkt" and "Minuten vor Ende" and the new explanation text (AC-31, AC-32); the connected two-column table against a 0.10.0 service is checked in the test run (no 0.10.0 service is installed anywhere). Build the `.dmg` with `pwsh 02_Implementation/scripts/package-macos.ps1`, check it is 0.10.0 and put its SHA-256 in the report. Do not install it over Michael's Mac app (test starting point). Write report §Mac (Step 7) and update §6 "How to test". Do not set the story to `Implemented` (that happens after Step 9). Commit and push (H2).
+   > You are DEV on the MacBook. US-010 step c, plan Step 7 (`02_Implementation/docs/requirements/user-stories/US-010/implementation-plan.md`). Steps 1 to 4 and 6 are done on Windows (`implementation-report.md` §8; Step 5 is Michael's check on Windows, §9). Run `pwsh 02_Implementation/scripts/build.ps1` and `test.ps1` (Shared 314, ParentApp 1,108 expected; 0 warnings, all green). Build the Mac app Debug and do the look check of the Settings page with the probe/`screencapture` pattern of US-008 §8.3, light and dark: the section "Zeit-Ende Warnungen" has only the columns "Zeitpunkt" and "Minuten vor Ende" and the new explanation text (AC-31, AC-32); the connected two-column table against a 0.10.0 service is checked in the test run (no 0.10.0 service is installed anywhere). Build the `.dmg` with `pwsh 02_Implementation/scripts/package-macos.ps1`, check it is 0.10.0 and put its SHA-256 in the report. Do not install it over Michael's Mac app (test starting point). Write report §Mac (Step 7) and update §6 "How to test". Step 5 and Step 9 already passed (§9.1), so once Step 7 is green set the story to `Implemented` (status line and change log in `user-story.md`). Commit and push (H2).
 
 **What Step 7 contains** (plan Step 7)
 

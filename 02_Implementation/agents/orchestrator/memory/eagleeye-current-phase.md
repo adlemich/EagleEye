@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-11-01 US-010 Windows steps done (72b3d12, installers 0.10.0); NEXT Michael Step 5 live check, then MacBook Step 7, then .85 Step 9
+description: EagleEye workflow status — 2026-11-07 US-010 Windows part approved (pilot check covers Steps 5+9); NEXT MacBook Step 7 (.dmg 0.10.0, story → Implemented), then TES step d
 metadata:
   type: project
 ---
+
+**Update 2026-11-07 (US-010 step c, Windows): Michael installed 0.10.0 in the pilot (Windows machines) and approved the Windows part as is: "overlay pill tested OK in different games and applications, all as expected" = Steps 5 + 9 passed, no per-row results (test run covers them). Q-DEV-1 (keep D-3) and Q-DEV-2 closed with defaults. Bugs later as issues. Recorded in report §9.1 + story change log; story stays Analyzed until Step 7. TI-16: Mac app 0.9.0 not to be used against .85 until .dmg 0.10.0 installed. NEXT: Michael on MacBook runs Step 7 (report §10 prompt; DEV sets story Implemented), then step-c approval → TES step d.**
 
 **Update 2026-11-01 (US-010 step c, Windows parts DONE): Michael approved plan (c0b6d1a; no RAM/CPU run in Step 5 — AC-27 in pilot; Q-1..Q-3 defaults; ADR-022 + amendments Accepted; story Analyzed; arc42 update deferred to ARC). Orchestrator added .85 to dev-environments §1 (45e492d). DEV (subagent) did Steps 1–4 + 6: ba64076, aa38a55 (Steps 2+3 together, D-1), 0c6d672, 72b3d12. 3 096 tests green (Shared 314, Service 1 506, Tray 168, ParentApp 1 108), 0 warnings. Installers 0.10.0 in 03_Delivery/windows (service 49BC687C…5D5F, parent app BA87EBB8…DCA9), not installed. Migration 7 verified in tests + on a copied DB. Nothing visible checked by DEV (RDP session, no display). Q-DEV-1 bottom corners: large line at the corner (reverse order) default yes; Q-DEV-2 Step 5 uses Admin as controlled account with Debug service (offset 10000). R-2 tray published self-contained (bigger working set). NEXT: Michael Step 5 at .37 console (report §9, ~20 min), H1 MacBook Step 7 (report §10 prompt), Step 9 on .85.**
 
