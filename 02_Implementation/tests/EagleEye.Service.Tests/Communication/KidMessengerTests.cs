@@ -11,7 +11,7 @@ namespace EagleEye.Service.Tests.Communication;
 
 public sealed class KidMessengerTests
 {
-    private static readonly KidMessageDto Message = new(KidMessageReason.AppEarlyWarning, null, "Editor", 2, null, null);
+    private static readonly KidMessageDto Message = new(KidMessageReason.AppBudgetUsedUp, null, "Editor", null, null);
 
     private readonly TrayConnectionRegistry _registry = new();
     private readonly Mock<ISingleClientProxy> _client = new();

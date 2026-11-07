@@ -112,7 +112,6 @@ public static class AppTexts
     public static string WarningsExplanation => Get(nameof(WarningsExplanation));
     public static string WarningsColumnPoint => Get(nameof(WarningsColumnPoint));
     public static string WarningsColumnMinutes => Get(nameof(WarningsColumnMinutes));
-    public static string WarningsColumnText => Get(nameof(WarningsColumnText));
     public static string WarningsEarly => Get(nameof(WarningsEarly));
     public static string WarningsFinal => Get(nameof(WarningsFinal));
     public static string WarningsInvalidMinutes => Get(nameof(WarningsInvalidMinutes));

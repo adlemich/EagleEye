@@ -49,7 +49,7 @@ public sealed class ParentHubAppRulesTests
     public static TheoryData<Func<ParentHub, Task>> WarningWrites() => new()
     {
         hub => hub.SetWarningMinutes(RequestId, WarningLevel.Early, 3),
-        hub => hub.SetWarningText(RequestId, WarningLevel.Final, "Schnell"),
+
     };
 
     // ---------- Queries ----------
@@ -102,7 +102,7 @@ public sealed class ParentHubAppRulesTests
     [Fact]
     public async Task GetWarningSettings_ReturnsSnapshot()
     {
-        var dto = new WarningSettingsDto(2, null, 5, null, 1, null);
+        var dto = new WarningSettingsDto(2, null, 5, 1);
         _warnings.Setup(w => w.GetAsync(It.IsAny<CancellationToken>())).ReturnsAsync(dto);
 
         Assert.Same(dto, await _hub.GetWarningSettings());
@@ -163,11 +163,9 @@ public sealed class ParentHubAppRulesTests
     }
 
     [Fact]
-    public async Task SetWarningText_Delegates()
+    public void SetWarningText_Removed()
     {
-        _warnings.Setup(w => w.SetTextAsync(RequestId, WarningLevel.Early, "Bald", DeviceName, It.IsAny<CancellationToken>())).ReturnsAsync(Ack);
-
-        Assert.Same(Ack, await _hub.SetWarningText(RequestId, WarningLevel.Early, "Bald"));
+        Assert.Null(typeof(ParentHub).GetMethod("SetWarningText"));
     }
 
     // ---------- Writes: invalid input ----------
@@ -202,11 +200,10 @@ public sealed class ParentHubAppRulesTests
     }
 
     [Fact]
-    public async Task WarningWrites_InvalidRequestOrText_InvalidRequest()
+    public async Task WarningWrites_InvalidRequestOrLevel_InvalidRequest()
     {
         Assert.Equal(ParentHub.InvalidRequestMessage, (await Assert.ThrowsAsync<HubException>(() => _hub.SetWarningMinutes(Guid.Empty, WarningLevel.Early, 3))).Message);
-        Assert.Equal(ParentHub.InvalidRequestMessage, (await Assert.ThrowsAsync<HubException>(() => _hub.SetWarningText(RequestId, WarningLevel.Early, "a" + '\uD83D'))).Message);
-        Assert.Equal(ParentHub.InvalidRequestMessage, (await Assert.ThrowsAsync<HubException>(() => _hub.SetWarningText(RequestId, (WarningLevel)3, "x"))).Message);
+        Assert.Equal(ParentHub.InvalidRequestMessage, (await Assert.ThrowsAsync<HubException>(() => _hub.SetWarningMinutes(RequestId, (WarningLevel)3, 3))).Message);
     }
 
     // ---------- Writes: exception mapping ----------
@@ -255,6 +252,6 @@ public sealed class ParentHubAppRulesTests
         _apps.Setup(a => a.SetDayAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<DayOfWeek>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ThrowsAsync(failure);
         _apps.Setup(a => a.SetBudgetTextAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ThrowsAsync(failure);
         _warnings.Setup(w => w.SetMinutesAsync(It.IsAny<Guid>(), It.IsAny<WarningLevel>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ThrowsAsync(failure);
-        _warnings.Setup(w => w.SetTextAsync(It.IsAny<Guid>(), It.IsAny<WarningLevel>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ThrowsAsync(failure);
+
     }
 }

@@ -122,6 +122,25 @@ public sealed class AppWindowRuleTests
         Assert.Equal(new AgentApp(100, AgentAppKind.Window), AppWindowRule.Classify(window));
     }
 
+    [Theory]
+    [InlineData(0x00010088L, "WindowsForms10.Window.808.app.0.1")]
+    [InlineData(0x080900A8L, "WindowsForms10.Window.8.app.0.1")]
+    public void Classify_TrayClientMenuSubmenuAndOverlay_ExStylesMeasuredInTheSpike_NoApp(long exStyle, string className)
+    {
+        // US-010 FR-TRAY-032 (spike D-10, Decision 9 layer 2): tool-window menus (0x00010088) and the overlay (0x080900A8),
+        // visible and unowned, are never an app, even outside the install folder (layer 1).
+        var window = Normal with { ClassName = className, ExStyle = exStyle, ProcessName = "EagleEye.TrayClient.exe", Width = 180, Height = 120 };
+
+        Assert.Null(AppWindowRule.Classify(window));
+    }
+
+    [Fact]
+    public void Classify_PlainContextMenuStripPopup_IsAnApp_TheD10Finding()
+    {
+        // Without WS_EX_TOOLWINDOW the WinForms popup (TOPMOST | CONTROLPARENT) counts as an app: why the tray uses tool windows.
+        Assert.NotNull(AppWindowRule.Classify(Normal with { ExStyle = 0x00010008L, ProcessName = "EagleEye.TrayClient.exe" }));
+    }
+
     [Fact]
     public void Classify_Null_ThrowsArgumentNullException()
     {

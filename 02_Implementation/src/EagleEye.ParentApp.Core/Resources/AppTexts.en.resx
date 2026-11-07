@@ -99,10 +99,9 @@
   <data name="RulesInvalidHours" xml:space="preserve"><value>Enter hours between 0 and 23.</value></data>
   <data name="RulesInvalidBudgetMinutes" xml:space="preserve"><value>Enter minutes between 0 and 59.</value></data>
   <data name="SectionTimeWarnings" xml:space="preserve"><value>Time-elapsed warnings</value></data>
-  <data name="WarningsExplanation" xml:space="preserve"><value>Here you can set 2 points in time at which your kid gets a warning that it will soon be time to stop. This applies when the time budget of an app will soon be used up, or when a break time is about to begin.</value></data>
+  <data name="WarningsExplanation" xml:space="preserve"><value>Here you can set 2 points in time at which your kid is warned that it will soon be time to stop. Your kid sees the remaining time on the screen; at these points it turns yellow and red, with a sound. This applies when the time budget of an app or app group will soon be used up, or when a break time is about to begin.</value></data>
   <data name="WarningsColumnPoint" xml:space="preserve"><value>Point in time</value></data>
   <data name="WarningsColumnMinutes" xml:space="preserve"><value>Minutes before end</value></data>
-  <data name="WarningsColumnText" xml:space="preserve"><value>Display text</value></data>
   <data name="WarningsEarly" xml:space="preserve"><value>Early warning</value></data>
   <data name="WarningsFinal" xml:space="preserve"><value>Final warning</value></data>
   <data name="WarningsInvalidMinutes" xml:space="preserve"><value>Enter minutes between 1 and 59.</value></data>

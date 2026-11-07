@@ -166,7 +166,7 @@ public sealed class AppGroupRepositoryTests : IAsyncLifetime
             await using var database = new ServiceDatabase(ServiceDatabase.BuildConnectionString(file));
             await database.InitializeAsync();
 
-            Assert.Equal(6, await database.GetSchemaVersionAsync());
+            Assert.Equal(7, await database.GetSchemaVersionAsync());
             Assert.True((await new AccountSelectionRepository(database).LoadAllAsync())[Kid]);
             Assert.Equal(605, (await new UsageRepository(database).GetUsageAsync(Kid, new DateOnly(2026, 10, 30), new DateOnly(2026, 10, 30))).Single().Seconds);
             Assert.Equal((45, BreakTimeDays.All), ((await new AppRuleRepository(database).LoadAllAsync()).Apps.Single().BudgetMinutes, (await new AppRuleRepository(database).LoadAllAsync()).Apps.Single().Days));

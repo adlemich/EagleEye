@@ -95,9 +95,6 @@ public interface IParentHubClient : IAsyncDisposable
     /// <summary>Calls <c>IParentHub.SetWarningMinutes</c>.</summary>
     Task<StateWriteAckDto> SetWarningMinutesAsync(Guid requestId, WarningLevel level, int minutes, CancellationToken ct);
 
-    /// <summary>Calls <c>IParentHub.SetWarningText</c>.</summary>
-    Task<StateWriteAckDto> SetWarningTextAsync(Guid requestId, WarningLevel level, string text, CancellationToken ct);
-
     /// <summary>The service broadcast <c>IParentClientCallback.OnAppGroupsChanged</c> (US-008).</summary>
     event Action<AppGroupsDto>? AppGroupsChanged;
 

@@ -88,13 +88,12 @@ public sealed class WarningSettingsViewModel : ObservableObject, IWarningRowHost
     /// <summary>Whether a message is shown.</summary>
     public bool HasError => ErrorText.Length > 0;
 
-    /// <summary>Commits typed minutes and texts; called before the page changes.</summary>
+    /// <summary>Commits typed minutes; called before the page changes.</summary>
     public void FlushPendingEdits()
     {
         foreach (var row in new[] { Early, Final })
         {
             row?.CommitMinutes();
-            row?.CommitText();
         }
     }
 

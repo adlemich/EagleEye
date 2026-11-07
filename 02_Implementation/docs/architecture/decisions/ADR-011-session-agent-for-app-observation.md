@@ -1,8 +1,10 @@
 # ADR-011: Session Agent for App Observation — a SYSTEM Helper per Watched Session
 
-**Status**: Accepted (approved by Michael with the US-004 implementation plan, 2026-10-07); amendment for graceful close approved with the US-005 implementation plan, 2026-10-10
+**Status**: Accepted (approved by Michael with the US-004 implementation plan, 2026-10-07); amendment for graceful close approved with the US-005 implementation plan, 2026-10-10; US-010 amendment (FR-TRAY-032) approved with the US-010 implementation plan, 2026-11-01
 **Date**: 2026-10-07
 **Deciders**: ARC, Michael
+
+> **Amendment 2026-11-01 (US-010, FR-TRAY-032) — approved by Michael together with the US-010 implementation plan (2026-11-01)**: **§5 "Never recorded"** covers **every window of the tray client** (tray menu and its submenus, the remaining-time overlay, the dialogs): the installed tray client is dropped by full path before the tracker, the start gate and the engine, and `AppCloser` never closes it. This is now pinned by explicit unit tests for the tray client's path. **Defence in depth (US-010 spike finding D-10)**: a WinForms `ContextMenuStrip` popup is a visible, unowned, non-tool top-level window that the §4 rule counts as an app; the tray client therefore creates its context menu, every submenu and the overlay as **tool windows** (`WS_EX_TOOLWINDOW`, no `WS_EX_APPWINDOW`), so §4 never counts them even for a tray started outside the installation folder (Debug). The §4 rule itself is unchanged; unit tests document that the measured tray exstyles (`0x00010088` menu, `0x080900A8` overlay) are not apps.
 
 > **Amendment 2026-10-10 (US-005, ADR-013; approved by Michael with the US-005 implementation plan, 2026-10-10)**
 >

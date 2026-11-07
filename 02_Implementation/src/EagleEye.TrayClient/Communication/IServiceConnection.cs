@@ -13,6 +13,9 @@ public interface IServiceConnection : IAsyncDisposable
     /// <summary>Raised when the service sends a pairing code to show (FR-TRAY-070). Raised on a thread-pool thread.</summary>
     event Action<string>? PairingCodeReceived;
 
+    /// <summary>Raised when the service pushes the session's remaining-time model (US-010, ADR-022). Raised on a thread-pool thread.</summary>
+    event Action<RemainingTimeDto>? RemainingTimeReceived;
+
     /// <summary>
     /// Answers <c>ShowKidMessage</c> requests of the service (ADR-014 §2 as amended by US-006); must return at once.
     /// Called on a thread-pool thread. Without a handler the request fails (the service logs "did not answer").

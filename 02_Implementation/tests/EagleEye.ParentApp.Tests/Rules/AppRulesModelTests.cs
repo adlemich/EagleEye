@@ -85,13 +85,11 @@ public sealed class AppRulesModelTests
     [Fact]
     public async Task WarningSettings_FetchedOnConnect_BroadcastAppliedAndWritesSent()
     {
-        _client.Setup(c => c.GetWarningSettingsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new WarningSettingsDto(2, null, 5, null, 1, null));
+        _client.Setup(c => c.GetWarningSettingsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new WarningSettingsDto(2, null, 5, 1));
         _client.Setup(c => c.SetWarningMinutesAsync(It.IsAny<Guid>(), WarningLevel.Early, 3, It.IsAny<CancellationToken>()))
-            .Callback(() => _client.Raise(c => c.WarningSettingsChanged += null, new WarningSettingsDto(4, null, 3, null, 1, null)))
+            .Callback(() => _client.Raise(c => c.WarningSettingsChanged += null, new WarningSettingsDto(4, null, 3, 1)))
             .ReturnsAsync(new StateWriteAckDto(4));
-        _client.Setup(c => c.SetWarningTextAsync(It.IsAny<Guid>(), WarningLevel.Final, "Schnell", It.IsAny<CancellationToken>()))
-            .Callback(() => _client.Raise(c => c.WarningSettingsChanged += null, new WarningSettingsDto(5, null, 3, null, 1, "Schnell")))
-            .ReturnsAsync(new StateWriteAckDto(5));
+
         var model = new WarningSettingsModel(_gateway, _time);
         Assert.Equal(AccountsLoadState.NotAvailable, model.LoadState);
 
@@ -99,19 +97,17 @@ public sealed class AppRulesModelTests
         await model.LastFetch;
         Assert.Equal((AccountsLoadState.Ready, 2L), (model.LoadState, model.Snapshot!.Revision));
 
-        _client.Raise(c => c.WarningSettingsChanged += null, new WarningSettingsDto(3, null, 6, null, 1, null));
+        _client.Raise(c => c.WarningSettingsChanged += null, new WarningSettingsDto(3, null, 6, 1));
         Assert.Equal(6, model.Snapshot!.EarlyMinutes);
 
         Assert.True(await model.SetMinutesAsync(WarningLevel.Early, 3));
-        Assert.True(await model.SetTextAsync(WarningLevel.Final, "Schnell"));
-        Assert.Equal("Schnell", model.Snapshot!.FinalText);
-        await Assert.ThrowsAsync<ArgumentNullException>(() => model.SetTextAsync(WarningLevel.Final, null!));
+        Assert.Equal(3, model.Snapshot!.EarlyMinutes);
     }
 
     [Fact]
     public async Task WarningSettings_CreatedWhileConnected_FetchesAtOnce()
     {
-        _client.Setup(c => c.GetWarningSettingsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new WarningSettingsDto(2, null, 5, null, 1, null));
+        _client.Setup(c => c.GetWarningSettingsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new WarningSettingsDto(2, null, 5, 1));
         _gateway.SetConnected(_client.Object);
 
         var model = new WarningSettingsModel(_gateway, _time);

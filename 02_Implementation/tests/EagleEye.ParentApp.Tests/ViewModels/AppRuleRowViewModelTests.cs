@@ -84,7 +84,7 @@ public sealed class AppRuleRowViewModelTests
 
 public sealed class WarningRowViewModelTests
 {
-    private static readonly WarningSettingsDto Settings = new(2, null, 5, "Bald", 1, null);
+    private static readonly WarningSettingsDto Settings = new(2, null, 5, 1);
 
     private readonly Host _host = new();
 
@@ -101,22 +101,22 @@ public sealed class WarningRowViewModelTests
     {
         var row = new WarningRowViewModel(WarningLevel.Early, Settings, _host);
         row.MinutesText = "5";
-        row.Text = "Bald";
         row.MinutesText = null!;
-        row.Text = null!;
 
-        Assert.Equal((string.Empty, string.Empty), (row.MinutesText, row.Text));
+        Assert.Equal(string.Empty, row.MinutesText);
     }
 
     [Fact]
-    public void TypedMinutes_KeptAgainstSnapshots_TextUpdated()
+    public void TypedMinutes_KeptAgainstSnapshots_OtherRowUpdated()
     {
         var row = new WarningRowViewModel(WarningLevel.Early, Settings, _host);
+        var final = new WarningRowViewModel(WarningLevel.Final, Settings, _host);
         row.MinutesText = "9";
 
-        row.Update(Settings with { EarlyMinutes = 7, EarlyText = "Neu" });
+        row.Update(Settings with { EarlyMinutes = 7, FinalMinutes = 2 });
+        final.Update(Settings with { EarlyMinutes = 7, FinalMinutes = 2 });
 
-        Assert.Equal(("9", "Neu"), (row.MinutesText, row.Text));
+        Assert.Equal(("9", "2"), (row.MinutesText, final.MinutesText));
     }
 
     private sealed class Host : IWarningRowHost

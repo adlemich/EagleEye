@@ -91,7 +91,7 @@ public sealed class AppStartGateTests
             (2, Kid, "kid1", Notepad, "notepad.exe", "Editor", BlockedStartTexts.AppStartTrigger, Evening, Utc(20, 5), new DateTime(2026, 10, 12, 20, 5, 0), Utc(20, 10)),
             (start.SessionId, start.AccountSid, start.UserName, start.ProgramPath, start.ProcessName, start.DisplayName, start.Trigger, start.Entry, start.StartedUtc, start.StartedLocal, start.DetectedUtc));
         Assert.Equal([new ObservedProcess(10, Ft(20, 5))], start.Targets);
-        Assert.Equal(new KidMessageDto(KidMessageReason.BreakTime, null, null, null, 1200, 1439), start.Message);
+        Assert.Equal(new KidMessageDto(KidMessageReason.BreakTime, null, null, 1200, 1439), start.Message);
         Assert.Equal((CloseKinds.BlockedStart, CloseReasons.BreakTime, true), (start.Kind, start.Reason, start.RemovesFromReport));
     }
 
@@ -330,7 +330,7 @@ public sealed class AppStartGateTests
         Assert.Equal(
             (CloseKinds.BlockedStart, CloseReasons.NotAllowedToday, (BreakTimeEntryDto?)null, new AppRuleAtClose(0, BreakTimeDays.None, 0)),
             (start.Kind, start.Reason, start.Entry, start.Rule));
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppNotAllowedToday, null, "App", null, null, null), start.Message);
+        Assert.Equal(new KidMessageDto(KidMessageReason.AppNotAllowedToday, null, "App", null, null), start.Message);
     }
 
     [Fact]
@@ -420,7 +420,7 @@ public sealed class AppStartGateTests
         var start = _started.Single();
         Assert.Empty(screened.Apps);
         Assert.Equal((CloseReasons.BudgetUsedUp, new AppRuleAtClose(5, BreakTimeDays.All, 300, 7, "Games")), (start.Reason, start.Rule));
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppBudgetUsedUp, null, "Games", null, null, null), start.Message);
+        Assert.Equal(new KidMessageDto(KidMessageReason.AppBudgetUsedUp, null, "Games", null, null), start.Message);
     }
 
     [Fact]

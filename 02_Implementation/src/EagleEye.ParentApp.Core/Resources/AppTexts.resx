@@ -99,10 +99,9 @@
   <data name="RulesInvalidHours" xml:space="preserve"><value>Bitte Stunden zwischen 0 und 23 eingeben.</value></data>
   <data name="RulesInvalidBudgetMinutes" xml:space="preserve"><value>Bitte Minuten zwischen 0 und 59 eingeben.</value></data>
   <data name="SectionTimeWarnings" xml:space="preserve"><value>Zeit-Ende Warnungen</value></data>
-  <data name="WarningsExplanation" xml:space="preserve"><value>Hier kannst du 2 Zeitpunkte einstellen, bei denen dein Kind eine Warnung erhält, wenn es bald Zeit wird aufzuhören. Dies gilt, wenn das Zeit-Budget für eine Applikation bald erreicht wird, oder bald eine Ruhezeit ansteht.</value></data>
+  <data name="WarningsExplanation" xml:space="preserve"><value>Hier kannst du 2 Zeitpunkte einstellen, zu denen dein Kind gewarnt wird, dass es bald Zeit wird aufzuhören. Dein Kind sieht die verbleibende Zeit am Bildschirm; zu diesen Zeitpunkten wird die Anzeige gelb bzw. rot, mit einem Ton. Dies gilt, wenn das Zeit-Budget für eine Applikation oder App-Gruppe bald erreicht wird, oder bald eine Ruhezeit ansteht.</value></data>
   <data name="WarningsColumnPoint" xml:space="preserve"><value>Zeitpunkt</value></data>
   <data name="WarningsColumnMinutes" xml:space="preserve"><value>Minuten vor Ende</value></data>
-  <data name="WarningsColumnText" xml:space="preserve"><value>Anzeigetext</value></data>
   <data name="WarningsEarly" xml:space="preserve"><value>Frühe Warnung</value></data>
   <data name="WarningsFinal" xml:space="preserve"><value>Finale Warnung</value></data>
   <data name="WarningsInvalidMinutes" xml:space="preserve"><value>Bitte Minuten zwischen 1 und 59 eingeben.</value></data>

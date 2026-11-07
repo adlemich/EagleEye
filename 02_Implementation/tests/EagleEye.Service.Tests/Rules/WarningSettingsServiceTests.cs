@@ -45,19 +45,19 @@ public sealed class WarningSettingsServiceTests : IAsyncLifetime
     public async Task Defaults_WithoutRow()
     {
         Assert.Equal(WarningSettings.Defaults, _service.Current);
-        Assert.Equal(new WarningSettingsDto(1, null, 5, null, 1, null), await _service.GetAsync());
+        Assert.Equal(new WarningSettingsDto(1, null, 5, 1), await _service.GetAsync());
         Assert.Contains("Warning levels loaded: early 5 min, final 1 min.", _logger.Messages(LogLevel.Information));
     }
 
     [Fact]
     public async Task Initialize_StoredRow_Loaded()
     {
-        await _repository.SaveAsync(new StoredWarningSettings(10, "Bald", 3, null), _time.GetUtcNow());
+        await _repository.SaveAsync(new StoredWarningSettings(10, 3), _time.GetUtcNow());
         using var service = new WarningSettingsService(_repository, _broadcaster.Object, _time, _logger);
 
         await service.InitializeAsync();
 
-        Assert.Equal(new WarningSettings(10, "Bald", 3, null), service.Current);
+        Assert.Equal(new WarningSettings(10, 3), service.Current);
     }
 
     [Fact]
@@ -68,8 +68,8 @@ public sealed class WarningSettingsServiceTests : IAsyncLifetime
 
         Assert.Equal(3, ack.Revision);
         Assert.Equal((3, 2), (_service.Current.EarlyMinutes, _service.Current.FinalMinutes));
-        Assert.Equal(new StoredWarningSettings(3, null, 2, null), await _repository.LoadAsync());
-        Assert.Equal(new WarningSettingsDto(3, RequestA, 3, null, 2, null), _broadcasts[^1]);
+        Assert.Equal(new StoredWarningSettings(3, 2), await _repository.LoadAsync());
+        Assert.Equal(new WarningSettingsDto(3, RequestA, 3, 2), _broadcasts[^1]);
         Assert.Equal(
             "Warning settings changed by Dad's laptop: warning levels changed: early 3 min, final 2 min (request aaaaaaaa-0000-0000-0000-000000000001, revision 3).",
             _logger.Messages(LogLevel.Information)[^1]);
@@ -95,42 +95,6 @@ public sealed class WarningSettingsServiceTests : IAsyncLifetime
     public async Task SetMinutesAsync_OutOfRange_Throws(WarningLevel level, int minutes)
     {
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => _service.SetMinutesAsync(RequestA, level, minutes, Device));
-    }
-
-    [Fact]
-    public async Task SetTextAsync_CustomThenDefault()
-    {
-        await _service.SetTextAsync(RequestA, WarningLevel.Early, "Bald\r\nSchluss \U0001F680", Device);
-        Assert.Equal("Bald\nSchluss \U0001F680", _service.Current.EarlyText);
-        Assert.EndsWith("early warning text changed (request aaaaaaaa-0000-0000-0000-000000000001, revision 2).", _logger.Messages(LogLevel.Information)[^1], StringComparison.Ordinal);
-
-        await _service.SetTextAsync(RequestA, WarningLevel.Early, "Attention, you only have 5 minutes left! Save your progress.", Device);
-
-        Assert.Null(_service.Current.EarlyText);
-        Assert.Contains("early warning text reset to the default", _logger.Messages(LogLevel.Information)[^1], StringComparison.Ordinal);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("Achtung!!! Nur noch 1 Minute – jetzt aber schnell speichern!")]
-    [InlineData("Attention!!! Only 1 minute left – save quickly now!")]
-    public async Task SetTextAsync_Final_EmptyOrAnyDefault_Default(string text)
-    {
-        await _service.SetTextAsync(RequestA, WarningLevel.Final, "x", Device);
-
-        await _service.SetTextAsync(RequestA, WarningLevel.Final, text, Device);
-
-        Assert.Null(_service.Current.FinalText);
-        Assert.Null((await _repository.LoadAsync())!.FinalText);
-    }
-
-    [Fact]
-    public async Task SetTextAsync_Invalid_Throws()
-    {
-        await Assert.ThrowsAsync<ArgumentNullException>(() => _service.SetTextAsync(RequestA, WarningLevel.Early, null!, Device));
-        await Assert.ThrowsAsync<ArgumentException>(() => _service.SetTextAsync(RequestA, WarningLevel.Early, new string('a', 501), Device));
-        await Assert.ThrowsAsync<ArgumentException>(() => _service.SetTextAsync(RequestA, (WarningLevel)5, "x", Device));
-        await Assert.ThrowsAsync<ArgumentNullException>(() => _service.SetTextAsync(RequestA, WarningLevel.Early, "x", null!));
     }
 
     [Fact]
@@ -160,10 +124,17 @@ public sealed class WarningSettingsServiceTests : IAsyncLifetime
     [Fact]
     public void WarningSettings_Accessors()
     {
-        var settings = new WarningSettings(5, "e", 1, "f");
+        var settings = new WarningSettings(5, 1);
 
-        Assert.Equal((5, 1, "e", "f"), (settings.MinutesOf(WarningLevel.Early), settings.MinutesOf(WarningLevel.Final), settings.TextOf(WarningLevel.Early), settings.TextOf(WarningLevel.Final)));
-        Assert.Equal(new WarningSettings(5, "e", 1, null), settings.WithText(WarningLevel.Final, null));
-        Assert.Equal(new WarningSettings(5, null, 1, "f"), settings.WithText(WarningLevel.Early, null));
+        Assert.Equal((5, 1), (settings.MinutesOf(WarningLevel.Early), settings.MinutesOf(WarningLevel.Final)));
+        Assert.Equal(new WarningSettings(7, 1), settings.WithMinutes(WarningLevel.Early, 7));
+        Assert.Equal(new WarningSettings(5, 2), settings.WithMinutes(WarningLevel.Final, 2));
+    }
+
+    [Fact]
+    public void Service_HasNoTextApi()
+    {
+        Assert.Null(typeof(IWarningSettingsService).GetMethod("SetTextAsync"));
+        Assert.Equal(["EarlyMinutes", "FinalMinutes"], typeof(WarningSettings).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance).Select(p => p.Name).Where(n => n != "EqualityContract").Order());
     }
 }

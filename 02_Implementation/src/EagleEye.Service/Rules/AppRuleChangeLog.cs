@@ -26,9 +26,6 @@ public static class AppRuleChangeLog
     public static string LevelsChanged(int earlyMinutes, int finalMinutes) =>
         $"warning levels changed: early {earlyMinutes} min, final {finalMinutes} min";
 
-    /// <summary>"early warning text changed" / "final warning text reset to the default".</summary>
-    public static string WarningTextChanged(WarningLevel level, bool reset) =>
-        $"{(level == WarningLevel.Early ? "early" : "final")} warning text {(reset ? "reset to the default" : "changed")}";
 
     /// <summary>"Mo Tu We" or "no day".</summary>
     public static string Days(BreakTimeDays days) => days == BreakTimeDays.None ? "no day" : BreakTimeChangeLog.Days(days);

@@ -107,42 +107,42 @@ public sealed class EnforcementLog(ILogger<EnforcementLog> logger, InstanceLogLi
     }
 
     /// <summary>
-    /// "Warning: account kid1, Editor (notepad.exe), early warning, 2 min left (budget); message shown." (US-006 AC-37) or
+    /// "Warning: account kid1, Editor (notepad.exe), early warning, 2 min left (budget); shown in overlay." (US-006 AC-37, US-010 AC-36) or
     /// "Warning: account kid1, group Games (Editor, Paint), …" (US-008 AC-31); <paramref name="subject"/> from <see cref="Subject"/>.
     /// </summary>
-    public void AppWarning(string userName, string subject, WarningLevel level, int minutes, AppEndKind kind, string messageState)
+    public void AppWarning(string userName, string subject, WarningLevel level, int minutes, AppEndKind kind, string overlayState)
     {
         logger.LogInformation(
-            "Warning: account {UserName}, {Subject}, {Level} warning, {Minutes} min left ({End}); message {MessageState}.",
-            userName, subject, LevelText(level), minutes, EndText(kind), messageState);
+            "Warning: account {UserName}, {Subject}, {Level} warning, {Minutes} min left ({End}); {OverlayState}.",
+            userName, subject, LevelText(level), minutes, EndText(kind), overlayState);
     }
 
-    /// <summary>"Warning: account kid1, break time 20:00–23:59 (Sa) begins at 20:00, final warning, 1 min left; message shown." (AC-37).</summary>
-    public void BreakWarning(string userName, BreakTimeEntryDto entry, DateTime beginsLocal, WarningLevel level, int minutes, string messageState)
+    /// <summary>"Warning: account kid1, break time 20:00–23:59 (Sa) begins at 20:00, final warning, 1 min left; shown in overlay." (AC-37).</summary>
+    public void BreakWarning(string userName, BreakTimeEntryDto entry, DateTime beginsLocal, WarningLevel level, int minutes, string overlayState)
     {
         ArgumentNullException.ThrowIfNull(entry);
         logger.LogInformation(
-            "Warning: account {UserName}, break time {Range} ({Days}) begins at {Begins}, {Level} warning, {Minutes} min left; message {MessageState}.",
+            "Warning: account {UserName}, break time {Range} ({Days}) begins at {Begins}, {Level} warning, {Minutes} min left; {OverlayState}.",
             userName, BreakTimeChangeLog.Range(entry), BreakTimeChangeLog.Days(entry.Days), beginsLocal.ToString("HH:mm", CultureInfo.InvariantCulture),
-            LevelText(level), minutes, messageState);
+            LevelText(level), minutes, overlayState);
     }
 
-    /// <summary>"Grace period: account kid1, Editor (notepad.exe): the rules changed (budget); closes in 1 min at 18:31:05; message shown." (AC-37).</summary>
-    public void AppGrace(string userName, string subject, AppEndKind kind, int minutes, DateTime closesLocal, string messageState)
+    /// <summary>"Grace period: account kid1, Editor (notepad.exe): the rules changed (budget); closes in 1 min at 18:31:05; shown in overlay." (AC-37).</summary>
+    public void AppGrace(string userName, string subject, AppEndKind kind, int minutes, DateTime closesLocal, string overlayState)
     {
         logger.LogInformation(
-            "Grace period: account {UserName}, {Subject}: the rules changed ({End}); closes in {Minutes} min at {Closes}; message {MessageState}.",
-            userName, subject, EndText(kind), minutes, closesLocal.ToString("HH:mm:ss", CultureInfo.InvariantCulture), messageState);
+            "Grace period: account {UserName}, {Subject}: the rules changed ({End}); closes in {Minutes} min at {Closes}; {OverlayState}.",
+            userName, subject, EndText(kind), minutes, closesLocal.ToString("HH:mm:ss", CultureInfo.InvariantCulture), overlayState);
     }
 
-    /// <summary>"Grace period: account kid1, break time 20:00–23:59 (Sa) begins at 20:00; 2 app(s) close in 1 min at 19:59:35; message shown." (AC-37).</summary>
-    public void BreakGrace(string userName, BreakTimeEntryDto entry, DateTime beginsLocal, int count, int minutes, DateTime closesLocal, string messageState)
+    /// <summary>"Grace period: account kid1, break time 20:00–23:59 (Sa) begins at 20:00; 2 app(s) close in 1 min at 19:59:35; shown in overlay." (AC-37).</summary>
+    public void BreakGrace(string userName, BreakTimeEntryDto entry, DateTime beginsLocal, int count, int minutes, DateTime closesLocal, string overlayState)
     {
         ArgumentNullException.ThrowIfNull(entry);
         logger.LogInformation(
-            "Grace period: account {UserName}, break time {Range} ({Days}) begins at {Begins}; {Count} app(s) close in {Minutes} min at {Closes}; message {MessageState}.",
+            "Grace period: account {UserName}, break time {Range} ({Days}) begins at {Begins}; {Count} app(s) close in {Minutes} min at {Closes}; {OverlayState}.",
             userName, BreakTimeChangeLog.Range(entry), BreakTimeChangeLog.Days(entry.Days), beginsLocal.ToString("HH:mm", CultureInfo.InvariantCulture),
-            count, minutes, closesLocal.ToString("HH:mm:ss", CultureInfo.InvariantCulture), messageState);
+            count, minutes, closesLocal.ToString("HH:mm:ss", CultureInfo.InvariantCulture), overlayState);
     }
 
     /// <summary>Writes one summary line per app whose limit window is over and had suppressed entries.</summary>

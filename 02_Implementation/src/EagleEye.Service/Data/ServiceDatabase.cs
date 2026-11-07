@@ -14,12 +14,14 @@ namespace EagleEye.Service.Data;
 /// (time-zone and clock changes, 90 days, ADR-013 §9). History rows have no foreign keys: entries may be deleted later.
 /// Migration 5 (US-006, ADR-015 §8) creates <c>AppRules</c> (no row = default rule 0:00, no day: deny by default, no data
 /// copy), <c>AccountBudgetTexts</c> (no row = default text, ADR-016) and <c>WarningSettings</c> (at most one row; no row =
-/// 5 / 1 minutes and default texts), and rebuilds <c>BlockedStarts</c> with nullable entry columns plus kind, reason and
+/// 5 / 1 minutes and default texts; texts dropped by migration 7), and rebuilds <c>BlockedStarts</c> with nullable entry columns plus kind, reason and
 /// app-rule columns (old rows: kind "blocked start", reason "break time").
 /// Migration 6 (US-008, ADR-021) creates <c>AppGroups</c> (name key unique ignoring case), <c>AppGroupMembers</c> (one group
 /// per program path), <c>AppGroupRules</c> (no row = 0:00, no day) and <c>ActivitySpans</c> (credited intervals per app record,
 /// Unix milliseconds UTC, one row per app record and start, purged with <c>DailyUsage</c>), and adds the group columns to
 /// <c>BlockedStarts</c>. No data copy: after the update there are no groups.
+/// Migration 7 (US-010, ADR-015 amendment) drops the warning texts <c>EarlyText</c> and <c>FinalText</c> from
+/// <c>WarningSettings</c> (the overlay replaced the warning dialogs); the minutes and all other tables are kept.
 /// </summary>
 /// <param name="connectionString">SQLite connection string, see <see cref="SqliteDatabase.BuildConnectionString"/>.</param>
 public sealed class ServiceDatabase(string connectionString) : SqliteDatabase(connectionString)
@@ -220,6 +222,10 @@ public sealed class ServiceDatabase(string connectionString) : SqliteDatabase(co
         CREATE INDEX IX_ActivitySpans_Day ON ActivitySpans (Day);
         ALTER TABLE BlockedStarts ADD COLUMN GroupId INTEGER NULL;
         ALTER TABLE BlockedStarts ADD COLUMN GroupName TEXT NULL;
+        """,
+        """
+        ALTER TABLE WarningSettings DROP COLUMN EarlyText;
+        ALTER TABLE WarningSettings DROP COLUMN FinalText;
         """,
     ];
 

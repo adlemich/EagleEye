@@ -89,12 +89,11 @@ public sealed class GracePolicyTests
 
 public sealed class KidMessageFactoryTests
 {
-    private static readonly WarningSettings Settings = new(5, "frueh", 2, null);
 
     [Fact]
     public void BreakTime_ParentTextAndTimes()
     {
-        Assert.Equal(new KidMessageDto(KidMessageReason.BreakTime, "Pause", null, null, 1200, 1439), KidMessageFactory.BreakTime("Pause", new BreakTimeEntryDto(1, true, 1200, 1439, BreakTimeDays.All)));
+        Assert.Equal(new KidMessageDto(KidMessageReason.BreakTime, "Pause", null, 1200, 1439), KidMessageFactory.BreakTime("Pause", new BreakTimeEntryDto(1, true, 1200, 1439, BreakTimeDays.All)));
     }
 
     [Theory]
@@ -102,24 +101,9 @@ public sealed class KidMessageFactoryTests
     [InlineData(CloseReasons.NotAllowedToday, KidMessageReason.AppNotAllowedToday)]
     public void AppEnd_ReasonAndBudgetText(string reason, KidMessageReason expected)
     {
-        Assert.Equal(new KidMessageDto(expected, null, "Editor", null, null, null), KidMessageFactory.AppEnd(reason, null, "Editor"));
+        Assert.Equal(new KidMessageDto(expected, null, "Editor", null, null), KidMessageFactory.AppEnd(reason, null, "Editor"));
     }
 
-    [Fact]
-    public void Warnings_TextOfTheLevelAndMinutesRoundedUp()
-    {
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppEarlyWarning, "frueh", "Editor", 3, null, null), KidMessageFactory.AppWarning(WarningLevel.Early, Settings, "Editor", 121));
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppFinalWarning, null, "Editor", 1, null, null), KidMessageFactory.AppWarning(WarningLevel.Final, Settings, "Editor", 20));
-        Assert.Equal(new KidMessageDto(KidMessageReason.BreakEarlyWarning, "frueh", null, 5, 1200, null), KidMessageFactory.BreakWarning(WarningLevel.Early, Settings, 1200, 300));
-        Assert.Equal(new KidMessageDto(KidMessageReason.BreakFinalWarning, null, null, 2, 1200, null), KidMessageFactory.BreakWarning(WarningLevel.Final, Settings, 1200, 61));
-    }
-
-    [Fact]
-    public void Graces_FinalTextAndTheFullFinalMinutes()
-    {
-        Assert.Equal(new KidMessageDto(KidMessageReason.AppGracePeriod, null, "Editor", 2, null, null), KidMessageFactory.AppGrace(Settings, "Editor"));
-        Assert.Equal(new KidMessageDto(KidMessageReason.BreakGracePeriod, null, null, 2, 1200, null), KidMessageFactory.BreakGrace(Settings, 1200));
-    }
 
     [Theory]
     [InlineData(0, 1)]
@@ -137,63 +121,6 @@ public sealed class KidMessageFactoryTests
     {
         Assert.Throws<ArgumentNullException>(() => KidMessageFactory.BreakTime(null, null!));
         Assert.Throws<ArgumentNullException>(() => KidMessageFactory.AppEnd(CloseReasons.BudgetUsedUp, null, null!));
-        Assert.Throws<ArgumentNullException>(() => KidMessageFactory.AppWarning(WarningLevel.Early, null!, "a", 1));
-        Assert.Throws<ArgumentNullException>(() => KidMessageFactory.AppWarning(WarningLevel.Early, Settings, null!, 1));
-        Assert.Throws<ArgumentNullException>(() => KidMessageFactory.BreakWarning(WarningLevel.Early, null!, 1, 1));
-        Assert.Throws<ArgumentNullException>(() => KidMessageFactory.AppGrace(null!, "a"));
-        Assert.Throws<ArgumentNullException>(() => KidMessageFactory.AppGrace(Settings, null!));
-        Assert.Throws<ArgumentNullException>(() => KidMessageFactory.BreakGrace(null!, 1));
+
     }
-}
-
-public sealed class MessageOutboxTests
-{
-    private readonly Mock<IKidMessenger> _messenger = new();
-    private readonly List<(string Who, string State)> _logs = [];
-
-    public MessageOutboxTests()
-    {
-        _messenger.Setup(m => m.ShowAsync(It.IsAny<int>(), It.IsAny<KidMessageDto>(), It.IsAny<CancellationToken>())).ReturnsAsync(KidMessageStates.Shown);
-    }
-
-    [Theory]
-    [InlineData(KidMessageReason.BreakGracePeriod, 6)]
-    [InlineData(KidMessageReason.AppGracePeriod, 5)]
-    [InlineData(KidMessageReason.BreakFinalWarning, 4)]
-    [InlineData(KidMessageReason.AppFinalWarning, 3)]
-    [InlineData(KidMessageReason.BreakEarlyWarning, 2)]
-    [InlineData(KidMessageReason.AppEarlyWarning, 1)]
-    public void PriorityOf_GraceFinalEarly_BreakBeforeApp(KidMessageReason reason, int expected)
-    {
-        Assert.Equal(expected, MessageOutbox.PriorityOf(reason));
-    }
-
-    [Fact]
-    public void Send_MostUrgentSent_OthersReplacedInTheTick()
-    {
-        var outbox = new MessageOutbox();
-        var early = Message(KidMessageReason.AppEarlyWarning);
-        var final = Message(KidMessageReason.AppFinalWarning);
-        var final2 = Message(KidMessageReason.AppFinalWarning);
-        outbox.Add(early, s => _logs.Add(("early", s)));
-        outbox.Add(final, s => _logs.Add(("final", s)));
-        outbox.Add(final2, s => _logs.Add(("final2", s)));
-
-        outbox.Send(_messenger.Object, 2);
-
-        _messenger.Verify(m => m.ShowAsync(2, final, CancellationToken.None), Times.Once);
-        Assert.Equal(
-            [("early", KidMessageStates.ReplacedInTick), ("final2", KidMessageStates.ReplacedInTick), ("final", KidMessageStates.Shown)],
-            _logs);
-    }
-
-    [Fact]
-    public void Send_Empty_NothingSent()
-    {
-        new MessageOutbox().Send(_messenger.Object, 2);
-
-        _messenger.VerifyNoOtherCalls();
-    }
-
-    private static KidMessageDto Message(KidMessageReason reason) => new(reason, null, "a", 1, null, null);
 }

@@ -4,6 +4,8 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
     <UseWindowsForms>true</UseWindowsForms>
+    <!-- US-010 Decision 6 (ADR-022 §4): process-wide PerMonitorV2, as Program.Main sets it. -->
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
@@ -24,6 +26,8 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="EagleEye.TrayClient.Tests" />
+    <!-- Moq proxies of internal interfaces (US-010 IOverlaySettingsStore). -->
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
   </ItemGroup>
 
   <ItemGroup>

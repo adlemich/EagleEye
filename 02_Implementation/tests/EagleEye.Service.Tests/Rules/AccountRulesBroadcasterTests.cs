@@ -34,7 +34,7 @@ public sealed class AccountRulesBroadcasterTests
         var hub = new Mock<IHubContext<ParentHub, IParentClientCallback>>();
         hub.SetupGet(h => h.Clients).Returns(clients.Object);
         var apps = new AppRulesDto(2, null, "S-1-5-21-1-2-3-1003", [], null);
-        var warnings = new WarningSettingsDto(3, null, 5, null, 1, null);
+        var warnings = new WarningSettingsDto(3, null, 5, 1);
         var broadcaster = new AccountRulesBroadcaster(hub.Object);
 
         await broadcaster.BroadcastAsync(apps);

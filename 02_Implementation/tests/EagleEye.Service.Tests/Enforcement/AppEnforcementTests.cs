@@ -25,6 +25,7 @@ public sealed class AppEnforcementTests
     private readonly TestLogger<AppStartGate> _gateLogger = new();
     private readonly OpenAppsView _openApps = new();
     private readonly SessionAppsView _sessionApps = new();
+    private readonly Mock<IOverlayPublisher> _overlay = new();
     private readonly TodayUsageLedger _ledger;
     private readonly AppEnforcement _enforcement;
 
@@ -42,7 +43,7 @@ public sealed class AppEnforcementTests
         _ledger = new TodayUsageLedger(_usage.Object, _appRules.Object, _time, new TestLogger<TodayUsageLedger>());
         var gate = new AppStartGate(_rules.Object, _appRules.Object, GroupsView.Empty, _ledger, Mock.Of<IProcessTable>(), _runner.Object, registry, ignoreList, _time, _gateLogger);
         var engine = new TimeLimitEngine(
-            _rules.Object, _appRules.Object, GroupsView.Empty, warnings.Object, _ledger, _sessionApps, registry, _runner.Object, Mock.Of<IKidMessenger>(), ignoreList, log, _time);
+            _rules.Object, _appRules.Object, GroupsView.Empty, warnings.Object, _ledger, _sessionApps, registry, _runner.Object, Mock.Of<IKidMessenger>(), _overlay.Object, ignoreList, log, _time);
         _enforcement = new AppEnforcement(
             gate,
             _ledger,
@@ -91,6 +92,17 @@ public sealed class AppEnforcementTests
         Assert.Equal(105, _ledger.UsedSeconds(Kid, Notepad, today));
         Assert.Equal(5, _ledger.GroupUsedSeconds(Kid, [Notepad], today));
         _rules.VerifyGet(r => r.Current, Times.AtLeast(2));
+    }
+
+    [Fact]
+    public async Task OnTickAsync_SessionInUse_EngineGetsItAndPushesTheModel()
+    {
+        _sessionApps.Update(2, Kid, []);
+        var controlled = new Dictionary<string, string> { [Kid] = "kid1" };
+
+        await _enforcement.OnTickAsync(new EnforcementTick(controlled, [new SessionInUse(2, Kid, "kid1")], [], (_, _) => false), CancellationToken.None);
+
+        _overlay.Verify(o => o.Publish(2, It.Is<RemainingTimeDto>(m => m.Lines.Count == 0 && m.Signal == OverlaySignal.None)), Times.Once);
     }
 
     [Fact]

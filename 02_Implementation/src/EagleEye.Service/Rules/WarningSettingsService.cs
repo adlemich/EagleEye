@@ -1,7 +1,6 @@
 using EagleEye.Service.Data;
 using EagleEye.Shared.Constants;
 using EagleEye.Shared.Models;
-using EagleEye.Shared.Resources;
 
 namespace EagleEye.Service.Rules;
 
@@ -21,13 +20,11 @@ public interface IWarningSettingsService
     /// <exception cref="RuleValidationException">The early warning would not stay greater than the final warning.</exception>
     Task<StateWriteAckDto> SetMinutesAsync(Guid requestId, WarningLevel level, int minutes, string deviceName, CancellationToken ct = default);
 
-    /// <summary>Sets the text of a level; empty, white space only or a default text of any language restores the default.</summary>
-    Task<StateWriteAckDto> SetTextAsync(Guid requestId, WarningLevel level, string text, string deviceName, CancellationToken ct = default);
 }
 
 /// <summary>
 /// State owner of "WarningSettings": one lock; validate against the stored values → store → replace → revision++ → log →
-/// broadcast → ack (same pattern as the account rules). No row = defaults (5 / 1 minutes, default texts).
+/// broadcast → ack (same pattern as the account rules). No row = defaults (5 / 1 minutes).
 /// </summary>
 public sealed class WarningSettingsService(
     IWarningSettingsRepository repository,
@@ -47,7 +44,7 @@ public sealed class WarningSettingsService(
     public Task InitializeAsync(CancellationToken ct = default) => LockedAsync(async () =>
     {
         var stored = await repository.LoadAsync(ct).ConfigureAwait(false);
-        var settings = stored is null ? WarningSettings.Defaults : new WarningSettings(stored.EarlyMinutes, stored.EarlyText, stored.FinalMinutes, stored.FinalText);
+        var settings = stored is null ? WarningSettings.Defaults : new WarningSettings(stored.EarlyMinutes, stored.FinalMinutes);
         Volatile.Write(ref _current, settings);
         logger.LogInformation(
             "Warning levels loaded: early {Early} min, final {Final} min.", settings.EarlyMinutes, settings.FinalMinutes);
@@ -74,20 +71,6 @@ public sealed class WarningSettingsService(
         }, ct);
     }
 
-    /// <inheritdoc />
-    public Task<StateWriteAckDto> SetTextAsync(Guid requestId, WarningLevel level, string text, string deviceName, CancellationToken ct = default)
-    {
-        ArgumentNullException.ThrowIfNull(text);
-        var normalized = BreakTimeRules.NormalizeLineBreaks(text);
-        if (!Enum.IsDefined(level) || !BreakTimeRules.IsValidDisplayText(normalized))
-        {
-            throw new ArgumentException("The warning text is not valid.", nameof(text));
-        }
-
-        var kind = level == WarningLevel.Early ? DefaultTextKind.EarlyWarningText : DefaultTextKind.FinalWarningText;
-        var custom = DefaultTexts.MeansDefault(kind, normalized) ? null : normalized;
-        return WriteAsync(requestId, deviceName, current => (current.WithText(level, custom), AppRuleChangeLog.WarningTextChanged(level, custom is null)), ct);
-    }
 
     /// <inheritdoc />
     public void Dispose() => _gate.Dispose();
@@ -100,7 +83,7 @@ public sealed class WarningSettingsService(
         {
             var (settings, change) = apply(_current);
             await repository.SaveAsync(
-                new StoredWarningSettings(settings.EarlyMinutes, settings.EarlyText, settings.FinalMinutes, settings.FinalText), timeProvider.GetUtcNow(), ct)
+                new StoredWarningSettings(settings.EarlyMinutes, settings.FinalMinutes), timeProvider.GetUtcNow(), ct)
                 .ConfigureAwait(false);
             Volatile.Write(ref _current, settings);
             _revision++;
@@ -123,7 +106,7 @@ public sealed class WarningSettingsService(
     }
 
     private WarningSettingsDto BuildDto() =>
-        new(_revision, _lastRequest, _current.EarlyMinutes, _current.EarlyText, _current.FinalMinutes, _current.FinalText);
+        new(_revision, _lastRequest, _current.EarlyMinutes, _current.FinalMinutes);
 
     private async Task<T> LockedAsync<T>(Func<Task<T>> work, CancellationToken ct)
     {

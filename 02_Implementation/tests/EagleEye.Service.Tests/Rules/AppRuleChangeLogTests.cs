@@ -26,8 +26,7 @@ public sealed class AppRuleChangeLogTests
         Assert.Equal("budget text changed", AppRuleChangeLog.TextChanged());
         Assert.Equal("budget text reset to the default", AppRuleChangeLog.TextReset());
         Assert.Equal("warning levels changed: early 5 min, final 1 min", AppRuleChangeLog.LevelsChanged(5, 1));
-        Assert.Equal("early warning text changed", AppRuleChangeLog.WarningTextChanged(WarningLevel.Early, false));
-        Assert.Equal("final warning text reset to the default", AppRuleChangeLog.WarningTextChanged(WarningLevel.Final, true));
+
     }
 
     [Fact]

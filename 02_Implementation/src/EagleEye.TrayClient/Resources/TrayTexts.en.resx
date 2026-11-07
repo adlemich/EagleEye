@@ -18,15 +18,21 @@
   <data name="PairingValidityFormat" xml:space="preserve"><value>The code is valid for {0} minutes.</value></data>
   <data name="BreakMessageTitle" xml:space="preserve"><value>EagleEye</value></data>
   <!-- US-006 AC-34: info line of the kid dialog. -->
-  <data name="InfoMinutesLeftOne" xml:space="preserve"><value>{0}: 1 minute left.</value></data>
-  <data name="InfoMinutesLeftMany" xml:space="preserve"><value>{0}: {1} minutes left.</value></data>
-  <data name="InfoBreakBegins" xml:space="preserve"><value>Break time begins at {2}.</value></data>
-  <data name="InfoAppGraceOne" xml:space="preserve"><value>{0}: your parents changed the rules. {0} closes in 1 minute.</value></data>
-  <data name="InfoAppGraceMany" xml:space="preserve"><value>{0}: your parents changed the rules. {0} closes in {1} minutes.</value></data>
-  <data name="InfoBreakGraceOne" xml:space="preserve"><value>Your parents set a break time. All apps close in 1 minute.</value></data>
-  <data name="InfoBreakGraceMany" xml:space="preserve"><value>Your parents set a break time. All apps close in {1} minutes.</value></data>
   <data name="InfoNotAllowedToday" xml:space="preserve"><value>{0}: not allowed today.</value></data>
   <data name="InfoBudgetUsedUp" xml:space="preserve"><value>{0}: time budget used up.</value></data>
-  <data name="InfoBreakTime" xml:space="preserve"><value>Break time from {2} to {3}.</value></data>
+  <data name="InfoBreakTime" xml:space="preserve"><value>Break time from {1} to {2}.</value></data>
   <data name="InfoMidnight" xml:space="preserve"><value>midnight</value></data>
+  <!-- US-010: tray menu overlay settings (AC-15) and overlay labels (AC-3, AC-4). -->
+  <data name="MenuOpacity" xml:space="preserve"><value>Opacity</value></data>
+  <data name="MenuPosition" xml:space="preserve"><value>Position</value></data>
+  <data name="MenuShowFrom" xml:space="preserve"><value>Show from</value></data>
+  <data name="MenuWarningSound" xml:space="preserve"><value>Warning sound</value></data>
+  <data name="OpacityFormat" xml:space="preserve"><value>{0} %</value></data>
+  <data name="CornerTopLeft" xml:space="preserve"><value>Top left</value></data>
+  <data name="CornerTopRight" xml:space="preserve"><value>Top right</value></data>
+  <data name="CornerBottomLeft" xml:space="preserve"><value>Bottom left</value></data>
+  <data name="CornerBottomRight" xml:space="preserve"><value>Bottom right</value></data>
+  <data name="ShowFromFormat" xml:space="preserve"><value>{0} min</value></data>
+  <data name="BreakLineFormat" xml:space="preserve"><value>Break in {0}</value></data>
+  <data name="MoreLinesFormat" xml:space="preserve"><value>+{0} more</value></data>
 </root>

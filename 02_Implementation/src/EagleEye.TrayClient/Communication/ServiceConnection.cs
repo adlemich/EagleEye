@@ -34,6 +34,7 @@ public sealed class ServiceConnection : IServiceConnection
         _hubConnection.Closed += OnClosed;
         _hubConnection.On<string>(nameof(ITrayClientCallback.OnShowPairingCode), code => PairingCodeReceived?.Invoke(code));
         _hubConnection.On<KidMessageDto, KidMessageResult>(nameof(ITrayClientCallback.ShowKidMessage), OnKidMessage);
+        _hubConnection.On<RemainingTimeDto>(nameof(ITrayClientCallback.OnRemainingTime), model => RemainingTimeReceived?.Invoke(model));
     }
 
     /// <inheritdoc />
@@ -41,6 +42,9 @@ public sealed class ServiceConnection : IServiceConnection
 
     /// <inheritdoc />
     public event Action<string>? PairingCodeReceived;
+
+    /// <inheritdoc />
+    public event Action<RemainingTimeDto>? RemainingTimeReceived;
 
     /// <inheritdoc />
     public Func<KidMessageDto, KidMessageResult>? KidMessageHandler { get; set; }

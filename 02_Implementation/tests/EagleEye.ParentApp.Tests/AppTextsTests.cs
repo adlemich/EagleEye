@@ -47,6 +47,17 @@ public sealed class AppTextsTests
         Assert.Equal((menu, remove), texts);
     }
 
+    [Theory]
+    [InlineData("de-DE", "Dein Kind sieht die verbleibende Zeit am Bildschirm; zu diesen Zeitpunkten wird die Anzeige gelb bzw. rot, mit einem Ton.")]
+    [InlineData("en-US", "Your kid sees the remaining time on the screen; at these points it turns yellow and red, with a sound.")]
+    public void WarningsExplanation_US010_NamesTheOverlay_NoTextColumn(string culture, string sentence)
+    {
+        var text = TestSupport.InCulture(culture, () => AppTexts.WarningsExplanation);
+
+        Assert.Contains(sentence, text, StringComparison.Ordinal);
+        Assert.Null(GetResource(CultureInfo.InvariantCulture, "WarningsColumnText"));
+    }
+
     [Fact]
     public void Resources_GermanAndEnglish_DefineTheSameKeys()
     {

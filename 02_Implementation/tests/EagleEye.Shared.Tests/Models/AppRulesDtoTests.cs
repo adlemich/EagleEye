@@ -46,7 +46,7 @@ public sealed class AppRulesDtoTests
     [Fact]
     public void WarningSettingsDto_JsonRoundTrip_WithAndWithoutTexts()
     {
-        var dto = new WarningSettingsDto(3, Guid.NewGuid(), 5, null, 1, "Schnell! \U0001F680");
+        var dto = new WarningSettingsDto(3, Guid.NewGuid(), 5, 1);
 
         var copy = JsonSerializer.Deserialize<WarningSettingsDto>(JsonSerializer.Serialize(dto, WebOptions), WebOptions);
 
@@ -56,7 +56,7 @@ public sealed class AppRulesDtoTests
     [Fact]
     public void KidMessageDto_JsonRoundTrip_AllFields()
     {
-        var dto = new KidMessageDto(KidMessageReason.BreakTime, null, "Editor", 2, 1200, 1439);
+        var dto = new KidMessageDto(KidMessageReason.BreakTime, null, "Editor", 1200, 1439);
 
         var copy = JsonSerializer.Deserialize<KidMessageDto>(JsonSerializer.Serialize(dto, WebOptions), WebOptions);
 
@@ -68,7 +68,7 @@ public sealed class AppRulesDtoTests
     {
         foreach (var reason in Enum.GetValues<KidMessageReason>())
         {
-            var dto = new KidMessageDto(reason, "t", null, null, null, null);
+            var dto = new KidMessageDto(reason, "t", null, null, null);
 
             Assert.Equal(dto, JsonSerializer.Deserialize<KidMessageDto>(JsonSerializer.Serialize(dto, WebOptions), WebOptions));
         }
@@ -80,8 +80,10 @@ public sealed class AppRulesDtoTests
         Assert.Equal([AppBudgetPart.Hours, AppBudgetPart.Minutes], Enum.GetValues<AppBudgetPart>());
         Assert.Equal([WarningLevel.Early, WarningLevel.Final], Enum.GetValues<WarningLevel>());
         Assert.Equal(
-            [DefaultTextKind.BreakDisplayText, DefaultTextKind.BudgetText, DefaultTextKind.EarlyWarningText, DefaultTextKind.FinalWarningText],
+            [DefaultTextKind.BreakDisplayText, DefaultTextKind.BudgetText],
             Enum.GetValues<DefaultTextKind>());
-        Assert.Equal(9, Enum.GetValues<KidMessageReason>().Length);
+        Assert.Equal(
+            [KidMessageReason.AppNotAllowedToday, KidMessageReason.AppBudgetUsedUp, KidMessageReason.BreakTime],
+            Enum.GetValues<KidMessageReason>());
     }
 }
