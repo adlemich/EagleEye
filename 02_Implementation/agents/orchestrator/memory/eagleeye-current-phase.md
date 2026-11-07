@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-11-07 US-010 Step 7 Mac done (f3c0339, .dmg 0.10.0 not installed, story Implemented); NEXT Michael approves step c → TES step d
+description: EagleEye workflow status — 2026-11-07 US-010 CLOSED and merged into main (no TES steps); between stories
 metadata:
   type: project
 ---
+
+**Update 2026-11-07 (US-010 CLOSED + merged, MacBook): Michael approved step c and closed US-010 without TES steps d–f ("skip the test plan this time … merge to main directly"). Orchestrator wrote `docs/testing/US-010/test-report.md` (gaps: most ACs only unit-tested or covered by the pilot summary; F-1 install Mac .dmg 0.10.0 before using the Mac app against .85; F-2 "Minuten vor Ende" header wraps on Mac; F-3 pilot bugs as issues). Story Verified/Closed, merged --no-ff into main, branch deleted. NEXT: between stories.**
 
 **Update 2026-11-07 (US-010 step c, MacBook Step 7 DONE): DEV (subagent) f3c0339 pushed (H2): build 0 warnings, Shared 314 + ParentApp 1 108 green; Settings look check light/dark passed (AC-31/32; evidence `US-010/evidence/step7-*`, probe removed, no src change → Step 8 NOT needed). `.dmg` `03_Delivery/macos/EagleEye-ParentApp-0.10.0.dmg` 29 312 683 B, SHA-256 70606ff8…d33e1e3, NOT installed (Mac app still 0.9.0; TI-16: don't use it against .85 until 0.10.0 installed). Report §11 Mac, §6 final; story Implemented. Cosmetic: header "Minuten vor Ende" wraps in 96-pt column (not fixed, possible issue). TES note: pilot already on 0.10.0 incl. .85 → AC-35 starting versions must be checked per machine. NEXT: Michael approves step c → TES step d (test plan + run checklist); Windows machine needs `git pull`.**
 

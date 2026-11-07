@@ -1,6 +1,6 @@
 # US-010: Remaining-Time Overlay Replaces the Warning Dialogs (0.10.0)
 
-**Status**: Implemented
+**Status**: Verified/Closed
 **Created**: 2026-11-01
 **Approved**: by Michael, 2026-11-01, with OQ-1 to OQ-22 as resolved (OQ-4 replaced by the multi-line pill; OQ-2 and OQ-19 replaced by the display threshold 15/30/45/60 min, default 30); requirements v1.10 in effect
 **Component(s)**: EagleEye.TrayClient (overlay, tray menu settings), EagleEye.Service (remaining time for the overlay, warning dialogs dropped, warning texts removed), EagleEye.Shared (contracts), EagleEye.ParentApp incl. EagleEye.ParentApp.Core (warning texts removed from the Settings page)
@@ -216,6 +216,7 @@ The changes below are written into `02_Implementation/docs/requirements/general-
 | 2026-11-01 | Implementation plan (`US-010/implementation-plan.md`), ADR-022 and the amendments of ADR-007, ADR-011, ADR-014, ADR-015 and ADR-016 approved by Michael; plan Q-1 to Q-3 answered with the proposed defaults; one change: no CPU/memory run before the test run, AC-27 (CPU, memory) is verified by Michael in pilot operation; the on-screen check of plan Step 5 is kept short. Spike code removed (`177813f`), delivery notes updated; status → `Analyzed` | Michael (via the Orchestrator), recorded by ARC |
 | 2026-11-07 | Windows part approved by Michael after a pilot check of the installed 0.10.0 ("overlay pill tested OK in different games and applications, all as expected"), which covers plan Steps 5 and 9; open implementation questions closed with their defaults (`implementation-report.md` §9.1). Status stays `Analyzed` until the MacBook Step 7 is done | Michael (via the Orchestrator), recorded by the Orchestrator |
 | 2026-11-07 | MacBook plan Step 7 done: build and tests green (Shared 314, ParentApp 1,108, 0 warnings), Settings look check light/dark passed (AC-31, AC-32 layout), `.dmg` 0.10.0 built and not installed; no code change, so Step 8 is not needed (`implementation-report.md` §11). Status → `Implemented` | DEV (MacBook) |
+| 2026-11-07 | Step c approved and story closed by Michael without TES steps d to f ("We can skip the test plan this time … I want to close it now"); based on his pilot check (report §9.1) and Step 7. ACs not verified manually are listed in `02_Implementation/docs/testing/US-010/test-report.md`. Status → `Verified/Closed`; merged into `main` | Michael (via the Orchestrator), recorded by the Orchestrator |
 
 ---
 

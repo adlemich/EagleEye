@@ -1,6 +1,6 @@
 # Implementation Report: US-010 — Remaining-Time Overlay Replaces the Warning Dialogs (0.10.0)
 
-**Status**: Windows Steps 1 to 4 and 6 done (2026-11-01). **Step 5 and Step 9 passed** by Michael's pilot check on 2026-11-07 (§9.1); the Windows part is approved as is. **Step 7 (MacBook) done** on 2026-11-07 (§11): build and tests green, Settings look check passed, `.dmg` 0.10.0 built (not installed). No code change on the Mac, so **Step 8 is not needed**. Story → `Implemented`.
+**Status**: Windows Steps 1 to 4 and 6 done (2026-11-01). **Step 5 and Step 9 passed** by Michael's pilot check on 2026-11-07 (§9.1); the Windows part is approved as is. **Step 7 (MacBook) done** on 2026-11-07 (§11): build and tests green, Settings look check passed, `.dmg` 0.10.0 built (not installed). No code change on the Mac, so **Step 8 is not needed**. Story → `Implemented`. **Step c approved and story closed by Michael on 2026-11-07** (TES steps d to f skipped; gaps in `02_Implementation/docs/testing/US-010/test-report.md`).
 **Author**: DEV
 **Branch**: `feature/US-010-time-overlay`
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-010/implementation-plan.md` (approved 2026-11-01)
