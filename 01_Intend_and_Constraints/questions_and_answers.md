@@ -1,5 +1,7 @@
 # EagleEye Project - Clarifying Questions & Answers
 
+> **Status note (2026-11-07, Orchestrator)**: this is an original input document of the project owner and is kept as written. Later decisions superseded some answers. Notable: Q2.2, the overlay became mandatory and replaced the warning dialogs (US-010, ADR-022; still no DirectX overlay); the mobile apps were removed (CR-001); acceptance testing is manual (ADR-007). The settled answers are in `02_Implementation/docs/requirements/general-product-requirements.md`.
+
 This file records all clarifying questions asked during the project bootstrapping interview, along with the project owner's answers.
 
 ---

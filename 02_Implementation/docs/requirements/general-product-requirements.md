@@ -3,7 +3,7 @@
 *Status: Approved v1.10 (v1.0 approved 2026-09-20; v1.1 approved 2026-10-03; v1.2 approved by the project owner 2026-10-04; v1.3 approved by the project owner 2026-10-07; v1.4 approved by the project owner 2026-10-07; v1.5 approved by the project owner 2026-10-10; v1.6 approved by the project owner 2026-10-12; v1.7 approved by the project owner 2026-10-20; v1.8 (app groups) approved by the project owner with US-008 on 2026-10-31; v1.9 (Windows 10 for the Windows parent app) approved by the project owner with US-009 on 2026-10-31; v1.10 (remaining-time overlay, warning texts removed) approved by the project owner with US-010 on 2026-11-01)*
 *Approved: v1.0 by the project owner*
 *Maintainer: PRO Agent*
-*Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07, 2026-10-10, 2026-10-12, 2026-10-20, 2026-10-31, 2026-11-01*
+*Date: 2026-09-15, amended 2026-10-03, 2026-10-04, 2026-10-07, 2026-10-10, 2026-10-12, 2026-10-20, 2026-10-31, 2026-11-01; implementation status added 2026-11-07*
 
 > **v1.10 amendment (2026-11-01, directed by the project owner, with US-010; approved by the project owner 2026-11-01)**: the tray client shows a **remaining-time overlay** instead of the early and final warning dialogs. The overlay is a small, half-transparent, topmost, click-through pill that never takes the focus. It has one line per running application that is not in an app group, one per app group with at least one running application, and one for an approaching break time. Lines are sorted shortest first, the top line large. A line is shown only below the **display threshold** (15, 30, 45 or 60 minutes, default 30), or once it has reached the early-warning level. Each line takes the colour of its level (white, yellow at the early level, red at the final level); reaching a level makes the pill pulse and plays a sound. The tray menu offers opacity, position (four corners), display threshold and warning sound next to "App Infos", per Windows account. The kid dialog stays only for blocked starts and enforced closes (budget text, break display text). The **warning texts are removed**: the parent sets only the warning minutes, which are unchanged. The tray client's own windows never count as applications. Over true exclusive fullscreen the overlay is not visible (accepted limit). Changed: FR-SVC-032, FR-TRAY-020, FR-TRAY-021 and FR-TRAY-022 (notes), FR-TRAY-030, FR-TRAY-031 and FR-TRAY-032 (new), FR-APP-054, §4.4 step 21, TC-030, TC-031, TC-033, TC-040, TC-041, MU-011, §10 (note), §11.1 Q-9 (new).
 
@@ -51,6 +51,23 @@
 9. [Platform Requirements](#9-platform-requirements)
 10. [Out of Scope for Version 1](#10-out-of-scope-for-version-1)
 11. [Open Questions](#11-open-questions)
+
+---
+
+
+## Implementation Status (0.10.0, recorded by the Orchestrator 2026-11-07)
+
+All requirements in effect are implemented in build 0.10.0 (US-001 to US-010), except the following, which stay open for later stories:
+
+| Requirement | State in 0.10.0 |
+|---|---|
+| FR-SVC-033, FR-SVC-042 (separate files per child account) | One SQLite database `EagleEye.Service.db` holds all accounts, keyed by SID (ADR-002, arc42 §8.4). |
+| FR-SVC-080, FR-SVC-081, FR-SVC-082, FR-APP-033 (scan of installed applications, re-scan) | Not built. Apps are listed once a monitored user has started them (FR-SVC-044); v1.6 made the scan unnecessary for the app rules. |
+| FR-SVC-102 (debug mode switched from the parent app) | Not built. The service always logs at Information (FR-SVC-101). |
+| FR-APP-061 (used time vs. configured budget on Reports) | Not built. Reports shows the used time per app and group; the budget is shown on the Rules page. |
+| FR-APP-070 (real-time event feed in the parent app) | Not built. The service pushes state snapshots only (ADR-010), no event list. |
+
+The manual verification of the built requirements is partial; see the test report of each story under `02_Implementation/docs/testing/US-XXX/test-report.md`.
 
 ---
 

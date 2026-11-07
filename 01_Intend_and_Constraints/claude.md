@@ -1,5 +1,7 @@
 # Project EagleEye - A parental control solution
 
+> **Status note (2026-11-07, Orchestrator)**: this is an original input document of the project owner and is kept as written. This bootstrapping instruction is complete (Phase 0). The repository now has its own root (`EagleEye/`), and the rules in force are in the root `CLAUDE.md` and `02_Implementation/agents/<role>/CLAUDE.md`.
+
 ## Purpose
 
 This is a bootstrapping activity to set up a brand new software development project. It does not deal with code yet, but is used to generate the folders and files for the software project.

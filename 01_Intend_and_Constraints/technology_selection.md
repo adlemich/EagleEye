@@ -1,5 +1,7 @@
 # Technology Selection, technical Constraints, Development Approach
 
+> **Status note (2026-11-07, Orchestrator)**: this is an original input document of the project owner and is kept as written. As built: the parent app is MAUI for Windows and macOS only (CR-001). Point 2 "events and update pushes": the service pushes **state snapshots** with revisions (ADR-010), not an event feed. The YAML configuration is not built (ADR-002 status note).
+
 This file lists the technological choices and with that some constraints for the technical solution architecture.
 
 ## Implementation Language

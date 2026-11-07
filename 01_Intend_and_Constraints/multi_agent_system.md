@@ -1,5 +1,7 @@
 # Multi Agent Software Development System
 
+> **Status note (2026-11-07, Orchestrator)**: this is an original input document of the project owner and is kept as written. As set up: TES became the **Manual Test Lead** (ADR-007, 2026-10-03). There is no E2E test code and no static HTML test report; test plans, run checklists and reports are Markdown under `02_Implementation/docs/testing/`, and regression runs happen only on the project owner's request. Current agent rules: `02_Implementation/agents/<role>/CLAUDE.md`.
+
 This project shall be implemented by a team of AI agents. The human shall serve as reviewer, feedback provider and as aproval authority. The AI agents shall be independant by their nature, but integrate their work via shared assets, e.g. markdown files in the folder structure of the project.
 
 ## Agents we need

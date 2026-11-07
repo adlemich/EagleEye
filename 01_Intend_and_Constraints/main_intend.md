@@ -1,5 +1,7 @@
 # Main Intend and key Use Cases
 
+> **Status note (2026-11-07, Orchestrator)**: this is an original input document of the project owner and is kept as written. As built in 0.10.0: the remaining-time overlay **cannot be switched off** by the kid and appears whenever a limit or break comes close (US-010, ADR-022) and **replaces** the warning notifications (colour, pulse, sound instead of OK dialogs); the kid dialog remains only for blocked starts and enforced closes. Per-app and per-group daily budgets with weekdays (US-006, US-008), break times (US-005) and usage reports (US-004) are built. Real-time event notifications to the parent and a scan of installed apps are not built (requirements, section "Implementation Status").
+
 The following describes the main intend and key use cases that shall be implemented by the Eagle-Eye project and software.
 
 > **Amendment 2026-10-20 (the project owner's decision, CR-001)**: the iOS and Android mobile parent applications (module 2 below) are **dropped from the product**. The parent app ships only as the **Windows parent app** (own installer, added 2026-10-03/04) and the **Mac app** (module 3, Mac Catalyst, `.dmg`); both are production platforms. Wherever this document says "mobile parent application(s)" or "mobile app", read "parent app (Windows or Mac)". Reason and details: `02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`; binding requirements: `02_Implementation/docs/requirements/general-product-requirements.md` (v1.7).

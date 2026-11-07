@@ -1,5 +1,7 @@
 # EagleEye — Project Structure Plan
 
+> **Status note (2026-11-07, Orchestrator)**: this is an original input document of the project owner and is kept as written. This was the plan. The layout as built is described in `README.md` and `02_Implementation/docs/architecture/product-coding-guidelines.md` §10.1. Differences: the repo root is `EagleEye/`; `EagleEye.ParentApp.Core` was added (ADR-009); there is no `EagleEye.E2E.Tests` project and no `test-reports/` folder (manual testing, ADR-007); the tray client has an `Overlay/` folder and no notification bubbles or local database; no YAML configuration files exist.
+
 This document describes the planned folder structure and initial files to be generated under `02_Implementation`. It is subject to the project owner's review and approval before anything is generated.
 
 > **Amendment 2026-10-20 (the project owner's decision, CR-001)**: the iOS and Android parent apps are dropped. The parent app targets only **Windows** (added 2026-10-03, ADR-007) and **macOS** (Mac Catalyst). The `Platforms/iOS/` and `Platforms/Android/` folders, `03_Delivery/android/` and the Apple Developer / Android signing sections of the secrets template are marked dropped below; their removal from the repository is a follow-up for DEV (`02_Implementation/docs/requirements/change-requests/CR-001-remove-mobile-platforms.md`).
