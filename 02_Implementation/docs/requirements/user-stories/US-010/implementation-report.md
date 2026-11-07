@@ -1,6 +1,6 @@
 # Implementation Report: US-010 — Remaining-Time Overlay Replaces the Warning Dialogs (0.10.0)
 
-**Status**: Windows Steps 1 to 4 and 6 done (2026-11-01). **Step 5 and Step 9 passed** by Michael's pilot check on 2026-11-07 (§9.1); the Windows part is approved as is. Step 7 (MacBook) pending (H1, §10); after Step 7 the story goes to `Implemented`.
+**Status**: Windows Steps 1 to 4 and 6 done (2026-11-01). **Step 5 and Step 9 passed** by Michael's pilot check on 2026-11-07 (§9.1); the Windows part is approved as is. **Step 7 (MacBook) done** on 2026-11-07 (§11): build and tests green, Settings look check passed, `.dmg` 0.10.0 built (not installed). No code change on the Mac, so **Step 8 is not needed**. Story → `Implemented`.
 **Author**: DEV
 **Branch**: `feature/US-010-time-overlay`
 **Plan**: `02_Implementation/docs/requirements/user-stories/US-010/implementation-plan.md` (approved 2026-11-01)
@@ -46,7 +46,7 @@ No other deviations. Story/plan interpretation kept: the plan's Step 5 row 1 say
 | Parent app Core | `02_Implementation/src/EagleEye.ParentApp.Core/ViewModels/WarningRowViewModel.cs`, `WarningSettingsViewModel.cs`; `Settings/WarningSettingsModel.cs`; `Communication/IParentHubClient.cs`, `ParentHubClient.cs`; `AppTexts.cs`; `Resources/AppTexts.resx`, `AppTexts.en.resx` |
 | Parent app XAML (Windows and Mac) | `02_Implementation/src/EagleEye.ParentApp/Views/SettingsView.xaml`, `SettingsView.xaml.cs` |
 | Tests | see §4 |
-| Evidence | `02_Implementation/docs/requirements/user-stories/US-010/evidence/step4-pill-render-offline.png` |
+| Evidence | `02_Implementation/docs/requirements/user-stories/US-010/evidence/step4-pill-render-offline.png`; Step 7 (Mac): `evidence/step7-settings-warnings-light.png`, `evidence/step7-settings-warnings-dark.png`, `evidence/step7-probe-log.txt`, `evidence/step7-ui-probe.cs.txt` (temporary probe source, not in `src/`) |
 
 ## 4. Unit Tests
 
@@ -58,6 +58,8 @@ Windows, `pwsh 02_Implementation/scripts/test.ps1`, after the last code commit `
 | Service.Tests | 1,493 | **1,506** | + `Communication/OverlayPublisherTests` (not connected → state, nothing sent; newest connection → `ShownInOverlay`, one `SendAsync`; send failure and client lookup failure never throw, Debug log); + `Enforcement/OverlayLineBuilderTests` (own time ignores a nearer break, beyond horizon → no line, not allowed today = 0 counting, app grace, break line next/in effect/grace/none, rounding); `TimeLimitEngineTests` and `TimeLimitEngineGroupTests` rewritten to the overlay model (one line per ungrouped app and per group, own time vs break, break line only with a running app, grace lines, Expired signal + 0:00 expiring line until closed, replaced when a member runs again, signals once per subject/day, strongest per tick, Counting false when not in use, empty push for every controlled session, none for uncontrolled sessions, no `ShowKidMessage` for warnings/graces, log state "shown in overlay"/"not shown (tray client not connected)", horizon ≥ 60 min); `AppEnforcementTests` (sessions in use reach the engine); `Data/WarningSettingsRepositoryTests` (**migration 7**: v6 file with texts and minutes 7/2 → schema 7, columns `Id, EarlyMinutes, FinalMinutes, ChangedUtc`, minutes 7/2 read back, other data kept; fresh database → schema 7 without texts; repository round trip); schema version 6 → 7 in the other repository tests; `WarningSettingsServiceTests` (no text API, minutes validation unchanged); `ParentHubAppRulesTests` (`SetWarningText` gone); `EnforcementLogTests` (new endings); `SessionAgent/AppWindowRuleTests` (tray exstyles, D-2); text cases of `KidMessageFactory`/`MessageOutbox` deleted |
 | TrayClient.Tests | 95 | **168** | + `Overlay/OverlayLayoutTests` (thresholds 15/30/45/60 at 899/900 … 3599/3600, early level above the threshold, sort with ties break → name ignoring case → ordinal, cap 5 with "+N more"/"+N weitere", exactly 5, name truncation incl. an emoji at the cut, m:ss/h:mm:ss, break text de/en/fr, levels per line, AnyFinalAboveZero, nothing due); `RemainingTimeClockTests` (countdown per whole second, non-counting lines, floor 0, stale at 15 s, restart on a new push, clear, next-tick timing); `PillAnimationTests` (base alpha per opacity, quick pulse 3 s at 4 Hz, slow pulse 1 Hz, quick overrides slow, sound only with a signal and the sound on, quick pulse on Early only); `OverlaySettingsTests` (defaults, sanitize every invalid/missing value, model load once/save/raise/unchanged ignored); `UI/TrayMenuTests` (order and texts de/en, submenus are tool windows, default check marks, clicks change and store each setting, check marks refreshed on opening, About, `NotifyIcon.ShowContextMenu` exists — TI-10 guard); `UI/TrayWindowStylesTests` (both masks contain `WS_EX_TOOLWINDOW`, never `WS_EX_APPWINDOW`); `UI/TrayTextsOverlayTests` (12 new keys de/en, 7 removed keys gone); `KidMessageTextTests` reduced to the three remaining reasons |
 | ParentApp.Tests | 1,109 | **1,108** | `WarningSettingsViewModelTests` (labels and minutes de/en, no text members, minutes validation/commit/pending/error unchanged, flush commits both rows' minutes); `AppRuleRowViewModelTests.WarningRowViewModelTests` (minutes only); `AppRulesModelTests` (warning model without `SetTextAsync`); `AppTextsTests` (new explanation de/en, `WarningsColumnText` gone) |
+
+MacBook, `pwsh 02_Implementation/scripts/test.ps1`, Step 7 (§11): **Shared.Tests 314** and **ParentApp.Tests 1,108** green, `build.ps1` 0 warnings, 0 errors.
 
 Not unit-tested (manual, Step 5 / test run, as planned): `OverlayWindow`, `PillRenderer` pixels, `ForegroundHook`, `OverlayController`, `RegistryOverlaySettingsStore`, `SystemEvents` handling, MAUI views, installers.
 
@@ -72,11 +74,11 @@ Not unit-tested (manual, Step 5 / test run, as planned): `OverlayWindow`, `PillR
 | R-3 | The pulse/sound can come up to 5 s after the colour change (plan Q-1, accepted). | — |
 | R-4 | US-009 R-1 flaky test (`CloseSequenceRunnerTests.ParallelLimit_…`) did not fail in any run of this step. | — |
 
-## 6. How to Test (preliminary, for TES; final after Step 7)
+## 6. How to Test (final, for TES)
 
-**Artifacts** (git-ignored, version 0.10.0, §8.5): `03_Delivery/windows/EagleEye-Setup-0.10.0.exe` (service + tray client, Windows 11), `03_Delivery/windows/EagleEye-ParentApp-Setup-0.10.0.exe` (Windows 10 22H2 / 11, per user); `.dmg` follows in Step 7. Starting points untouched by DEV: service and tray **0.8.0** on `192.168.1.37` (Q-2: Michael installs 0.9.0 first for AC-35); gaming PC `192.168.1.85` unchanged.
+**Artifacts** (git-ignored, version 0.10.0, §8.5): `03_Delivery/windows/EagleEye-Setup-0.10.0.exe` (service + tray client, Windows 11), `03_Delivery/windows/EagleEye-ParentApp-Setup-0.10.0.exe` (Windows 10 22H2 / 11, per user); `03_Delivery/macos/EagleEye-ParentApp-0.10.0.dmg` on the MacBook (29,312,683 bytes, SHA-256 `70606ff8bcb04714b2e1efe23242f81ff4eb8cbb0b6f468ebeea36b93d33e1e3`, `CFBundleShortVersionString` 0.10.0, §11). DEV installed none of them. Note for TES: since this section was first written, Michael installed 0.10.0 in the pilot environment, including the gaming PC `192.168.1.85` (§9.1). The starting versions for AC-35 (0.9.0 → 0.10.0) must therefore be checked on each machine before the test run. The Mac app is still **0.9.0** (the Mac test starting point).
 
-**Install**: service installer elevated over the installed version (migration 7 runs at the first start; the minutes are kept, the texts dropped); tray *App Infos* shows 0.10. Windows parent app as a normal user.
+**Install**: service installer elevated over the installed version (migration 7 runs at the first start; the minutes are kept, the texts dropped); tray *App Infos* shows 0.10. Windows parent app as a normal user. **Mac app** (AC-32, AC-34): quit the 0.9.0 app (Cmd+Q), open the `.dmg`, drag *EagleEye Parent App* to *Applications* and replace it. On the first start, allow it once in *System Settings → Privacy & Security → Open Anyway* (not notarised, ADR-019). If it does not connect, apply the Local Network fix from `02_Implementation/docs/dev-process/dev-environments.md` §5 (switch the EagleEye entries off and on, Keychain "Immer erlauben"; check with `nc -z -G 3 <ip> 5443`). The pairing and the settings of 0.9.0 are kept (same bundle id `com.adlemich.eagleeye`). Do not use a 0.9.0 Mac app against a 0.10.0 service (TI-16).
 
 **What to look for**
 
@@ -85,9 +87,10 @@ Not unit-tested (manual, Step 5 / test run, as planned): `OverlayWindow`, `PillR
 - Tray menu: right and left button; Opacity 25/50/75/100 %, Position (4 corners), Show from 60/45/30/15 min, Warning sound, separator, About. Defaults 75 %, top right, 30 min, on.
 - Settings per Windows account: `HKCU\Software\EagleEye\TrayClient` (`OverlayOpacity`, `OverlayCorner` 0–3, `OverlayShowFromMinutes`, `OverlaySound` 0/1); invalid values fall back to the defaults.
 - Timing: push every 5 s; pill gone ≤ 15 s after connection loss or without pushes; immediately on lock (back with the next push after unlock).
+- Parent apps (Windows and Mac), Settings → "Zeit-Ende Warnungen": the explanation text (AC-31) and only the columns "Zeitpunkt" and "Minuten vor Ende" (no display-text column), rows "Frühe Warnung" / "Finale Warnung" with the minutes (AC-32). The Mac look was checked by DEV with sample data only (§11); the connected table against a 0.10.0 service is part of the test run.
 - Service log (`%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log`): "Warning: account …, early warning, 2 min left (budget); shown in overlay." / "Grace period: …; shown in overlay." / "…; not shown (tray client not connected)."; "warning levels changed: early … min, final … min"; no "warning text changed" entries.
 
-**Known limitations**: exclusive fullscreen hides the pill (sound still plays, AC-23); the tray client has no log; nothing visual verified by DEV (R-1).
+**Known limitations**: exclusive fullscreen hides the pill (sound still plays, AC-23); the tray client has no log; nothing visual on Windows was verified by DEV (R-1). On the Mac, the column header "Minuten vor Ende" wraps to two lines in its 96-pt column (seen in the Step 7 screenshots, light and dark). This is cosmetic, comes from the shared XAML, and DEV did not change it (§11). Mac app log: the app's data folder as in the earlier stories (unchanged).
 
 ## 7. Machine(s) Used
 
@@ -95,7 +98,7 @@ Not unit-tested (manual, Step 5 / test run, as planned): `OverlayWindow`, `PillR
 |---|---|
 | 1 to 4, 6 | Windows Developer Machine `ZOCK-O-MAT-V3` (192.168.1.37), DEV session over RDP (session 2, account Admin), no display/input usable for checks |
 | 5, 9 | Pilot environment (Windows machines incl. gaming PC 192.168.1.85), installed 0.10.0, Michael — passed 2026-11-07 (§9.1) |
-| 7 | MacBook — pending (§10) |
+| 7 | MacBook (Platform darwin, macOS 27.0.1, Xcode 27.2, .NET SDK 10.0.401, workload `maui-maccatalyst`), DEV session, 2026-11-07 (§11) |
 
 ---
 
@@ -197,7 +200,7 @@ No result was recorded per row, so the rows of the table above and the Step 9 po
 
 ---
 
-## 10. H1 — Handover to the MacBook (Step 7)
+## 10. H1 — Handover to the MacBook (Step 7) — done 2026-11-07
 
 Everything is pushed on `feature/US-010-time-overlay`. The shared changes the Mac must build: `EagleEye.Shared` (contracts), `EagleEye.ParentApp.Core` (warning row without texts, new explanation text) and the shared `EagleEye.ParentApp/Views/SettingsView.xaml(.cs)` (no text column). The Windows installers stay on .37 (`03_Delivery/windows/`, git-ignored).
 
@@ -219,3 +222,34 @@ Everything is pushed on `feature/US-010-time-overlay`. The shared changes the Ma
 | 7.4 | Report §Mac | Commit, push (**H2**); back on Windows Step 8 only if Step 7 changed code |
 
 Mac-side note (TI-16): the Mac app paired with the gaming PC .85 must not be used against a 0.10.0 service there until the Mac app is 0.10.0 too (H3).
+
+---
+
+## 11. Mac Part (Step 7, MacBook, 2026-11-07)
+
+Host MacBook (`env-check.ps1`: machine role MacBook, macOS 27.0.1, Xcode 27.2, .NET SDK 10.0.401, workload `maui-maccatalyst`, PowerShell 7.6.5). Branch `feature/US-010-time-overlay`, clean and in sync with `origin` at `4a8eb3f` before the work started. No internet access was needed (the restore was up to date).
+
+| # | Step | Result |
+|---|---|---|
+| 7.1 | `pwsh 02_Implementation/scripts/build.ps1`, `pwsh 02_Implementation/scripts/test.ps1` | Build succeeded (Debug, Shared + ParentApp Mac Catalyst): **0 warnings, 0 errors**. Tests: **Shared.Tests 314/314**, **ParentApp.Tests 1,108/1,108** green, as expected. |
+| 7.2 | Mac Debug build, Settings look check, light and dark | **Passed.** The section "Zeit-Ende Warnungen" shows the new explanation text (AC-31) and only the columns "Zeitpunkt" and "Minuten vor Ende", with the rows "Frühe Warnung" 5 and "Finale Warnung" 1. There is no display-text column and no text editor (AC-32). Readable in both themes; no stale background (Catalyst unset-colour lesson, `dev-environments.md` §5). |
+| 7.3 | `pwsh 02_Implementation/scripts/package-macos.ps1` | `03_Delivery/macos/EagleEye-ParentApp-0.10.0.dmg`, 29,312,683 bytes, SHA-256 `70606ff8bcb04714b2e1efe23242f81ff4eb8cbb0b6f468ebeea36b93d33e1e3`. Mounted read-only: `CFBundleShortVersionString` **0.10.0**, `CFBundleVersion` 1, volume "EagleEye Parent App 0.10.0". All script checks OK (bundle id, `NSLocalNetworkUsageDescription`, de/en strings and resources, arm64 only). The file is git-ignored. **Not installed**: Michael's Mac app stays on 0.9.0 (test starting point). |
+| 7.4 | Report, story status, commit, push (H2) | This section, §6 final, §10 marked done; `user-story.md` → `Implemented`. |
+
+**Look check method** (as in US-008 §8.3): the Debug build has its own data and is not paired, and DEV must not connect it to the pilot service PC 192.168.1.85 (0.10.0, TI-16). So a **temporary probe** replaced the connection coordinator, the accounts model and the warning settings model with fakes (connected to "192.168.1.37", one controlled account `eagleeye-kid`, warnings 5/1). It selected the Settings page and set the theme from `EAGLEEYE_UI_THEME`. The window was captured with `screencapture -l <window id>`. Afterwards the probe and its two hook lines (`MauiProgram.cs`, `MainPage.xaml.cs`) were removed. The committed source tree is unchanged: `git status` shows only the evidence files. The probe source is kept as evidence.
+
+| Evidence (`02_Implementation/docs/requirements/user-stories/US-010/evidence/`) | Shows |
+|---|---|
+| `step7-settings-warnings-light.png` | Settings page, light: explanation text, columns "Zeitpunkt" / "Minuten vor Ende", rows 5 / 1 |
+| `step7-settings-warnings-dark.png` | Same in dark mode |
+| `step7-probe-log.txt` | Probe log: page settings, theme light/dark, warnings ready True, early 5, final 1 |
+| `step7-ui-probe.cs.txt` | Source of the temporary probe (not in `src/`) |
+
+**Observation (cosmetic, not changed)**: the header "Minuten vor Ende" wraps to two lines ("Minuten / vor Ende") in the fixed 96-pt column of the shared `SettingsView.xaml` (column widths from the plan: 160 | 96). The text is complete and readable. Changing the width would be a shared XAML change, and with it a Windows Step 8, so DEV left it as planned. TES or Michael can file it as an issue if it should change.
+
+**Code changes in Step 7**: none. Only docs and evidence changed. **Step 8 (Windows close-out) is therefore not needed** (plan: "only if Step 7 changed code").
+
+**Deviations in Step 7**: none. Not done by DEV, as planned: the connected two-column table against a live 0.10.0 service, and installing the `.dmg`. Both are in the TES test run (AC-32, AC-34).
+
+**H2**: committed and pushed on `feature/US-010-time-overlay`. The `.dmg` stays on the MacBook (`03_Delivery/macos/`, git-ignored). Back on Windows: `git pull`; no Step 8.
+

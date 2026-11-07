@@ -1,0 +1,68 @@
+// TEMPORARY US-010 Step 7.2 on-screen probe. NOT COMMITTED (like the US-008 probe). Delete before commit.
+#if DEBUG
+using EagleEye.ParentApp.Core.Accounts;
+using EagleEye.ParentApp.Core.Communication;
+using EagleEye.ParentApp.Core.Settings;
+using EagleEye.ParentApp.Core.ViewModels;
+using EagleEye.Shared.Models;
+
+namespace EagleEye.ParentApp.Probe;
+
+public static class UiProbe
+{
+    public const string Kid = "S-1-5-21-1-2-3-1003";
+    public static string? Mode => Environment.GetEnvironmentVariable("EAGLEEYE_UI_PROBE");
+
+    public static void Log(string text) => Console.Error.WriteLine($"[PROBE] {DateTime.Now:HH:mm:ss.fff} {text}");
+
+    public static void Register(IServiceCollection services)
+    {
+        if (Mode is null) return;
+        services.AddSingleton<IConnectionCoordinator, FakeCoordinator>();
+        services.AddSingleton<IUserAccountsModel, FakeAccounts>();
+        services.AddSingleton<IWarningSettingsModel, FakeWarnings>();
+    }
+
+    public static async void Run()
+    {
+        if (Mode is null) return;
+        await Task.Delay(1000);
+        var sp = IPlatformApplication.Current!.Services;
+        var theme = Environment.GetEnvironmentVariable("EAGLEEYE_UI_THEME");
+        if (theme is not null) Application.Current!.UserAppTheme = theme == "dark" ? AppTheme.Dark : AppTheme.Light;
+        var main = sp.GetRequiredService<MainViewModel>();
+        main.SelectedItem = main.MenuItems.First(i => i.Key == MainViewModel.SettingsKey);
+        var vm = sp.GetRequiredService<WarningSettingsViewModel>();
+        Log($"page settings, theme {theme}, warnings ready {vm.IsReady}, early {vm.Early?.MinutesText}, final {vm.Final?.MinutesText}");
+    }
+
+    private sealed class FakeCoordinator : IConnectionCoordinator
+    {
+        public ConnectionState State { get; } = new(ConnectionStatus.PairedConnected, "192.168.1.37", "MacBook", ConnectionMessage.None);
+        public event Action<ConnectionState>? StateChanged { add { } remove { } }
+        public Task<ConnectionState> InitializeAsync() => Task.FromResult(State);
+        public Task BeginPairingAsync(string? hostInput) => Task.CompletedTask;
+        public Task RequestNewCodeAsync() => Task.CompletedTask;
+        public Task SubmitCodeAsync(string? code, string? deviceName) => Task.CompletedTask;
+        public Task CancelPairingAsync() => Task.CompletedTask;
+        public Task<bool> RemovePairingAsync() => Task.FromResult(false);
+        public Task<bool> ForgetPairingLocallyAsync() => Task.FromResult(false);
+    }
+
+    private sealed class FakeAccounts : IUserAccountsModel
+    {
+        public event Action? Changed { add { } remove { } }
+        public AccountsLoadState LoadState => AccountsLoadState.Ready;
+        public UserAccountListDto? Snapshot { get; } = new(1, null, [new UserAccountDto(Kid, "eagleeye-kid", null, false, true)]);
+        public Task<bool> SetParentalControlAsync(string accountSid, bool isUnderParentalControl) => Task.FromResult(true);
+    }
+
+    private sealed class FakeWarnings : IWarningSettingsModel
+    {
+        public event Action? Changed { add { } remove { } }
+        public AccountsLoadState LoadState => AccountsLoadState.Ready;
+        public WarningSettingsDto? Snapshot { get; } = new(1, null, 5, 1);
+        public Task<bool> SetMinutesAsync(WarningLevel level, int minutes) => Task.FromResult(true);
+    }
+}
+#endif
