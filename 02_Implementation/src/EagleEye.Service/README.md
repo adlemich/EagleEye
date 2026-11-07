@@ -1,4 +1,4 @@
-| Database | `%ProgramData%agleEyeagleEye.Service.db` (pairings, selections, usage; US-005: `BreakTimeEntries`, `AccountDisplayTexts`, `BlockedStarts` and `TimeChangeFindings`, the last two kept 90 days) |# EagleEye.Service
+# EagleEye.Service
 
 Windows service running as `SYSTEM`. The core enforcement engine of EagleEye.
 
@@ -45,7 +45,8 @@ EagleEye.Service/
 │                     AppGroupsSnapshot (IAppGroupsView: members, group rules; no rule row = 0:00, no day),
 │                     AppGroupCatalog, AppGroupChangeLog (log texts), SpanUnion and GroupUsageCalculator (group used
 │                     time = union of the current members' activity spans, TC-026)
-├── Configuration/    Per-user configuration management — rules, budgets, schedules
+├── Configuration/    Empty (`.gitkeep`): reserved for the YAML service configuration of ADR-002, not built yet;
+│                     rules, budgets and schedules live in `Rules/`, `Groups/` and the database
 ├── Statistics/       Usage accounting (ADR-012): event queue, UsageTracker (monotonic credit, midnight
 │                     split), UsageService (state owner of the usage areas), 5 s accounting loop. US-008:
 │                     ActivitySpanAccumulator (spans of credited time per account and app, persisted with the tick;
@@ -87,7 +88,7 @@ Every accepted write and every change of the Windows accounts produces one revis
 
 | What | Where |
 |---|---|
-| Database | `%ProgramData%\EagleEye\EagleEye.Service.db` (`PairedDevices`, `AccountSelections`) |
+| Database | `%ProgramData%\EagleEye\EagleEye.Service.db`, schema version 7 (migrations under `Data/` above): pairings, account selections, app records and daily usage, break times and display texts, app rules and budget texts, warning minutes, app groups, group rules and activity spans, blocked starts and time-change findings (the last two kept 90 days) |
 | Certificate | `%ProgramData%\EagleEye\certs\` (SYSTEM + Administrators only) |
 | Log files | `%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log` (SYSTEM + Administrators only; 50 MB per file, at most 3 files, older than 5 days deleted except the current one). The service re-applies the folder ACL on every start; if that fails it writes no log file in that run. |
 | US-008 log entries | `App groups loaded: …` at start; `App groups changed by <device>: app group created / renamed / deleted, app moved …`; `Group rules of account … changed …`; warnings, grace periods, blocked starts and closes name the group (`group Games`) |

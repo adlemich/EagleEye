@@ -16,8 +16,8 @@ Cross-platform parent application built with .NET MAUI. One codebase targets two
 - Edit the break times and the display text per account under parental control on the Rules page (US-005)
 - Edit the application rules (daily budget, weekdays) and the budget text per account on the Rules page, and the two time-elapsed warnings on the Settings page (US-006)
 - US-007: the macOS app (Mac Catalyst) with the same pages, macOS language and formats, accent-colour heading bars, Keychain for the token
-- US-008 (macOS app): the "App Groups" page (groups of the service PC, drag-and-drop, "Move to …"), the "App group rules" section on Rules and the group lines on Reports. The Windows parent app compiles the same views but gets groups in US-009.
-- Later stories: statistics per kid
+- US-008 (macOS app) and US-009 (Windows parent app, also on Windows 10 22H2): the "App Groups" page (groups of the service PC, drag-and-drop, "Move to …"), the "App group rules" section on Rules and the group lines on Reports
+- US-010: the time-elapsed warnings have only their minutes (the warning texts were removed; the kid sees the remaining-time overlay instead of a dialog)
 
 ## Structure
 
@@ -30,8 +30,8 @@ EagleEye.ParentApp/
 │   ├── MainPage             Desktop layout: menu left, content right, status bar bottom (FR-APP-081);
 │   │                        starts on Reports when paired, on Settings when not (ISSUE-007)
 │   ├── SettingsView         "Visual appearance", "Server connection", "User accounts on the EagleEye PC" and
-│   │                        "Time-elapsed warnings" (US-006: two fixed rows, columns 160 | 96 | *; flushed when
-│   │                        the page changes)
+│   │                        "Time-elapsed warnings" (US-006: two fixed rows; US-010: columns 160 | 96, minutes
+│   │                        only, no text column; flushed when the page changes)
 │   ├── RulesView            Rules (US-005): account selection, break-time table edited in place (fixed columns
 │   │                        40 | 64 | 88 | 88 | 7 × 48), display text; times saved on leaving the field or Enter,
 │   │                        text on leaving the box; MainPage flushes typed values when the page changes.
@@ -121,4 +121,4 @@ Uninstalling removes all three.
 
 The `.dmg` contains "Remove EagleEye Parent App.command", which removes the data folders and the Keychain entry; the app itself is moved to the Trash by hand. First start of an unsigned build: *System Settings → Privacy & Security → Open Anyway* (ADR-019).
 
-**No connection after an update?** After installing a rebuilt `.dmg`, the app may not connect: macOS treats every ad-hoc signed build as a new app. *System Settings → Datenschutz & Sicherheit → Lokales Netzwerk* then lists one EagleEye entry per build; all show as on, but the current build is not allowed. Fix: quit the app (Cmd+Q), switch the EagleEye entries off and on again, start the app, and answer the Keychain prompt with "Immer erlauben". A failed ping to the service PC proves nothing (Windows blocks ICMP by default); test TCP port 5443 instead: `nc -z -G 3 <ip> 5443`. (dev-environments.md §5)
+**No connection after an update?** After installing a rebuilt `.dmg`, the app may not connect: macOS treats every ad-hoc signed build as a new app. *System Settings → Datenschutz & Sicherheit → Lokales Netzwerk* then lists one EagleEye entry per build; all show as on, but the current build is not allowed. Fix: quit the app (Cmd+Q), switch the EagleEye entries off and on again, start the app, and answer the Keychain prompt with "Immer erlauben". A failed ping to the service PC proves nothing (Windows blocks ICMP by default); test TCP port 5443 instead: `nc -z -G 3 <service-pc> 5443`. (dev-environments.md §5)

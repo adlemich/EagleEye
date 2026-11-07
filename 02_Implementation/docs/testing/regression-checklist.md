@@ -4,6 +4,8 @@
 
 Story test runs do not include these cases. Only when the project owner explicitly requests a regression run before a major version release does TES copy all sections into `docs/testing/regression/regression-run-<version>.md` (see `docs/testing/README.md`). Cases are added here only when a story is closed (`Verified/Closed`). Keep each section short. It holds the cases that prove the story still works, not the full test plan.
 
+> **State (2026-11-07)**: only US-001 has a section. US-002 to US-010 were closed without a TES step that added their cases (several were closed without a full test run, see each `docs/testing/US-XXX/test-report.md`). Before the next regression run, TES adds sections for them from their test plans and reports. REG-001-04: the tray menu now also opens with the left mouse button and lists the overlay settings above *App Infos* (US-010).
+
 UI texts below are the German texts (Windows display language German); on an English system the English equivalents apply.
 
 ---

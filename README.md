@@ -1,6 +1,6 @@
 # EagleEye — Parental Control for Windows
 
-EagleEye is a parental control solution that lets parents control which applications their children can use on Windows, set time budgets per application, configure usage schedules, and monitor usage statistics, all remotely from the EagleEye parent app on Windows or macOS.
+EagleEye is a parental control solution that lets parents control which applications their children can use on Windows: daily time budgets per application or per app group, break times, and usage reports, all set remotely from the EagleEye parent app on Windows or macOS. On the kid's PC a small half-transparent overlay shows the remaining time and turns yellow and red before the time runs out.
 
 ---
 
@@ -9,7 +9,7 @@ EagleEye is a parental control solution that lets parents control which applicat
 | Component | Description | Technology |
 |-----------|-------------|------------|
 | `EagleEye.Service` | Windows service (SYSTEM): monitors processes, enforces rules, serves the SignalR hub | .NET 10, Windows Service |
-| `EagleEye.TrayClient` | Windows tray application: runs in the kid's user session, shows remaining time | .NET 10, WinForms |
+| `EagleEye.TrayClient` | Windows tray application: runs in the kid's user session; remaining-time overlay, kid dialogs, overlay settings in the tray menu | .NET 10, WinForms |
 | `EagleEye.ParentApp` | Parent app: configure rules, view statistics | .NET 10, MAUI: Windows parent app (own installer) and Mac app (Mac Catalyst, `.dmg`) |
 | `EagleEye.Shared` | Shared library: SignalR contracts (API-first), domain models | .NET 10 |
 
@@ -34,7 +34,7 @@ EagleEye is developed on two machines that share this repository (see `02_Implem
 
 | Machine | Develops, builds and tests |
 |---------|---------------------------|
-| **Windows 11 developer machine** | Service, TrayClient, Shared, ParentApp **Windows** target, Windows installers. It is also the **manual test station**. |
+| **Windows 11 developer machine** | Service, TrayClient, Shared, ParentApp **Windows** target, Windows installers. It is also the **manual test station**; test-only PCs (a Windows 10 PC, the kid's gaming PC) get the installers by hand. |
 | **MacBook** | ParentApp **macOS** target (Mac Catalyst), `.dmg` |
 
 Sync is through git only: pull when you start, commit and push before you switch machines.
@@ -65,9 +65,12 @@ pwsh 02_Implementation/scripts/env-check.ps1
 # Build and unit-test everything that belongs to this machine
 pwsh 02_Implementation/scripts/build.ps1
 pwsh 02_Implementation/scripts/test.ps1
+
+# Remove build output (keeps secrets/ and the installers in 03_Delivery/)
+pwsh 02_Implementation/scripts/clean.ps1
 ```
 
-Secrets (only needed for pushing and for signed packaging) go in `secrets/secrets.json`, created per machine from `secrets/secrets.template.json`. Never commit it.
+Secrets (only the GitHub credentials for pushing, if the machine has no other git credential helper) go in `secrets/secrets.json`, created per machine from `secrets/secrets.template.json`. Never commit it. Builds and packaging need no secrets: the installers are not code-signed and the `.dmg` is only ad-hoc signed (ADR-019, ADR-020).
 
 VSCode build tasks and launch configurations live in `02_Implementation/.vscode/`. Open the `02_Implementation` folder to use them.
 

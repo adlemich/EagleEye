@@ -1,12 +1,12 @@
 # EagleEye.TrayClient
 
-Lightweight Windows tray application that runs in the **kid's user session**. Informs the kid about remaining time and enforces notifications.
+Lightweight Windows tray application that runs in the **kid's user session**. Shows the kid the remaining time (overlay) and the kid dialogs for blocked starts and enforced closes.
 
 ## Responsibility
 
-- Display a system tray icon showing EagleEye status
-- Show remaining time budget for the active application
-- Show notifications when time is running low or exhausted
+- Display a system tray icon showing the connection status; its menu (left or right click) holds the overlay settings and *App Infos*
+- Show the kid dialog (topmost, "OK") when the service blocks a start or closes an app (budget used up, break time), US-005/US-006
+- Show the pairing code window when a parent app pairs (US-002)
 - Display the remaining-time overlay (US-010, ADR-022): a half-transparent, click-through, top-most pill with one line per
   running subject and an approaching break, coloured by warning level, with pulse and sound; settings (opacity, corner,
   display threshold, sound) in the tray menu, stored per Windows account in `HKCU\Software\EagleEye\TrayClient`
@@ -33,6 +33,6 @@ EagleEye.TrayClient/
 ## Runtime
 
 - Runs as a standard Windows executable in the kid's user session
-- Auto-started via Windows Startup registry entry (configured by the installer)
+- Auto-started at sign-in via the `HKLM\...\CurrentVersion\Run` value `EagleEyeTrayClient` (written by the installer)
 - Connects to `EagleEye.Service` SignalR hub on localhost
 - Packaged together with `EagleEye.Service` in the Inno Setup installer

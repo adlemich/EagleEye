@@ -38,7 +38,7 @@ EagleEye.ParentApp.Core/
 │                        delete, move; one fixed key of SelectedAccountModel), AppGroupNameRules (AppGroupNames of
 │                        Shared + no duplicate ignoring case; the renamed group itself is ignored)
 ├── Settings/            US-006: WarningSettingsModel (global area "WarningSettings", one fixed key of
-│                        SelectedAccountModel), WarningEditRules (1…59, early > final)
+│                        SelectedAccountModel), WarningEditRules (1…59, early > final); since US-010 minutes only (no texts)
 ├── Appearance/         HeadingBarPalette: heading bar colours (platform accent or app primary #1E7B3A,
 │                        white or black text by WCAG contrast, ISSUE-007); RgbColor
 ├── Data/

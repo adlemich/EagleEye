@@ -61,8 +61,8 @@ Follow the [Microsoft C# naming conventions](https://learn.microsoft.com/en-us/d
 | Element | Convention | Example |
 |---------|-----------|---------|
 | Namespace | PascalCase, matching folder path | `EagleEye.Service.Monitoring` |
-| Class / Record / Struct | PascalCase | `ProcessMonitor`, `AppRuleDto` |
-| Interface | `I` prefix + PascalCase | `IProcessMonitor` |
+| Class / Record / Struct | PascalCase | `SessionAgentLauncher`, `AppRuleDto` |
+| Interface | `I` prefix + PascalCase | `IAgentLauncher` |
 | Public method | PascalCase | `GetUserConfig()` |
 | Private method | PascalCase | `ClassifyProcess()` |
 | Public property | PascalCase | `IsConnected` |
@@ -77,9 +77,9 @@ Follow the [Microsoft C# naming conventions](https://learn.microsoft.com/en-us/d
 
 ### 1.2 File and Type Organization
 
-- **One type per file.** The file name matches the type name: `ProcessMonitor.cs` contains `class ProcessMonitor`.
+- **One type per file.** The file name matches the type name: `SessionAgentLauncher.cs` contains `class SessionAgentLauncher`.
 - **Exception**: nested private types may live in the parent type's file.
-- **Namespace matches folder path.** `EagleEye.Service/Monitoring/ProcessMonitor.cs` → `namespace EagleEye.Service.Monitoring`.
+- **Namespace matches folder path.** `EagleEye.Service/Monitoring/SessionAgentLauncher.cs` → `namespace EagleEye.Service.Monitoring`.
 - **File-scoped namespaces.** Use `namespace EagleEye.Service.Monitoring;` (no braces) — the C# 10+ style.
 
 ### 1.3 Formatting
@@ -88,7 +88,7 @@ Follow the [Microsoft C# naming conventions](https://learn.microsoft.com/en-us/d
 - **Braces**: Allman style (opening brace on its own line) for types and methods. K&R (same line) is acceptable for single-statement property accessors and lambdas.
 - **Indentation**: 4 spaces, no tabs.
 - **Max line length**: 120 characters (soft limit — prefer readability over rigid wrapping).
-- **`using` directives**: at the top of the file, sorted alphabetically, `System` namespaces first. Use global usings in `GlobalUsings.cs` for project-wide imports.
+- **`using` directives**: at the top of the file, sorted alphabetically, `System` namespaces first. All projects set `<ImplicitUsings>enable</ImplicitUsings>`; there is no `GlobalUsings.cs`. Add one only if a project needs further project-wide imports.
 
 ### 1.4 Modern C# 14 Features — Use Where Appropriate
 
@@ -219,7 +219,7 @@ public class InvalidUserSidException : Exception { } // Don't do this
 
 - Define focused interfaces. A consumer should not depend on methods it does not use.
 - The `EagleEye.Shared/Contracts/` interfaces (`IParentHub`, `ITrayHub`, `IParentClientCallback`, `ITrayClientCallback`) are the canonical examples — each is scoped to one client role (see ADR-003).
-- Internal service component interfaces (e.g., `IProcessMonitor`, `IConfigurationManager`) should expose only the methods needed by their consumers.
+- Internal service component interfaces (e.g., `IAgentLauncher`, `IUsageService`) should expose only the methods needed by their consumers.
 
 ### 4.3 Class Design Rules
 
@@ -275,7 +275,7 @@ See system architecture §8.12 for the service registration overview.
 
 | Lifetime | Use For | Example |
 |----------|---------|---------|
-| **Singleton** | Components with long-lived state or expensive initialization | `IProcessMonitor`, `IConfigurationManager`, `ICertificateManager` |
+| **Singleton** | Components with long-lived state or expensive initialization | `IUsageService`, `IAppRuleService`, `ICertificateManager` |
 | **Scoped** | Per-SignalR-connection or per-request state | Hub-scoped services (if needed) |
 | **Transient** | Stateless, lightweight services | Validators, mappers |
 
@@ -289,7 +289,7 @@ Rules:
 ### 6.2 Testing with DI
 
 - Every service component is injectable and testable in isolation.
-- Mocks are created with Moq, substituting the interface (`Mock<IProcessMonitor>`).
+- Mocks are created with Moq, substituting the interface (`Mock<IAgentLauncher>`).
 - Integration tests can use `WebApplicationFactory<T>` for end-to-end hub testing.
 
 ---
@@ -580,8 +580,9 @@ _logger.LogInformation($"Budget expired for user {userSid}, app {appName}");
 - **Framework**: xUnit
 - **Mocking**: Moq
 - **Projects**: one test project per component in `02_Implementation/tests/` (`EagleEye.<Component>.Tests`), with folders mirroring the source project structure. Unit tests are the only automated tests; acceptance testing is manual (ADR-007).
-- **Naming**: `{ClassUnderTest}_{MethodUnderTest}_{Scenario}_{ExpectedResult}`
-  - Example: `ProcessMonitor_ClassifyProcess_IgnoredProcess_ReturnsIgnored`
+- **Naming**: test class `{ClassUnderTest}Tests`, test method `{MethodUnderTest}_{Scenario}_{ExpectedResult}`; the class name is not repeated in the method name
+  - Example: `ProgramPathPolicyTests.Classify_TooLong_IsInvalid`
+  - Shorter names are fine when the scenario says it all (about a third of the existing tests, e.g. behaviour tests of a whole flow)
 - **One assert per test** (preferred). Multiple asserts are acceptable when testing a single logical outcome with multiple observable effects.
 
 ### 11.2 What to Test

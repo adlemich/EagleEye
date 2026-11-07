@@ -22,14 +22,18 @@ All acceptance and end-to-end testing for EagleEye is **manual**. The project ow
 | Machine | Tested there |
 |---|---|
 | **Windows Developer Machine** (main test station) | Installer, `EagleEye.Service`, `EagleEye.TrayClient`, Windows parent app |
-| **MacBook** | macOS parent app only. It connects over the LAN to the service on the Windows machine. |
+| **MacBook** | macOS parent app only. It connects over the LAN to the service on a Windows PC. |
+| **Windows 10 test PC** (test only, since US-009) | Windows parent app on Windows 10 22H2; installers copied by hand |
+| **`PILOT-PC`**, the kid's gaming PC (test only, since US-010) | Game cases and pilot operation with the installed service and tray client; installers copied by hand |
+
+Machine and account names in test docs use the placeholders of `docs/dev-process/dev-environments.md` §1, never real IP addresses or host names.
 
 ### Test accounts on the Windows machine
 
 - **The project owner's admin account**: used to install EagleEye and for the parent apps. Admin accounts are never monitored, so EagleEye does not interfere with development work.
 - **A local standard (non-admin) test account** (e.g. `eagleeye-kid`): the "kid". Use *Switch user* to move between the two accounts without logging off.
 
-> Caution: the service enforces rules for every standard account on the machine. Do not use a standard account for anything you care about while EagleEye is installed.
+> Caution: the service enforces rules only for the standard accounts ticked as "under parental control" in a parent app (US-003), but for those it denies every app without a rule (deny by default, US-006). Do not tick an account you need for other work while EagleEye is installed.
 
 ---
 
@@ -76,9 +80,9 @@ Partial runs are fine. Unticked cases count as "not executed".
 | Component | Location (Windows) |
 |---|---|
 | Service log (from 0.3.0) | `%ProgramData%\EagleEye\logs\EagleEye.Service-NNN.log` (admin-only folder, elevated terminal) |
-| Service (before 0.3.0), TrayClient | `%ProgramData%\EagleEye\` |
+| Service (before 0.3.0) | `%ProgramData%\EagleEye\` |
 | Windows Event Log (pairing code fallback) | Event Viewer → Windows Logs → Application, source `EagleEye` |
-| macOS parent app | `~/Library/Application Support/EagleEye/` |
+| Tray client, Windows parent app, macOS parent app | No log files. Note what the screen shows and take a screenshot; the service log records the connections and enforcement. |
 
 ---
 
@@ -101,4 +105,4 @@ docs/testing/
 
 - Test case IDs: `TC-<story>-<nn>` (e.g. `TC-001-07`). Each test case references the AC(s) it verifies.
 - Test runs are permanent records. A new run gets a new file.
-- Issues stay with their story: `docs/requirements/user-stories/US-XXX/issues/ISSUE-XXX.md`.
+- Issues stay with their story: `docs/requirements/user-stories/US-XXX/issues/ISSUE-XXX.md`. Issue numbers run across all stories. Exception (left where they are): ISSUE-008 and ISSUE-009 are in `docs/testing/US-006/issues/`, ISSUE-010 in `docs/testing/US-009/issues/`.
