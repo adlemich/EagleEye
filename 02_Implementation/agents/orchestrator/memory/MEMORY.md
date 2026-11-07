@@ -4,7 +4,7 @@ One line per memory. Content lives in the linked files, never here.
 
 - [Project owner](project-owner.md) — professional engineer, reviewer and sole approval authority; works on a Windows machine and a MacBook.
 - [Memory lives in the project](memory-lives-in-project.md) — memory files belong in this folder, never under ~/.claude.
-- [Current phase](eagleeye-current-phase.md) — 2026-11-07: between stories; docs privacy/accuracy pass done on main (not pushed yet); Mac .dmg 0.10.0 not yet installed.
+- [Current phase](eagleeye-current-phase.md) — 2026-11-07: between stories; docs privacy/accuracy pass pushed, history not rewritten; Mac .dmg 0.10.0 not yet installed.
 - [US-001 lessons](us001-lessons.md) — localization in every plan, ACs quote English examples, German UI labels in test manuals, publisher "Michael Adler".
 - [Workflow and gates](eagleeye-workflow-gates.md) — five agents, file-based handoffs, approval gates, manual test loop, one feature branch per story merged on close.
 - [Dev and test setup](eagleeye-dev-test-setup.md) — Windows: service/tray/Windows parent app + manual testing; MacBook: Mac app only (repo outside iCloud); ADR-007.

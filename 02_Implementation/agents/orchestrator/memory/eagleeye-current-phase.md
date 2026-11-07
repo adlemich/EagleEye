@@ -1,11 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-11-07 between stories; docs neutral-wording/privacy/accuracy pass on main, push and history rewrite undecided
+description: EagleEye workflow status — 2026-11-07 between stories; docs privacy/accuracy pass pushed; history stays as is
 metadata:
   type: project
 ---
 
-**Update 2026-11-07 (main, MacBook, between stories): clean.ps1 added (a036f4d). Docs pass on the project owner's request: name replaced by "the project owner" everywhere, IPs/host names/accounts replaced by placeholders (also in screenshots, test data, code comments), CLAUDE.md rule 9; living docs aligned with the 0.10.0 implementation (READMEs, testing docs, arc42 incl. the deferred US-010 amendment and an implementation-status note for the unbuilt YAML/AppDiscovery/debug-mode design, coding guidelines, requirements implementation-status section, ADR-002 note, status notes on 01_Intend docs). Open: push, and whether to rewrite git history (old texts and screenshots remain in history).**
+**Update 2026-11-07 (main, MacBook, between stories): clean.ps1 added (a036f4d). Docs pass on the project owner's request: name replaced by "the project owner" everywhere, IPs/host names/accounts replaced by placeholders (also in screenshots, test data, code comments), CLAUDE.md rule 9; living docs aligned with the 0.10.0 implementation (READMEs, testing docs, arc42 incl. the deferred US-010 amendment and an implementation-status note for the unbuilt YAML/AppDiscovery/debug-mode design, coding guidelines, requirements implementation-status section, ADR-002 note, status notes on 01_Intend docs). Pushed (3a3b2bd). The project owner decided: git history is NOT rewritten (old texts and screenshots stay in history); do not propose it again.**
 
 **Update 2026-11-07 (US-010 CLOSED + merged, MacBook): the project owner approved step c and closed US-010 without TES steps d–f ("skip the test plan this time … merge to main directly"). Orchestrator wrote `docs/testing/US-010/test-report.md` (gaps: most ACs only unit-tested or covered by the pilot summary; F-1 install Mac .dmg 0.10.0 before using the Mac app against PILOT-PC; F-2 "Minuten vor Ende" header wraps on Mac; F-3 pilot bugs as issues). Story Verified/Closed, merged --no-ff into main, branch deleted. NEXT: between stories.**
 

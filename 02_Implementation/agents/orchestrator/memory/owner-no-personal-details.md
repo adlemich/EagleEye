@@ -9,4 +9,4 @@ The project owner asked (2026-11-07) that no file in the repo names them or reve
 
 **Why:** the repo is on GitHub; the owner does not want personal or home-network information in it.
 
-**How to apply:** check every doc, report, test record, code comment and screenshot before committing (CLAUDE.md rule 9). Redact screenshots (OCR + overpaint worked with a Swift Vision script; small screenshots need upscaling before OCR). Git history still contains the old texts unless the owner decides to rewrite it. See [[project-owner]].
+**How to apply:** check every doc, report, test record, code comment and screenshot before committing (CLAUDE.md rule 9). Redact screenshots (OCR + overpaint worked with a Swift Vision script; small screenshots need upscaling before OCR). Git history keeps the old texts: the owner decided (2026-11-07) not to rewrite it. See [[project-owner]].
