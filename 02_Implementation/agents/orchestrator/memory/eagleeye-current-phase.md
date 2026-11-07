@@ -1,9 +1,11 @@
 ---
 name: eagleeye-current-phase
-description: EagleEye workflow status — 2026-11-07 US-010 Windows part approved (pilot check covers Steps 5+9); NEXT MacBook Step 7 (.dmg 0.10.0, story → Implemented), then TES step d
+description: EagleEye workflow status — 2026-11-07 US-010 Step 7 Mac done (f3c0339, .dmg 0.10.0 not installed, story Implemented); NEXT Michael approves step c → TES step d
 metadata:
   type: project
 ---
+
+**Update 2026-11-07 (US-010 step c, MacBook Step 7 DONE): DEV (subagent) f3c0339 pushed (H2): build 0 warnings, Shared 314 + ParentApp 1 108 green; Settings look check light/dark passed (AC-31/32; evidence `US-010/evidence/step7-*`, probe removed, no src change → Step 8 NOT needed). `.dmg` `03_Delivery/macos/EagleEye-ParentApp-0.10.0.dmg` 29 312 683 B, SHA-256 70606ff8…d33e1e3, NOT installed (Mac app still 0.9.0; TI-16: don't use it against .85 until 0.10.0 installed). Report §11 Mac, §6 final; story Implemented. Cosmetic: header "Minuten vor Ende" wraps in 96-pt column (not fixed, possible issue). TES note: pilot already on 0.10.0 incl. .85 → AC-35 starting versions must be checked per machine. NEXT: Michael approves step c → TES step d (test plan + run checklist); Windows machine needs `git pull`.**
 
 **Update 2026-11-07 (US-010 step c, Windows): Michael installed 0.10.0 in the pilot (Windows machines) and approved the Windows part as is: "overlay pill tested OK in different games and applications, all as expected" = Steps 5 + 9 passed, no per-row results (test run covers them). Q-DEV-1 (keep D-3) and Q-DEV-2 closed with defaults. Bugs later as issues. Recorded in report §9.1 + story change log; story stays Analyzed until Step 7. TI-16: Mac app 0.9.0 not to be used against .85 until .dmg 0.10.0 installed. NEXT: Michael on MacBook runs Step 7 (report §10 prompt; DEV sets story Implemented), then step-c approval → TES step d.**
 
